@@ -12,8 +12,9 @@ def timepoint_factory(detector, data, **kwargs):
         given the detector value.
 
     """
+    detector = detector.replace('numeric_', '')  # numeric date is a date
     kwargs.update({'timepoint': detector})
-    if detector in ['date', 'numeric_date']:
+    if detector == 'date':
         return Date(data, **kwargs)
     elif detector == 'date_interval':
         return DateInterval(data, **kwargs)
