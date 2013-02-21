@@ -51,6 +51,8 @@ def parse(text, lang, valid=False):
 
     """
     out = []
+    if isinstance(text, unicode):
+        text = text.encode('utf-8')
     detectors = [
         det for det in TIMEPOINT_REGEX[lang].keys()
         if not det.startswith('_')
