@@ -531,11 +531,14 @@ class DateTimeInterval(Timepoint):
 #                 self.weekday = SHORT_WEEKDAY_VALUE[self.lang][self.start_weekday_name]
 
 
-def parse(text, lang):
+def parse(text, lang, valid=False):
     """ Perform a date detection on text with all timepoint regex.
 
-    Returns a list of valid, non overlapping normalized timepoints
+    Returns a list of non overlapping normalized timepoints
     expressions.
+
+    If ``valid=True``, only valid Timepoints will be returned.
+    Else, invalid Timepoints can also be returned.
 
     """
     out = []
@@ -543,7 +546,7 @@ def parse(text, lang):
         det for det in TIMEPOINT_REGEX[lang].keys()
         if not det.startswith('_')
     ]
-    for detector in  detectors:
+    for detector in detectors:
         for match in re.finditer(TIMEPOINT_REGEX[lang][detector], text):
             out.append(
                 timepoint_factory(
@@ -553,10 +556,21 @@ def parse(text, lang):
                     span=match.span(),
                     lang=lang)
                 )
-    return remove_subsets(out)
+    out = remove_subsets(out)  # remove overlapping matches from results
+    if valid:  # only return valid Timepoints
+        return [match for match in out if match.valid]
+    return out
 
 
 def parse_to_json(text, lang, **kwargs):
+    """ Perform a date detection on text with all timepoint regex.
+
+    Returns a list of json serialized, non overlapping normalized timepoints
+    expressions.
+
+    All kwargs will be passed to ``to_json`` method of each Timepoint.
+
+    """
     return [timepoint.to_json(**kwargs) for timepoint in parse(text, lang)]
 
 
@@ -596,37 +610,3 @@ def remove_subsets(timepoints):
                                 out.remove(t1)
         out = sorted(out, key=lambda item: item.span[0])  # sort list by match position
         return out
-
-if __name__ == '__main__':
-    # import cPickle
-    # import traceback
-    # import pdb
-    # import sys
-    # import pprint
-    # if len(sys.argv) > 1:
-    #     index = int(sys.argv[1])
-    # else:
-    #     index = 0
-
-    # data = cPickle.load(open('extract/old/dates-test-data-cleaned.pickle'))
-    # for text in data[index:]:
-    #     print text
-    #     try:
-    #         td = TimepointDetector(text.encode('utf-8'), 'fr').detect()
-    #         print td
-    #         print 'valid', [tp.valid for tp in td]
-    #         # pprint.pprint([tp.to_dict() for tp in td])
-    #     except:
-    #         print traceback.print_exc()
-    #         d = raw_input('debug?')
-    #         if d == 'y':
-    #             pdb.set_trace()
-    #     c = raw_input('Continue? ')
-    #     if c == 'n':
-    #         val = raw_input('sure?')
-    #         if val == 'y':
-    #             break
-    text = "du 15 mars au samedi 19 avril 2013, de 15h à 16h30"
-    tp = parse(text, 'fr')
-    print tp
-    print tp[0].to_dict()
