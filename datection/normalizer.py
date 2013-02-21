@@ -205,7 +205,7 @@ class DateList(Timepoint):
         """ Check that all dates in self.dates are valid. """
         return all([date.valid for date in self.dates])
 
-    def to_dict():
+    def to_dict(self):
         return {
             'timepoint': 'date_list',
             'dates': [date.to_dict() for date in self.dates],
