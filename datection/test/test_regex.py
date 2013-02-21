@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-Test suite of the Mapado regexes.
+Test suite of the timepoint regexes.
 """
 
 import unittest
 import sys
 import re
 
-from regexes import *
+sys.path.insert(0, '..')
+from ..regexes import *
 
 
 class TestDateRegex(unittest.TestCase):
@@ -147,10 +148,10 @@ class TestNumericDateRegex(unittest.TestCase):
         # Regognized formats
         text = "Plop 12/12/2012 plop"
         date = re.search(FR_NUMERIC_DATE, text)
-        assert date.groupdict()['month'] == '12'
+        assert date.groupdict()['month_name'] == '12'
         text = "Plop 12/01/2012 plop"
         date = re.search(FR_NUMERIC_DATE, text)
-        assert date.groupdict()['month'] == '01'
+        assert date.groupdict()['month_name'] == '01'
 
         # Unrecognized formats
         text = "Plop 12/1/2012 plop"
