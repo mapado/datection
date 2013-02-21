@@ -7,6 +7,7 @@ import sys
 import json
 sys.path.insert(0, '..')
 
+from datection import parse, parse_to_json
 from ..normalizer import *
 
 
