@@ -59,14 +59,17 @@ def parse(text, lang, valid=False):
     ]
     for detector in detectors:
         for match in re.finditer(TIMEPOINT_REGEX[lang][detector], text):
-            out.append(
-                timepoint_factory(
-                    detector,
-                    match.groupdict(),
-                    text=match.group(0),
-                    span=match.span(),
-                    lang=lang)
-                )
+            try:
+                out.append(
+                    timepoint_factory(
+                        detector,
+                        match.groupdict(),
+                        text=match.group(0),
+                        span=match.span(),
+                        lang=lang)
+                    )
+            except:
+                pass
     out = remove_subsets(out)  # remove overlapping matches from results
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
