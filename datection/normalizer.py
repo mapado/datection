@@ -4,7 +4,7 @@ import re
 import datetime
 import json
 
-from regexes import *
+from regex import *
 
 
 def timepoint_factory(detector, data, **kwargs):

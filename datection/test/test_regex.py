@@ -9,7 +9,7 @@ import sys
 import re
 
 sys.path.insert(0, '..')
-from ..regexes import *
+from ..regex import *
 
 
 class TestDateRegex(unittest.TestCase):

@@ -47,7 +47,7 @@ _FR_DATE = r"""
     (?P<month_name>{month_name})\s*  # month
     (?P<year>{year})?  # year (optional)
     """.format(
-        prefix=DAYS_PREFIX, weekday_name=FR_weekday_nameS,
+        prefix=DAYS_PREFIX, weekday_name=FR_WEEKDAY_NAMES,
         day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 
 FR_DATE = re.compile(_FR_DATE,
@@ -122,7 +122,7 @@ _FR_DATE_INTERVAL = r"""
     (?P<end_month_name>{month_name})?\s*  # month (optional)
     (?P<end_year>{year})?  # year (optional)
     """.format(
-        prefix=INTERVAL_PREFIX, weekday_name=FR_weekday_nameS, day=DAY_NUMBER,
+        prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY_NAMES, day=DAY_NUMBER,
         month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
 FR_DATE_INTERVAL = re.compile(_FR_DATE_INTERVAL,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -162,7 +162,7 @@ _FR_DATE_IN_LIST = r"""
         (?P<day>{day})\s* # day number
         (?P<month_name>{month_name})?\s*
         (?P<year>{year})?\s*
-    """.format(prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_weekday_nameS, day=DAY_NUMBER,
+    """.format(prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY_NAMES, day=DAY_NUMBER,
         month_name=FR_MONTH, year=YEAR)
 FR_DATE_IN_LIST = re.compile(_FR_DATE_IN_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -184,7 +184,7 @@ _FR_DATE_LIST = r"""
         ({year})?\s*
     )
     """.format(prefix=FR_DATE_LIST_PREFIX, date=_FR_DATE_IN_LIST,
-        suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_weekday_nameS,
+        suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
         day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 FR_DATE_LIST = re.compile(_FR_DATE_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -218,7 +218,7 @@ _FR_DATE_RECURRENCE = r"""
     \s*
     (?P<end_weekday_name>{weekday_name}?)(s)?(?!\s{day}))  # day, not followed by a date (optional)
     """.format(
-        prefix=RECURRENCE_PREFIX, weekday_name=FR_weekday_nameS,
+        prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY_NAMES,
         suffix=RECURRENCE_SUFFIX, day=DAY_NUMBER)
 
 FR_DATE_RECURRENCE = re.compile(_FR_DATE_RECURRENCE,
@@ -252,14 +252,3 @@ TIMEPOINT_REGEX = {
         'datetime_interval': FR_DATETIME_INTERVAL,
     }
 }
-
-
-if __name__ == '__main__':
-    text = """ Adulte : 19 € Tarif réduit :
-            13 € Du 19 janvier au 1er mars 2013."""
-    for i in re.finditer(FR_DATE_INTERVAL, text):
-        print '"' + i.group(0) + '"'
-        print i.groupdict()
-        print
-    # for i in re.finditer(INTERVAL_FR_DATE, s):
-    #     print i.groupdict()
