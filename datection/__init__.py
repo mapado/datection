@@ -71,7 +71,7 @@ def parse(text, lang, valid=False):
     return out
 
 
-def parse_to_json(text, lang, **kwargs):
+def parse_to_json(text, lang, valid=False **kwargs):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of json serialized, non overlapping normalized timepoints
@@ -80,7 +80,7 @@ def parse_to_json(text, lang, **kwargs):
     All kwargs will be passed to ``to_json`` method of each Timepoint.
 
     """
-    return [timepoint.to_json(**kwargs) for timepoint in parse(text, lang)]
+    return [timepoint.to_json(**kwargs) for timepoint in parse(text, lang, valid)]
 
 
 def parse_to_dict(text, lang):
@@ -90,7 +90,7 @@ def parse_to_dict(text, lang):
     expressions.
 
     """
-    return [timepoint.to_dict() for timepoint in parse(text, lang)]
+    return [timepoint.to_dict() for timepoint in parse(text, lang, valid)]
 
 
 def remove_subsets(timepoints):
