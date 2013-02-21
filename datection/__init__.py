@@ -83,6 +83,16 @@ def parse_to_json(text, lang, **kwargs):
     return [timepoint.to_json(**kwargs) for timepoint in parse(text, lang)]
 
 
+def parse_to_dict(text, lang):
+    """ Perform a date detection on text with all timepoint regex.
+
+    Returns a list of non overlapping normalized timepoints
+    expressions.
+
+    """
+    return [timepoint.to_dict() for timepoint in parse(text, lang)]
+
+
 def remove_subsets(timepoints):
         """ Remove items contained which span is contained into others'.
 
