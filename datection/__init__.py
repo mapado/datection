@@ -71,7 +71,7 @@ def parse(text, lang, valid=False):
     return out
 
 
-def parse_to_json(text, lang, valid=False **kwargs):
+def parse_to_json(text, lang, valid=False, **kwargs):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of json serialized, non overlapping normalized timepoints
@@ -83,7 +83,7 @@ def parse_to_json(text, lang, valid=False **kwargs):
     return [timepoint.to_json(**kwargs) for timepoint in parse(text, lang, valid)]
 
 
-def parse_to_dict(text, lang):
+def parse_to_dict(text, lang, valid=False):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of non overlapping normalized timepoints
