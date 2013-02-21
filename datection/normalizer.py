@@ -59,6 +59,15 @@ class Timepoint(object):
     def __repr__(self):
         return '%s: %s' % (self.__class__, self.text)
 
+    def __eq__(self, other):
+        if isinstance(other, Timepoint):
+            return self.to_dict() == other.to_dict()
+        else:
+            raise TypeError(other, "must inherit from the Timepoint class")
+
+    def __ne__(self, other):
+        return not self == other
+
     def to_json(self, **kwargs):
         """ Serialize the Timepoint object to JSON format """
         d = self.to_dict()
