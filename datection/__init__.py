@@ -71,8 +71,7 @@ def parse(text, lang, valid=False):
                             lang=lang)
                         )
                 except:
-                    import traceback
-                    traceback.print_exc()
+                    pass
     out = remove_subsets(out)  # remove overlapping matches from results
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
