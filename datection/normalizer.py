@@ -12,7 +12,6 @@ def timepoint_factory(detector, data, **kwargs):
         given the detector value.
 
     """
-    detector = detector.replace('numeric_', '')  # numeric date is a date
     kwargs.update({'timepoint': detector})
     if detector == 'date':
         return Date(data, **kwargs)
@@ -184,7 +183,7 @@ class DateList(Timepoint):
         """
         # store all dates in self.dates list
         self.dates = []
-        for date in re.finditer(TIMEPOINT_REGEX[self.lang]['_date_in_list'], self.date_list):
+        for date in re.finditer(TIMEPOINT_REGEX[self.lang]['_date_in_list'][0], self.date_list):
             self.dates.append(Date(date.groupdict(), text=date.group(0), lang=self.lang))
         # All dates without a year will inherit from the end date year
         end_date = self.dates[-1]
@@ -348,12 +347,12 @@ class TimeInterval(Timepoint):
     def _normalize(self):
         """ Convert the self.start_time and self.end_time into Time objects. """
         # normalization of self.start_time into a Time object
-        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'], self.start_time)
+        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.start_time)
         self.start_time = Time(st.groupdict(), lang=self.lang)
 
         if self.end_time:
             # normalization of self.end_time into a Time object
-            et = re.search(TIMEPOINT_REGEX[self.lang]['_time'], self.end_time)
+            et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.end_time)
             self.end_time = Time(et.groupdict(), lang=self.lang)
 
     @property
@@ -403,10 +402,13 @@ class DateTime(Timepoint):
         as already converted.
         """
         if not hasattr(self, 'date'):
-            d = re.search(TIMEPOINT_REGEX[self.lang]['date'], self.text)
-            self.date = Date(d.groupdict(), text=d.group(0), lang=self.lang)
+            for date_pattern in TIMEPOINT_REGEX[self.lang]['date']:
+                d = re.search(date_pattern, self.text)
+                if d:
+                    self.date = Date(d.groupdict(), text=d.group(0), lang=self.lang)
+                    break
         if not hasattr(self, 'time'):
-            ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'], self.text)
+            ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'][0], self.text)
             self.time = TimeInterval(ti.groupdict(), text=ti.group(0), lang=self.lang)
 
     @property
@@ -447,11 +449,14 @@ class DateTimeList(Timepoint):
         self.datetimes = []
 
         # Extract the date list and create a DateList object
-        dl = re.search(TIMEPOINT_REGEX[self.lang]['date_list'], self.text)
-        date_list = DateList(
-            dl.groupdict(), text=dl.group(0),lang=self.lang)
+        for date_list_pattern in TIMEPOINT_REGEX[self.lang]['date_list']:
+            dl = re.search(date_list_pattern, self.text)
+            if dl:
+                date_list = DateList(
+                    dl.groupdict(), text=dl.group(0),lang=self.lang)
+                break
         # extract the time interval and create a TimeInterval object
-        ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'], self.text).groupdict()
+        ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'][0], self.text).groupdict()
         time = TimeInterval(ti, lang=self.lang)
 
         # Populate self.datetimes with Datetimes objects
@@ -491,7 +496,7 @@ class DateTimeInterval(Timepoint):
         # normalized start date and end date
         sd, ed = DateInterval(
             re.search(
-                TIMEPOINT_REGEX[self.lang]['date_interval'], self.text).groupdict(),
+                TIMEPOINT_REGEX[self.lang]['date_interval'][0], self.text).groupdict(),
             lang=self.lang)
         self.start_datetime = DateTime({},
                                     date=sd,

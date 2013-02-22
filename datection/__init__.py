@@ -53,23 +53,26 @@ def parse(text, lang, valid=False):
     out = []
     if isinstance(text, unicode):
         text = text.encode('utf-8')
-    detectors = [
+
+    timepoint_families = [
         det for det in TIMEPOINT_REGEX[lang].keys()
         if not det.startswith('_')
     ]
-    for detector in detectors:
-        for match in re.finditer(TIMEPOINT_REGEX[lang][detector], text):
-            try:
-                out.append(
-                    timepoint_factory(
-                        detector,
-                        match.groupdict(),
-                        text=match.group(0),
-                        span=match.span(),
-                        lang=lang)
-                    )
-            except:
-                pass
+    for family in timepoint_families:
+        for detector in TIMEPOINT_REGEX[lang][family]:
+            for match in re.finditer(detector, text):
+                try:
+                    out.append(
+                        timepoint_factory(
+                            family,
+                            match.groupdict(),
+                            text=match.group(0),
+                            span=match.span(),
+                            lang=lang)
+                        )
+                except:
+                    import traceback
+                    traceback.print_exc()
     out = remove_subsets(out)  # remove overlapping matches from results
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]

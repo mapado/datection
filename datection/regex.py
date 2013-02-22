@@ -260,17 +260,16 @@ FR_DATETIME_RECURRENCE = re.compile(r"""
 
 TIMEPOINT_REGEX = {
     'fr': {
-        'date': FR_DATE,
-        'numeric_date': FR_NUMERIC_DATE,
-        'date_list': FR_DATE_LIST,
-        '_date_in_list': FR_DATE_IN_LIST,  # "private" sub-regex
-        'date_interval': FR_DATE_INTERVAL,
-        'date_recurrence': FR_DATE_RECURRENCE,
-        '_time': FR_TIME,  # "private" sub-regex
-        'time_interval': FR_TIME_INTERVAL,
-        'datetime': FR_DATETIME,
-        'datetime_list': FR_DATETIME_LIST,
-        'datetime_recurrence': FR_DATETIME_RECURRENCE,
-        'datetime_interval': FR_DATETIME_INTERVAL,
+        'date': [FR_DATE, FR_NUMERIC_DATE],
+        'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
+        '_date_in_list': [FR_DATE_IN_LIST,],  # "private" sub-regex
+        'date_interval': [FR_DATE_INTERVAL,],
+        'date_recurrence': [FR_DATE_RECURRENCE,],
+        '_time': [FR_TIME,],  # "private" sub-regex
+        'time_interval': [FR_TIME_INTERVAL,],
+        'datetime': [FR_DATETIME,],
+        'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
+        'datetime_recurrence': [FR_DATETIME_RECURRENCE,],
+        'datetime_interval': [FR_DATETIME_INTERVAL,],
     }
 }
