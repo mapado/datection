@@ -155,9 +155,8 @@ FR_DATETIME_INTERVAL = re.compile(r"""
 # * Les 25, 26, 27 et 28 octobre
 # * les 25, 26, 27 mars 2013
 FR_DATE_LIST_PREFIX = r'le(s)?'  # le/les
-FR_DATE_LIST_SUFFIX = r'(et|,)'
+FR_DATE_LIST_SUFFIX = r'et'
 _FR_DATE_IN_LIST = r"""
-        ({prefix})?\s*  # prefix (optional)
         (?P<weekday_name>{weekday_name})?\s*  # day (optional)
         (?P<day>{day})\s* # day number
         (?P<month_name>{month_name})?\s*
@@ -167,40 +166,63 @@ _FR_DATE_IN_LIST = r"""
 FR_DATE_IN_LIST = re.compile(_FR_DATE_IN_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
+# Example: lundi 25, mardi, 26 et mercredi 27 mars 2013
+_FR_DATE_LIST_WEEKDAY = r"""
+    (?P<date_list>
+        (
+            {weekday_name}\s* # weekday (optional)
+            {day}\s* # day number
+            (,\s)?
+        )+
+        ({suffix}\s*)?  # separator
+        ({weekday_name})?\s*  # day (optional)
+        {day}\s* # day number
+        {month_name}\s*
+        ({year})?\s*
+    )
+    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
+        day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+FR_DATE_LIST_WEEKDAY = re.compile(_FR_DATE_LIST_WEEKDAY,
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+# Example: 25, 26, 27 mars 2013
+# strong hypothesis: no weekday
 _FR_DATE_LIST = r"""
     (?P<date_list>
         (
-            ({prefix})?\s*  # prefix (optional)
-            ({weekday_name})?\s*  # day (optional)
             {day}\s* # day number
-            ({month_name})?\s*
-            ({year})?\s*
-            ,?
-            {suffix}\s*  # separator
+            (,\s)?
         )+
-        ({weekday_name})?\s*  # day (optional)
+        ({suffix}\s*)?  # separator
         {day}\s* # day number
-        ({month_name})?\s*
+        {month_name}\s*
         ({year})?\s*
     )
-    """.format(prefix=FR_DATE_LIST_PREFIX, date=_FR_DATE_IN_LIST,
-        suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
+    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
         day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 FR_DATE_LIST = re.compile(_FR_DATE_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
-
 
 
 # A given time for a list of dates
 # Examples:
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 à 20h30
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 de 20h à 20h30
+FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
+    {datelist}
+    ,?\s*
+    {time}
+    """.format(datelist=_FR_DATE_LIST_WEEKDAY, time=_FR_TIME_INTERVAL),
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+# datetime list with *no* weekday
 FR_DATETIME_LIST = re.compile(r"""
     {datelist}
     ,?\s*
     {time}
     """.format(datelist=_FR_DATE_LIST, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
 
 # Recurrence are recurrent dates, linked by a prefix and a suffix
 # Examples:

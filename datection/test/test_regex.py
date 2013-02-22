@@ -412,14 +412,14 @@ class TestDateListRegex(unittest.TestCase):
         """Test the extraction of a list of the form Day X, Day Y, et Day X Month."""
         text = """ Adulte : 19 € Tarif réduit :
             13 € le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février."""
-        datelist = re.search(FR_DATE_LIST, text)
-        expected = "le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
+        datelist = re.search(FR_DATE_LIST_WEEKDAY, text)
+        expected = "Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
         assert datelist.groupdict()['date_list'].strip() == expected
 
         text = """ Adulte : 19 € Tarif réduit :
             13 € le lundi 13 et mardi 14 février."""
-        datelist = re.search(FR_DATE_LIST, text)
-        expected = "le lundi 13 et mardi 14 février"
+        datelist = re.search(FR_DATE_LIST_WEEKDAY, text)
+        expected = "lundi 13 et mardi 14 février"
         assert datelist.groupdict()['date_list'].strip() == expected
 
 
@@ -435,18 +435,18 @@ class TestDateTimeListRegex(unittest.TestCase):
         text = """ Adulte : 19 € Tarif réduit :
             13 € les 25, 26 et 27 février 2013 de 20h à 21h20."""
         datelist = re.search(FR_DATETIME_LIST, text)
-        assert datelist.groupdict()['date_list'].strip() == 'les 25, 26 et 27 février 2013'
+        assert datelist.groupdict()['date_list'].strip() == '25, 26 et 27 février 2013'
 
         text = """ Adulte : 19 € Tarif réduit :
             13 € les 25, 26, 27 février 2013 de 20h à 21h20."""
         datelist = re.search(FR_DATETIME_LIST, text)
-        assert datelist.groupdict()['date_list'].strip() == 'les 25, 26, 27 février 2013'
+        assert datelist.groupdict()['date_list'].strip() == '25, 26, 27 février 2013'
 
     def test_date_time_list(self):
         text = """ Adulte : 19 € Tarif réduit :
             13 € le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février de 20h à 21h20."""
-        datelist = re.search(FR_DATETIME_LIST, text)
-        expected = "le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
+        datelist = re.search(FR_DATETIME_LIST_WEEKDAY, text)
+        expected = "Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
         assert datelist.groupdict()['date_list'].strip() == expected
         assert datelist.groupdict()['start_time'] == '20h'
         assert datelist.groupdict()['end_time'] == '21h20'
