@@ -2,7 +2,6 @@
 
 import re
 import datetime
-import json
 
 from regex import *
 
@@ -67,14 +66,14 @@ class Timepoint(object):
     def __ne__(self, other):
         return not self == other
 
-    def to_json(self, **kwargs):
-        """ Serialize the Timepoint object to JSON format """
+    def serialize(self):
+        """ Serialize the Timepoint object to a Python dict """
         d = self.to_dict()
         # the 'valid' and 'timepoint' members are only shown at the root level
         # not at children level, to avoid filling the JSON struct
         # with partial validity indicators
         d.update({'valid': self.valid, 'timepoint': self.timepoint})
-        return json.dumps(d, **kwargs)
+        return d
 
 
 class Date(Timepoint):
