@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Datection provides you with a parser that can extract and normalize
@@ -32,12 +32,23 @@ will be normalized into the following JSON structure:
 No external dependencies are needed.
 """
 
-__version__= '0.1'
+__version__ = '0.1'
 
 import re
+import signal
 
 from datection.regex import TIMEPOINT_REGEX
 from datection.normalizer import timepoint_factory
+
+
+class Timeout(Exception):
+    pass
+
+
+def signal_handler(signum, frame):
+    raise Timeout('Function timed out.')
+
+signal.signal(signal.SIGALRM, signal_handler)
 
 
 def parse(text, lang, valid=False):
@@ -61,6 +72,7 @@ def parse(text, lang, valid=False):
     for family in timepoint_families:
         for detector in TIMEPOINT_REGEX[lang][family]:
             for match in re.finditer(detector, text):
+                signal.alarm(1)  # limit execution time to 1s
                 try:
                     out.append(
                         timepoint_factory(
@@ -70,8 +82,11 @@ def parse(text, lang, valid=False):
                             span=match.span(),
                             lang=lang)
                         )
-                except:
+                except NotImplementedError:
                     pass
+                except Timeout:
+                    raise Timeout
+    signal.alarm(0)  # remove all execution time limit
     out = remove_subsets(out)  # remove overlapping matches from results
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
