@@ -84,6 +84,9 @@ def parse(text, lang, valid=False):
                         )
                 except NotImplementedError:
                     pass
+                except AttributeError:
+                    # exception often raised when a false detection occurs
+                    pass
                 except Timeout:
                     raise Timeout
     signal.alarm(0)  # remove all execution time limit
