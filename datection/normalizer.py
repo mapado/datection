@@ -165,7 +165,6 @@ class DateList(Timepoint):
             self.dates = dates
         self._normalize()
 
-
     def __iter__(self):
         """ Iterate over the dates in self.dates. """
         for date in self.dates:
@@ -337,7 +336,7 @@ class TimeInterval(Timepoint):
 
     def __repr__(self):
         end_time = self.end_time or ''
-        return '%s-%s' % (self.start_time, self.end_time)
+        return '%s-%s' % (self.start_time, end_time)
 
     def __iter__(self):
         """ Iteration over the start and end time. """
@@ -453,7 +452,7 @@ class DateTimeList(Timepoint):
             dl = re.search(date_list_pattern, self.text)
             if dl:
                 date_list = DateList(
-                    dl.groupdict(), text=dl.group(0),lang=self.lang)
+                    dl.groupdict(), text=dl.group(0), lang=self.lang)
                 break
         # extract the time interval and create a TimeInterval object
         ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'][0], self.text).groupdict()
@@ -487,7 +486,6 @@ class DateTimeInterval(Timepoint):
         """ Iteration over the start and end datetime. """
         for time in [self.start_datetime, self.end_datetime]:
             yield time
-
 
     def _normalize(self):
         """ Normalisation of start and end datetimes."""
