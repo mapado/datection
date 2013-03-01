@@ -4,10 +4,9 @@
 
 import unittest
 import sys
-import json
 sys.path.insert(0, '..')
 
-from datection import parse, parse_to_json
+from datection import parse, parse_to_serialized
 from ..normalizer import *
 
 
@@ -40,8 +39,7 @@ class TestFrDateNormalizer(unittest.TestCase):
 
     def test_to_json(self):
         """ Test the serialisation of a Date object. """
-        datejson = parse_to_json('le lundi 5 mars 2013', 'fr')[0]
-        date = json.loads(datejson)
+        date = parse_to_serialized('le lundi 5 mars 2013', 'fr')[0]
         assert date['day'] == 5
         assert date['month'] == 3
         assert date['year'] == 2013
