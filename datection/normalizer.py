@@ -599,13 +599,13 @@ class DateTimeInterval(Timepoint):
 
     def _normalize(self):
         """ Normalisation of start and end datetimes."""
-        self.date_interval = TimeInterval(
+        self.time_interval = TimeInterval(
             {
             'start_time': self.start_time,
             'end_time': self.end_time
             },
             lang=self.lang)
-        self.time_interval = DateInterval(
+        self.date_interval = DateInterval(
             re.search(
                 TIMEPOINT_REGEX[self.lang]['date_interval'][0], self.text).groupdict(),
             lang=self.lang)
@@ -625,16 +625,16 @@ class DateTimeInterval(Timepoint):
         out = []
 
         # getting date interval
-        sd = self.start_datetime.date
-        ed = self.end_datetime.date
+        sd = self.date_interval.start_date
+        ed = self.date_interval.end_date
 
         start_date = datetime.date(year=sd.year, month=sd.month, day=sd.day)
         end_date = datetime.date(year=ed.year, month=ed.month, day=ed.day)
         delta = end_date - start_date
 
         # getting time interval
-        start_time = self.start_datetime.time.start_time
-        end_time = self.end_datetime.time.end_time
+        start_time = self.time_interval.start_time
+        end_time = self.time_interval.end_time
 
         nb_days = range(0, delta.days + 1)
         for i in nb_days:

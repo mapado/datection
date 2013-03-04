@@ -264,21 +264,18 @@ class TestFrDateTimeInterval(unittest.TestCase):
         dti = parse(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
         assert dti.valid
         datetime_interval = dti.to_dict()
-        assert datetime_interval['start_datetime']['date']['year'] == 2013
-        assert datetime_interval['start_datetime']['date']['month'] == 02
-        assert datetime_interval['start_datetime']['date']['day'] == 15
-        assert datetime_interval['start_datetime']['time']['start_time']['hour'] == 14
-        assert datetime_interval['start_datetime']['time']['start_time']['minute'] == 00
-        assert datetime_interval['start_datetime']['time']['end_time']['hour'] == 18
-        assert datetime_interval['start_datetime']['time']['end_time']['minute'] == 30
+        assert datetime_interval['date_interval']['start_date']['year'] == 2013
+        assert datetime_interval['date_interval']['start_date']['month'] == 02
+        assert datetime_interval['date_interval']['start_date']['day'] == 15
 
-        assert datetime_interval['end_datetime']['date']['year'] == 2013
-        assert datetime_interval['end_datetime']['date']['month'] == 02
-        assert datetime_interval['end_datetime']['date']['day'] == 18
-        assert datetime_interval['end_datetime']['time']['start_time']['hour'] == 14
-        assert datetime_interval['end_datetime']['time']['start_time']['minute'] == 00
-        assert datetime_interval['end_datetime']['time']['end_time']['hour'] == 18
-        assert datetime_interval['end_datetime']['time']['end_time']['minute'] == 30
+        assert datetime_interval['date_interval']['end_date']['year'] == 2013
+        assert datetime_interval['date_interval']['end_date']['month'] == 02
+        assert datetime_interval['date_interval']['end_date']['day'] == 18
+
+        assert datetime_interval['time_interval']['start_time']['hour'] == 14
+        assert datetime_interval['time_interval']['start_time']['minute'] == 00
+        assert datetime_interval['time_interval']['end_time']['hour'] == 18
+        assert datetime_interval['time_interval']['end_time']['minute'] == 30
 
     def test_to_sql(self):
         """ Test the normaliser on a valid dateinterval. """
