@@ -115,6 +115,16 @@ def parse_to_dict(text, lang, valid=False):
     """
     return [timepoint.to_dict() for timepoint in parse(text, lang, valid)]
 
+def parse_to_sql(text, lang):
+    """ Perform a date detection on text with all timepoint regex.
+
+    Returns a list of datetime tuples ([start_datetime, end_datetime]) for sql insertion
+    """
+
+    out = [timepoint.to_sql() for timepoint in parse(text, lang, True)
+                if timepoint.valid]
+    return [item for item in out if item]
+
 
 def remove_subsets(timepoints):
         """ Remove items contained which span is contained into others'.

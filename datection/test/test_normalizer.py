@@ -6,7 +6,9 @@ import unittest
 import sys
 sys.path.insert(0, '..')
 
-from datection import parse, parse_to_serialized
+from datetime import datetime
+
+from datection import parse, parse_to_serialized, parse_to_sql
 from ..normalizer import *
 
 
@@ -39,7 +41,7 @@ class TestFrDateNormalizer(unittest.TestCase):
 
     def test_to_json(self):
         """ Test the serialisation of a Date object. """
-        date = parse_to_serialized('le lundi 5 mars 2013', 'fr')[0]
+        date = parse_to_serialized(u'le lundi 5 mars 2013', 'fr')[0]
         assert date['day'] == 5
         assert date['month'] == 3
         assert date['year'] == 2013
@@ -50,6 +52,14 @@ class TestFrDateNormalizer(unittest.TestCase):
         """ Check that missing date leads to invalid structure. """
         assert parse(u'5/03', 'fr')[0].valid is False
         assert parse(u'lundi 5 mars', 'fr')[0].valid is False
+
+    def test_to_sql(self):
+        """ Test the return format for sql insert """
+        datelist = parse_to_sql(u'le lundi 5 mars 2013', 'fr')
+        assert len(datelist) == 1
+        date = datelist[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=5, hour=0, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=3, day=5, hour=23, minute=59, second=59)
 
 
 class TestFrTimeIntervalNormalizer(unittest.TestCase):
@@ -90,6 +100,10 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
         assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
 
+    def test_to_sql(self):
+        """ Test the return format for sql insert """
+        date_list = parse_to_sql(u'de 15h30 à 16h', 'fr')
+        assert len(date_list) == 0
 
 class TestFrDateListNormalizer(unittest.TestCase):
     """ Test class of the DateList normaliser with french data. """
@@ -120,6 +134,21 @@ class TestFrDateListNormalizer(unittest.TestCase):
         assert not datelist.dates[1].valid
         assert not datelist.dates[2].valid
 
+    def test_to_sql(self):
+        """ Test the normaliser on a valid date list."""
+        datelist = parse_to_sql(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
+        assert len(datelist) == 3
+        date = datelist[0]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=5, hour=0, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=5, hour=23, minute=59, second=59)
+        date = datelist[1]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=6, hour=23, minute=59, second=59)
+        date = datelist[2]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=8, hour=0, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=8, hour=23, minute=59, second=59)
+        
+
 
 class TestFrDateTime(unittest.TestCase):
     """ Test class of the DateTime normalizer with french data. """
@@ -142,6 +171,20 @@ class TestFrDateTime(unittest.TestCase):
         dt1 = parse(u'le lundi 15 mars 2013 de 15h à 20h', 'fr')[0]
         dt2 = parse(u'le lundi 15 mars 2013, 15h-20h', 'fr')[0]
         assert dt1 == dt2
+
+    def test_to_sql(self):
+        """ Test the normaliser on a valid date time. """
+        dt = parse_to_sql(u'le lundi 15 mars 2013 à 20h', 'fr')
+        assert len(dt) == 1
+        date = dt[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
+
+        dt = parse_to_sql(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
+        assert len(dt) == 1
+        date = dt[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
 
 class TestFrDateTimeList(unittest.TestCase):
@@ -168,3 +211,97 @@ class TestFrDateTimeList(unittest.TestCase):
         dtl2 = parse(u'6, 9 octobre 2013 entre 15h et 20h', 'fr')[0]
         dtl3 = parse(u'6, 9 octobre 2013 de 15h à 20h', 'fr')[0]
         assert dtl1 == dtl2 == dtl3
+
+    def test_to_sql(self):
+        """ Test the normaliser on a valid date time list. """
+        datetimelist = parse_to_sql(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
+
+        # le 6
+        date = datetimelist[0]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=6, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=6, hour=20, minute=0, second=0)
+
+        # le 7
+        date = datetimelist[1]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=9, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
+
+
+class TestFrDateInterval(unittest.TestCase):
+    """ Test class of the DateInterval normalizer with french data """
+
+    def test_valid_format(self):
+        """ Test the normalizer """
+        di = parse(u'du 15 au 18 février 2013', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_dict()
+        assert dateinterval['start_date']['year'] == 2013
+        assert dateinterval['start_date']['month'] == 02
+        assert dateinterval['start_date']['day'] == 15
+        assert dateinterval['end_date']['year'] == 2013
+        assert dateinterval['end_date']['month'] == 02
+        assert dateinterval['end_date']['day'] == 18
+
+    def test_all_formats(self):
+        di1 = parse(u'du 15 au 18 février 2013', 'fr')[0]
+        di2 = parse(u'15 au 18 février 2013', 'fr')[0]
+        di3 = parse(u'15-18 février 2013', 'fr')[0]
+        assert di1 == di2 == di3
+
+    def test_to_sql(self):
+        """ Test the normaliser on a valid dateinterval. """
+        dateinterval = parse_to_sql(u'du 6 au 9 octobre 2013', 'fr')[0]
+
+        assert len(dateinterval) == 2
+        assert dateinterval[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
+        assert dateinterval[1] == datetime.datetime(year=2013, month=10, day=9, hour=23, minute=59, second=59)
+
+class TestFrDateTimeInterval(unittest.TestCase):
+    """ Test class of the DateTimeInterval normalizer with french data """
+
+    def test_valid_format(self):
+        """ Test the normalizer """
+        dti = parse(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
+        assert dti.valid
+        datetime_interval = dti.to_dict()
+        assert datetime_interval['start_datetime']['date']['year'] == 2013
+        assert datetime_interval['start_datetime']['date']['month'] == 02
+        assert datetime_interval['start_datetime']['date']['day'] == 15
+        assert datetime_interval['start_datetime']['time']['start_time']['hour'] == 14
+        assert datetime_interval['start_datetime']['time']['start_time']['minute'] == 00
+        assert datetime_interval['start_datetime']['time']['end_time']['hour'] == 18
+        assert datetime_interval['start_datetime']['time']['end_time']['minute'] == 30
+
+        assert datetime_interval['end_datetime']['date']['year'] == 2013
+        assert datetime_interval['end_datetime']['date']['month'] == 02
+        assert datetime_interval['end_datetime']['date']['day'] == 18
+        assert datetime_interval['end_datetime']['time']['start_time']['hour'] == 14
+        assert datetime_interval['end_datetime']['time']['start_time']['minute'] == 00
+        assert datetime_interval['end_datetime']['time']['end_time']['hour'] == 18
+        assert datetime_interval['end_datetime']['time']['end_time']['minute'] == 30
+
+    def test_to_sql(self):
+        """ Test the normaliser on a valid dateinterval. """
+        datetime_interval_list = parse_to_sql(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
+
+        assert len(datetime_interval_list) == 4
+
+        # 2013-02-15
+        datetime_interval = datetime_interval_list[0]
+        assert datetime_interval[0] == datetime.datetime(year=2013, month=2, day=15, hour=14, minute=0, second=0)
+        assert datetime_interval[1] == datetime.datetime(year=2013, month=2, day=15, hour=18, minute=30, second=0)
+
+        # 2013-02-16
+        datetime_interval = datetime_interval_list[1]
+        assert datetime_interval[0] == datetime.datetime(year=2013, month=2, day=16, hour=14, minute=0, second=0)
+        assert datetime_interval[1] == datetime.datetime(year=2013, month=2, day=16, hour=18, minute=30, second=0)
+
+        # 2013-02-17
+        datetime_interval = datetime_interval_list[2]
+        assert datetime_interval[0] == datetime.datetime(year=2013, month=2, day=17, hour=14, minute=0, second=0)
+        assert datetime_interval[1] == datetime.datetime(year=2013, month=2, day=17, hour=18, minute=30, second=0)
+
+        # 2013-02-18
+        datetime_interval = datetime_interval_list[3]
+        assert datetime_interval[0] == datetime.datetime(year=2013, month=2, day=18, hour=14, minute=0, second=0)
+        assert datetime_interval[1] == datetime.datetime(year=2013, month=2, day=18, hour=18, minute=30, second=0)
