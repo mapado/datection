@@ -75,6 +75,13 @@ class Timepoint(object):
         d.update({'valid': self.valid, 'timepoint': self.timepoint})
         return d
 
+    def to_sql(self):
+        """ Default implementation of to_sql
+
+        Return an empty list
+        """
+        return []
+
 
 class Date(Timepoint):
     """ A class representing a simple date.
@@ -148,6 +155,25 @@ class Date(Timepoint):
             'month': self.month,
             'year': self.year}
 
+    def to_sql(self):
+        start_datetime = datetime.datetime(
+            year=self.year,
+            month=self.month,
+            day=self.day,
+            hour=0,
+            minute=0,
+            second=0,
+        )
+        end_datetime = datetime.datetime(
+            year=self.year,
+            month=self.month,
+            day=self.day,
+            hour=23,
+            minute=59,
+            second=59,
+        )
+        return (start_datetime, end_datetime)
+
 
 class DateList(Timepoint):
     """ A datelist contains several dates.
@@ -208,6 +234,28 @@ class DateList(Timepoint):
             'dates': [date.to_dict() for date in self.dates],
             }
 
+    def to_sql(self):
+        out = []
+        for date in self.dates:
+            start_datetime = datetime.datetime(
+                year=date.year,
+                month=date.month,
+                day=date.day,
+                hour=0,
+                minute=0,
+                second=0,
+            )
+            end_datetime = datetime.datetime(
+                year=date.year,
+                month=date.month,
+                day=date.day,
+                hour=23,
+                minute=59,
+                second=59,
+            )
+            out.append((start_datetime, end_datetime))
+        return out
+
 
 class DateInterval(Timepoint):
     """ A class representing a date interval
@@ -226,7 +274,7 @@ class DateInterval(Timepoint):
         self._normalize()
 
     def __repr__(self):
-        return '%s: %s-%s' % (self.__class__, self.start_date, self.end_date)
+        return '%s-%s' % (self.start_date, self.end_date)
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
@@ -264,6 +312,13 @@ class DateInterval(Timepoint):
         'start_date': self.start_date.to_dict(),
         'end_date': self.end_date.to_dict(),
         }
+
+    def to_sql(self):
+        """ convert for sql insert """
+        start_datetime = datetime.datetime(year=self.start_date.year, month=self.start_date.month, day=self.start_date.day, hour=0, minute=0, second=0)
+        end_datetime =   datetime.datetime(year=self.end_date.year, month=self.end_date.month, day=self.end_date.day, hour=23, minute=59, second=59)
+
+        return (start_datetime, end_datetime)
 
 
 class Time(Timepoint):
@@ -419,6 +474,32 @@ class DateTime(Timepoint):
             'date': self.date.to_dict(),
             'time': self.time.to_dict()}
 
+    def to_sql(self):
+        """ Export Datetime to sql """
+        start_datetime = datetime.datetime(
+            year=self.date.year,
+            month=self.date.month,
+            day=self.date.day,
+            hour=self.time.start_time.hour,
+            minute=self.time.start_time.minute,
+            second=0
+        )
+
+        if self.time.end_time:
+            end_datetime = datetime.datetime(
+                year=self.date.year,
+                month=self.date.month,
+                day=self.date.day,
+                hour=self.time.end_time.hour,
+                minute=self.time.end_time.minute,
+                second=0
+            )
+        else:
+            end_datetime = start_datetime
+
+        return (start_datetime, end_datetime)
+
+
 
 class DateTimeList(Timepoint):
     """ A datetime list refers to a specific timing for a list of dates.
@@ -470,6 +551,36 @@ class DateTimeList(Timepoint):
         return {
             'datetimes': [dt.to_dict() for dt in self.datetimes]}
 
+    def to_sql(self):
+        """ Export Datetime to sql """
+        out = []
+
+        for dt in self.datetimes:
+            start_datetime = datetime.datetime(
+                year=dt.date.year,
+                month=dt.date.month,
+                day=dt.date.day,
+                hour=dt.time.start_time.hour,
+                minute=dt.time.start_time.minute,
+                second=0
+            )
+
+            if dt.time.end_time:
+                end_datetime = datetime.datetime(
+                    year=dt.date.year,
+                    month=dt.date.month,
+                    day=dt.date.day,
+                    hour=dt.time.end_time.hour,
+                    minute=dt.time.end_time.minute,
+                    second=0
+                )
+            else:
+                end_datetime = start_datetime
+
+            out.append((start_datetime, end_datetime))
+
+        return out
+
 
 class DateTimeInterval(Timepoint):
     """ A datetime interval refers to a interval of date, with specified time. """
@@ -478,42 +589,76 @@ class DateTimeInterval(Timepoint):
         self._normalize()
 
     def __repr__(self):
-        return '%s: %s-%s: %s' % (self.__class__, self.start_datetime.date,
-                                    self.end_datetime.date, self.start_datetime.time)
+        return '%s: %s-%s' % (self.__class__, self.date_interval,
+                                    self.time_interval)
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
-        for time in [self.start_datetime, self.end_datetime]:
-            yield time
+        for date in self.date_interval:
+            yield date
 
     def _normalize(self):
         """ Normalisation of start and end datetimes."""
-        ti = TimeInterval({'start_time': self.start_time, 'end_time': self.end_time},
-                            lang=self.lang)
-        # normalized start date and end date
-        sd, ed = DateInterval(
+        self.time_interval = TimeInterval(
+            {
+            'start_time': self.start_time,
+            'end_time': self.end_time
+            },
+            lang=self.lang)
+        self.date_interval = DateInterval(
             re.search(
                 TIMEPOINT_REGEX[self.lang]['date_interval'][0], self.text).groupdict(),
             lang=self.lang)
-        self.start_datetime = DateTime({},
-                                    date=sd,
-                                    time=ti,
-                                    lang=self.lang)
-        self.end_datetime = DateTime({},
-                                    date=ed,
-                                    time=ti,
-                                    day=self.end_day,
-                                    lang=self.lang)
 
     @property
     def valid(self):
         """ Checks that start and end datetimes are valid. """
-        return all([self.start_datetime.valid, self.end_datetime.valid])
+        return all([self.date_interval.valid, self.time_interval.valid])
 
     def to_dict(self):
         return {
-        'start_datetime': self.start_datetime.to_dict(),
-        'end_datetime': self.end_datetime.to_dict()}
+        'date_interval': self.date_interval.to_dict(),
+        'time_interval': self.time_interval.to_dict()}
+
+    def to_sql(self):
+        """ Export DateTimeInterval to sql """
+        out = []
+
+        # getting date interval
+        sd = self.date_interval.start_date
+        ed = self.date_interval.end_date
+
+        start_date = datetime.date(year=sd.year, month=sd.month, day=sd.day)
+        end_date = datetime.date(year=ed.year, month=ed.month, day=ed.day)
+        delta = end_date - start_date
+
+        # getting time interval
+        start_time = self.time_interval.start_time
+        end_time = self.time_interval.end_time
+
+        nb_days = range(0, delta.days + 1)
+        for i in nb_days:
+            i_date = start_date + datetime.timedelta(days=i)
+            i_start_datetime = datetime.datetime(
+                year = i_date.year,
+                month = i_date.month,
+                day = i_date.day,
+                hour = start_time.hour,
+                minute = start_time.minute,
+                second = 0
+            )
+            i_end_datetime = datetime.datetime(
+                year = i_date.year,
+                month = i_date.month,
+                day = i_date.day,
+                hour = end_time.hour,
+                minute = end_time.minute,
+                second = 0
+            )
+
+            out.append((i_start_datetime, i_end_datetime))
+
+        return out
 
 
 # class Recurrence(Timepoint):
