@@ -274,7 +274,7 @@ class DateInterval(Timepoint):
         self._normalize()
 
     def __repr__(self):
-        return '%s: %s-%s' % (self.__class__, self.start_date, self.end_date)
+        return '%s-%s' % (self.start_date, self.end_date)
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
@@ -589,42 +589,36 @@ class DateTimeInterval(Timepoint):
         self._normalize()
 
     def __repr__(self):
-        return '%s: %s-%s: %s' % (self.__class__, self.start_datetime.date,
-                                    self.end_datetime.date, self.start_datetime.time)
+        return '%s: %s-%s' % (self.__class__, self.date_interval,
+                                    self.time_interval)
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
-        for time in [self.start_datetime, self.end_datetime]:
-            yield time
+        for date in self.date_interval:
+            yield date
 
     def _normalize(self):
         """ Normalisation of start and end datetimes."""
-        ti = TimeInterval({'start_time': self.start_time, 'end_time': self.end_time},
-                            lang=self.lang)
-        # normalized start date and end date
-        sd, ed = DateInterval(
+        self.date_interval = TimeInterval(
+            {
+            'start_time': self.start_time,
+            'end_time': self.end_time
+            },
+            lang=self.lang)
+        self.time_interval = DateInterval(
             re.search(
                 TIMEPOINT_REGEX[self.lang]['date_interval'][0], self.text).groupdict(),
             lang=self.lang)
-        self.start_datetime = DateTime({},
-                                    date=sd,
-                                    time=ti,
-                                    lang=self.lang)
-        self.end_datetime = DateTime({},
-                                    date=ed,
-                                    time=ti,
-                                    day=self.end_day,
-                                    lang=self.lang)
 
     @property
     def valid(self):
         """ Checks that start and end datetimes are valid. """
-        return all([self.start_datetime.valid, self.end_datetime.valid])
+        return all([self.date_interval.valid, self.time_interval.valid])
 
     def to_dict(self):
         return {
-        'start_datetime': self.start_datetime.to_dict(),
-        'end_datetime': self.end_datetime.to_dict()}
+        'date_interval': self.date_interval.to_dict(),
+        'time_interval': self.time_interval.to_dict()}
 
     def to_sql(self):
         """ Export DateTimeInterval to sql """
