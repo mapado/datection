@@ -23,8 +23,8 @@ class TestDateRegex(unittest.TestCase):
         text = """ Adulte : 19 € Tarif réduit : 13 €
                 Mardi 19 février 2013 : de 20h à 21h20."""
         date = re.search(FR_DATE, text)
-        assert date.group(0).strip() == 'Mardi 19 février 2013'
-        assert date.groupdict()['weekday_name'] == 'Mardi'
+        assert date.group(0).strip() == '19 février 2013'
+        # assert date.groupdict()['weekday_name'] == 'Mardi'
         assert date.groupdict()['day'] == '19'
         assert date.groupdict()['month_name'] == 'février'
         assert date.groupdict()['year'] == '2013'
@@ -34,8 +34,8 @@ class TestDateRegex(unittest.TestCase):
         text = """ Adulte : 19 € Tarif réduit : 13 €
                 lundi 28 Février 2001 : de 20h à 21h20."""
         date = re.search(FR_DATE, text)
-        assert date.group(0).strip() == 'lundi 28 Février 2001'
-        assert date.groupdict()['weekday_name'] == 'lundi'
+        assert date.group(0).strip() == '28 Février 2001'
+        # assert date.groupdict()['weekday_name'] == 'lundi'
         assert date.groupdict()['month_name'] == 'Février'
 
     def test_missing_day(self):
@@ -44,24 +44,21 @@ class TestDateRegex(unittest.TestCase):
         date = re.search(FR_DATE, text)
 
         assert date.group(0).strip() == '28 Février 2001'
-        assert date.groupdict()['weekday_name'] is None
+        # assert date.groupdict()['weekday_name'] is None
         assert date.groupdict()['day'] == '28'
         assert date.groupdict()['month_name'] == 'Février'
 
     def test_missing_date(self):
-        """ Test that the date is not mandatory for the match to happen. """
+        """ Test that the date is mandatory for the match to happen. """
         text = 'Adulte : 19 € Tarif réduit : 13 € Février 2001 : de 20h à 21h20.'
         date = re.search(FR_DATE, text)
-        assert date.group(0).strip() == 'Février 2001'
-        assert date.groupdict()['weekday_name'] is None
-        assert date.groupdict()['day'] is None
-        assert date.groupdict()['month_name'] == 'Février'
+        assert date is None
 
     def test_missing_year(self):
         """Test the extraction of a date with no year."""
         text = 'Adulte : 19 € Tarif réduit : 13 € Mardi 4 Février : de 20h à 21h20.'
         date = re.search(FR_DATE, text)
-        assert date.group(0).strip() == 'Mardi 4 Février'
+        assert date.group(0).strip() == '4 Février'
         assert date.groupdict()['year'] is None
 
     def test_all_date_formats(self):
@@ -79,29 +76,22 @@ class TestDateRegex(unittest.TestCase):
 
         """
         # One digit dates
-        text = 'Mardi 4 Février : de 20h à 21h20.'
+        text = '4 Février : de 20h à 21h20.'
         assert re.search(FR_DATE, text).groupdict()['day'] == '4'
-        text = 'Mardi 0 Février : de 20h à 21h20.'
-        assert re.search(FR_DATE, text).groupdict()['day'] is None
+        text = '0 Février : de 20h à 21h20.'
+        assert re.search(FR_DATE, text) is None
 
         # Two digits dates
-        text = 'Mardi 09 Février : de 20h à 21h20.'
+        text = '09 Février : de 20h à 21h20.'
         assert re.search(FR_DATE, text).groupdict()['day'] == '09'
-        text = 'Mardi 14 Février : de 20h à 21h20.'
+        text = '14 Février : de 20h à 21h20.'
         assert re.search(FR_DATE, text).groupdict()['day'] == '14'
-        text = 'Mardi 24 Février : de 20h à 21h20.'
+        text = '24 Février : de 20h à 21h20.'
         assert re.search(FR_DATE, text).groupdict()['day'] == '24'
-        text = 'Mardi 31 Février : de 20h à 21h20.'
+        text = '31 Février : de 20h à 21h20.'
         assert re.search(FR_DATE, text).groupdict()['day'] == '31'
-        text = 'Mardi 32 Février : de 20h à 21h20.'
-        assert re.search(FR_DATE, text).groupdict()['day'] is None
-
-    def test_prefixes(self):
-        """ Test the extraction of a date with a prefix. """
-        text = """Adulte : 19 € Tarif réduit :
-            13 € le 13 Février 2001 : de 20h à 21h20."""
-        assert re.search(FR_DATE, text).group(0).strip() == 'le 13 Février 2001'
-        assert re.search(FR_DATE, text).groupdict()['prefix'] == 'le'
+        text = ' 32 Février : de 20h à 21h20.'
+        assert re.search(FR_DATE, text) is None
 
     def test_premier(self):
         """ Test the extraction of a date with a '1er' in the string. """
@@ -168,11 +158,9 @@ class TestDateIntervalRegex(unittest.TestCase):
         """ Extract date intervals of the form 'du X au Y MM YYYY' """
         text = "du lundi 17 au mercredi 23 octobre 2012: de 20h à 21h20."
         interval = re.search(FR_DATE_INTERVAL, text)
-        assert interval.groupdict()['start_weekday_name'] == 'lundi'
         assert interval.groupdict()['start_day'] == '17'
         assert interval.groupdict()['start_month_name'] is None
         assert interval.groupdict()['start_year'] is None
-        assert interval.groupdict()['end_weekday_name'] == 'mercredi'
         assert interval.groupdict()['end_day'] == '23'
         assert interval.groupdict()['end_month_name'] == 'octobre'
         assert interval.groupdict()['end_year'] == '2012'
@@ -181,11 +169,9 @@ class TestDateIntervalRegex(unittest.TestCase):
         """ Extract date intervals of the form 'du X au Y MM' """
         text = "du 5 au 8 octobre: de 20h à 21h20."
         interval = re.search(FR_DATE_INTERVAL, text)
-        assert interval.groupdict()['start_weekday_name'] is None
         assert interval.groupdict()['start_day'] == '5'
         assert interval.groupdict()['start_month_name'] is None
         assert interval.groupdict()['start_year'] is None
-        assert interval.groupdict()['end_weekday_name'] is None
         assert interval.groupdict()['end_day'] == '8'
         assert interval.groupdict()['end_month_name'] == 'octobre'
         assert interval.groupdict()['end_year'] is None
@@ -193,11 +179,9 @@ class TestDateIntervalRegex(unittest.TestCase):
     def test_premier(self):
         text = 'Du 19 janvier au 1er mai 2013'
         interval = re.search(FR_DATE_INTERVAL, text)
-        assert interval.groupdict()['start_weekday_name'] is None
         assert interval.groupdict()['start_day'] == '19'
         assert interval.groupdict()['start_month_name'] == 'janvier'
         assert interval.groupdict()['start_year'] is None
-        assert interval.groupdict()['end_weekday_name'] is None
         assert interval.groupdict()['end_day'] == '1'
         assert interval.groupdict()['end_month_name'] == 'mai'
         assert interval.groupdict()['end_year'] == '2013'
@@ -205,11 +189,9 @@ class TestDateIntervalRegex(unittest.TestCase):
     def test_dash_separator(self):
         text = "5-7 avril 2013"
         interval = re.search(FR_DATE_INTERVAL, text)
-        assert interval.groupdict()['start_weekday_name'] is None
         assert interval.groupdict()['start_day'] == '5'
         assert interval.groupdict()['start_month_name'] is None
         assert interval.groupdict()['start_year'] is None
-        assert interval.groupdict()['end_weekday_name'] is None
         assert interval.groupdict()['end_day'] == '7'
         assert interval.groupdict()['end_month_name'] == 'avril'
         assert interval.groupdict()['end_year'] == '2013'
@@ -362,7 +344,6 @@ class TestDateTimeRegex(unittest.TestCase):
         text = """ Adulte : 19 € Tarif réduit : 13 €
                 le mardi 13 septembre de 20h à 21h20."""
         tstamp_time_int = re.search(FR_DATETIME, text)
-        assert tstamp_time_int.groupdict()['weekday_name'] == 'mardi'
         assert tstamp_time_int.groupdict()['day'] == '13'
         assert tstamp_time_int.groupdict()['month_name'] == 'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
@@ -372,7 +353,6 @@ class TestDateTimeRegex(unittest.TestCase):
     def test_interval_with_comma(self):
         text = 'le mardi 13 septembre, de 20h à 21h20'
         tstamp_time_int = re.search(FR_DATETIME, text)
-        assert tstamp_time_int.groupdict()['weekday_name'] == 'mardi'
         assert tstamp_time_int.groupdict()['day'] == '13'
         assert tstamp_time_int.groupdict()['month_name'] == 'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
@@ -384,7 +364,6 @@ class TestDateTimeRegex(unittest.TestCase):
         # entre / et
         tstamp_time_int = re.search(FR_DATETIME,
             'le mardi 13 septembre entre 20h et 21h20.')
-        assert tstamp_time_int.groupdict()['weekday_name'] == 'mardi'
         assert tstamp_time_int.groupdict()['day'] == '13'
         assert tstamp_time_int.groupdict()['month_name'] == 'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
