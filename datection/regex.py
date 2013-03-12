@@ -15,7 +15,7 @@ FR_WEEKDAY_NAMES = r'(%s)' % ('|'.join(WEEKDAY_VALUE['fr'].keys()))
 FR_MONTH = r'(%s)' % ('|'.join(MONTH_VALUE['fr'].keys() + SHORT_MONTH_VALUE['fr'].keys()))
 
 # The day number. Ex: lundi *18* juin 2013.
-DAY_NUMBER = (r'(?<=\s)?'  # a space before
+DAY_NUMBER = (r'(?<!\d)'  # not preceeded by a digit
             r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'  # OK: (0)1..(0)9...10...29, 30, 31
             r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
             # to avoid matching (20)13 in a year, (20)€ or (15)h
@@ -41,14 +41,10 @@ MINUTE = r'[0-5][0-9]'
 # it can be re-used in other patters, to avoid
 # redudancy and un-maintainability
 _FR_DATE = r"""
-    (?P<prefix>{prefix})?\s*  # prefix (optional)
-    (?P<weekday_name>{weekday_name})?\s*  # day (optional)
-    ((?P<day>{day})(er)?)?\s* # day number (optional)
+    ((?P<day>{day})(er)?)\s* # day number (optional)
     (?P<month_name>{month_name})\s*  # month
     (?P<year>{year})?  # year (optional)
-    """.format(
-        prefix=DAYS_PREFIX, weekday_name=FR_WEEKDAY_NAMES,
-        day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+    """.format(day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 
 FR_DATE = re.compile(_FR_DATE,
         flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -111,13 +107,11 @@ FR_TIME_INTERVAL = re.compile(r'%s' % (_FR_TIME_INTERVAL),
 INTERVAL_PREFIX = r'du'
 INTERVAL_SUFFIX = r'(au|-)'
 _FR_DATE_INTERVAL = r"""
-    (?P<prefix>{prefix})?\s*  # prefix (optional)
-    (?P<start_weekday_name>{weekday_name})?\s*  # day (optional)
     ((?P<start_day>{day})(er)?)\s* # day number
     (?P<start_month_name>{month_name})?\s*  # month (optional)
     (?P<start_year>{year})?\s* # year (optional)
     (?P<suffix>{suffix})\s*  # prefix
-    (?P<end_weekday_name>{weekday_name})?\s*  # day (optional)
+    ({weekday_name})?\s*  # day (optional)
     ((?P<end_day>{day})(er)?)\s* # day number # day number (optional)
     (?P<end_month_name>{month_name})?\s*  # month (optional)
     (?P<end_year>{year})?  # year (optional)
