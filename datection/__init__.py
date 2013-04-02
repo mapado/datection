@@ -39,6 +39,7 @@ import signal
 
 from datection.regex import TIMEPOINT_REGEX
 from datection.normalizer import timepoint_factory
+from datection.context import independants, probe
 
 
 class Timeout(Exception):
@@ -51,7 +52,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGALRM, signal_handler)
 
 
-def parse(text, lang, valid=False):
+def parse(text, lang, valid=True, use_context=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of non overlapping normalized timepoints
@@ -64,6 +65,17 @@ def parse(text, lang, valid=False):
     out = []
     if isinstance(text, unicode):
         text = text.encode('utf-8')
+
+    # if not event simple date markers could be found, stop here
+    if use_context:
+        contexts = probe(text, lang)
+        if not contexts:
+            return {}
+        else:
+            # merge overriding contexts
+            contexts = independants(contexts)
+    else:
+        contexts = [text]
 
     timepoint_families = [
         det for det in TIMEPOINT_REGEX[lang].keys()
@@ -81,7 +93,7 @@ def parse(text, lang, valid=False):
                             text=match.group(0),
                             span=match.span(),
                             lang=lang)
-                        )
+                    )
                 except NotImplementedError:
                     pass
                 except AttributeError:
@@ -90,39 +102,42 @@ def parse(text, lang, valid=False):
                 except Timeout:
                     raise Timeout
     signal.alarm(0)  # remove all execution time limit
-    out = remove_subsets(out)  # remove overlapping matches from results
+    if not use_context:
+        out = remove_subsets(out)
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out
 
 
-def parse_to_serialized(text, lang, valid=False):
+def parse_to_serialized(text, lang, valid=True, use_context=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of serialized, non overlapping normalized timepoints
     expressions.
 
     """
-    return [timepoint.serialize() for timepoint in parse(text, lang, valid)]
+    return [timepoint.serialize() for timepoint in parse(text, lang, valid, use_context)]
 
 
-def parse_to_dict(text, lang, valid=False):
+def parse_to_dict(text, lang, valid=True, use_context=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of non overlapping normalized timepoints
     expressions.
 
     """
-    return [timepoint.to_dict() for timepoint in parse(text, lang, valid)]
+    return [timepoint.to_dict() for timepoint in parse(text, lang, valid, use_context)]
 
-def parse_to_sql(text, lang):
+
+def parse_to_sql(text, lang, valid=True, use_context=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of datetime tuples ([start_datetime, end_datetime]) for sql insertion
     """
-
-    out = [timepoint.to_sql() for timepoint in parse(text, lang, True)
-                if timepoint.valid]
+    out = [
+        timepoint.to_sql() for timepoint in parse(text, lang, valid, use_context)
+        if timepoint.valid
+    ]
     return [item for item in out if item]
 
 
@@ -138,11 +153,11 @@ def remove_subsets(timepoints):
 
         Example: the second and third matches are subsets of the first one.
         Input: [
-            (match1, set(5, ..., 15), 'datetime'),
-            (match2, set(5, ..., 10), 'date')
-            (match3, set(11, ..., 15), 'time')
-            (match4, set(0, ... 3), 'time')
-            ]
+        (match1, set(5, ..., 15), 'datetime'),
+        (match2, set(5, ..., 10), 'date')
+        (match3, set(11, ..., 15), 'time')
+        (match4, set(0, ... 3), 'time')
+        ]
         Output: [(match4, 'time'), (match1, 'datetime')]
 
         """
