@@ -69,7 +69,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
 
     def test_valid_time(self):
         """ Test the normaliser on a valid time."""
-        time = parse(u'15h30', 'fr', use_context=False)[0]
+        time = parse(u'15h30', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
         time_norm = time.to_dict()
@@ -78,7 +78,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
 
     def test_missing_minute(self):
         """ Test the normaliser on a time witout minute. """
-        time = parse(u'15h', 'fr', use_context=False)[0]
+        time = parse(u'15h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
         time_norm = time.to_dict()
@@ -87,7 +87,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
 
     def test_valid_time_interval(self):
         """ Test the normaliser on a valid time *interval*"""
-        time = parse(u'de 15h30 à 16h', 'fr', use_context=False)[0]
+        time = parse(u'de 15h30 à 16h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
         time_norm = time.to_dict()
@@ -98,9 +98,9 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
 
     def test_all_interval_formats(self):
         """ Test that all supported formats lead to equivalent normalized forms."""
-        assert parse(u'15h30', 'fr', use_context=False)[0] == parse(u'15:30', 'fr', use_context=False)[0]
-        assert parse(u'de 15h à 18h', 'fr', use_context=False)[0] == parse(u'15h-18h', 'fr', use_context=False)[0]
-        assert parse(u'entre 15h et 18h', 'fr', use_context=False)[0] == parse(u'15h-18h', 'fr', use_context=False)[0]
+        assert parse(u'15h30', 'fr')[0] == parse(u'15:30', 'fr')[0]
+        assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
+        assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
 
     def test_to_sql(self):
         """ Test the return format for sql insert """
@@ -140,7 +140,7 @@ class TestFrDateListNormalizer(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the normaliser on a valid date list."""
-        datelist = parse_to_sql(u'le 5, 6 et 8 octobre 2013', 'fr', use_context=False)[0]
+        datelist = parse_to_sql(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
         assert len(datelist) == 3
         date = datelist[0]
         assert date[0] == datetime.datetime(year=2013, month=10, day=5, hour=0, minute=0, second=0)
@@ -235,7 +235,7 @@ class TestFrDateInterval(unittest.TestCase):
 
     def test_valid_format(self):
         """ Test the normalizer """
-        di = parse(u'du 15 au 18 février 2013', 'fr', use_context=False)[0]
+        di = parse(u'du 15 au 18 février 2013', 'fr')[0]
         assert di.valid
         dateinterval = di.to_dict()
         assert dateinterval['start_date']['year'] == 2013
@@ -265,7 +265,7 @@ class TestFrDateTimeInterval(unittest.TestCase):
 
     def test_valid_format(self):
         """ Test the normalizer """
-        dti = parse(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr', use_context=False)[0]
+        dti = parse(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
         assert dti.valid
         datetime_interval = dti.serialize()
         assert datetime_interval['date_interval']['start_date']['year'] == 2013
