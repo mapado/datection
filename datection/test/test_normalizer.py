@@ -131,7 +131,7 @@ class TestFrDateListNormalizer(unittest.TestCase):
 
     def test_missing_year(self):
         """ Test the normaliser on a date with no year."""
-        datelist = parse(u'le 5, 6 et 7 octobre', 'fr')[0]
+        datelist = parse(u'le 5, 6 et 7 octobre', 'fr', valid=False)[0]
         assert datelist.timepoint == 'date_list'
         assert not datelist.valid
         assert not datelist.dates[0].valid
