@@ -120,11 +120,11 @@ class Date(Timepoint):
         if hasattr(self, 'lang'):
             if isinstance(self.month_name, basestring):  # string date
                 # if month name is whole
-                if self.month_name.lower() in MONTH_VALUE[self.lang]:
-                    self.month = MONTH_VALUE[self.lang][self.month_name.lower()]
+                if self.month_name.lower() in MONTH[self.lang]:
+                    self.month = MONTH[self.lang][self.month_name.lower()]
                 # if month name is abbreviated
-                elif self.month_name.lower() in SHORT_MONTH_VALUE[self.lang]:
-                    self.month = SHORT_MONTH_VALUE[self.lang][self.month_name.lower()]
+                elif self.month_name.lower() in SHORT_MONTH[self.lang]:
+                    self.month = SHORT_MONTH[self.lang][self.month_name.lower()]
             elif isinstance(self.month_name, int):  # numeric date
                 self.month = self.month_name
             else:
@@ -672,7 +672,7 @@ class DateTimeInterval(Timepoint):
 #         """ Convert the weekday_name in weekday number."""
 #         if self.start_weekday_name:
 #             # whole weekday name
-#             if self.start_weekday_name in WEEKDAY_VALUE[self.lang]:
-#                 self.weekday = WEEKDAY_VALUE[self.lang][self.start_weekday_name]
-#             elif self.start_weekday_name in SHORT_WEEKDAY_VALUE:
-#                 self.weekday = SHORT_WEEKDAY_VALUE[self.lang][self.start_weekday_name]
+#             if self.start_weekday_name in WEEKDAY[self.lang]:
+#                 self.weekday = WEEKDAY[self.lang][self.start_weekday_name]
+#             elif self.start_weekday_name in SHORT_WEEKDAY:
+#                 self.weekday = SHORT_WEEKDAY[self.lang][self.start_weekday_name]
