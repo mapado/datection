@@ -267,3 +267,7 @@ TIMEPOINT_REGEX = {
         'datetime_interval': [FR_DATETIME_INTERVAL,],
     }
 }
+
+TIMEPOINT_PROBE = {
+    'fr': [FR_MONTH, FR_NUMERIC_DATE, FR_TIME_INTERVAL, YEAR, FR_WEEKDAY]
+}
