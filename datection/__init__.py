@@ -121,16 +121,6 @@ def parse_to_serialized(text, lang, valid=True):
     return [timepoint.serialize() for timepoint in parse(text, lang, valid)]
 
 
-def parse_to_dict(text, lang, valid=True):
-    """ Perform a date detection on text with all timepoint regex.
-
-    Returns a list of non overlapping normalized timepoints
-    expressions.
-
-    """
-    return [timepoint.to_dict() for timepoint in parse(text, lang, valid)]
-
-
 def parse_to_sql(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 

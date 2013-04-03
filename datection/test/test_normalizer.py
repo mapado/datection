@@ -22,7 +22,7 @@ class TestFrDateNormalizer(unittest.TestCase):
         date = parse(u'le lundi 5 mars 2013', 'fr')[0]
         assert date.valid
         assert date.timepoint == 'date'
-        date_norm = date.to_dict()
+        date_norm = date.serialize()
         assert date_norm['day'] == 5
         assert date_norm['month'] == 3
         assert date_norm['year'] == 2013
@@ -36,7 +36,7 @@ class TestFrDateNormalizer(unittest.TestCase):
         date = parse(u'5/03/2013', 'fr')[0]
         assert date.valid
         assert date.timepoint == 'date'
-        date_norm = date.to_dict()
+        date_norm = date.serialize()
         assert date_norm['day'] == 5
         assert date_norm['month'] == 3
         assert date_norm['year'] == 2013
@@ -72,7 +72,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         time = parse(u'15h30', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
-        time_norm = time.to_dict()
+        time_norm = time.serialize()
         assert time_norm['start_time']['hour'] == 15
         assert time_norm['start_time']['minute'] == 30
 
@@ -81,7 +81,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         time = parse(u'15h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
-        time_norm = time.to_dict()
+        time_norm = time.serialize()
         assert time_norm['start_time']['hour'] == 15
         assert time_norm['start_time']['minute'] == 0
 
@@ -90,7 +90,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         time = parse(u'de 15h30 à 16h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
-        time_norm = time.to_dict()
+        time_norm = time.serialize()
         assert time_norm['start_time']['hour'] == 15
         assert time_norm['start_time']['minute'] == 30
         assert time_norm['end_time']['hour'] == 16
@@ -118,7 +118,7 @@ class TestFrDateListNormalizer(unittest.TestCase):
         assert datelist.timepoint == 'date_list'
         assert datelist.valid
         assert all([date.valid for date in datelist.dates])
-        datelist_norm = datelist.to_dict()
+        datelist_norm = datelist.serialize()
         assert datelist_norm['dates'][0]['day'] == 5
         assert datelist_norm['dates'][0]['month'] == 10
         assert datelist_norm['dates'][0]['year'] == 2013
@@ -162,7 +162,7 @@ class TestFrDateTime(unittest.TestCase):
         assert datetime.valid
         assert datetime.date.valid
         assert datetime.time.valid
-        datetime_norm = datetime.to_dict()
+        datetime_norm = datetime.serialize()
         assert datetime_norm['date']['day'] == 15
         assert datetime_norm['date']['month'] == 3
         assert datetime_norm['date']['year'] == 2013
@@ -199,7 +199,7 @@ class TestFrDateTimeList(unittest.TestCase):
         assert datetimelist.valid
         for date in datetimelist:
             assert date.valid
-        datetimelist_norm = datetimelist.to_dict()
+        datetimelist_norm = datetimelist.serialize()
         assert datetimelist_norm['datetimes'][0]['date']['year'] == 2013
         assert datetimelist_norm['datetimes'][0]['date']['month'] == 10
         assert datetimelist_norm['datetimes'][0]['date']['day'] == 6
@@ -237,7 +237,7 @@ class TestFrDateInterval(unittest.TestCase):
         """ Test the normalizer """
         di = parse(u'du 15 au 18 février 2013', 'fr')[0]
         assert di.valid
-        dateinterval = di.to_dict()
+        dateinterval = di.serialize()
         assert dateinterval['start_date']['year'] == 2013
         assert dateinterval['start_date']['month'] == 02
         assert dateinterval['start_date']['day'] == 15

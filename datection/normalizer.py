@@ -59,7 +59,7 @@ class Timepoint(object):
 
     def __eq__(self, other):
         if isinstance(other, Timepoint):
-            return self.to_dict() == other.to_dict()
+            return self._to_dict() == other._to_dict()
         else:
             raise TypeError(other, "must inherit from the Timepoint class")
 
@@ -68,7 +68,7 @@ class Timepoint(object):
 
     def serialize(self):
         """ Serialize the Timepoint object to a Python dict """
-        d = self.to_dict()
+        d = self._to_dict()
         # the 'valid' and 'timepoint' members are only shown at the root level
         # not at children level, to avoid filling the JSON struct
         # with partial validity indicators
@@ -149,7 +149,7 @@ class Date(Timepoint):
         else:
             return False
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'day': self.day,
             'month': self.month,
@@ -228,10 +228,10 @@ class DateList(Timepoint):
         """ Check that all dates in self.dates are valid. """
         return all([date.valid for date in self.dates])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'timepoint': 'date_list',
-            'dates': [date.to_dict() for date in self.dates],
+            'dates': [date._to_dict() for date in self.dates],
             }
 
     def to_sql(self):
@@ -307,10 +307,10 @@ class DateInterval(Timepoint):
         """ Check that start and end date are valid. """
         return all([self.start_date.valid, self.end_date.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-        'start_date': self.start_date.to_dict(),
-        'end_date': self.end_date.to_dict(),
+        'start_date': self.start_date._to_dict(),
+        'end_date': self.end_date._to_dict(),
         }
 
     def to_sql(self):
@@ -367,7 +367,7 @@ class Time(Timepoint):
         else:
             return False
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'hour': self.hour,
             'minute': self.minute}
@@ -416,13 +416,13 @@ class TimeInterval(Timepoint):
         else:
             return self.start_time.valid
 
-    def to_dict(self):
+    def _to_dict(self):
         if not self.end_time:
             end_time = None
         else:
-            end_time = self.end_time.to_dict()
+            end_time = self.end_time._to_dict()
         return {
-            'start_time': self.start_time.to_dict(),
+            'start_time': self.start_time._to_dict(),
             'end_time': end_time}
 
 
@@ -469,10 +469,10 @@ class DateTime(Timepoint):
         """ Checks that both self.time and self.date are valid. """
         return all([self.time.valid and self.date.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-            'date': self.date.to_dict(),
-            'time': self.time.to_dict()}
+            'date': self.date._to_dict(),
+            'time': self.time._to_dict()}
 
     def to_sql(self):
         """ Export Datetime to sql """
@@ -547,9 +547,9 @@ class DateTimeList(Timepoint):
         """ Check the validity of each datetime in self.datetimes. """
         return all([datetime.valid for datetime in self.datetimes])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-            'datetimes': [dt.to_dict() for dt in self.datetimes]}
+            'datetimes': [dt._to_dict() for dt in self.datetimes]}
 
     def to_sql(self):
         """ Export Datetime to sql """
@@ -615,10 +615,10 @@ class DateTimeInterval(Timepoint):
         """ Checks that start and end datetimes are valid. """
         return all([self.date_interval.valid, self.time_interval.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-        'date_interval': self.date_interval.to_dict(),
-        'time_interval': self.time_interval.to_dict()}
+        'date_interval': self.date_interval._to_dict(),
+        'time_interval': self.time_interval._to_dict()}
 
     def to_sql(self):
         """ Export DateTimeInterval to sql """
