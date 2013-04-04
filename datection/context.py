@@ -36,6 +36,8 @@ class Context(object):
         else:
             self.start = 0
         self.end = match_end + size
+        if isinstance(text, unicode):
+            text = text.encode('utf-8')
         self.text = text  # the input text
         self.size = size  # the number of characters of context
 
