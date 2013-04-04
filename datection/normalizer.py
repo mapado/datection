@@ -54,9 +54,6 @@ class Timepoint(object):
             else:
                 self.__setattr__(k, v)
 
-    def __repr__(self):
-        return '%s: %s' % (self.__class__, self.text)
-
     def __eq__(self, other):
         if isinstance(other, Timepoint):
             return self._to_dict() == other._to_dict()
@@ -106,18 +103,6 @@ class Date(Timepoint):
             self.month = month
         if not all([day, month, year]):
             self._normalize()
-
-    def __repr__(self):
-        """ Print the date using the mm/dd/yyy format.
-
-        All missing data will be replaced by '?'.
-
-        """
-        day = self.day or '??'
-        month = self.month or '??'
-        year = self.year or '????'
-        return '%s/%s/%s' % (str(day), str(month), str(year))
-
 
     def _normalize(self):
         """ Convert month name to normalized month number """
@@ -200,9 +185,6 @@ class DateList(Timepoint):
         for date in self.dates:
             yield date
 
-    def __repr__(self):
-        return str(self.__class__)
-
     def _normalize(self):
         """ Restore all missing date from dates in the date list.
 
@@ -281,9 +263,6 @@ class DateInterval(Timepoint):
             self.end_date = end_date
         if not (start_date and end_date):
             self._normalize()
-
-    def __repr__(self):
-        return '%s-%s' % (self.start_date, self.end_date)
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
@@ -460,9 +439,6 @@ class DateTime(Timepoint):
         if not (date and time):
             self._normalize()
 
-    def __repr__(self):
-        return '%s: %s:%s' % (self.__class__, self.date, self.time)
-
     def _normalize(self):
         """ Convert date and time groupdicts into Date and TimeInterval objects.
 
@@ -612,10 +588,6 @@ class DateTimeInterval(Timepoint):
             self.time_interval = time_interval
         if not(date_interval and time_interval):
             self._normalize()
-
-    def __repr__(self):
-        return '%s: %s-%s' % (self.__class__, self.date_interval,
-                                    self.time_interval)
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
