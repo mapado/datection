@@ -28,7 +28,7 @@ class Context(object):
         between the chars of index 80 and 187.
 
     """
-    def __init__(self, match_start, match_end, text, size):
+    def __init__(self, match_start, match_end, text, size=30):
         # deduce Context start and end index from match start/end index
         # and context size
         if match_start - size > 0:
@@ -86,7 +86,7 @@ def probe(text, lang):
             start, end = match.span()
             matches.extend(
                 [
-                    Context(start, end, text, 50)
+                    Context(start, end, text)
                     for match in re.finditer(tp_probe, text)
                 ]
             )
