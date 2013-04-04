@@ -92,9 +92,9 @@ class Date(Timepoint):
     * 31 janvier
     * 15/01/2013
     * 15/12/13
-    """
 
-    def __init__(self, data, year=None, month_name=None, day=None, **kwargs):
+    """
+    def __init__(self, data={}, year=None, month_name=None, month=None, day=None, **kwargs):
         super(Date, self).__init__(data, **kwargs)
         if year:
             self.year = year
@@ -102,7 +102,10 @@ class Date(Timepoint):
             self.month_name = month_name
         if day:
             self.day = day
-        self._normalize()
+        if month:
+            self.month = month
+        if not all([day, month, year]):
+            self._normalize()
 
     def __repr__(self):
         """ Print the date using the mm/dd/yyy format.
@@ -114,6 +117,7 @@ class Date(Timepoint):
         month = self.month or '??'
         year = self.year or '????'
         return '%s/%s/%s' % (str(day), str(month), str(year))
+
 
     def _normalize(self):
         """ Convert month name to normalized month number """
@@ -183,17 +187,21 @@ class DateList(Timepoint):
     * mardi 5 et mercredi 15 Mars
 
     """
-    def __init__(self, data, dates=None, **kwargs):
+    def __init__(self, data={}, dates=None, **kwargs):
         """ Initialize the DateList object. """
         super(DateList, self).__init__(data, **kwargs)
         if dates:
             self.dates = dates
-        self._normalize()
+        else:
+            self._normalize()
 
     def __iter__(self):
         """ Iterate over the dates in self.dates. """
         for date in self.dates:
             yield date
+
+    def __repr__(self):
+        return str(self.__class__)
 
     def _normalize(self):
         """ Restore all missing date from dates in the date list.
@@ -265,13 +273,14 @@ class DateInterval(Timepoint):
     * 5-7 avril 2013
 
     """
-    def __init__(self, data, start_date=None, end_date=None, **kwargs):
+    def __init__(self, data={}, start_date=None, end_date=None, **kwargs):
         super(DateInterval, self).__init__(data, **kwargs)
         if start_date:
             self.start_date = start_date
         if end_date:
             self.end_date = end_date
-        self._normalize()
+        if not (start_date and end_date):
+            self._normalize()
 
     def __repr__(self):
         return '%s-%s' % (self.start_date, self.end_date)
@@ -315,10 +324,13 @@ class DateInterval(Timepoint):
 
     def to_sql(self):
         """ convert for sql insert """
-        start_datetime = datetime.datetime(year=self.start_date.year, month=self.start_date.month, day=self.start_date.day, hour=0, minute=0, second=0)
-        end_datetime =   datetime.datetime(year=self.end_date.year, month=self.end_date.month, day=self.end_date.day, hour=23, minute=59, second=59)
-
-        return (start_datetime, end_datetime)
+        start_datetime = datetime.datetime(
+            year=self.start_date.year, month=self.start_date.month,
+            day=self.start_date.day, hour=0, minute=0, second=0)
+        end_datetime = datetime.datetime(
+            year=self.end_date.year, month=self.end_date.month,
+            day=self.end_date.day, hour=23, minute=59, second=59)
+        return start_datetime, end_datetime
 
 
 class Time(Timepoint):
@@ -327,13 +339,14 @@ class Time(Timepoint):
     Examples: 15h30, 15h, 8h, 08 h, 20:30
 
     """
-    def __init__(self, data, hour=None, minute=None, **kwargs):
+    def __init__(self, data={}, hour=None, minute=None, **kwargs):
         super(Time, self).__init__(data, **kwargs)
         if hour:
             self.hour = hour
         if minute:
             self.minute = minute
-        self._normalize()
+        if not (hour and minute):
+            self._normalize()
 
     def __repr__(self):
         """ Print with HHhmm format """
@@ -379,14 +392,15 @@ class TimeInterval(Timepoint):
     Examples: 15h30-18h, de 15h à 18h
 
     """
-    def __init__(self, data, start_time=None, end_time=None, **kwargs):
+    def __init__(self, data={}, start_time=None, end_time=None, **kwargs):
         super(TimeInterval, self).__init__(data, **kwargs)
         # store TimeInterval specific arguments
         if start_time:
             self.start_time = start_time
         if end_time:
             self.end_time = end_time
-        self._normalize()
+        if not(start_time):
+            self._normalize()
 
     def __repr__(self):
         end_time = self.end_time or ''
@@ -432,7 +446,7 @@ class DateTime(Timepoint):
     Examples: lundi 15 mars à 15h30, le 8 octobre 2013 de 15h30 à 16h
 
     """
-    def __init__(self, data, date=None, time=None, **kwargs):
+    def __init__(self, data={}, date=None, time=None, **kwargs):
         """ Initialize the DateTime object.
 
         ``date`` argument is of type ``Date``.
@@ -443,7 +457,8 @@ class DateTime(Timepoint):
             self.date = date
         if time:
             self.time = time
-        self._normalize()
+        if not (date and time):
+            self._normalize()
 
     def __repr__(self):
         return '%s: %s:%s' % (self.__class__, self.date, self.time)
@@ -509,9 +524,13 @@ class DateTimeList(Timepoint):
     * mardi 5 et mercredi 15 septembre de 15h30 à 19h15
 
     """
-    def __init__(self, data, **kwargs):
+    def __init__(self, data={}, datetimes=None, **kwargs):
         super(DateTimeList, self).__init__(data, **kwargs)
-        self._normalize()
+        if datetimes:
+            self.datetimes = datetimes
+        else:
+            self._normalize()
+
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
@@ -584,9 +603,15 @@ class DateTimeList(Timepoint):
 
 class DateTimeInterval(Timepoint):
     """ A datetime interval refers to a interval of date, with specified time. """
-    def __init__(self, data, **kwargs):
+    def __init__(self, data={}, date_interval=None, time_interval=None, **kwargs):
+
         super(DateTimeInterval, self).__init__(data, **kwargs)
-        self._normalize()
+        if date_interval:
+            self.date_interval = date_interval
+        if time_interval:
+            self.time_interval = time_interval
+        if not(date_interval and time_interval):
+            self._normalize()
 
     def __repr__(self):
         return '%s: %s-%s' % (self.__class__, self.date_interval,
