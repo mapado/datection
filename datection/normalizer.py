@@ -431,9 +431,9 @@ class TimeInterval(Timepoint):
             return self.start_time.valid
 
     def _to_dict(self):
-        if not self.end_time:
+        if not hasattr(self, 'end_time') or not self.end_time:
             end_time = None
-        else:
+        elif self.end_time is not None:
             end_time = self.end_time._to_dict()
         return {
             'start_time': self.start_time._to_dict(),
