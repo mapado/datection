@@ -104,15 +104,15 @@ def independants(contexts):
     They then need to be merged into a single context.
 
     :param contexts: a list of datection.context.Context
-    :return: a list of non overlapping datection.context.Context objects
+    :return: a list of non overlapping strings, containing temporal information
 
     """
-    if len(contexts) <= 1:  # if only one context
+
+    if len(contexts) <= 1:  # if only one context, return it as a str
         return [str(contexts[0])]
 
     out = []
-    i = 1
-    history, curr = contexts[0], contexts[1]
+    i = 0
     while i < len(contexts) - 1:
         history = contexts[i]  # make the first context history
         curr = contexts[i + 1]
