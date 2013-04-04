@@ -15,7 +15,7 @@ from datection.regex import TIMEPOINT_PROBE
 
 
 class Context(object):
-    """ An object representing the context around a temporal reference
+    """ An object representing the textual context around a temporal reference
         detected in a text, by the datection regexes.
 
         :param match_start: the start index of the match span (int)
@@ -77,13 +77,19 @@ def probe(text, lang):
     """ Scans the text for very simple markers, indicating the presence of
         temporal patterns.
 
-        :return: a list of datection.context.Context objects.
+        :param text: the text to probe (basestring)
+        :param lang: the 2 character code of the text language (str)
+        :param context_size: the number of character before and after a probe
+        match to be taken as context.
+
+        :return: a list of datection.context.Context objects, sorted by order of
+        appearance in the input text.
 
     """
     matches = []
     for tp_probe in TIMEPOINT_PROBE[lang]:
         for match in re.finditer(tp_probe, text):
-            start, end = match.span()
+            start, end = match.span()  # start/end indexes of the match in text
             matches.extend(
                 [
                     Context(start, end, text)
@@ -136,4 +142,5 @@ def independants(contexts):
     else:   # independant last context
         # create new context
         out.append(curr)
+    # convert the Contexts to string and return them
     return [str(context) for context in out]
