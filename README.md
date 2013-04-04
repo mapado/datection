@@ -70,9 +70,22 @@ Example:
 ["Le lundi 5 mars 2013, j'ai mang\xc3\xa9 une pomme, et elle \xc3\xa9tait super bonn"]
 ```
 
-### Serializing
+### Normalizing
 Each ``Context`` object is then submitted to a battery of regexes, each of them tailored to detect a variety of temporal markers.
-The result of the regex detection is them fed to a timepoint factory, which returns a Python object, with notably two serialization methods:
+The result of the regex detection is them fed to a timepoint factory, which returns a Python object, subclassing the ``datection.serialize.Timepoint`` class.
+
+It is highly possible that some result overlap others. For example, parsing the string "lundi 15 mars 2013 à 15h30" will yield 3 different results:
+
+* lundi 15 mars 2013 → ``Date``
+* 15h30 → ``TimeInterval``
+* lundi 15 mars 2013 à 15h30 → ``DateTime``
+
+The function ``datection.remove_subsets`` (poor name choice, will have to fix that someday) will return only the non overlapping, independant results.
+In this example, it would only return the ``DateTime`` instance.
+
+
+## Serializing
+Each ``Timepoint`` subclass is provided with two serialization methods:
 
 * ``serialize``: exports the object to the JSON format
 * ``to_sql``: exports the object to standard Python format (``datetime``) in order to insert it into an SQL database
@@ -90,6 +103,8 @@ Example
 >>> dt.to_sql()
 (datetime.datetime(2013, 3, 15, 5, 0), datetime.datetime(2013, 3, 15, 8, 30))
 ```
+
+
 
 ### Deserializing
 The JSON-serialized format can be deserialized, to recreate a Python datection object.
