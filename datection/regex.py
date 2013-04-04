@@ -15,13 +15,14 @@ FR_WEEKDAY = r'(%s)' % ('|'.join(WEEKDAY['fr'].keys()))
 FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + SHORT_MONTH['fr'].keys()))
 
 # The day number. Ex: lundi *18* juin 2013.
-DAY_NUMBER = (r'(?<!\d)'  # not preceeded by a digit
-            r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'  # OK: (0)1..(0)9...10...29, 30, 31
-            r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
-            # to avoid matching (20)13 in a year, (20)€ or (15)h
-            # Note that is its possible for a single digit  to be matched
-            # that's ok because the DAY_NUMBER regex will be used in combination
-            # with others like DAYS, MONTHS, etc
+DAY_NUMBER = (
+    r'(?<!\d)'  # not preceeded by a digit
+    r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'  # OK: (0)1..(0)9...10...29, 30, 31
+    r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
+    # to avoid matching (20)13 in a year, (20)€ or (15)h
+    # Note that is its possible for a single digit  to be matched
+    # that's ok because the DAY_NUMBER regex will be used in combination
+    # with others like DAYS, MONTHS, etc
 
 # The year number. A  valid year must begin with 2, to avoid detection
 # of past dates
@@ -46,8 +47,8 @@ _FR_DATE = r"""
     (?P<year>{year})?  # year (optional)
     """.format(day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 
-FR_DATE = re.compile(_FR_DATE,
-        flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+FR_DATE = re.compile(
+    _FR_DATE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # The numeric version of the month: 2 digits bewteen 01 and 12
 NUMERIC_MONTH = r'0[1-9]|1[0-2]'
@@ -63,9 +64,10 @@ FR_NUMERIC_DATE = re.compile(r"""
     (?P<month_name>{month})
     (/)? # optional separator (if year not present)
     (?P<year>{year})?  # year (optional)
-    """.format(day=DAY_NUMBER,
-        month=NUMERIC_MONTH,
-        year=NUMERIC_YEAR),
+    """.format(
+    day=DAY_NUMBER,
+    month=NUMERIC_MONTH,
+    year=NUMERIC_YEAR),
     flags=re.VERBOSE)
 
 # separator bewteen hour and minutes
@@ -94,9 +96,10 @@ _FR_TIME_INTERVAL = r"""
     (\s*{suffix})?
     (\s*(?P<end_time>{time}))?
     """.format(
-        prefix=FR_TIME_INTERVAL_PREFIX, time=_FR_TIME,
-        suffix=FR_TIME_INTERVAL_SUFFIX)
-FR_TIME_INTERVAL = re.compile(r'%s' % (_FR_TIME_INTERVAL),
+    prefix=FR_TIME_INTERVAL_PREFIX, time=_FR_TIME,
+    suffix=FR_TIME_INTERVAL_SUFFIX)
+FR_TIME_INTERVAL = re.compile(
+    r'%s' % (_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 
@@ -116,10 +119,10 @@ _FR_DATE_INTERVAL = r"""
     (?P<end_month_name>{month_name})?\s*  # month (optional)
     (?P<end_year>{year})?  # year (optional)
     """.format(
-        prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
-        month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
-FR_DATE_INTERVAL = re.compile(_FR_DATE_INTERVAL,
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
+    month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
+FR_DATE_INTERVAL = re.compile(
+    _FR_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Datetime: a date and a time
 # Examples:
@@ -155,10 +158,11 @@ _FR_DATE_IN_LIST = r"""
         (?P<day>{day})\s* # day number
         (?P<month_name>{month_name})?\s*
         (?P<year>{year})?\s*
-    """.format(prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
-        month_name=FR_MONTH, year=YEAR)
-FR_DATE_IN_LIST = re.compile(_FR_DATE_IN_LIST,
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    """.format(
+    prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
+    month_name=FR_MONTH, year=YEAR)
+FR_DATE_IN_LIST = re.compile(
+    _FR_DATE_IN_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Example: lundi 25, mardi, 26 et mercredi 27 mars 2013
 _FR_DATE_LIST_WEEKDAY = r"""
@@ -174,10 +178,12 @@ _FR_DATE_LIST_WEEKDAY = r"""
         {month_name}\s*
         ({year})?\s*
     )
-    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
-        day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
-FR_DATE_LIST_WEEKDAY = re.compile(_FR_DATE_LIST_WEEKDAY,
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    """.format(
+    suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
+    day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+
+FR_DATE_LIST_WEEKDAY = re.compile(
+    _FR_DATE_LIST_WEEKDAY, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Example: 25, 26, 27 mars 2013
 # strong hypothesis: no weekday
@@ -192,10 +198,12 @@ _FR_DATE_LIST = r"""
         {month_name}\s*
         ({year})?\s*
     )
-    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
-        day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
-FR_DATE_LIST = re.compile(_FR_DATE_LIST,
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    """.format(
+    suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
+    day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+
+FR_DATE_LIST = re.compile(
+    _FR_DATE_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 
 # A given time for a list of dates
@@ -234,11 +242,11 @@ _FR_DATE_RECURRENCE = r"""
     \s*
     (?P<end_weekday_name>{weekday_name}?)(s)?(?!\s{day}))  # day, not followed by a date (optional)
     """.format(
-        prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY,
-        suffix=RECURRENCE_SUFFIX, day=DAY_NUMBER)
+    prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY,
+    suffix=RECURRENCE_SUFFIX, day=DAY_NUMBER)
 
-FR_DATE_RECURRENCE = re.compile(_FR_DATE_RECURRENCE,
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+FR_DATE_RECURRENCE = re.compile(
+    _FR_DATE_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # A time interval related to a recurrent dates
 # Examples:
@@ -256,15 +264,15 @@ TIMEPOINT_REGEX = {
     'fr': {
         'date': [FR_DATE, FR_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
-        '_date_in_list': [FR_DATE_IN_LIST,],  # "private" sub-regex
-        'date_interval': [FR_DATE_INTERVAL,],
-        'date_recurrence': [FR_DATE_RECURRENCE,],
-        '_time': [FR_TIME,],  # "private" sub-regex
-        'time_interval': [FR_TIME_INTERVAL,],
-        'datetime': [FR_DATETIME,],
+        '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
+        'date_interval': [FR_DATE_INTERVAL],
+        'date_recurrence': [FR_DATE_RECURRENCE],
+        '_time': [FR_TIME],  # "private" sub-regex
+        'time_interval': [FR_TIME_INTERVAL],
+        'datetime': [FR_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
-        'datetime_recurrence': [FR_DATETIME_RECURRENCE,],
-        'datetime_interval': [FR_DATETIME_INTERVAL,],
+        'datetime_recurrence': [FR_DATETIME_RECURRENCE],
+        'datetime_interval': [FR_DATETIME_INTERVAL],
     }
 }
 

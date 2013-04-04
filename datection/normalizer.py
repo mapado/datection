@@ -119,8 +119,9 @@ class Date(Timepoint):
             else:
                 self.month = None
         else:
-            raise Warning('A language must be given to Date constructor '
-                        'to be able to normalize the month name.')
+            raise Warning(
+                'A language must be given to Date constructor '
+                'to be able to normalize the month name.')
         if len(str(self.year)) == 2:  # numeric date with shortened year format
             # ex xx/xx/12 --> xx/xx/2012
             self.year = int(str(datetime.date.today().year)[:2] + str(self.year))
@@ -222,7 +223,7 @@ class DateList(Timepoint):
         return {
             'timepoint': 'date_list',
             'dates': [date._to_dict() for date in self.dates],
-            }
+        }
 
     def to_sql(self):
         out = []
@@ -279,16 +280,18 @@ class DateInterval(Timepoint):
 
         # Create normalised start date of Date type
         if not hasattr(self, 'start_date'):
-            self.start_date = Date({}, year=self.start_year,
-                                        month_name=self.start_month_name,
-                                        day=self.start_day,
-                                        lang=self.lang)
+            self.start_date = Date(
+                year=self.start_year,
+                month_name=self.start_month_name,
+                day=self.start_day,
+                lang=self.lang)
         # create normalized end date of Date type
         if not hasattr(self, 'end_date'):
-            self.end_date = Date({}, year=self.end_year,
-                                        month_name=self.end_month_name,
-                                        day=self.end_day,
-                                        lang=self.lang)
+            self.end_date = Date(
+                year=self.end_year,
+                month_name=self.end_month_name,
+                day=self.end_day,
+                lang=self.lang)
 
     @property
     def valid(self):
@@ -297,8 +300,8 @@ class DateInterval(Timepoint):
 
     def _to_dict(self):
         return {
-        'start_date': self.start_date._to_dict(),
-        'end_date': self.end_date._to_dict(),
+            'start_date': self.start_date._to_dict(),
+            'end_date': self.end_date._to_dict(),
         }
 
     def to_sql(self):
@@ -491,7 +494,6 @@ class DateTime(Timepoint):
         return (start_datetime, end_datetime)
 
 
-
 class DateTimeList(Timepoint):
     """ A datetime list refers to a specific timing for a list of dates.
 
@@ -506,7 +508,6 @@ class DateTimeList(Timepoint):
             self.datetimes = datetimes
         else:
             self._normalize()
-
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
@@ -598,8 +599,8 @@ class DateTimeInterval(Timepoint):
         """ Normalisation of start and end datetimes."""
         self.time_interval = TimeInterval(
             {
-            'start_time': self.start_time,
-            'end_time': self.end_time
+                'start_time': self.start_time,
+                'end_time': self.end_time
             },
             lang=self.lang)
         self.date_interval = DateInterval(
@@ -614,8 +615,9 @@ class DateTimeInterval(Timepoint):
 
     def _to_dict(self):
         return {
-        'date_interval': self.date_interval._to_dict(),
-        'time_interval': self.time_interval._to_dict()}
+            'date_interval': self.date_interval._to_dict(),
+            'time_interval': self.time_interval._to_dict()
+        }
 
     def to_sql(self):
         """ Export DateTimeInterval to sql """
@@ -637,39 +639,22 @@ class DateTimeInterval(Timepoint):
         for i in nb_days:
             i_date = start_date + datetime.timedelta(days=i)
             i_start_datetime = datetime.datetime(
-                year = i_date.year,
-                month = i_date.month,
-                day = i_date.day,
-                hour = start_time.hour,
-                minute = start_time.minute,
-                second = 0
+                year=i_date.year,
+                month=i_date.month,
+                day=i_date.day,
+                hour=start_time.hour,
+                minute=start_time.minute,
+                second=0
             )
             i_end_datetime = datetime.datetime(
-                year = i_date.year,
-                month = i_date.month,
-                day = i_date.day,
-                hour = end_time.hour,
-                minute = end_time.minute,
-                second = 0
+                year=i_date.year,
+                month=i_date.month,
+                day=i_date.day,
+                hour=end_time.hour,
+                minute=end_time.minute,
+                second=0
             )
 
             out.append((i_start_datetime, i_end_datetime))
 
         return out
-
-
-# class Recurrence(Timepoint):
-#     """ A class handling recurrent timepoints. """
-
-#     def __init__(self, data, **kwargs):
-#         super(Recurrence, self).__init__(data, **kwargs)
-#         self._normalize()
-
-#     def _normalize(self):
-#         """ Convert the weekday_name in weekday number."""
-#         if self.start_weekday_name:
-#             # whole weekday name
-#             if self.start_weekday_name in WEEKDAY[self.lang]:
-#                 self.weekday = WEEKDAY[self.lang][self.start_weekday_name]
-#             elif self.start_weekday_name in SHORT_WEEKDAY:
-#                 self.weekday = SHORT_WEEKDAY[self.lang][self.start_weekday_name]

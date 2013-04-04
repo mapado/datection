@@ -8,25 +8,11 @@ For example, the french expression "le lundi 15 mars, de 15h30 à 16h"
 will be normalized into the following JSON structure:
 
 {
-    'date':
-    {
-        'day': 15,
-        'month': 3,
-        'year': None
-    },
+    'date': {'day': 15, 'month': 3, 'year': None},
     'time':
-    {
-        'end_time':
-        {
-            'hour': 16,
-            'minute': 0
-        },
-        'start_time':
-        {
-            'hour': 15,
-            'minute': 30
+        {'end_time': {'hour': 16, 'minute': 0},
+        'start_time': {'hour': 15,'minute': 30}
         }
-    }
 }
 
 No external dependencies are needed.
@@ -38,7 +24,7 @@ import re
 import signal
 
 from datection.regex import TIMEPOINT_REGEX
-from datection.normalizer import timepoint_factory
+from datection.normalize import timepoint_factory
 from datection.context import independants, probe
 
 
@@ -108,7 +94,6 @@ def parse(text, lang, valid=True):
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out
-
 
 
 def parse_to_serialized(text, lang, valid=True):
