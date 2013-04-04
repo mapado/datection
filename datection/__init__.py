@@ -32,7 +32,7 @@ will be normalized into the following JSON structure:
 No external dependencies are needed.
 """
 
-__version__ = '0.3'
+__version__ = '0.3.1'
 
 import re
 import signal
