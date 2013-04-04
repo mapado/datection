@@ -330,14 +330,6 @@ class Time(Timepoint):
         if not (hour and minute):
             self._serialize()
 
-    def __repr__(self):
-        """ Print with HHhmm format """
-        if len(str(self.minute)) == 1:
-            minute = '0' + str(self.minute)
-        else:
-            minute = str(self.minute)
-        return '%dh%s' % (self.hour, minute)
-
     def _serialize(self):
         """ Set self.minute to 0 if missing or null """
         # TODO: gérer le cas midi/minuit
@@ -383,10 +375,6 @@ class TimeInterval(Timepoint):
             self.end_time = end_time
         if not(start_time):
             self._serialize()
-
-    def __repr__(self):
-        end_time = self.end_time or ''
-        return '%s-%s' % (self.start_time, end_time)
 
     def __iter__(self):
         """ Iteration over the start and end time. """
