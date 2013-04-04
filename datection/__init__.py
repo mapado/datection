@@ -24,7 +24,7 @@ import re
 import signal
 
 from datection.regex import TIMEPOINT_REGEX
-from datection.normalize import timepoint_factory
+from datection.serialize import timepoint_factory
 from datection.context import independants, probe
 
 

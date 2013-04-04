@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-""" Test suite of the timepoint normalizer suite. """
+""" Test suite of the timepoint serialize suite. """
 
 import unittest
 import sys
@@ -9,16 +9,14 @@ sys.path.insert(0, '..')
 from datetime import datetime
 
 from datection import parse, parse_to_serialized, parse_to_sql
-from ..normalizer import *
+from ..serialize import *
 
 
-# NOTE: date interval does not seem to work
-
-class TestFrDateNormalizer(unittest.TestCase):
-    """ Test class of the Date normalizer with french data"""
+class TestSerializeFrDates(unittest.TestCase):
+    """ Test class of the Date serializer with french data"""
 
     def test_valid_litteral_date(self):
-        """ Test the normalisation of valid years of litteral format. """
+        """ Test the serialization of valid years of litteral format. """
         date = parse(u'le lundi 5 mars 2013', 'fr')[0]
         assert date.valid
         assert date.timepoint == 'date'
@@ -64,11 +62,11 @@ class TestFrDateNormalizer(unittest.TestCase):
         assert date[1] == datetime.datetime(year=2013, month=3, day=5, hour=23, minute=59, second=59)
 
 
-class TestFrTimeIntervalNormalizer(unittest.TestCase):
-    """ Test class of the Time normalizer on french data. """
+class TestSerializeFrTimeInterval(unittest.TestCase):
+    """ Test class of the Time serializer on french data. """
 
     def test_valid_time(self):
-        """ Test the normaliser on a valid time."""
+        """ Test the serializer on a valid time."""
         time = parse(u'15h30', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
@@ -77,7 +75,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         assert time_norm['start_time']['minute'] == 30
 
     def test_missing_minute(self):
-        """ Test the normaliser on a time witout minute. """
+        """ Test the serializer on a time witout minute. """
         time = parse(u'15h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
@@ -86,7 +84,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         assert time_norm['start_time']['minute'] == 0
 
     def test_valid_time_interval(self):
-        """ Test the normaliser on a valid time *interval*"""
+        """ Test the serializer on a valid time *interval*"""
         time = parse(u'de 15h30 à 16h', 'fr')[0]
         assert time.valid
         assert time.timepoint == 'time_interval'
@@ -97,7 +95,7 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         assert time_norm['end_time']['minute'] == 0
 
     def test_all_interval_formats(self):
-        """ Test that all supported formats lead to equivalent normalized forms."""
+        """ Test that all supported formats lead to equivalent serialized forms."""
         assert parse(u'15h30', 'fr')[0] == parse(u'15:30', 'fr')[0]
         assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
         assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
@@ -108,11 +106,11 @@ class TestFrTimeIntervalNormalizer(unittest.TestCase):
         assert len(date_list) == 0
 
 
-class TestFrDateListNormalizer(unittest.TestCase):
-    """ Test class of the DateList normaliser with french data. """
+class TestSerializeFrDateList(unittest.TestCase):
+    """ Test class of the DateList serializer with french data. """
 
     def test_valid_format(self):
-        """ Test the normaliser on a valid date list."""
+        """ Test the serializer on a valid date list."""
         datelist = parse(u'le 5, 6 et 7 octobre 2013', 'fr')[0]
         print datelist.__dict__
         assert datelist.timepoint == 'date_list'
@@ -130,7 +128,7 @@ class TestFrDateListNormalizer(unittest.TestCase):
         assert datelist_norm['dates'][2]['year'] == 2013
 
     def test_missing_year(self):
-        """ Test the normaliser on a date with no year."""
+        """ Test the serializer on a date with no year."""
         datelist = parse(u'le 5, 6 et 7 octobre', 'fr', valid=False)[0]
         assert datelist.timepoint == 'date_list'
         assert not datelist.valid
@@ -139,7 +137,7 @@ class TestFrDateListNormalizer(unittest.TestCase):
         assert not datelist.dates[2].valid
 
     def test_to_sql(self):
-        """ Test the normaliser on a valid date list."""
+        """ Test the serializer on a valid date list."""
         datelist = parse_to_sql(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
         assert len(datelist) == 3
         date = datelist[0]
@@ -153,11 +151,11 @@ class TestFrDateListNormalizer(unittest.TestCase):
         assert date[1] == datetime.datetime(year=2013, month=10, day=8, hour=23, minute=59, second=59)
 
 
-class TestFrDateTime(unittest.TestCase):
-    """ Test class of the DateTime normalizer with french data. """
+class TestSerializeFrDateTime(unittest.TestCase):
+    """ Test class of the DateTime serializer with french data. """
 
     def test_valid_format(self):
-        """ Test the normaliser on a valid format. """
+        """ Test the serializer on a valid format. """
         datetime = parse(u'le lundi 15 mars 2013 à 20h', 'fr')[0]
         assert datetime.valid
         assert datetime.date.valid
@@ -176,7 +174,7 @@ class TestFrDateTime(unittest.TestCase):
         assert dt1 == dt2
 
     def test_to_sql(self):
-        """ Test the normaliser on a valid date time. """
+        """ Test the serializer on a valid date time. """
         dt = parse_to_sql(u'le lundi 15 mars 2013 à 20h', 'fr')
         assert len(dt) == 1
         date = dt[0]
@@ -190,11 +188,11 @@ class TestFrDateTime(unittest.TestCase):
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
 
-class TestFrDateTimeList(unittest.TestCase):
-    """ Test class of the DateTimeList normalizer with french data."""
+class TestSerializeFrDateTimeList(unittest.TestCase):
+    """ Test class of the DateTimeList serializer with french data."""
 
     def test_valid_format(self):
-        """ Test the normaliser on a valid format."""
+        """ Test the serializer on a valid format."""
         datetimelist = parse(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
         assert datetimelist.valid
         for date in datetimelist:
@@ -216,7 +214,7 @@ class TestFrDateTimeList(unittest.TestCase):
         assert dtl1 == dtl2 == dtl3
 
     def test_to_sql(self):
-        """ Test the normaliser on a valid date time list. """
+        """ Test the serializer on a valid date time list. """
         datetimelist = parse_to_sql(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
 
         # le 6
@@ -230,11 +228,11 @@ class TestFrDateTimeList(unittest.TestCase):
         assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
 
 
-class TestFrDateInterval(unittest.TestCase):
-    """ Test class of the DateInterval normalizer with french data """
+class TestSerializeFrDateInterval(unittest.TestCase):
+    """ Test class of the DateInterval serializer with french data """
 
     def test_valid_format(self):
-        """ Test the normalizer """
+        """ Test the serialize """
         di = parse(u'du 15 au 18 février 2013', 'fr')[0]
         assert di.valid
         dateinterval = di.serialize()
@@ -252,7 +250,7 @@ class TestFrDateInterval(unittest.TestCase):
         assert di1 == di2 == di3
 
     def test_to_sql(self):
-        """ Test the normaliser on a valid dateinterval. """
+        """ Test the serializer on a valid dateinterval. """
         dateinterval = parse_to_sql(u'du 6 au 9 octobre 2013', 'fr')[0]
 
         assert len(dateinterval) == 2
@@ -260,11 +258,11 @@ class TestFrDateInterval(unittest.TestCase):
         assert dateinterval[1] == datetime.datetime(year=2013, month=10, day=9, hour=23, minute=59, second=59)
 
 
-class TestFrDateTimeInterval(unittest.TestCase):
-    """ Test class of the DateTimeInterval normalizer with french data """
+class TestSerializeFrDateTimeInterval(unittest.TestCase):
+    """ Test class of the DateTimeInterval serialize with french data """
 
     def test_valid_format(self):
-        """ Test the normalizer """
+        """ Test the serialize """
         dti = parse(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
         assert dti.valid
         datetime_interval = dti.serialize()
@@ -282,7 +280,7 @@ class TestFrDateTimeInterval(unittest.TestCase):
         assert datetime_interval['time_interval']['end_time']['minute'] == 30
 
     def test_to_sql(self):
-        """ Test the normaliser on a valid dateinterval. """
+        """ Test the serializer on a valid dateinterval. """
         datetime_interval_list = parse_to_sql(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
 
         assert len(datetime_interval_list) == 4

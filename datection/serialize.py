@@ -102,10 +102,10 @@ class Date(Timepoint):
         if month:
             self.month = month
         if not all([day, month, year]):
-            self._normalize()
+            self._serialize()
 
-    def _normalize(self):
-        """ Convert month name to normalized month number """
+    def _serialize(self):
+        """ Convert month name to serialized month number """
         if hasattr(self, 'lang'):
             if isinstance(self.month_name, basestring):  # string date
                 # if month name is whole
@@ -121,7 +121,7 @@ class Date(Timepoint):
         else:
             raise Warning(
                 'A language must be given to Date constructor '
-                'to be able to normalize the month name.')
+                'to be able to serialize the month name.')
         if len(str(self.year)) == 2:  # numeric date with shortened year format
             # ex xx/xx/12 --> xx/xx/2012
             self.year = int(str(datetime.date.today().year)[:2] + str(self.year))
@@ -179,14 +179,14 @@ class DateList(Timepoint):
         if dates:
             self.dates = dates
         else:
-            self._normalize()
+            self._serialize()
 
     def __iter__(self):
         """ Iterate over the dates in self.dates. """
         for date in self.dates:
             yield date
 
-    def _normalize(self):
+    def _serialize(self):
         """ Restore all missing date from dates in the date list.
 
         All dates (in the date list) with missing data will be given
@@ -263,15 +263,15 @@ class DateInterval(Timepoint):
         if end_date:
             self.end_date = end_date
         if not (start_date and end_date):
-            self._normalize()
+            self._serialize()
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
         for date in [self.start_date, self.end_date]:
             yield date
 
-    def _normalize(self):
-        """ Restore all missing data and normalize the start and end date """
+    def _serialize(self):
+        """ Restore all missing data and serialize the start and end date """
         # start year inherits from the end date year and month name
         if not self.start_year and self.end_year:
             self.start_year = self.end_year
@@ -285,7 +285,7 @@ class DateInterval(Timepoint):
                 month_name=self.start_month_name,
                 day=self.start_day,
                 lang=self.lang)
-        # create normalized end date of Date type
+        # create serialized end date of Date type
         if not hasattr(self, 'end_date'):
             self.end_date = Date(
                 year=self.end_year,
@@ -328,7 +328,7 @@ class Time(Timepoint):
         if minute:
             self.minute = minute
         if not (hour and minute):
-            self._normalize()
+            self._serialize()
 
     def __repr__(self):
         """ Print with HHhmm format """
@@ -338,7 +338,7 @@ class Time(Timepoint):
             minute = str(self.minute)
         return '%dh%s' % (self.hour, minute)
 
-    def _normalize(self):
+    def _serialize(self):
         """ Set self.minute to 0 if missing or null """
         # TODO: gérer le cas midi/minuit
         if not hasattr(self, 'minute') or not self.minute:
@@ -382,7 +382,7 @@ class TimeInterval(Timepoint):
         if end_time:
             self.end_time = end_time
         if not(start_time):
-            self._normalize()
+            self._serialize()
 
     def __repr__(self):
         end_time = self.end_time or ''
@@ -393,7 +393,7 @@ class TimeInterval(Timepoint):
         for time in [self.start_time, self.end_time]:
             yield time
 
-    def _normalize(self):
+    def _serialize(self):
         """ Convert the self.start_time and self.end_time into Time objects. """
         # normalization of self.start_time into a Time object
         st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.start_time)
@@ -440,9 +440,9 @@ class DateTime(Timepoint):
         if time:
             self.time = time
         if not (date and time):
-            self._normalize()
+            self._serialize()
 
-    def _normalize(self):
+    def _serialize(self):
         """ Convert date and time groupdicts into Date and TimeInterval objects.
 
         If date and/or time arguments were passed manually, they are considered
@@ -507,14 +507,14 @@ class DateTimeList(Timepoint):
         if datetimes:
             self.datetimes = datetimes
         else:
-            self._normalize()
+            self._serialize()
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
         for dt in self.datetimes:
             yield dt
 
-    def _normalize(self):
+    def _serialize(self):
         """ Associate the time interval to each date in the date list.
 
         The normalization process will instanciate DateTime objects,
@@ -588,14 +588,14 @@ class DateTimeInterval(Timepoint):
         if time_interval:
             self.time_interval = time_interval
         if not(date_interval and time_interval):
-            self._normalize()
+            self._serialize()
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
         for date in self.date_interval:
             yield date
 
-    def _normalize(self):
+    def _serialize(self):
         """ Normalisation of start and end datetimes."""
         self.time_interval = TimeInterval(
             {
