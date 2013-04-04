@@ -6,13 +6,13 @@ from datenames import *
 # words located before a date, giving hints about how it relates
 # to other dates
 DAYS_PREFIX = r'le'
-FR_WEEKDAY_NAMES = r'(%s)' % ('|'.join(WEEKDAY_VALUE['fr'].keys()))
+FR_WEEKDAY = r'(%s)' % ('|'.join(WEEKDAY['fr'].keys()))
 
 
 # first the whole month number, then the abbreviated
 # otherwhise, 'oct' might be matched in 'october', thus breaking
 # the whole date structure
-FR_MONTH = r'(%s)' % ('|'.join(MONTH_VALUE['fr'].keys() + SHORT_MONTH_VALUE['fr'].keys()))
+FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + SHORT_MONTH['fr'].keys()))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (r'(?<!\d)'  # not preceeded by a digit
@@ -116,7 +116,7 @@ _FR_DATE_INTERVAL = r"""
     (?P<end_month_name>{month_name})?\s*  # month (optional)
     (?P<end_year>{year})?  # year (optional)
     """.format(
-        prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY_NAMES, day=DAY_NUMBER,
+        prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
         month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
 FR_DATE_INTERVAL = re.compile(_FR_DATE_INTERVAL,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -155,7 +155,7 @@ _FR_DATE_IN_LIST = r"""
         (?P<day>{day})\s* # day number
         (?P<month_name>{month_name})?\s*
         (?P<year>{year})?\s*
-    """.format(prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY_NAMES, day=DAY_NUMBER,
+    """.format(prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
         month_name=FR_MONTH, year=YEAR)
 FR_DATE_IN_LIST = re.compile(_FR_DATE_IN_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -174,7 +174,7 @@ _FR_DATE_LIST_WEEKDAY = r"""
         {month_name}\s*
         ({year})?\s*
     )
-    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
+    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
         day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 FR_DATE_LIST_WEEKDAY = re.compile(_FR_DATE_LIST_WEEKDAY,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -192,7 +192,7 @@ _FR_DATE_LIST = r"""
         {month_name}\s*
         ({year})?\s*
     )
-    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY_NAMES,
+    """.format(suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
         day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
 FR_DATE_LIST = re.compile(_FR_DATE_LIST,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -234,7 +234,7 @@ _FR_DATE_RECURRENCE = r"""
     \s*
     (?P<end_weekday_name>{weekday_name}?)(s)?(?!\s{day}))  # day, not followed by a date (optional)
     """.format(
-        prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY_NAMES,
+        prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY,
         suffix=RECURRENCE_SUFFIX, day=DAY_NUMBER)
 
 FR_DATE_RECURRENCE = re.compile(_FR_DATE_RECURRENCE,
@@ -266,4 +266,8 @@ TIMEPOINT_REGEX = {
         'datetime_recurrence': [FR_DATETIME_RECURRENCE,],
         'datetime_interval': [FR_DATETIME_INTERVAL,],
     }
+}
+
+TIMEPOINT_PROBE = {
+    'fr': [FR_MONTH, FR_NUMERIC_DATE, FR_TIME_INTERVAL, YEAR, FR_WEEKDAY]
 }

@@ -32,7 +32,7 @@ will be normalized into the following JSON structure:
 No external dependencies are needed.
 """
 
-__version__ = '0.1'
+__version__ = '0.3'
 
 import re
 import signal
@@ -52,7 +52,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGALRM, signal_handler)
 
 
-def parse(text, lang, valid=True, use_context=True):
+def parse(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of non overlapping normalized timepoints
@@ -67,75 +67,67 @@ def parse(text, lang, valid=True, use_context=True):
         text = text.encode('utf-8')
 
     # if not event simple date markers could be found, stop here
-    if use_context:
-        contexts = probe(text, lang)
-        if not contexts:
-            return {}
-        else:
-            # merge overriding contexts
-            contexts = independants(contexts)
+    contexts = probe(text, lang)
+    if not contexts:
+        return {}
     else:
-        contexts = [text]
+        # merge overriding contexts
+        contexts = independants(contexts)
 
     timepoint_families = [
         det for det in TIMEPOINT_REGEX[lang].keys()
         if not det.startswith('_')
     ]
-    for family in timepoint_families:
-        for detector in TIMEPOINT_REGEX[lang][family]:
-            for match in re.finditer(detector, text):
-                signal.alarm(1)  # limit execution time to 1s
-                try:
-                    out.append(
-                        timepoint_factory(
-                            family,
-                            match.groupdict(),
-                            text=match.group(0),
-                            span=match.span(),
-                            lang=lang)
-                    )
-                except NotImplementedError:
-                    pass
-                except AttributeError:
-                    # exception often raised when a false detection occurs
-                    pass
-                except Timeout:
-                    raise Timeout
+
+    for context in contexts:
+        timepoints = []
+        for family in timepoint_families:
+            for detector in TIMEPOINT_REGEX[lang][family]:
+                for match in re.finditer(detector, context):
+                    signal.alarm(1)  # limit execution time to 1s
+                    try:
+                        timepoints.append(
+                            timepoint_factory(
+                                family,
+                                match.groupdict(),
+                                text=match.group(0),
+                                span=match.span(),
+                                lang=lang)
+                        )
+                    except NotImplementedError:
+                        pass
+                    except AttributeError:
+                        # exception often raised when a false detection occurs
+                        pass
+                    except Timeout:
+                        raise Timeout
+        timepoints = remove_subsets(timepoints)  # remove any overlapping timepoints
+        out.extend(timepoints)
+
     signal.alarm(0)  # remove all execution time limit
-    if not use_context:
-        out = remove_subsets(out)
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out
 
 
-def parse_to_serialized(text, lang, valid=True, use_context=True):
+
+def parse_to_serialized(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of serialized, non overlapping normalized timepoints
     expressions.
 
     """
-    return [timepoint.serialize() for timepoint in parse(text, lang, valid, use_context)]
+    return [timepoint.serialize() for timepoint in parse(text, lang, valid)]
 
 
-def parse_to_dict(text, lang, valid=True, use_context=True):
-    """ Perform a date detection on text with all timepoint regex.
-
-    Returns a list of non overlapping normalized timepoints
-    expressions.
-
-    """
-    return [timepoint.to_dict() for timepoint in parse(text, lang, valid, use_context)]
-
-
-def parse_to_sql(text, lang, valid=True, use_context=True):
+def parse_to_sql(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of datetime tuples ([start_datetime, end_datetime]) for sql insertion
     """
     out = [
-        timepoint.to_sql() for timepoint in parse(text, lang, valid, use_context)
+        timepoint.to_sql() for timepoint in parse(text, lang, valid)
         if timepoint.valid
     ]
     return [item for item in out if item]

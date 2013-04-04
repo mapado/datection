@@ -59,7 +59,7 @@ class Timepoint(object):
 
     def __eq__(self, other):
         if isinstance(other, Timepoint):
-            return self.to_dict() == other.to_dict()
+            return self._to_dict() == other._to_dict()
         else:
             raise TypeError(other, "must inherit from the Timepoint class")
 
@@ -68,7 +68,7 @@ class Timepoint(object):
 
     def serialize(self):
         """ Serialize the Timepoint object to a Python dict """
-        d = self.to_dict()
+        d = self._to_dict()
         # the 'valid' and 'timepoint' members are only shown at the root level
         # not at children level, to avoid filling the JSON struct
         # with partial validity indicators
@@ -92,9 +92,9 @@ class Date(Timepoint):
     * 31 janvier
     * 15/01/2013
     * 15/12/13
-    """
 
-    def __init__(self, data, year=None, month_name=None, day=None, **kwargs):
+    """
+    def __init__(self, data={}, year=None, month_name=None, month=None, day=None, **kwargs):
         super(Date, self).__init__(data, **kwargs)
         if year:
             self.year = year
@@ -102,7 +102,10 @@ class Date(Timepoint):
             self.month_name = month_name
         if day:
             self.day = day
-        self._normalize()
+        if month:
+            self.month = month
+        if not all([day, month, year]):
+            self._normalize()
 
     def __repr__(self):
         """ Print the date using the mm/dd/yyy format.
@@ -115,16 +118,17 @@ class Date(Timepoint):
         year = self.year or '????'
         return '%s/%s/%s' % (str(day), str(month), str(year))
 
+
     def _normalize(self):
         """ Convert month name to normalized month number """
         if hasattr(self, 'lang'):
             if isinstance(self.month_name, basestring):  # string date
                 # if month name is whole
-                if self.month_name.lower() in MONTH_VALUE[self.lang]:
-                    self.month = MONTH_VALUE[self.lang][self.month_name.lower()]
+                if self.month_name.lower() in MONTH[self.lang]:
+                    self.month = MONTH[self.lang][self.month_name.lower()]
                 # if month name is abbreviated
-                elif self.month_name.lower() in SHORT_MONTH_VALUE[self.lang]:
-                    self.month = SHORT_MONTH_VALUE[self.lang][self.month_name.lower()]
+                elif self.month_name.lower() in SHORT_MONTH[self.lang]:
+                    self.month = SHORT_MONTH[self.lang][self.month_name.lower()]
             elif isinstance(self.month_name, int):  # numeric date
                 self.month = self.month_name
             else:
@@ -149,7 +153,7 @@ class Date(Timepoint):
         else:
             return False
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'day': self.day,
             'month': self.month,
@@ -183,17 +187,21 @@ class DateList(Timepoint):
     * mardi 5 et mercredi 15 Mars
 
     """
-    def __init__(self, data, dates=None, **kwargs):
+    def __init__(self, data={}, dates=None, **kwargs):
         """ Initialize the DateList object. """
         super(DateList, self).__init__(data, **kwargs)
         if dates:
             self.dates = dates
-        self._normalize()
+        else:
+            self._normalize()
 
     def __iter__(self):
         """ Iterate over the dates in self.dates. """
         for date in self.dates:
             yield date
+
+    def __repr__(self):
+        return str(self.__class__)
 
     def _normalize(self):
         """ Restore all missing date from dates in the date list.
@@ -228,10 +236,10 @@ class DateList(Timepoint):
         """ Check that all dates in self.dates are valid. """
         return all([date.valid for date in self.dates])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'timepoint': 'date_list',
-            'dates': [date.to_dict() for date in self.dates],
+            'dates': [date._to_dict() for date in self.dates],
             }
 
     def to_sql(self):
@@ -265,13 +273,14 @@ class DateInterval(Timepoint):
     * 5-7 avril 2013
 
     """
-    def __init__(self, data, start_date=None, end_date=None, **kwargs):
+    def __init__(self, data={}, start_date=None, end_date=None, **kwargs):
         super(DateInterval, self).__init__(data, **kwargs)
         if start_date:
             self.start_date = start_date
         if end_date:
             self.end_date = end_date
-        self._normalize()
+        if not (start_date and end_date):
+            self._normalize()
 
     def __repr__(self):
         return '%s-%s' % (self.start_date, self.end_date)
@@ -307,18 +316,21 @@ class DateInterval(Timepoint):
         """ Check that start and end date are valid. """
         return all([self.start_date.valid, self.end_date.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-        'start_date': self.start_date.to_dict(),
-        'end_date': self.end_date.to_dict(),
+        'start_date': self.start_date._to_dict(),
+        'end_date': self.end_date._to_dict(),
         }
 
     def to_sql(self):
         """ convert for sql insert """
-        start_datetime = datetime.datetime(year=self.start_date.year, month=self.start_date.month, day=self.start_date.day, hour=0, minute=0, second=0)
-        end_datetime =   datetime.datetime(year=self.end_date.year, month=self.end_date.month, day=self.end_date.day, hour=23, minute=59, second=59)
-
-        return (start_datetime, end_datetime)
+        start_datetime = datetime.datetime(
+            year=self.start_date.year, month=self.start_date.month,
+            day=self.start_date.day, hour=0, minute=0, second=0)
+        end_datetime = datetime.datetime(
+            year=self.end_date.year, month=self.end_date.month,
+            day=self.end_date.day, hour=23, minute=59, second=59)
+        return start_datetime, end_datetime
 
 
 class Time(Timepoint):
@@ -327,13 +339,14 @@ class Time(Timepoint):
     Examples: 15h30, 15h, 8h, 08 h, 20:30
 
     """
-    def __init__(self, data, hour=None, minute=None, **kwargs):
+    def __init__(self, data={}, hour=None, minute=None, **kwargs):
         super(Time, self).__init__(data, **kwargs)
         if hour:
             self.hour = hour
         if minute:
             self.minute = minute
-        self._normalize()
+        if not (hour and minute):
+            self._normalize()
 
     def __repr__(self):
         """ Print with HHhmm format """
@@ -367,7 +380,7 @@ class Time(Timepoint):
         else:
             return False
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
             'hour': self.hour,
             'minute': self.minute}
@@ -379,14 +392,15 @@ class TimeInterval(Timepoint):
     Examples: 15h30-18h, de 15h à 18h
 
     """
-    def __init__(self, data, start_time=None, end_time=None, **kwargs):
+    def __init__(self, data={}, start_time=None, end_time=None, **kwargs):
         super(TimeInterval, self).__init__(data, **kwargs)
         # store TimeInterval specific arguments
         if start_time:
             self.start_time = start_time
         if end_time:
             self.end_time = end_time
-        self._normalize()
+        if not(start_time):
+            self._normalize()
 
     def __repr__(self):
         end_time = self.end_time or ''
@@ -416,13 +430,13 @@ class TimeInterval(Timepoint):
         else:
             return self.start_time.valid
 
-    def to_dict(self):
-        if not self.end_time:
+    def _to_dict(self):
+        if not hasattr(self, 'end_time') or not self.end_time:
             end_time = None
-        else:
-            end_time = self.end_time.to_dict()
+        elif self.end_time is not None:
+            end_time = self.end_time._to_dict()
         return {
-            'start_time': self.start_time.to_dict(),
+            'start_time': self.start_time._to_dict(),
             'end_time': end_time}
 
 
@@ -432,7 +446,7 @@ class DateTime(Timepoint):
     Examples: lundi 15 mars à 15h30, le 8 octobre 2013 de 15h30 à 16h
 
     """
-    def __init__(self, data, date=None, time=None, **kwargs):
+    def __init__(self, data={}, date=None, time=None, **kwargs):
         """ Initialize the DateTime object.
 
         ``date`` argument is of type ``Date``.
@@ -443,7 +457,8 @@ class DateTime(Timepoint):
             self.date = date
         if time:
             self.time = time
-        self._normalize()
+        if not (date and time):
+            self._normalize()
 
     def __repr__(self):
         return '%s: %s:%s' % (self.__class__, self.date, self.time)
@@ -469,10 +484,10 @@ class DateTime(Timepoint):
         """ Checks that both self.time and self.date are valid. """
         return all([self.time.valid and self.date.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-            'date': self.date.to_dict(),
-            'time': self.time.to_dict()}
+            'date': self.date._to_dict(),
+            'time': self.time._to_dict()}
 
     def to_sql(self):
         """ Export Datetime to sql """
@@ -509,9 +524,13 @@ class DateTimeList(Timepoint):
     * mardi 5 et mercredi 15 septembre de 15h30 à 19h15
 
     """
-    def __init__(self, data, **kwargs):
+    def __init__(self, data={}, datetimes=None, **kwargs):
         super(DateTimeList, self).__init__(data, **kwargs)
-        self._normalize()
+        if datetimes:
+            self.datetimes = datetimes
+        else:
+            self._normalize()
+
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
@@ -547,9 +566,9 @@ class DateTimeList(Timepoint):
         """ Check the validity of each datetime in self.datetimes. """
         return all([datetime.valid for datetime in self.datetimes])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-            'datetimes': [dt.to_dict() for dt in self.datetimes]}
+            'datetimes': [dt._to_dict() for dt in self.datetimes]}
 
     def to_sql(self):
         """ Export Datetime to sql """
@@ -584,9 +603,15 @@ class DateTimeList(Timepoint):
 
 class DateTimeInterval(Timepoint):
     """ A datetime interval refers to a interval of date, with specified time. """
-    def __init__(self, data, **kwargs):
+    def __init__(self, data={}, date_interval=None, time_interval=None, **kwargs):
+
         super(DateTimeInterval, self).__init__(data, **kwargs)
-        self._normalize()
+        if date_interval:
+            self.date_interval = date_interval
+        if time_interval:
+            self.time_interval = time_interval
+        if not(date_interval and time_interval):
+            self._normalize()
 
     def __repr__(self):
         return '%s: %s-%s' % (self.__class__, self.date_interval,
@@ -615,10 +640,10 @@ class DateTimeInterval(Timepoint):
         """ Checks that start and end datetimes are valid. """
         return all([self.date_interval.valid, self.time_interval.valid])
 
-    def to_dict(self):
+    def _to_dict(self):
         return {
-        'date_interval': self.date_interval.to_dict(),
-        'time_interval': self.time_interval.to_dict()}
+        'date_interval': self.date_interval._to_dict(),
+        'time_interval': self.time_interval._to_dict()}
 
     def to_sql(self):
         """ Export DateTimeInterval to sql """
@@ -672,7 +697,7 @@ class DateTimeInterval(Timepoint):
 #         """ Convert the weekday_name in weekday number."""
 #         if self.start_weekday_name:
 #             # whole weekday name
-#             if self.start_weekday_name in WEEKDAY_VALUE[self.lang]:
-#                 self.weekday = WEEKDAY_VALUE[self.lang][self.start_weekday_name]
-#             elif self.start_weekday_name in SHORT_WEEKDAY_VALUE:
-#                 self.weekday = SHORT_WEEKDAY_VALUE[self.lang][self.start_weekday_name]
+#             if self.start_weekday_name in WEEKDAY[self.lang]:
+#                 self.weekday = WEEKDAY[self.lang][self.start_weekday_name]
+#             elif self.start_weekday_name in SHORT_WEEKDAY:
+#                 self.weekday = SHORT_WEEKDAY[self.lang][self.start_weekday_name]

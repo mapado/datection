@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 
-WEEKDAY_VALUE = {
+WEEKDAY = {
     'fr':
     {
         'lundi': 1,
@@ -14,7 +14,7 @@ WEEKDAY_VALUE = {
     }
 }
 
-SHORT_WEEKDAY_VALUE = {
+SHORT_WEEKDAY = {
 # Untested for now!
     'fr':
     {
@@ -28,7 +28,7 @@ SHORT_WEEKDAY_VALUE = {
     }
 }
 
-MONTH_VALUE = {
+MONTH = {
     'fr':
     {
         'janvier': 1,
@@ -49,7 +49,7 @@ MONTH_VALUE = {
     }
 }
 
-SHORT_MONTH_VALUE = {
+SHORT_MONTH = {
 # Untested for now!
     'fr':
     {
