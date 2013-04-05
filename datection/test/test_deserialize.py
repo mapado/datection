@@ -25,6 +25,7 @@ class TestDeserialize(unittest.TestCase):
     """
 
     def test_deserialize_date(self):
+        """ Test case for a Date instance. """
         date = datection.parse(u'le 15 janvier 2013', 'fr')[0]
         assert isinstance(date, datection.serialize.Date)
         ser = date.serialize()
@@ -33,6 +34,7 @@ class TestDeserialize(unittest.TestCase):
         assert date.serialize() == newdate.serialize()
 
     def test_deserialize_time(self):
+        """ Test case for a Time instance. """
         time = datection.parse(u'15h30', 'fr')[0]
         assert isinstance(time, datection.serialize.TimeInterval)
         ser = time.serialize()
@@ -41,6 +43,7 @@ class TestDeserialize(unittest.TestCase):
         assert time.serialize() == newtime.serialize()
 
     def test_deserialize_time_interval(self):
+        """ Test case for TimeInterval instance. """
         time = datection.parse(u'de 15h30 à 16h30', 'fr')[0]
         assert isinstance(time, datection.serialize.TimeInterval)
         ser = time.serialize()
@@ -49,6 +52,7 @@ class TestDeserialize(unittest.TestCase):
         assert time.serialize() == newtime.serialize()
 
     def test_deserialize_date_list(self):
+        """ Test case for a DateList instance. """
         datelist = datection.parse(u'le 5 et 6 janvier 2013', 'fr')[0]
         assert isinstance(datelist, datection.serialize.DateList)
         ser = datelist.serialize()
@@ -57,6 +61,7 @@ class TestDeserialize(unittest.TestCase):
         assert datelist.serialize() == newdatelist.serialize()
 
     def test_deserialize_date_interval(self):
+        """ Test case for a DateInterval instance. """
         dateinterval = datection.parse(u'du 5 au 8 janvier 2013', 'fr')[0]
         assert isinstance(dateinterval, datection.serialize.DateInterval)
         ser = dateinterval.serialize()
@@ -65,6 +70,7 @@ class TestDeserialize(unittest.TestCase):
         assert dateinterval.serialize() == newdateinterval.serialize()
 
     def test_deserialize_datetime(self):
+        """ Test case for a DateTime instance. """
         datetime = datection.parse(u'le 5 janvier 2013 à 15h39', 'fr')[0]
         assert isinstance(datetime, datection.serialize.DateTime)
         ser = datetime.serialize()
@@ -73,6 +79,7 @@ class TestDeserialize(unittest.TestCase):
         assert datetime.serialize() == newdatetime.serialize()
 
     def test_deserialize_datetime_list(self):
+        """ Test case for a DateTimeList instance. """
         datetimelist = datection.parse(u'les 5, 6, 7 janvier 2013, de 15h39 à 16h', 'fr')[0]
         assert isinstance(datetimelist, datection.serialize.DateTimeList)
         ser = datetimelist.serialize()
@@ -81,6 +88,7 @@ class TestDeserialize(unittest.TestCase):
         assert datetimelist.serialize() == newdatetimelist.serialize()
 
     def test_deserialize_datetime_interval(self):
+        """ Test case for a DateTimeInterval instance. """
         datetimeinterval = datection.parse(u'du 7 au 9 janvier 2013, de 15h39 à 16h', 'fr')[0]
         assert isinstance(datetimeinterval, datection.serialize.DateTimeInterval)
         ser = datetimeinterval.serialize()

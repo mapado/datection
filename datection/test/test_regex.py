@@ -197,7 +197,6 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['end_year'] == '2013'
 
 
-
 class TestTimeRegex(unittest.TestCase):
     """ Test class for the extraction of times.
 
