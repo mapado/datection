@@ -79,6 +79,10 @@ class Timepoint(object):
         """
         return []
 
+    def future(self, reference=None):
+        """Return whether the timepoint is located in the future."""
+        return False
+
 
 class Date(Timepoint):
     """ A class representing a simple date.
@@ -164,6 +168,15 @@ class Date(Timepoint):
         )
         return (start_datetime, end_datetime)
 
+    def future(self, reference=datetime.date.today()):
+        """Returns whether the Date is located in the future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        date = datetime.date(day=self.day, month=self.month, year=self.year)
+        return date > reference
+
 
 class DateList(Timepoint):
     """ A datelist contains several dates.
@@ -247,6 +260,17 @@ class DateList(Timepoint):
             out.append((start_datetime, end_datetime))
         return out
 
+    def future(self, reference=datetime.date.today()):
+        """Returns whether the DateList is located in the future.
+
+        A DateList is considered future even if a part of its dates
+        are future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        return any([d.future(reference) for d in self.dates])
+
 
 class DateInterval(Timepoint):
     """ A class representing a date interval
@@ -313,6 +337,17 @@ class DateInterval(Timepoint):
             year=self.end_date.year, month=self.end_date.month,
             day=self.end_date.day, hour=23, minute=59, second=59)
         return start_datetime, end_datetime
+
+    def future(self, reference=datetime.date.today()):
+        """Returns whether the DateInterval is located in the future.
+
+        A DateInterval is considered future if its end date is located
+        in the future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        return self.end_date.future(reference)
 
 
 class Time(Timepoint):
@@ -481,6 +516,14 @@ class DateTime(Timepoint):
 
         return (start_datetime, end_datetime)
 
+    def future(self, reference=datetime.date.today()):
+        """Return whether the datetime is located in the future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        return self.date.future(reference)
+
 
 class DateTimeList(Timepoint):
     """ A datetime list refers to a specific timing for a list of dates.
@@ -525,6 +568,17 @@ class DateTimeList(Timepoint):
         # Populate self.datetimes with Datetimes objects
         for date in date_list:
             self.datetimes.append(DateTime(ti, date=date, time=time, lang=self.lang))
+
+    def future(self, reference=datetime.date.today()):
+        """Returns whether the DateTimeList is located in the future.
+
+        A DateTimeList is considered future even if a part of its
+        datetimes are future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        return any([dt.date.future(reference) for dt in self.datetimes])
 
     @property
     def valid(self):
@@ -646,3 +700,14 @@ class DateTimeInterval(Timepoint):
             out.append((i_start_datetime, i_end_datetime))
 
         return out
+
+    def future(self, reference=datetime.date.today()):
+        """Returns whether the DateTimeInterval is located in the future.
+
+        A DateTimeInterval is considered future if its end date is located
+        in the future.
+
+        The default time reference is the day of the method execution.
+
+        """
+        return self.date_interval.end_date.future(reference)

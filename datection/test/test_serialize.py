@@ -6,10 +6,14 @@ import unittest
 import sys
 sys.path.insert(0, '..')
 
-from datetime import datetime
+import datetime
 
 from datection import parse, parse_to_serialized, parse_to_sql
 from ..serialize import *
+
+
+# We pretend to be in the future
+today = datetime.date(day=5, month=10, year=2008)
 
 
 class TestSerializeFrDates(unittest.TestCase):
@@ -55,11 +59,21 @@ class TestSerializeFrDates(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the return format for sql insert """
-        datelist = parse_to_sql(u'le lundi 5 mars 2013', 'fr')
-        assert len(datelist) == 1
-        date = datelist[0]
+        dates = parse_to_sql(u'le lundi 5 mars 2013', 'fr')
+        assert len(dates) == 1
+        date = dates[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=5, hour=0, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=5, hour=23, minute=59, second=59)
+
+    def test_future_date(self):
+        """ Test that the date is in the future. """
+        date = parse(u'le mercredi 16 décembre 2013', 'fr')[0]
+        assert date.future(reference=today)
+
+    def test_past_date(self):
+        """ Test that the date is in the past. """
+        date = parse(u'le mercredi 16 décembre 2003', 'fr')[0]
+        assert not date.future(reference=today)
 
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
@@ -149,6 +163,16 @@ class TestSerializeFrDateList(unittest.TestCase):
         assert date[0] == datetime.datetime(year=2013, month=10, day=8, hour=0, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=10, day=8, hour=23, minute=59, second=59)
 
+    def test_future_date_list(self):
+        """ Test that the datetlist is in the future. """
+        datelist = parse(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
+        assert datelist.future(reference=today)
+
+    def test_past_date_list(self):
+        """ Test that the datetlist is in the past. """
+        datelist = parse(u'le 5, 6 et 8 octobre 2003', 'fr')[0]
+        assert not datelist.future(reference=today)
+
 
 class TestSerializeFrDateTime(unittest.TestCase):
     """ Test class of the DateTime serializer with french data. """
@@ -185,6 +209,16 @@ class TestSerializeFrDateTime(unittest.TestCase):
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
+
+    def test_future_datetime(self):
+        """ Test that the datetime is in the future. """
+        dt = parse(u'le 8 octobre 2013 à 20h30', 'fr')[0]
+        assert dt.future(reference=today)
+
+    def test_past_date_list(self):
+        """ Test that the datetlist is in the past. """
+        dt = parse(u'le 8 octobre 2003 à 20h30', 'fr')[0]
+        assert not dt.future(reference=today)
 
 
 class TestSerializeFrDateTimeList(unittest.TestCase):
@@ -226,6 +260,16 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         assert date[0] == datetime.datetime(year=2013, month=10, day=9, hour=15, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
 
+    def test_future_datetime_list(self):
+        """ Test that the datetime is in the future. """
+        dt = parse(u'le 6, 7, 8 octobre 2013 à 20h30', 'fr')[0]
+        assert dt.future(reference=today)
+
+    def test_past_datetime_list(self):
+        """ Test that the datetlist is in the past. """
+        dt = parse(u'le 6, 7, 8 octobre 2003 à 20h30', 'fr')[0]
+        assert not dt.future(reference=today)
+
 
 class TestSerializeFrDateInterval(unittest.TestCase):
     """ Test class of the DateInterval serializer with french data """
@@ -255,6 +299,16 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         assert len(dateinterval) == 2
         assert dateinterval[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
         assert dateinterval[1] == datetime.datetime(year=2013, month=10, day=9, hour=23, minute=59, second=59)
+
+    def test_future_datetime_interval(self):
+        """ Test that the datetime is in the future. """
+        dti = parse(u'du 7 au 8 octobre 2013 à 20h30', 'fr')[0]
+        assert dti.future(reference=today)
+
+    def test_past_datetime_list(self):
+        """ Test that the datetlist is in the past. """
+        dti = parse(u'du 7 au 8 octobre 2003 à 20h30', 'fr')[0]
+        assert not dti.future(reference=today)
 
 
 class TestSerializeFrDateTimeInterval(unittest.TestCase):
