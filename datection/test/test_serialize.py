@@ -112,7 +112,6 @@ class TestSerializeFrDateList(unittest.TestCase):
     def test_valid_format(self):
         """ Test the serializer on a valid date list."""
         datelist = parse(u'le 5, 6 et 7 octobre 2013', 'fr')[0]
-        print datelist.__dict__
         assert datelist.timepoint == 'date_list'
         assert datelist.valid
         assert all([date.valid for date in datelist.dates])

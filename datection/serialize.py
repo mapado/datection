@@ -395,7 +395,7 @@ class TimeInterval(Timepoint):
     @property
     def valid(self):
         """ Check that both self.start_time and self.end_time (if any) are valid. """
-        if self.end_time:
+        if hasattr(self, 'end_time') and self.end_time:
             return all([self.start_time.valid, self.end_time.valid])
         else:
             return self.start_time.valid
