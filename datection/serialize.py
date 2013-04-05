@@ -583,7 +583,7 @@ class DateTimeList(Timepoint):
     @property
     def valid(self):
         """ Check the validity of each datetime in self.datetimes. """
-        return all([datetime.valid for datetime in self.datetimes])
+        return all([dt.valid for dt in self.datetimes])
 
     def _to_dict(self):
         return {
