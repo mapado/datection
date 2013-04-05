@@ -22,7 +22,7 @@ and the following python standard (and SQL-compliant) structure
 No external dependencies are required.
 """
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 import re
 import signal
