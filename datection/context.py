@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 This module defines some class and functions used for probing some input text.
 
