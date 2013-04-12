@@ -25,21 +25,10 @@ No external dependencies are required.
 __version__ = '0.3.4'
 
 import re
-import signal
 
 from datection.regex import TIMEPOINT_REGEX
 from datection.serialize import timepoint_factory
 from datection.context import independants, probe
-
-
-class Timeout(Exception):
-    pass
-
-
-def signal_handler(signum, frame):
-    raise Timeout('Function timed out.')
-
-signal.signal(signal.SIGALRM, signal_handler)
 
 
 def parse(text, lang, valid=True):
@@ -74,7 +63,6 @@ def parse(text, lang, valid=True):
         for family in timepoint_families:
             for detector in TIMEPOINT_REGEX[lang][family]:
                 for match in re.finditer(detector, context):
-                    signal.alarm(1)  # limit execution time to 1s
                     try:
                         timepoints.append(
                             timepoint_factory(
@@ -89,12 +77,9 @@ def parse(text, lang, valid=True):
                     except AttributeError:
                         # exception often raised when a false detection occurs
                         pass
-                    except Timeout:
-                        raise Timeout
         timepoints = remove_subsets(timepoints)  # remove any overlapping timepoints
         out.extend(timepoints)
 
-    signal.alarm(0)  # remove all execution time limit
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out
