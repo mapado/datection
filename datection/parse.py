@@ -25,9 +25,6 @@ def parse(text, lang, valid=True):
     contexts = probe(text, lang)
     if not contexts:
         return {}
-    else:
-        # merge overriding contexts
-        contexts = independants(contexts)
 
     timepoint_families = [
         det for det in TIMEPOINT_REGEX[lang].keys()

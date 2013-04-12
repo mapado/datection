@@ -47,20 +47,12 @@ Du 6 octobre 2012 au 13 juillet 2013."""
         assert c3.start == 30
         assert c3.end == 135
 
-    def test_probe(self):
-        probes = datection.context.probe(self.text, self.lang)
-        # 5 elements will be probed: '1h', 'octobre', '2012', 'juillet' & '2013'
-        # Note: '1h' is a false positive
-        assert len(probes) == 5
-
     def test_independants(self):
-        probes = datection.context.probe(self.text, self.lang)
-        indies = datection.context.independants(probes)
+        indies = datection.context.probe(self.text, self.lang)
+        # indies = datection.context.independants(probes)
         # 5 elements will be probed: '1h', 'octobre', '2012', 'juillet' & '2013'
-        # However, the 4 last all overlap, so they will be merged into one context
-        assert probes[3] in probes[2]
-        assert probes[4] in probes[3]
-        assert len(indies) == 2
+        # However, the 3 last all overlap, so they will be merged into one context
+        assert len(indies) == 3
 
 
 if __name__ == '__main__':

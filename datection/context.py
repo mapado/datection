@@ -84,8 +84,8 @@ def probe(text, lang):
         :param context_size: the number of character before and after a probe
         match to be taken as context.
 
-        :return: a list of datection.context.Context objects, sorted by order of
-        appearance in the input text.
+        :return: a list of non ovrlapping datection.context.Context objects,
+        sorted by order of appearance in the input text.
 
     """
     matches = []
@@ -101,7 +101,10 @@ def probe(text, lang):
 
     out = list(set(matches))  # remove redundant matches
     # sort return list by order of apperance in the text
-    return sorted(out, key=lambda x: x.start)
+
+    # merge overriding contexts
+    out = independants(matches)
+    return [str(context) for context in out]
 
 
 def independants(contexts):
@@ -145,4 +148,4 @@ def independants(contexts):
         # create new context
         out.append(curr)
     # convert the Contexts to string and return them
-    return [str(context) for context in out]
+    return sorted(out, key=lambda cx: cx.start)
