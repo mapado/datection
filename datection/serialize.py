@@ -128,7 +128,20 @@ class Date(Timepoint):
                 'to be able to serialize the month name.')
         if len(str(self.year)) == 2:  # numeric date with shortened year format
             # ex xx/xx/12 --> xx/xx/2012
-            self.year = int(str(datetime.date.today().year)[:2] + str(self.year))
+            # WARNING: if a past date is written in this format (ex: 01/06/78)
+            # it is impossible to know if it references the year 1978 or 2078.
+            # If the 2-digit date is less than 15 years in the future, we consider
+            # that it takes place in our century, otherwise, it is considered as a past
+            # date
+            current_year = datetime.date.today().year
+            century = int(str(current_year)[:2])
+            if int(str(century) + str(self.year)) - current_year < 15:
+                # if year is less than 15 years in the future, it is considered
+                # a future date
+                self.year = int(str(century) + str(self.year))
+            else:
+                # else, it is treated as a past date
+                self.year = int(str(century - 1) + str(self.year))
 
     @property
     def valid(self):

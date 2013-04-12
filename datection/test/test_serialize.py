@@ -75,6 +75,17 @@ class TestSerializeFrDates(unittest.TestCase):
         date = parse(u'le mercredi 16 décembre 2003', 'fr')[0]
         assert not date.future(reference=today)
 
+    def test_numeric_2digit_format(self):
+        """Test that numeric dates with a 2 digit year are
+        properly serialized.
+
+        """
+        # past date
+        date = parse(u'06/01/78', 'fr')[0]
+        assert date.year == 1978
+
+        date = parse(u'06/01/15', 'fr')[0]
+        assert date.year == 2015
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """
