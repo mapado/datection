@@ -48,7 +48,7 @@ If no weekday, month name, year or numeric date could be found, the parsing stop
 
 Examples:
 ```python
->>> from datection.context import probe
+>>> from datection import probe
 >>> probe('Hello world')  # no temporal markers
 []
 >>> p = probe("Le lundi 5 mars 2013, j'ai mangé une pomme, et elle était super bonne bonne bonne, comme le jour", 'fr')
@@ -111,7 +111,7 @@ The JSON-serialized format can be deserialized, to recreate a Python datection o
 
 To do so, use the ``datection.deserialize`` module:
 ```python
->>> from datection.deserialize import deserialize
+>>> from datection import deserialize
 >>> ser = dt.serialize()
 >>> newdt = deserialize(ser)
 >>> dt == newdt

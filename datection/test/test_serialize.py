@@ -8,7 +8,8 @@ sys.path.insert(0, '..')
 
 import datetime
 
-from datection import parse, parse_to_serialized, parse_to_sql
+from datection.parse import parse
+from datection.export import to_sql, to_json
 from ..serialize import *
 
 
@@ -45,7 +46,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
     def test_to_json(self):
         """ Test the serialisation of a Date object. """
-        date = parse_to_serialized(u'le lundi 5 mars 2013', 'fr')[0]
+        date = to_json(u'le lundi 5 mars 2013', 'fr')[0]
         assert date['day'] == 5
         assert date['month'] == 3
         assert date['year'] == 2013
@@ -59,7 +60,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the return format for sql insert """
-        dates = parse_to_sql(u'le lundi 5 mars 2013', 'fr')
+        dates = to_sql(u'le lundi 5 mars 2013', 'fr')
         assert len(dates) == 1
         date = dates[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=5, hour=0, minute=0, second=0)
@@ -86,6 +87,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
         date = parse(u'06/01/15', 'fr')[0]
         assert date.year == 2015
+
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """
@@ -127,7 +129,7 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the return format for sql insert """
-        date_list = parse_to_sql(u'de 15h30 à 16h', 'fr')
+        date_list = to_sql(u'de 15h30 à 16h', 'fr')
         assert len(date_list) == 0
 
 
@@ -162,7 +164,7 @@ class TestSerializeFrDateList(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the serializer on a valid date list."""
-        datelist = parse_to_sql(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
+        datelist = to_sql(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
         assert len(datelist) == 3
         date = datelist[0]
         assert date[0] == datetime.datetime(year=2013, month=10, day=5, hour=0, minute=0, second=0)
@@ -209,13 +211,13 @@ class TestSerializeFrDateTime(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the serializer on a valid date time. """
-        dt = parse_to_sql(u'le lundi 15 mars 2013 à 20h', 'fr')
+        dt = to_sql(u'le lundi 15 mars 2013 à 20h', 'fr')
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
-        dt = parse_to_sql(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
+        dt = to_sql(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
@@ -259,7 +261,7 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the serializer on a valid date time list. """
-        datetimelist = parse_to_sql(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
+        datetimelist = to_sql(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
 
         # le 6
         date = datetimelist[0]
@@ -305,7 +307,7 @@ class TestSerializeFrDateInterval(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the serializer on a valid dateinterval. """
-        dateinterval = parse_to_sql(u'du 6 au 9 octobre 2013', 'fr')[0]
+        dateinterval = to_sql(u'du 6 au 9 octobre 2013', 'fr')[0]
 
         assert len(dateinterval) == 2
         assert dateinterval[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
@@ -345,7 +347,7 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
 
     def test_to_sql(self):
         """ Test the serializer on a valid dateinterval. """
-        datetime_interval_list = parse_to_sql(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
+        datetime_interval_list = to_sql(u'du 15 au 18 février 2013 de 14h à 18h30', 'fr')[0]
 
         assert len(datetime_interval_list) == 4
 
