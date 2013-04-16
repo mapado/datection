@@ -104,6 +104,8 @@ def probe(text, lang):
 
     # merge overriding contexts
     out = independants(matches)
+    if not out:
+        return []
     return [str(context) for context in out]
 
 
@@ -118,8 +120,9 @@ def independants(contexts):
     :return: a list of non overlapping strings, containing temporal information
 
     """
-
-    if len(contexts) <= 1:  # if only one context, return it as a str
+    if not contexts:
+        return []
+    if len(contexts) == 1:  # if only one context, return it as a str
         return [str(contexts[0])]
 
     out = []
