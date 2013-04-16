@@ -53,6 +53,7 @@ def parse(text, lang, valid=True):
         timepoints = _remove_subsets(timepoints)  # rm overlapping timepoints
         out.extend(timepoints)
 
+    out = list(set(out))  # remove any redundancy
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out

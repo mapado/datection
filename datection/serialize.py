@@ -55,13 +55,13 @@ class Timepoint(object):
                 self.__setattr__(k, v)
 
     def __eq__(self, other):
-        if isinstance(other, Timepoint):
-            return self._to_dict() == other._to_dict()
-        else:
-            raise TypeError(other, "must inherit from the Timepoint class")
+        return self._to_dict() == other._to_dict()
 
     def __ne__(self, other):
         return not self == other
+
+    def __hash__(self):
+        return hash(str(self._to_dict()))
 
     def serialize(self):
         """ Serialize the Timepoint object to a Python dict """

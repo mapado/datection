@@ -88,6 +88,14 @@ class TestSerializeFrDates(unittest.TestCase):
         date = parse(u'06/01/15', 'fr')[0]
         assert date.year == 2015
 
+    def test_redundant_dates(self):
+        """Test that redundant serialized dates are only returned once
+        from the parse function.
+
+        """
+        dates = parse(u'le 15 février 2013, plop, 15/02/2013', 'fr')
+        assert len(dates) == 1
+
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """
