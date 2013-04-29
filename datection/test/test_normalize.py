@@ -8,7 +8,7 @@ sys.path.insert(0, '..')
 import datetime
 
 from datection.parse import parse
-from datection.export import to_db
+from datection.export import to_db, to_python
 from ..serialize import *
 
 
@@ -49,6 +49,13 @@ class TestSerializeFrDates(unittest.TestCase):
         date = dates[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=5, hour=0, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=5, hour=23, minute=59, second=59)
+
+    def test_to_python(self):
+        """ Test the return format of the python export """
+        dates = to_db(u'le lundi 5 mars 2013', 'fr')
+        assert len(dates) == 1
+        date = dates[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=5)
 
     def test_future_date(self):
         """ Test that the date is in the future. """
@@ -113,6 +120,22 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
         assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
 
+    def test_to_python_no_end_time(self):
+        """Test the format of the to_python method when no end_time is found
+        """
+        time = parse(u'15h', 'fr')[0]
+        time_norm = time.to_python()
+        assert time_norm == datetime.time(hour=15, minute=0)
+
+    def test_to_python(self):
+        """Test the format of the to_python method """
+        time = parse(u'de 15h à 16h', 'fr')[0]
+        time_norm = time.to_python()
+        assert time_norm == (
+            datetime.time(hour=15, minute=0),
+            datetime.time(hour=16, minute=0)
+        )
+
 
 class TestSerializeFrDateList(unittest.TestCase):
     """ Test class of the DateList serializer with french data. """
@@ -136,7 +159,7 @@ class TestSerializeFrDateList(unittest.TestCase):
         assert not datelist.dates[2].valid
 
     def test_to_db(self):
-        """ Test the serializer on a valid date list."""
+        """ Test the sql serializer on a valid date list."""
         datelist = to_db(u'le 5, 6 et 8 octobre 2013', 'fr')[0]
         assert len(datelist) == 3
         date = datelist[0]
@@ -148,6 +171,12 @@ class TestSerializeFrDateList(unittest.TestCase):
         date = datelist[2]
         assert date[0] == datetime.datetime(year=2013, month=10, day=8, hour=0, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=10, day=8, hour=23, minute=59, second=59)
+
+    def test_to_python(self):
+        """ Test the return value of the to_python mehod """
+        datelist = parse(u'le 5 et 6 octobre 2013', 'fr')[0].to_python()
+        assert datelist[0] == datetime.date(year=2013, month=10, day=5)
+        assert datelist[1] == datetime.date(year=2013, month=10, day=6)
 
     def test_future_date_list(self):
         """ Test that the datetlist is in the future. """
@@ -184,6 +213,18 @@ class TestSerializeFrDateTime(unittest.TestCase):
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
+
+        dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
+        assert len(dt) == 1
+        date = dt[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
+
+    def test_to_python(self):
+        dt = to_db(u'le lundi 15 mars 2013 à 20h', 'fr')
+        assert len(dt) == 1
+        date = dt[0]
+        assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
         dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
         assert len(dt) == 1
@@ -241,6 +282,19 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         assert date[0] == datetime.datetime(year=2013, month=10, day=9, hour=15, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
 
+    def test_to_python(self):
+        datetimelist = to_db(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
+
+        # le 6
+        date = datetimelist[0]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=6, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=6, hour=20, minute=0, second=0)
+
+        # le 7
+        date = datetimelist[1]
+        assert date[0] == datetime.datetime(year=2013, month=10, day=9, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
+
     def test_future_datetime_list(self):
         """ Test that the datetime is in the future. """
         dt = parse(u'le 6, 7, 8 octobre 2013 à 20h30', 'fr')[0]
@@ -276,6 +330,13 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         assert len(dateinterval) == 2
         assert dateinterval[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
         assert dateinterval[1] == datetime.datetime(year=2013, month=10, day=9, hour=23, minute=59, second=59)
+
+    def test_to_python(self):
+        dateinterval = parse(u'du 6 au 9 octobre 2013', 'fr')[0].to_python()
+
+        assert len(dateinterval) == 2
+        assert dateinterval[0] == datetime.date(year=2013, month=10, day=6)
+        assert dateinterval[1] == datetime.date(year=2013, month=10, day=9)
 
     def test_future_datetime_interval(self):
         """ Test that the datetime is in the future. """
@@ -335,3 +396,16 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
         datetime_interval = datetime_interval_list[3]
         assert datetime_interval[0] == datetime.datetime(year=2013, month=2, day=18, hour=14, minute=0, second=0)
         assert datetime_interval[1] == datetime.datetime(year=2013, month=2, day=18, hour=18, minute=30, second=0)
+
+    def test_to_python(self):
+        datetime_interval_list = to_python(u'du 15 au 16 février 2013 à 18h30', 'fr')[0]
+
+        assert len(datetime_interval_list) == 2
+
+        # 2013-02-15
+        datetime_interval = datetime_interval_list[0]
+        assert datetime_interval == datetime.datetime(year=2013, month=2, day=15, hour=18, minute=30, second=0)
+
+        # 2013-02-16
+        datetime_interval = datetime_interval_list[1]
+        assert datetime_interval == datetime.datetime(year=2013, month=2, day=16, hour=18, minute=30, second=0)
