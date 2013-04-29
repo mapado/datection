@@ -27,6 +27,5 @@ __version__ = '0.4.0'
 __author__ = 'Balthazar Rouberol'
 
 from datection.parse import parse
-from datection.deserialize import deserialize
 from datection.context import probe
 from datection.export import to_db, to_python
