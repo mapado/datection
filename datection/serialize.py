@@ -55,29 +55,13 @@ class Timepoint(object):
                 self.__setattr__(k, v)
 
     def __eq__(self, other):
-        return self._to_dict() == other._to_dict()
+        return self.to_python() == other.to_python()
 
     def __ne__(self, other):
         return not self == other
 
     def __hash__(self):
-        return hash(str(self._to_dict()))
-
-    def serialize(self):
-        """ Serialize the Timepoint object to a Python dict """
-        d = self._to_dict()
-        # the 'valid' and 'timepoint' members are only shown at the root level
-        # not at children level, to avoid filling the JSON struct
-        # with partial validity indicators
-        d.update({'valid': self.valid, 'timepoint': self.timepoint})
-        return d
-
-    def to_sql(self):
-        """ Default implementation of to_sql
-
-        Return an empty list
-        """
-        return []
+        return hash(str(self.to_python()))
 
     def future(self, reference=None):
         """Return whether the timepoint is located in the future."""
@@ -106,9 +90,9 @@ class Date(Timepoint):
         if month:
             self.month = month
         if not all([day, month, year]):
-            self._serialize()
+            self._normalize()
 
-    def _serialize(self):
+    def _normalize(self):
         """ Convert month name to serialized month number """
         if hasattr(self, 'lang'):
             if isinstance(self.month_name, basestring):  # string date
@@ -156,13 +140,14 @@ class Date(Timepoint):
         else:
             return False
 
-    def _to_dict(self):
-        return {
-            'day': self.day,
-            'month': self.month,
-            'year': self.year}
+    def to_python(self):
+        if self.valid:
+            return datetime.date(
+                year=self.year, month=self.month, day=self.day)
+        else:
+            return None
 
-    def to_sql(self):
+    def to_db(self):
         start_datetime = datetime.datetime(
             year=self.year,
             month=self.month,
@@ -187,7 +172,8 @@ class Date(Timepoint):
         The default time reference is the day of the method execution.
 
         """
-        date = datetime.date(day=self.day, month=self.month, year=self.year)
+        date = datetime.date(
+            day=self.day, month=self.month, year=self.year)
         return date > reference
 
 
@@ -205,14 +191,13 @@ class DateList(Timepoint):
         if dates:
             self.dates = dates
         else:
-            self._serialize()
+            self._normalize()
 
     def __iter__(self):
-        """ Iterate over the dates in self.dates. """
         for date in self.dates:
             yield date
 
-    def _serialize(self):
+    def _normalize(self):
         """ Restore all missing date from dates in the date list.
 
         All dates (in the date list) with missing data will be given
@@ -245,13 +230,10 @@ class DateList(Timepoint):
         """ Check that all dates in self.dates are valid. """
         return all([date.valid for date in self.dates])
 
-    def _to_dict(self):
-        return {
-            'timepoint': 'date_list',
-            'dates': [date._to_dict() for date in self.dates],
-        }
+    def to_python(self):
+        return [date.to_python() for date in self.dates]
 
-    def to_sql(self):
+    def to_db(self):
         out = []
         for date in self.dates:
             start_datetime = datetime.datetime(
@@ -300,14 +282,14 @@ class DateInterval(Timepoint):
         if end_date:
             self.end_date = end_date
         if not (start_date and end_date):
-            self._serialize()
+            self._normalize()
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
         for date in [self.start_date, self.end_date]:
             yield date
 
-    def _serialize(self):
+    def _normalize(self):
         """ Restore all missing data and serialize the start and end date """
         # start year inherits from the end date year and month name
         if not self.start_year and self.end_year:
@@ -335,13 +317,10 @@ class DateInterval(Timepoint):
         """ Check that start and end date are valid. """
         return all([self.start_date.valid, self.end_date.valid])
 
-    def _to_dict(self):
-        return {
-            'start_date': self.start_date._to_dict(),
-            'end_date': self.end_date._to_dict(),
-        }
+    def to_python(self):
+        return [date.to_python() for date in self]
 
-    def to_sql(self):
+    def to_db(self):
         """ convert for sql insert """
         start_datetime = datetime.datetime(
             year=self.start_date.year, month=self.start_date.month,
@@ -376,9 +355,9 @@ class Time(Timepoint):
         if minute:
             self.minute = minute
         if not (hour and minute):
-            self._serialize()
+            self._normalize()
 
-    def _serialize(self):
+    def _normalize(self):
         """ Set self.minute to 0 if missing or null """
         # TODO: gérer le cas midi/minuit
         if not hasattr(self, 'minute') or not self.minute:
@@ -402,10 +381,8 @@ class Time(Timepoint):
         else:
             return False
 
-    def _to_dict(self):
-        return {
-            'hour': self.hour,
-            'minute': self.minute}
+    def to_python(self):
+        return datetime.time(hour=int(self.hour), minute=int(self.minute))
 
 
 class TimeInterval(Timepoint):
@@ -422,14 +399,14 @@ class TimeInterval(Timepoint):
         if end_time:
             self.end_time = end_time
         if not(start_time):
-            self._serialize()
+            self._normalize()
 
     def __iter__(self):
         """ Iteration over the start and end time. """
         for time in [self.start_time, self.end_time]:
             yield time
 
-    def _serialize(self):
+    def _normalize(self):
         """ Convert the self.start_time and self.end_time into Time objects. """
         # normalization of self.start_time into a Time object
         st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.start_time)
@@ -448,14 +425,11 @@ class TimeInterval(Timepoint):
         else:
             return self.start_time.valid
 
-    def _to_dict(self):
-        if not hasattr(self, 'end_time') or not self.end_time:
-            end_time = None
-        elif self.end_time is not None:
-            end_time = self.end_time._to_dict()
-        return {
-            'start_time': self.start_time._to_dict(),
-            'end_time': end_time}
+    def to_python(self):
+        if self.end_time:
+            return (self.start_time.to_python(), self.end_time.to_python())
+        else:
+            return self.start_time.to_python()
 
 
 class DateTime(Timepoint):
@@ -476,9 +450,9 @@ class DateTime(Timepoint):
         if time:
             self.time = time
         if not (date and time):
-            self._serialize()
+            self._normalize()
 
-    def _serialize(self):
+    def _normalize(self):
         """ Convert date and time groupdicts into Date and TimeInterval objects.
 
         If date and/or time arguments were passed manually, they are considered
@@ -499,12 +473,30 @@ class DateTime(Timepoint):
         """ Checks that both self.time and self.date are valid. """
         return all([self.time.valid and self.date.valid])
 
-    def _to_dict(self):
-        return {
-            'date': self.date._to_dict(),
-            'time': self.time._to_dict()}
+    def to_python(self):
+        start_datetime = datetime.datetime(
+            year=self.date.year,
+            month=self.date.month,
+            day=self.date.day,
+            hour=self.time.start_time.hour,
+            minute=self.time.start_time.minute,
+            second=0
+        )
 
-    def to_sql(self):
+        if self.time.end_time:
+            end_datetime = datetime.datetime(
+                year=self.date.year,
+                month=self.date.month,
+                day=self.date.day,
+                hour=self.time.end_time.hour,
+                minute=self.time.end_time.minute,
+                second=0
+            )
+            return (start_datetime, end_datetime)
+        else:
+            return start_datetime
+
+    def to_db(self):
         """ Export Datetime to sql """
         start_datetime = datetime.datetime(
             year=self.date.year,
@@ -551,14 +543,14 @@ class DateTimeList(Timepoint):
         if datetimes:
             self.datetimes = datetimes
         else:
-            self._serialize()
+            self._normalize()
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
         for dt in self.datetimes:
             yield dt
 
-    def _serialize(self):
+    def _normalize(self):
         """ Associate the time interval to each date in the date list.
 
         The normalization process will instanciate DateTime objects,
@@ -598,11 +590,7 @@ class DateTimeList(Timepoint):
         """ Check the validity of each datetime in self.datetimes. """
         return all([dt.valid for dt in self.datetimes])
 
-    def _to_dict(self):
-        return {
-            'datetimes': [dt._to_dict() for dt in self.datetimes]}
-
-    def to_sql(self):
+    def to_db(self):
         """ Export Datetime to sql """
         out = []
 
@@ -643,14 +631,14 @@ class DateTimeInterval(Timepoint):
         if time_interval:
             self.time_interval = time_interval
         if not(date_interval and time_interval):
-            self._serialize()
+            self._normalize()
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
         for date in self.date_interval:
             yield date
 
-    def _serialize(self):
+    def _normalize(self):
         """ Normalisation of start and end datetimes."""
         self.time_interval = TimeInterval(
             {
@@ -668,13 +656,48 @@ class DateTimeInterval(Timepoint):
         """ Checks that start and end datetimes are valid. """
         return all([self.date_interval.valid, self.time_interval.valid])
 
-    def _to_dict(self):
-        return {
-            'date_interval': self.date_interval._to_dict(),
-            'time_interval': self.time_interval._to_dict()
-        }
+    def to_python(self):
+        out = []
 
-    def to_sql(self):
+        # getting date interval
+        sd = self.date_interval.start_date
+        ed = self.date_interval.end_date
+
+        start_date = datetime.date(year=sd.year, month=sd.month, day=sd.day)
+        end_date = datetime.date(year=ed.year, month=ed.month, day=ed.day)
+        delta = end_date - start_date
+
+        # getting time interval
+        start_time = self.time_interval.start_time
+        end_time = self.time_interval.end_time
+
+        nb_days = range(0, delta.days + 1)
+        for i in nb_days:
+            i_date = start_date + datetime.timedelta(days=i)
+            i_start_datetime = datetime.datetime(
+                year=i_date.year,
+                month=i_date.month,
+                day=i_date.day,
+                hour=start_time.hour,
+                minute=start_time.minute,
+                second=0
+            )
+            if end_time:
+                i_end_datetime = datetime.datetime(
+                    year=i_date.year,
+                    month=i_date.month,
+                    day=i_date.day,
+                    hour=end_time.hour,
+                    minute=end_time.minute,
+                    second=0
+                )
+                out.append((i_start_datetime, i_end_datetime))
+            else:
+                out.append(i_start_datetime)
+
+        return out
+
+    def to_db(self):
         """ Export DateTimeInterval to sql """
         out = []
 
@@ -701,14 +724,17 @@ class DateTimeInterval(Timepoint):
                 minute=start_time.minute,
                 second=0
             )
-            i_end_datetime = datetime.datetime(
-                year=i_date.year,
-                month=i_date.month,
-                day=i_date.day,
-                hour=end_time.hour,
-                minute=end_time.minute,
-                second=0
-            )
+            if end_time:
+                i_end_datetime = datetime.datetime(
+                    year=i_date.year,
+                    month=i_date.month,
+                    day=i_date.day,
+                    hour=end_time.hour,
+                    minute=end_time.minute,
+                    second=0
+                )
+            else:
+                i_end_datetime = i_start_datetime
 
             out.append((i_start_datetime, i_end_datetime))
 
