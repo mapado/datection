@@ -3,7 +3,7 @@
 import re
 
 from datection.regex import TIMEPOINT_REGEX
-from datection.serialize import timepoint_factory
+from datection.normalize import timepoint_factory
 from datection.context import probe
 
 

@@ -11,7 +11,7 @@ def timepoint_factory(detector, data, **kwargs):
         given the detector value.
 
     """
-    kwargs.update({'timepoint': detector})
+    # kwargs.update({'timepoint': detector})
     if detector == 'date':
         return Date(data, **kwargs)
     elif detector == 'date_interval':
@@ -42,17 +42,13 @@ class Timepoint(object):
         All non-string values are inserted as-is.
 
         """
-        for k, v in data.items() + kwargs.items():
+        for k, v in data.items():
             if v:
-                if isinstance(v, basestring):
-                    if v.isdigit():  # numbers
-                        self.__setattr__(k, int(v))
-                    else:  # strings
-                        self.__setattr__(k, v.strip())
-                else:
-                    self.__setattr__(k, v)
-            else:
-                self.__setattr__(k, v)
+                if v.isdigit():
+                    data[k] = int(v)
+        self.data = data
+        for k, v in kwargs.items():
+            self.__setattr__(k, v)
 
     def __eq__(self, other):
         return self.to_python() == other.to_python()
@@ -69,67 +65,67 @@ class Timepoint(object):
 
 
 class Date(Timepoint):
-    """ A class representing a simple date.
 
-    Examples:
-    * le 15 février 2013
-    * mardi 15 Mars
-    * 31 janvier
-    * 15/01/2013
-    * 15/12/13
-
-    """
-    def __init__(self, data={}, year=None, month_name=None, month=None, day=None, **kwargs):
+    def __init__(self, data={}, day=None, month=None, month_name=None, year=None, **kwargs):
         super(Date, self).__init__(data, **kwargs)
-        if year:
-            self.year = year
-        if month_name:
-            self.month_name = month_name
-        if day:
-            self.day = day
-        if month:
-            self.month = month
-        if not all([day, month, year]):
-            self._normalize()
-
-    def _normalize(self):
-        """ Convert month name to serialized month number """
-        if hasattr(self, 'lang'):
-            if isinstance(self.month_name, basestring):  # string date
-                # if month name is whole
-                if self.month_name.lower() in MONTH[self.lang]:
-                    self.month = MONTH[self.lang][self.month_name.lower()]
-                # if month name is abbreviated
-                elif self.month_name.lower() in SHORT_MONTH[self.lang]:
-                    self.month = SHORT_MONTH[self.lang][self.month_name.lower()]
-            elif isinstance(self.month_name, int):  # numeric date
-                self.month = self.month_name
+        if data:
+            self.year = self._set_year(self.data.get('year'))
+            self.month = self._set_month(self.data.get('month_name'))
+            self.day = self._set_day(self.data.get('day'))
+        else:
+            self.year = int(year)
+            if month:
+                self.month = int(month)
+            elif month_name:
+                # deduce month number from month name
+                self.month = self._set_month(month_name)
             else:
                 self.month = None
-        else:
-            raise Warning(
-                'A language must be given to Date constructor '
-                'to be able to serialize the month name.')
-        if len(str(self.year)) == 2:  # numeric date with shortened year format
+            self.day = int(day)
+
+    def _set_year(self, year):
+        if not year:
+            return None
+        # Case of a numeric date with short year format
+        if len(str(year)) == 2:
             # ex xx/xx/12 --> xx/xx/2012
             # WARNING: if a past date is written in this format (ex: 01/06/78)
             # it is impossible to know if it references the year 1978 or 2078.
-            # If the 2-digit date is less than 15 years in the future, we consider
-            # that it takes place in our century, otherwise, it is considered as a past
-            # date
+            # If the 2-digit date is less than 15 years in the future,
+            # we consider that it takes place in our century, otherwise,
+            # it is considered as a past date
             current_year = datetime.date.today().year
             century = int(str(current_year)[:2])
-            if int(str(century) + str(self.year)) - current_year < 15:
+            if int(str(century) + str(year)) - current_year < 15:
                 # if year is less than 15 years in the future, it is considered
                 # a future date
-                self.year = int(str(century) + str(self.year))
+                return int(str(century) + str(year))
             else:
                 # else, it is treated as a past date
-                self.year = int(str(century - 1) + str(self.year))
+                return int(str(century - 1) + str(year))
+        else:
+            return int(self.data['year'])
+
+    def _set_month(self, month_name):
+        if isinstance(month_name, basestring):  # string date
+            # if month name is whole
+            if month_name.lower() in MONTH[self.lang]:
+                return MONTH[self.lang][month_name.lower()]
+            # if month name is abbreviated
+            elif month_name.lower() in SHORT_MONTH[self.lang]:
+                return SHORT_MONTH[self.lang][month_name.lower()]
+        elif isinstance(month_name, int):  # numeric date
+            return month_name
+        else:
+            return None
+
+    def _set_day(self, day):
+        if not day:
+            return None
+        return int(day)
 
     @property
     def valid(self):
-        """ Returns whether the date exists. """
         if all([self.year, self.month, self.day]):
             try:  # check if date is valid
                 datetime.date(year=self.year, month=self.month, day=self.day)
@@ -172,58 +168,49 @@ class Date(Timepoint):
         The default time reference is the day of the method execution.
 
         """
-        date = datetime.date(
-            day=self.day, month=self.month, year=self.year)
-        return date > reference
+        return self.to_python() > reference
 
 
 class DateList(Timepoint):
-    """ A datelist contains several dates.
 
-    Examples:
-    * le 5, 6, 7 et 8 octobre 2013
-    * mardi 5 et mercredi 15 Mars
-
-    """
     def __init__(self, data={}, dates=None, **kwargs):
         """ Initialize the DateList object. """
         super(DateList, self).__init__(data, **kwargs)
         if dates:
             self.dates = dates
         else:
-            self._normalize()
+            self.dates = self._set_dates(data)
+            self._set_year()
+            self._set_month()
 
     def __iter__(self):
         for date in self.dates:
             yield date
 
-    def _normalize(self):
-        """ Restore all missing date from dates in the date list.
+    def _set_dates(self, data):
+        dates = []
+        for date in re.finditer(
+                TIMEPOINT_REGEX[self.lang]['_date_in_list'][0],
+                self.data['date_list']
+        ):
+            dates.append(Date(date.groupdict(), lang=self.lang))
+        return dates
 
-        All dates (in the date list) with missing data will be given
-        the corresponding data from the last date.
-
-        Example: 5, 6 et 7 février 2013
-        --> [5/02/2013, 6/02/2013, 7/02/2013]
-
-        """
-        # store all dates in self.dates list
-        self.dates = []
-        for date in re.finditer(TIMEPOINT_REGEX[self.lang]['_date_in_list'][0], self.date_list):
-            self.dates.append(Date(date.groupdict(), text=date.group(0), lang=self.lang))
-        # All dates without a year will inherit from the end date year
+    def _set_year(self):
+        """ All dates without a year will inherit from the end date year """
         end_date = self.dates[-1]
         if end_date.year:
             for date in self.dates[:-1]:
                 if not date.year:
                     date.year = end_date.year
-        # All dates without a month will inherit from the end date month/month_name
+
+    def _set_month(self):
+        """ All dates without a month will inherit from the end date month """
+        end_date = self.dates[-1]
         if end_date.month:
             for date in self.dates[:-1]:
                 if not date.month:
                     date.month = end_date.month
-                if not date.month_name:
-                    date.month_name = end_date.month_name
 
     @property
     def valid(self):
@@ -268,13 +255,7 @@ class DateList(Timepoint):
 
 
 class DateInterval(Timepoint):
-    """ A class representing a date interval
 
-    Examples:
-    * du 5 au 15 octobre
-    * 5-7 avril 2013
-
-    """
     def __init__(self, data={}, start_date=None, end_date=None, **kwargs):
         super(DateInterval, self).__init__(data, **kwargs)
         if start_date:
@@ -282,34 +263,34 @@ class DateInterval(Timepoint):
         if end_date:
             self.end_date = end_date
         if not (start_date and end_date):
-            self._normalize()
+            self._set_dates()
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
         for date in [self.start_date, self.end_date]:
             yield date
 
-    def _normalize(self):
+    def _set_dates(self):
         """ Restore all missing data and serialize the start and end date """
         # start year inherits from the end date year and month name
-        if not self.start_year and self.end_year:
-            self.start_year = self.end_year
-        if not self.start_month_name and self.end_month_name:
-            self.start_month_name = self.end_month_name
+        if not self.data['start_year'] and self.data['end_year']:
+            self.data['start_year'] = self.data['end_year']
+        if not self.data['start_month_name'] and self.data['end_month_name']:
+            self.data['start_month_name'] = self.data['end_month_name']
 
         # Create normalised start date of Date type
         if not hasattr(self, 'start_date'):
             self.start_date = Date(
-                year=self.start_year,
-                month_name=self.start_month_name,
-                day=self.start_day,
+                year=self.data['start_year'],
+                month_name=self.data['start_month_name'],
+                day=self.data['start_day'],
                 lang=self.lang)
         # create serialized end date of Date type
         if not hasattr(self, 'end_date'):
             self.end_date = Date(
-                year=self.end_year,
-                month_name=self.end_month_name,
-                day=self.end_day,
+                year=self.data['end_year'],
+                month_name=self.data['end_month_name'],
+                day=self.data['end_day'],
                 lang=self.lang)
 
     @property
@@ -343,11 +324,7 @@ class DateInterval(Timepoint):
 
 
 class Time(Timepoint):
-    """ A class representing a time.
 
-    Examples: 15h30, 15h, 8h, 08 h, 20:30
-
-    """
     def __init__(self, data={}, hour=None, minute=None, **kwargs):
         super(Time, self).__init__(data, **kwargs)
         if hour:
@@ -355,13 +332,12 @@ class Time(Timepoint):
         if minute:
             self.minute = minute
         if not (hour and minute):
-            self._normalize()
+            self.minute = self._set_minute(self.data.get('minute'))
+            self.hour = int(self.data['hour']) if self.data['hour'] else None
 
-    def _normalize(self):
-        """ Set self.minute to 0 if missing or null """
-        # TODO: gérer le cas midi/minuit
-        if not hasattr(self, 'minute') or not self.minute:
-            self.minute = 0
+    def _set_minute(self, minute):
+        """ Set self.minute to (0 if missing or null) """
+        return int(minute) if minute else 0
 
     @property
     def valid(self):
@@ -382,6 +358,8 @@ class Time(Timepoint):
             return False
 
     def to_python(self):
+        if not self.valid:
+            return None
         return datetime.time(hour=int(self.hour), minute=int(self.minute))
 
 
@@ -396,31 +374,35 @@ class TimeInterval(Timepoint):
         # store TimeInterval specific arguments
         if start_time:
             self.start_time = start_time
-        if end_time:
-            self.end_time = end_time
+        self.end_time = end_time
         if not(start_time):
-            self._normalize()
+            self.start_time = self._set_start_time(self.data.get('start_time'))
+            self.end_time = self._set_end_time(self.data.get('end_time'))
 
     def __iter__(self):
         """ Iteration over the start and end time. """
         for time in [self.start_time, self.end_time]:
             yield time
 
-    def _normalize(self):
-        """ Convert the self.start_time and self.end_time into Time objects. """
-        # normalization of self.start_time into a Time object
-        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.start_time)
-        self.start_time = Time(st.groupdict(), lang=self.lang)
+    def _set_start_time(self, st):
+        """ Normalize the start time into a Time object """
+        if not st:
+            return None
+        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], st)
+        return Time(st.groupdict(), lang=self.lang)
 
-        if self.end_time:
-            # normalization of self.end_time into a Time object
-            et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], self.end_time)
-            self.end_time = Time(et.groupdict(), lang=self.lang)
+    def _set_end_time(self, et):
+        """ Normalize the end time into a Time object """
+        # normalization of self.end_time into a Time object
+        if not et:
+            return None
+        et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], et)
+        return Time(et.groupdict(), lang=self.lang)
 
     @property
     def valid(self):
         """ Check that both self.start_time and self.end_time (if any) are valid. """
-        if hasattr(self, 'end_time') and self.end_time:
+        if self.end_time:
             return all([self.start_time.valid, self.end_time.valid])
         else:
             return self.start_time.valid
@@ -433,40 +415,34 @@ class TimeInterval(Timepoint):
 
 
 class DateTime(Timepoint):
-    """ A datetime has a fixed date, and either a start time, or a time interval.
 
-    Examples: lundi 15 mars à 15h30, le 8 octobre 2013 de 15h30 à 16h
-
-    """
     def __init__(self, data={}, date=None, time=None, **kwargs):
-        """ Initialize the DateTime object.
-
-        ``date`` argument is of type ``Date``.
-        ``time`` argument is of type ``Time``.
-        """
         super(DateTime, self).__init__(data, **kwargs)
         if date:
             self.date = date
         if time:
             self.time = time
         if not (date and time):
-            self._normalize()
+            year = self.data.get('year')
+            month_name = self.data.get('month_name')
+            day = self.data.get('day')
+            start_time = self.data.get('start_time')
+            end_time = self.data.get('end_time')
+            self.date = self._set_date(year, month_name, day)
+            self.time = self._set_time(start_time, end_time)
 
-    def _normalize(self):
-        """ Convert date and time groupdicts into Date and TimeInterval objects.
+    def _set_date(self, year, month_name, day):
+        return Date(year=year, month_name=month_name, day=day, lang=self.lang)
 
-        If date and/or time arguments were passed manually, they are considered
-        as already converted.
-        """
-        if not hasattr(self, 'date'):
-            for date_pattern in TIMEPOINT_REGEX[self.lang]['date']:
-                d = re.search(date_pattern, self.text)
-                if d:
-                    self.date = Date(d.groupdict(), text=d.group(0), lang=self.lang)
-                    break
-        if not hasattr(self, 'time'):
-            ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'][0], self.text)
-            self.time = TimeInterval(ti.groupdict(), text=ti.group(0), lang=self.lang)
+    def _set_time(self, start_time, end_time):
+        st_match = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], start_time)
+        st = Time(st_match.groupdict())
+        if not end_time:
+            return TimeInterval(start_time=st, end_time=None)
+        else:
+            et_match = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], end_time)
+            et = Time(et_match.groupdict())
+            return TimeInterval(start_time=st, end_time=et)
 
     @property
     def valid(self):
@@ -531,48 +507,52 @@ class DateTime(Timepoint):
 
 
 class DateTimeList(Timepoint):
-    """ A datetime list refers to a specific timing for a list of dates.
 
-    Examples:
-    * le 5, 6, 7 décembre 2013 à 15h30
-    * mardi 5 et mercredi 15 septembre de 15h30 à 19h15
-
-    """
     def __init__(self, data={}, datetimes=None, **kwargs):
         super(DateTimeList, self).__init__(data, **kwargs)
         if datetimes:
             self.datetimes = datetimes
         else:
-            self._normalize()
+            start_time = self.data.get('start_time')
+            end_time = self.data.get('end_time')
+            date_list = self.data.get('date_list')
+            self.datetimes = self._set_datetimes(date_list, start_time, end_time)
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
         for dt in self.datetimes:
             yield dt
 
-    def _normalize(self):
+    def _set_datetimes(self, dates, start_time, end_time):
         """ Associate the time interval to each date in the date list.
 
         The normalization process will instanciate DateTime objects,
         and store them in self.datetimes.
 
         """
-        self.datetimes = []
+        datetimes = []
 
         # Extract the date list and create a DateList object
         for date_list_pattern in TIMEPOINT_REGEX[self.lang]['date_list']:
-            dl = re.search(date_list_pattern, self.text)
+            dl = re.search(date_list_pattern, dates)
             if dl:
                 date_list = DateList(
                     dl.groupdict(), text=dl.group(0), lang=self.lang)
                 break
         # extract the time interval and create a TimeInterval object
-        ti = re.search(TIMEPOINT_REGEX[self.lang]['time_interval'][0], self.text).groupdict()
-        time = TimeInterval(ti, lang=self.lang)
+        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], start_time)
+        st = Time(st.groupdict())
+        if not end_time:
+            ti = TimeInterval(start_time=st, end_time=None, lang=self.lang)
+        else:
+            et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], end_time)
+            et = Time(et.groupdict())
+            ti = TimeInterval(start_time=st, end_time=et, lang=self.lang)
 
         # Populate self.datetimes with Datetimes objects
         for date in date_list:
-            self.datetimes.append(DateTime(ti, date=date, time=time, lang=self.lang))
+            datetimes.append(DateTime(date=date, time=ti, lang=self.lang))
+        return datetimes
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the DateTimeList is located in the future.
@@ -620,6 +600,9 @@ class DateTimeList(Timepoint):
 
         return out
 
+    def to_python(self):
+        return self.to_db()
+
 
 class DateTimeInterval(Timepoint):
     """ A datetime interval refers to a interval of date, with specified time. """
@@ -631,24 +614,30 @@ class DateTimeInterval(Timepoint):
         if time_interval:
             self.time_interval = time_interval
         if not(date_interval and time_interval):
-            self._normalize()
+            st = self.data.get('start_time')
+            et = self.data.get('end_time')
+            self.time_interval = self._set_time_interval(st, et)
+            self.date_interval = self._set_date_interval()
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
         for date in self.date_interval:
             yield date
 
-    def _normalize(self):
-        """ Normalisation of start and end datetimes."""
-        self.time_interval = TimeInterval(
+    def _set_time_interval(self, start_time, end_time):
+        return TimeInterval(
             {
-                'start_time': self.start_time,
-                'end_time': self.end_time
+                'start_time': start_time,
+                'end_time': end_time
             },
             lang=self.lang)
-        self.date_interval = DateInterval(
+
+    def _set_date_interval(self):
+        return DateInterval(
             re.search(
-                TIMEPOINT_REGEX[self.lang]['date_interval'][0], self.text).groupdict(),
+                TIMEPOINT_REGEX[self.lang]['date_interval'][0],
+                self.text
+            ).groupdict(),
             lang=self.lang)
 
     @property
