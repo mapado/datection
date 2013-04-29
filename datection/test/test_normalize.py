@@ -23,7 +23,6 @@ class TestSerializeFrDates(unittest.TestCase):
         """ Test the serialization of valid years of litteral format. """
         date = parse(u'le lundi 5 mars 2013', 'fr')[0]
         assert date.valid
-        assert date.timepoint == 'date'
         date_norm = date.to_python()
         assert date_norm == datetime.date(year=2013, month=3, day=5)
 
@@ -35,7 +34,6 @@ class TestSerializeFrDates(unittest.TestCase):
         """ Test the normalisation of valid years of litteral formats. """
         date = parse(u'5/03/2013', 'fr')[0]
         assert date.valid
-        assert date.timepoint == 'date'
         date_norm = date.to_python()
         assert date_norm == datetime.date(year=2013, month=3, day=5)
 
@@ -90,7 +88,6 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         """ Test the serializer on a valid time."""
         time = parse(u'15h30', 'fr')[0]
         assert time.valid
-        assert time.timepoint == 'time_interval'
         time_norm = time.to_python()
         assert time_norm == datetime.time(hour=15, minute=30)
 
@@ -98,7 +95,6 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         """ Test the serializer on a time witout minute. """
         time = parse(u'15h', 'fr')[0]
         assert time.valid
-        assert time.timepoint == 'time_interval'
         time_norm = time.to_python()
         assert time_norm == datetime.time(hour=15, minute=0)
 
@@ -106,7 +102,6 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         """ Test the serializer on a valid time *interval*"""
         time = parse(u'de 15h30 à 16h', 'fr')[0]
         assert time.valid
-        assert time.timepoint == 'time_interval'
         time_norm = time.to_python()
         st_time = datetime.time(hour=15, minute=30)
         end_time = datetime.time(hour=16, minute=0)
@@ -118,11 +113,6 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
         assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
 
-    def test_to_db(self):
-        """ Test the return format for sql insert """
-        date_list = to_db(u'de 15h30 à 16h', 'fr')
-        assert len(date_list) == 0
-
 
 class TestSerializeFrDateList(unittest.TestCase):
     """ Test class of the DateList serializer with french data. """
@@ -130,7 +120,6 @@ class TestSerializeFrDateList(unittest.TestCase):
     def test_valid_format(self):
         """ Test the serializer on a valid date list."""
         datelist = parse(u'le 5, 6 et 7 octobre 2013', 'fr')[0]
-        assert datelist.timepoint == 'date_list'
         assert datelist.valid
         assert all([date.valid for date in datelist.dates])
         datelist_norm = datelist.to_python()
@@ -141,7 +130,6 @@ class TestSerializeFrDateList(unittest.TestCase):
     def test_missing_year(self):
         """ Test the serializer on a date with no year."""
         datelist = parse(u'le 5, 6 et 7 octobre', 'fr', valid=False)[0]
-        assert datelist.timepoint == 'date_list'
         assert not datelist.valid
         assert not datelist.dates[0].valid
         assert not datelist.dates[1].valid
