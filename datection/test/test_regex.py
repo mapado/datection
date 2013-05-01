@@ -430,6 +430,23 @@ class TestDateTimeListRegex(unittest.TestCase):
         assert datelist.groupdict()['end_time'] == '21h20'
 
 
+class TestDateTimeIntervalRegex(unittest.TestCase):
+
+    def test_date_time_interval(self):
+        text = """Adulte : 19 € Tarif réduit :
+            13 € le du 15 au 23 mai 2013 de 20h à 21h20."""
+        dti = re.search(FR_DATETIME_INTERVAL, text)
+        assert dti.groupdict()['start_day'] == '15'
+        assert dti.groupdict()['start_month_name'] is None
+        assert dti.groupdict()['start_year'] is None
+        assert dti.groupdict()['end_day'] == '23'
+        assert dti.groupdict()['end_month_name'] == 'mai'
+        assert dti.groupdict()['end_year'] == '2013'
+        assert dti.groupdict()['start_time'] == '20h'
+        assert dti.groupdict()['end_time'] == '21h20'
+
+
+
 class TestRecurrenceRegex(unittest.TestCase):
     """ Test class for the extraction of recurrent dates.
 
