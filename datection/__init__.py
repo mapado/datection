@@ -29,3 +29,4 @@ __author__ = 'Balthazar Rouberol'
 from datection.parse import parse
 from datection.context import probe
 from datection.export import to_db, to_python
+from datection.future import is_future
