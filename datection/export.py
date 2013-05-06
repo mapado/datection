@@ -47,10 +47,10 @@ def to_mongo(text, lang, valid=True):
 
 
 def to_python(text, lang, valid=True):
-    """ Perform a date detection on text with all timepoint regex.
+    """ Perform a timepoint detection on text, and normalize each result to
+        python standard objects.
 
-    Returns a list of datetime tuples
-    ([start_datetime, end_datetime]) for sql insertion
+    Return a list of standard datetime python objects
     """
     out = [
         timepoint.to_python() for timepoint in parse(text, lang, valid)

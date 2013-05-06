@@ -84,8 +84,8 @@ def probe(text, lang):
         :param context_size: the number of character before and after a probe
         match to be taken as context.
 
-        :return: a list of non ovrlapping datection.context.Context objects,
-        sorted by order of appearance in the input text.
+        :return: list of non overlapping text fragments, sorted by order of
+        appearance in the input text.
 
     """
     matches = []
