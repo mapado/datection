@@ -44,7 +44,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
     def test_to_db(self):
         """ Test the return format for sql insert """
-        dates = to_db(u'le lundi 5 mars 2013', 'fr')
+        dates = to_db(u'le lundi 5 mars 2013', 'fr')[0]
         assert len(dates) == 1
         date = dates[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=5, hour=0, minute=0, second=0)
@@ -52,7 +52,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
     def test_to_python(self):
         """ Test the return format of the python export """
-        dates = to_db(u'le lundi 5 mars 2013', 'fr')
+        dates = to_db(u'le lundi 5 mars 2013', 'fr')[0]
         assert len(dates) == 1
         date = dates[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=5)
@@ -208,25 +208,25 @@ class TestSerializeFrDateTime(unittest.TestCase):
 
     def test_to_db(self):
         """ Test the serializer on a valid date time. """
-        dt = to_db(u'le lundi 15 mars 2013 à 20h', 'fr')
+        dt = to_db(u'le lundi 15 mars 2013 à 20h', 'fr')[0]
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
-        dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
+        dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')[0]
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
         assert date[1] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
     def test_to_python(self):
-        dt = to_db(u'le lundi 15 mars 2013 à 20h', 'fr')
+        dt = to_db(u'le lundi 15 mars 2013 à 20h', 'fr')[0]
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=20, minute=0, second=0)
 
-        dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')
+        dt = to_db(u'le lundi 15 mars 2013 de 19h à 20h', 'fr')[0]
         assert len(dt) == 1
         date = dt[0]
         assert date[0] == datetime.datetime(year=2013, month=3, day=15, hour=19, minute=0, second=0)
@@ -325,8 +325,7 @@ class TestSerializeFrDateInterval(unittest.TestCase):
 
     def test_to_db(self):
         """ Test the serializer on a valid dateinterval. """
-        dateinterval = to_db(u'du 6 au 9 octobre 2013', 'fr')[0]
-
+        dateinterval = to_db(u'du 6 au 9 octobre 2013', 'fr')[0][0]
         assert len(dateinterval) == 2
         assert dateinterval[0] == datetime.datetime(year=2013, month=10, day=6, hour=0, minute=0, second=0)
         assert dateinterval[1] == datetime.datetime(year=2013, month=10, day=9, hour=23, minute=59, second=59)

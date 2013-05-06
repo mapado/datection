@@ -19,6 +19,33 @@ def to_db(text, lang, valid=True):
     return [item for item in out if item]
 
 
+def to_mongo(text, lang, valid=True):
+    """ Detect and normalize all timepoints in the text and convert the
+        result into a mongoDB-tailored format, a list of dict
+
+        [
+            {'start': start_datetime, 'end': end_datetime},
+            ...
+        ]
+
+    """
+    out = []
+    # parse the text and normalize the result into database format
+    timepoints = [
+        timepoint.to_db()
+        for timepoint in parse(text, lang, valid)
+    ]
+
+    # convert the database format into specific mongodb format
+    timepoints = [item for item in timepoints if item]
+    for i, tp_group in enumerate(timepoints):
+        out.append(list())
+        for tp in tp_group:
+            start, end = tp
+            out[i].append({'start': start, 'end': end})
+    return out
+
+
 def to_python(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 

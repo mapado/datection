@@ -160,7 +160,7 @@ class Date(Timepoint):
             minute=59,
             second=59,
         )
-        return (start_datetime, end_datetime)
+        return [(start_datetime, end_datetime)]
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the Date is located in the future.
@@ -309,7 +309,7 @@ class DateInterval(Timepoint):
         end_datetime = datetime.datetime(
             year=self.end_date.year, month=self.end_date.month,
             day=self.end_date.day, hour=23, minute=59, second=59)
-        return start_datetime, end_datetime
+        return [(start_datetime, end_datetime)]
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the DateInterval is located in the future.
@@ -495,7 +495,7 @@ class DateTime(Timepoint):
         else:
             end_datetime = start_datetime
 
-        return (start_datetime, end_datetime)
+        return [(start_datetime, end_datetime)]
 
     def future(self, reference=datetime.date.today()):
         """Return whether the datetime is located in the future.
