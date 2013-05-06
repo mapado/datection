@@ -362,6 +362,9 @@ class Time(Timepoint):
             return None
         return datetime.time(hour=int(self.hour), minute=int(self.minute))
 
+    def to_db(self):
+        return None
+
 
 class TimeInterval(Timepoint):
     """ A class representing a simple time interval.
@@ -412,6 +415,9 @@ class TimeInterval(Timepoint):
             return (self.start_time.to_python(), self.end_time.to_python())
         else:
             return self.start_time.to_python()
+
+    def to_db(self):
+        return None
 
 
 class DateTime(Timepoint):
