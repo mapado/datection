@@ -30,22 +30,22 @@ Dates et horaires
 Du 6 octobre 2012 au 13 juillet 2013."""
         self.lang = 'fr'
         self.c1 = datection.context.Context(
-            match_start=50, match_end=100, text=' '*200, size=20)
+            match_start=60, match_end=100, text=' '*200, size=50)
         self.c2 = datection.context.Context(
-            match_start=70, match_end=115, text=' '*200, size=20)
+            match_start=70, match_end=115, text=' '*200, size=50)
 
     def test_context_init(self):
-        assert self.c1.start == 30  # 50 - 20
-        assert self.c1.end == 120  # 100 + 20
-        assert len(self.c1) == 90
+        assert self.c1.start == 10  # 60 - 50
+        assert self.c1.end == 150  # 100 + 50
+        assert len(self.c1) == 140
 
     def test_context_inclusion(self):
         assert self.c2 in self.c1
 
     def test_context_addition(self):
         c3 = self.c1 + self.c2
-        assert c3.start == 30
-        assert c3.end == 135
+        assert c3.start == 10
+        assert c3.end == 165
 
     def test_independants(self):
         indies = datection.context.probe(self.text, self.lang)
