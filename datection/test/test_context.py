@@ -51,8 +51,8 @@ Du 6 octobre 2012 au 13 juillet 2013."""
         indies = datection.context.probe(self.text, self.lang)
         # indies = datection.context.independants(probes)
         # 5 elements will be probed: '1h', 'octobre', '2012', 'juillet' & '2013'
-        # However, the 3 last all overlap, so they will be merged into one context
-        assert len(indies) == 3
+        # However, the last 4 all overlap, so they will be merged into one context
+        assert len(indies) == 2
 
 
 if __name__ == '__main__':

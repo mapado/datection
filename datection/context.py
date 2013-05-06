@@ -101,9 +101,10 @@ def probe(text, lang):
 
     out = list(set(matches))  # remove redundant matches
     # sort return list by order of apperance in the text
+    out = sorted(out, key=lambda x: x.start)
 
     # merge overriding contexts
-    out = independants(matches)
+    out = independants(out)
     if not out:
         return []
     return [str(context) for context in out]
