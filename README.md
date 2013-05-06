@@ -14,6 +14,7 @@ datetime.time(15, 30)
 ```
 
 # Detection of a datetime
+```python
 >>> dt = parse('le lundi 15 mars 2013 de 15h30 à 17h', 'fr')[0]
 >>> dt
 <datection.serialize.DateTime at 0x2412a10>
