@@ -1,6 +1,6 @@
 # datection
 
-Detect, serialize and deserialize temporal expressions.
+Detect and normalize textual temporal expressions.
 
 Example:
 ```python
@@ -9,22 +9,16 @@ Example:
 >>> t = parse('15h30', 'fr')[0]
 >>> t
 <datection.serialize.TimeInterval at 0x2412610>
->>> t.serialize()
-{'end_time': None,
-'start_time': {'hour': 15, 'minute': 30},
-'timepoint': 'time_interval',
-'valid': True}
+>>> t.to_python()
+datetime.time(15, 30)
+```
 
 # Detection of a datetime
 >>> dt = parse('le lundi 15 mars 2013 de 15h30 à 17h', 'fr')[0]
 >>> dt
 <datection.serialize.DateTime at 0x2412a10>
->>> dt.serialize()
-{'date': {'day': 15, 'month': 3, 'year': 2013},
-'time': {'end_time': {'hour': 17, 'minute': 0},
-'start_time': {'hour': 15, 'minute': 30}},
-'timepoint': 'datetime',
-'valid': True}
+>>> dt.to_python()
+(datetime.datetime(2013, 3, 15, 15, 30), datetime.datetime(2013, 3, 15, 17, 0))
 ```
 
 ## What time expressions are supported?
@@ -51,27 +45,22 @@ Examples:
 >>> from datection import probe
 >>> probe('Hello world')  # no temporal markers
 []
->>> p = probe("Le lundi 5 mars 2013, j'ai mangé une pomme, et elle était super bonne bonne bonne, comme le jour", 'fr')
+>>> p = probe("En 2013, j'ai mangé une pomme, et elle était super bonne bonne bonne, comme le jour", 'fr')
 >>> p
-[Le lundi 5 mars 2013, j'ai mangé une pomme, et elle était super,  # context of 'lundi'
-Le lundi 5 mars 2013, j'ai mangé une pomme, et elle était super bonn,  # context of 'mars'
-Le lundi 5 mars 2013, j'ai mangé une pomme, et elle étai]  # context of '2013'
->>> type(p[0])
-datection.context.Context
+["En 2013, j'ai mangé une pomme, et el"]  # context of "2013"
 ```
-
 If some temporal markers could be found, we extract the context around each of these markers.
-If some of the returned Contexts overlap each other, we merge them.
 
-Example:
+####Note
+If some of the returned Contexts overlap each other, they are automatically merged together, in a single context.
 ```python
->>> from datection.context import independants
->>> independants(probe("Le lundi 5 mars 2013, j'ai mangé une pomme, et elle était super bonne bonne bonne, comme le jour", 'fr'))
-["Le lundi 5 mars 2013, j'ai mang\xc3\xa9 une pomme, et elle \xc3\xa9tait super bonn"]
+>>> p = probe("Le 7 septembre 2013, j'ai mangé une pomme, et elle était super bonne", "fr")
+>>> p
+["Le 7 septembre 2013, j'ai mang\xc3\xa9 une pomme, et el"] # merged context of "septembre" and "2013"
 ```
 
 ### Normalizing
-Each ``Context`` object is then submitted to a battery of regexes, each of them tailored to detect a variety of temporal markers.
+Each string context is then submitted to a battery of regexes, each of them tailored to detect a variety of temporal markers.
 The result of the regex detection is them fed to a timepoint factory, which returns a Python object, subclassing the ``datection.serialize.Timepoint`` class.
 
 It is highly possible that some result overlap others. For example, parsing the string "lundi 15 mars 2013 à 15h30" will yield 3 different results:
@@ -80,43 +69,27 @@ It is highly possible that some result overlap others. For example, parsing the 
 * 15h30 → ``TimeInterval``
 * lundi 15 mars 2013 à 15h30 → ``DateTime``
 
-The function ``datection.remove_subsets`` (poor name choice, will have to fix that someday) will return only the non overlapping, independant results.
+The function ``datection._remove_subsets`` (poor name choice, will have to fix that someday) will return only the non overlapping, independant results.
 In this example, it would only return the ``DateTime`` instance.
 
 
 ## Serializing
 Each ``Timepoint`` subclass is provided with two serialization methods:
 
-* ``serialize``: exports the object to the JSON format
-* ``to_sql``: exports the object to standard Python format (``datetime``) in order to insert it into an SQL database
+* ``to_python``: exports the object to standard Python format (``time``, ``date`` or ``datetime``)
+* ``to_db``:  exports the object to a database compliant format, only based on datetime intervals
 
-Example
-```python
->>> from datection import parse
->>> dt = parse('lundi 15 mars 2013, de 5h à 8h30')
->>> dt.serialize()
-{'date': {'day': 15, 'month': 3, 'year': 2013},
-'time': {'end_time': {'hour': 8, 'minute': 30},
-'start_time': {'hour': 5, 'minute': 0}},
-'timepoint': 'datetime',
-'valid': True}
->>> dt.to_sql()
-(datetime.datetime(2013, 3, 15, 5, 0), datetime.datetime(2013, 3, 15, 8, 30))
-```
-
-
-
-### Deserializing
-The JSON-serialized format can be deserialized, to recreate a Python datection object.
-
-To do so, use the ``datection.deserialize`` module:
-```python
->>> from datection import deserialize
->>> ser = dt.serialize()
->>> newdt = deserialize(ser)
->>> dt == newdt
-True
-```
+### Serialization conversion table
+Expression | Timepoint | to_python | to_db
+--- | --- | --- | ---
+le 5 janvier 2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
+Le 5 et 6 janvier 2013 | DateList | [datetime.date(2013, 1, 15),<br> datetime.date(2013, 1, 16)]` |[(datetime.datetime(2013, 1, 15, 0, 0),<br> datetime.datetime(2013, 1, 15, 23, 59, 59)),<br>(datetime.datetime(2013, 1, 16, 0, 0),<br>datetime.datetime(2013, 1, 16, 23, 59, 59))]
+du 5 au 10 juillet 2013 | DateInterval | [datetime.date(2013, 7, 5),<br> datetime.date(2013, 7, 10)] | [(datetime.datetime(2013, 7, 5, 0, 0),<br> datetime.datetime(2013, 7, 10, 23, 59, 59))]
+15h30 | TimeInterval | datetime.time(15, 30) | None
+de 15h30 à 16h | TimeInterval | (datetime.time(15, 30),<br> datetime.time(16, 0)) | None
+le 18 janvier 2013 à 16h | DateTime | datetime.datetime(2013, 1, 18, 16, 0) | [(datetime.datetime(2013, 1, 18, 16, 0),<br> datetime.datetime(2013, 1, 18, 16, 0))]
+le 6 et 8 avril 2015, de 16h à 17h | DateTimeList | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))] | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))]
+du 17 au 18 avril 2012, de 17h à 21h | DateTimeInterval | [(datetime.datetime(2012, 4, 17, 17, 0),<br> datetime.datetime(2012, 4, 17, 21, 0)),<br>(datetime.datetime(2012, 4, 18, 17, 0),<br>datetime.datetime(2012, 4, 18, 21, 0))] | [(datetime.datetime(2012, 4, 17, 17, 0) datetime.datetime(2012, 4, 17, 21, 0)),<br> (datetime.datetime(2012, 4, 18, 17, 0),<br> datetime.datetime(2012, 4, 18, 21, 0))]
 
 ## Pitfalls
 
