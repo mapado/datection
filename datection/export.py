@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Datection exporters to JSON and SQL-compliant formats.
+Datection exporters to python and SQL/mongo compliant formats.
 """
 
 from datection.parse import parse
