@@ -87,6 +87,13 @@ class TestSerializeFrDates(unittest.TestCase):
         dates = parse(u'le 15 février 2013, plop, 15/02/2013', 'fr')
         assert len(dates) == 1
 
+    def test_missing_year(self):
+        """ Test the normalization of date in the case of a missing year. """
+        d_no_year = parse(u'le 15 février de 15h à 20h, plop', 'fr', valid=False)[0]
+        assert d_no_year.date.year == datetime.MINYEAR
+        assert d_no_year.valid is False
+        assert d_no_year.date.valid is False
+
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """
@@ -242,6 +249,14 @@ class TestSerializeFrDateTime(unittest.TestCase):
         dt = parse(u'le 8 octobre 2003 à 20h30', 'fr')[0]
         assert not dt.future(reference=today)
 
+    def test_missing_year(self):
+        """ test the normalisation of a datetime with a missing year """
+        dt = parse(u'le 8 octobre à 20h30', 'fr', valid=False)[0]
+        assert dt.date.year == datetime.MINYEAR
+        assert dt.valid is False
+        assert dt.date.valid is False
+        assert dt.time.valid is True
+
 
 class TestSerializeFrDateTimeList(unittest.TestCase):
     """ Test class of the DateTimeList serializer with french data."""
@@ -305,6 +320,17 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         dt = parse(u'le 6, 7, 8 octobre 2003 à 20h30', 'fr')[0]
         assert not dt.future(reference=today)
 
+    def test_missing_year(self):
+        """ Test the normalisation of a datetimelist in the case
+            where the date is missing
+
+        """
+        dtl = parse(u'le 6, 7, 8 octobre à 20h30', 'fr', valid=False)[0]
+        assert dtl.valid is False
+        assert dtl.datetimes[0].date.year == datetime.MINYEAR
+        assert dtl.datetimes[1].date.year == datetime.MINYEAR
+        assert dtl.datetimes[2].date.year == datetime.MINYEAR
+
 
 class TestSerializeFrDateInterval(unittest.TestCase):
     """ Test class of the DateInterval serializer with french data """
@@ -337,15 +363,17 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         assert dateinterval[0] == datetime.date(year=2013, month=10, day=6)
         assert dateinterval[1] == datetime.date(year=2013, month=10, day=9)
 
-    def test_future_datetime_interval(self):
-        """ Test that the datetime is in the future. """
-        dti = parse(u'du 7 au 8 octobre 2013 à 20h30', 'fr')[0]
-        assert dti.future(reference=today)
+    def test_missing_year(self):
+        """ Test then normalisation of a datetimeinterval
+            in the case of a missing year
 
-    def test_past_datetime_list(self):
-        """ Test that the datetlist is in the past. """
-        dti = parse(u'du 7 au 8 octobre 2003 à 20h30', 'fr')[0]
-        assert not dti.future(reference=today)
+        """
+        di = parse(u'du 6 au 9 octobre', 'fr', valid=False)[0]
+        assert di.start_date.valid is False
+        assert di.end_date.valid is False
+        assert di.start_date.year == datetime.MINYEAR
+        assert di.end_date.year == datetime.MINYEAR
+        assert di.valid is False
 
 
 class TestSerializeFrDateTimeInterval(unittest.TestCase):
@@ -408,3 +436,13 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
         # 2013-02-16
         datetime_interval = datetime_interval_list[1]
         assert datetime_interval == datetime.datetime(year=2013, month=2, day=16, hour=18, minute=30, second=0)
+
+    def test_future_datetime_interval(self):
+        """ Test that the datetime is in the future. """
+        dti = parse(u'du 7 au 8 octobre 2013 à 20h30', 'fr')[0]
+        assert dti.future(reference=today)
+
+    def test_past_datetime_list(self):
+        """ Test that the datetlist is in the past. """
+        dti = parse(u'du 7 au 8 octobre 2003 à 20h30', 'fr')[0]
+        assert not dti.future(reference=today)

@@ -73,7 +73,14 @@ class Date(Timepoint):
             self.month = self._set_month(self.data.get('month_name'))
             self.day = self._set_day(self.data.get('day'))
         else:
-            self.year = int(year)
+            # if the year is None, set its value to datetime.MINYEAR (= 1)
+            # in this case, the date will be considered as invalid
+            if year:
+                self.year = int(year)
+            else:
+                self.year = datetime.MINYEAR
+
+            # if month is not given but month name is, deduce month from it
             if month:
                 self.month = int(month)
             elif month_name:
@@ -81,11 +88,13 @@ class Date(Timepoint):
                 self.month = self._set_month(month_name)
             else:
                 self.month = None
+
             self.day = int(day)
 
     def _set_year(self, year):
         if not year:
-            return None
+            return datetime.MINYEAR
+
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
             # ex xx/xx/12 --> xx/xx/2012
@@ -127,6 +136,8 @@ class Date(Timepoint):
     @property
     def valid(self):
         if all([self.year, self.month, self.day]):
+            if self.year == datetime.MINYEAR:
+                return False
             try:  # check if date is valid
                 datetime.date(year=self.year, month=self.month, day=self.day)
             except ValueError:
@@ -137,11 +148,8 @@ class Date(Timepoint):
             return False
 
     def to_python(self):
-        if self.valid:
-            return datetime.date(
-                year=self.year, month=self.month, day=self.day)
-        else:
-            return None
+        return datetime.date(
+            year=self.year, month=self.month, day=self.day)
 
     def to_db(self):
         start_datetime = datetime.datetime(
@@ -201,7 +209,7 @@ class DateList(Timepoint):
         end_date = self.dates[-1]
         if end_date.year:
             for date in self.dates[:-1]:
-                if not date.year:
+                if date.year == datetime.MINYEAR:
                     date.year = end_date.year
 
     def _set_month(self):
@@ -273,8 +281,12 @@ class DateInterval(Timepoint):
     def _set_dates(self):
         """ Restore all missing data and serialize the start and end date """
         # start year inherits from the end date year and month name
+
         if not self.data['start_year'] and self.data['end_year']:
             self.data['start_year'] = self.data['end_year']
+        elif not (self.data['start_year'] or self.data['end_year']):
+            self.data['start_year'] = datetime.MINYEAR
+            self.data['end_year'] = datetime.MINYEAR
         if not self.data['start_month_name'] and self.data['end_month_name']:
             self.data['start_month_name'] = self.data['end_month_name']
 
