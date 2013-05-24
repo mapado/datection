@@ -9,7 +9,7 @@ import datetime
 
 from datection.parse import parse
 from datection.export import to_db, to_python
-from ..serialize import *
+from ..normalize import *
 
 
 # We pretend to be in the future
