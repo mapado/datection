@@ -460,7 +460,7 @@ class DateTime(Timepoint):
         if time:
             self.time = time
         if not (date and time):
-            year = self.data.get('year')
+            year = self.data.get('year') or datetime.date.today().year
             month_name = self.data.get('month_name')
             day = self.data.get('day')
             start_time = self.data.get('start_time')
