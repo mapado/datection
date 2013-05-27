@@ -209,13 +209,24 @@ class DateList(Timepoint):
                 TIMEPOINT_REGEX[self.lang]['_date_in_list'][0],
                 self.data['date_list']
         ):
-            dates.append(Date(date.groupdict(), lang=self.lang))
+            # Assign datetime.MINYEAR to year, if year is None
+            # It will be a marker allowing the year to be replaced
+            # by the same value as the last year of the list
+            # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
+            if not date.groupdict()['year']:
+                groupdict = dict(date.groupdict())
+                groupdict['year'] = datetime.MINYEAR
+                dates.append(Date(groupdict, lang=self.lang))
+            else:
+                dates.append(Date(date.groupdict(), lang=self.lang))
         return dates
 
     def _set_year(self):
         """ All dates without a year will inherit from the end date year """
         end_date = self.dates[-1]
         if end_date.year:
+            if end_date.year == datetime.MINYEAR:
+                end_date.year = datetime.date.today().year
             for date in self.dates[:-1]:
                 if date.year == datetime.MINYEAR:
                     date.year = end_date.year
