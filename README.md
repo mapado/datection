@@ -91,6 +91,15 @@ le 18 janvier 2013 à 16h | DateTime | datetime.datetime(2013, 1, 18, 16, 0) | [
 le 6 et 8 avril 2015, de 16h à 17h | DateTimeList | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))] | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))]
 du 17 au 18 avril 2012, de 17h à 21h | DateTimeInterval | [(datetime.datetime(2012, 4, 17, 17, 0),<br> datetime.datetime(2012, 4, 17, 21, 0)),<br>(datetime.datetime(2012, 4, 18, 17, 0),<br>datetime.datetime(2012, 4, 18, 21, 0))] | [(datetime.datetime(2012, 4, 17, 17, 0) datetime.datetime(2012, 4, 17, 21, 0)),<br> (datetime.datetime(2012, 4, 18, 17, 0),<br> datetime.datetime(2012, 4, 18, 21, 0))]
 
+#####Note:
+If the year is missing, the value of the current year is taken.
+
+Examples:
+
+* "5 octobre": 5/10/2013
+* "du 5 au 8 juin": 5/06/2013 → 8/06/2013
+* "le 5, 6, 7 et 13 novembre": 5/11/2013, 6/11/2013, 7/11/2013, 13/11/2013
+
 ## API
 
 ###``datection.parse``
@@ -212,7 +221,6 @@ Assesses if the input datetime interval is located in the future.
 
 ####Returns
 ``True`` if the input timepoint is in the future. Else ``False``.
-
 
 
 ## Pitfalls
