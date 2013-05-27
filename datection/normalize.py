@@ -156,8 +156,12 @@ class Date(Timepoint):
             return False
 
     def to_python(self):
-        return datetime.date(
-            year=self.year, month=self.month, day=self.day)
+        try:
+            return datetime.date(
+                year=self.year, month=self.month, day=self.day)
+        except TypeError:
+            # Eg: if one of the attributes is None
+            return None
 
     def to_db(self):
         start_datetime = datetime.datetime(
