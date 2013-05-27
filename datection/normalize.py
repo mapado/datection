@@ -304,8 +304,8 @@ class DateInterval(Timepoint):
         if not self.data['start_year'] and self.data['end_year']:
             self.data['start_year'] = self.data['end_year']
         elif not (self.data['start_year'] or self.data['end_year']):
-            self.data['start_year'] = datetime.MINYEAR
-            self.data['end_year'] = datetime.MINYEAR
+            self.data['start_year'] = datetime.date.today().year
+            self.data['end_year'] = datetime.date.today().year
         if not self.data['start_month_name'] and self.data['end_month_name']:
             self.data['start_month_name'] = self.data['end_month_name']
 
