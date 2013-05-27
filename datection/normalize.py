@@ -43,7 +43,7 @@ class Timepoint(object):
 
         """
         for k, v in data.items():
-            if v:
+            if v and isinstance(v, basestring):
                 if v.isdigit():
                     data[k] = int(v)
         self.data = data
