@@ -92,8 +92,16 @@ class Date(Timepoint):
             self.day = int(day)
 
     def _set_year(self, year):
+        """ Set and normalise the date year
+
+        If year is None (missing year) we replace it by the current year
+        Elif the year is numeric but only 2 digit long, we guess in which
+        century it is (ex: dd/mm/13 -> 1913, 2013, etc ?)
+        Else, make sure the year is an int
+
+        """
         if not year:
-            return datetime.MINYEAR
+            return datetime.date.today().year
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
