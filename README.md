@@ -83,8 +83,10 @@ The ``parse`` function automatically select the "largest" results, overlapping o
 Expression | Timepoint | to_python | to_db
 --- | --- | --- | ---
 le 5 janvier 2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
+05/01/2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
 Le 5 et 6 janvier 2013 | DateList | [datetime.date(2013, 1, 15),<br> datetime.date(2013, 1, 16)]` |[(datetime.datetime(2013, 1, 15, 0, 0),<br> datetime.datetime(2013, 1, 15, 23, 59, 59)),<br>(datetime.datetime(2013, 1, 16, 0, 0),<br>datetime.datetime(2013, 1, 16, 23, 59, 59))]
 du 5 au 10 juillet 2013 | DateInterval | [datetime.date(2013, 7, 5),<br> datetime.date(2013, 7, 10)] | [(datetime.datetime(2013, 7, 5, 0, 0),<br> datetime.datetime(2013, 7, 10, 23, 59, 59))]
+du 5/07/2013 au 10/07/2013 | DateInterval | [datetime.date(2013, 7, 5),<br> datetime.date(2013, 7, 10)] | [(datetime.datetime(2013, 7, 5, 0, 0),<br> datetime.datetime(2013, 7, 10, 23, 59, 59))]
 15h30 | TimeInterval | datetime.time(15, 30) | None
 de 15h30 à 16h | TimeInterval | (datetime.time(15, 30),<br> datetime.time(16, 0)) | None
 le 18 janvier 2013 à 16h | DateTime | datetime.datetime(2013, 1, 18, 16, 0) | [(datetime.datetime(2013, 1, 18, 16, 0),<br> datetime.datetime(2013, 1, 18, 16, 0))]
