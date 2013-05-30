@@ -196,6 +196,26 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['end_month_name'] == 'avril'
         assert interval.groupdict()['end_year'] == '2013'
 
+    def test_numeric_date_interval(self):
+        text = "ohai du 01/12/2005 au 05/04/2007 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] == '2005'
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '2007'
+
+    def test_numeric_date_interval_2digit_year(self):
+        text = "ohai du 01/12/05 au 05/04/07 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] == '05'
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '07'
+
 
 class TestTimeRegex(unittest.TestCase):
     """ Test class for the extraction of times.

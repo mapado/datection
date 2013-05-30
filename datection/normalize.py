@@ -76,7 +76,12 @@ class Date(Timepoint):
             # if the year is None, set its value to datetime.MINYEAR (= 1)
             # in this case, the date will be considered as invalid
             if year:
-                self.year = int(year)
+                if len(str(year)) == 4:
+                    self.year = int(year)
+                else:
+                    # if a 2 digit year has been passed as argument, it needs
+                    # to be normalized
+                    self.year = self._set_year(year)
             else:
                 self.year = datetime.MINYEAR
 

@@ -59,7 +59,7 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
 # Dates of format dd/mm(/(yy)yy)
-FR_NUMERIC_DATE = re.compile(r"""
+_FR_NUMERIC_DATE = r"""
     (?P<day>{day})
     /  # separator
     (?P<month_name>{month})
@@ -68,8 +68,9 @@ FR_NUMERIC_DATE = re.compile(r"""
     """.format(
     day=DAY_NUMBER,
     month=NUMERIC_MONTH,
-    year=NUMERIC_YEAR),
-    flags=re.VERBOSE)
+    year=NUMERIC_YEAR)
+
+FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 
 # separator bewteen hour and minutes
 # example: 10h50, 10:50, 10h
@@ -124,6 +125,22 @@ _FR_DATE_INTERVAL = r"""
     month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
 FR_DATE_INTERVAL = re.compile(
     _FR_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+
+_FR_NUMERIC_DATE_INTERVAL = r"""
+    (?<={prefix}\s)
+    (?P<start_day>{day})/ # day number
+    (?P<start_month_name>{month_name})/  # month
+    (?P<start_year>{year})\s # year
+    {suffix}\s  # prefix
+    (?P<end_day>{day})/ # day number # day number
+    (?P<end_month_name>{month_name})/  # month
+    (?P<end_year>{year})  # year
+    """.format(
+    prefix=INTERVAL_PREFIX, day=DAY_NUMBER,
+    month_name=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
+FR_NUMERIC_DATE_INTERVAL = re.compile(
+    _FR_NUMERIC_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Datetime: a date and a time
 # Examples:
@@ -266,7 +283,7 @@ TIMEPOINT_REGEX = {
         'date': [FR_DATE, FR_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
-        'date_interval': [FR_DATE_INTERVAL],
+        'date_interval': [FR_DATE_INTERVAL, FR_NUMERIC_DATE_INTERVAL],
         'date_recurrence': [FR_DATE_RECURRENCE],
         '_time': [FR_TIME],  # "private" sub-regex
         'time_interval': [FR_TIME_INTERVAL],

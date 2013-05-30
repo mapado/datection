@@ -344,13 +344,27 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
 class TestSerializeFrDateInterval(unittest.TestCase):
     """ Test class of the DateInterval serializer with french data """
 
-    def test_valid_format(self):
-        """ Test the serialize """
+    def test_litteral_format(self):
+        """ Test the serializer """
         di = parse(u'du 15 au 18 février 2013', 'fr')[0]
         assert di.valid
         dateinterval = di.to_python()
         assert dateinterval[0] == datetime.date(year=2013, month=2, day=15)
         assert dateinterval[1] == datetime.date(year=2013, month=2, day=18)
+
+    def test_numeric_format(self):
+        di = parse(u'du 03/04/2011 au 05/06/2012', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2011, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2012, month=6, day=5)
+
+    def test_numeric_format_2digit_year(self):
+        di = parse(u'du 03/04/11 au 05/06/12', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2011, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2012, month=6, day=5)
 
     def test_all_formats(self):
         di1 = parse(u'du 15 au 18 février 2013', 'fr')[0]
