@@ -96,6 +96,12 @@ class TestSerializeFrDates(unittest.TestCase):
         dates = parse(u'le 15 février 2013, plop, 15/02/2013', 'fr')
         assert len(dates) == 1
 
+    def test_serialize_2digit_year(self):
+        assert Date._normalize_2digit_year(12) == 2012
+        assert Date._normalize_2digit_year(20) == 2020
+        assert Date._normalize_2digit_year(30) == 1930
+        assert Date._normalize_2digit_year(80) == 1980
+
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """

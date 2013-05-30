@@ -81,7 +81,7 @@ class Date(Timepoint):
                 else:
                     # if a 2 digit year has been passed as argument, it needs
                     # to be normalized
-                    self.year = self._set_year(year)
+                    self.year = self._normalize_2digit_year(year)
             else:
                 self.year = datetime.MINYEAR
 
@@ -95,6 +95,29 @@ class Date(Timepoint):
                 self.month = None
 
             self.day = int(day)
+
+    @staticmethod
+    def _normalize_2digit_year(year):
+        """ Normalize a 2 digit year into a 4 digit one
+
+        Example: xx/xx/12 --> xx/xx/2012
+
+        WARNING: if a past date is written in this format (ex: 01/06/78)
+        it is impossible to know if it references the year 1978 or 2078.
+        If the 2-digit date is less than 15 years in the future,
+        we consider that it takes place in our century, otherwise,
+        it is considered as a past date
+
+        """
+        current_year = datetime.date.today().year
+        century = int(str(current_year)[:2])
+        if int(str(century) + str(year)) - current_year < 15:
+            # if year is less than 15 years in the future, it is considered
+            # a future date
+            return int(str(century) + str(year))
+        else:
+            # else, it is treated as a past date
+            return int(str(century - 1) + str(year))
 
     def _set_year(self, year):
         """ Set and normalise the date year
@@ -110,21 +133,7 @@ class Date(Timepoint):
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
-            # ex xx/xx/12 --> xx/xx/2012
-            # WARNING: if a past date is written in this format (ex: 01/06/78)
-            # it is impossible to know if it references the year 1978 or 2078.
-            # If the 2-digit date is less than 15 years in the future,
-            # we consider that it takes place in our century, otherwise,
-            # it is considered as a past date
-            current_year = datetime.date.today().year
-            century = int(str(current_year)[:2])
-            if int(str(century) + str(year)) - current_year < 15:
-                # if year is less than 15 years in the future, it is considered
-                # a future date
-                return int(str(century) + str(year))
-            else:
-                # else, it is treated as a past date
-                return int(str(century - 1) + str(year))
+            return self._normalize_2digit_year(year)
         else:
             return int(self.data['year'])
 
