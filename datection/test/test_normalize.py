@@ -372,6 +372,13 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         assert dateinterval[0] == datetime.date(year=2011, month=4, day=3)
         assert dateinterval[1] == datetime.date(year=2012, month=6, day=5)
 
+        # Test the special case where the 2 digit year starts with 0
+        di = parse(u'du 03/04/07 au 05/06/07', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2007, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2007, month=6, day=5)
+
     def test_all_formats(self):
         di1 = parse(u'du 15 au 18 février 2013', 'fr')[0]
         di2 = parse(u'15 au 18 février 2013', 'fr')[0]

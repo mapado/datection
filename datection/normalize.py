@@ -111,13 +111,20 @@ class Date(Timepoint):
         """
         current_year = datetime.date.today().year
         century = int(str(current_year)[:2])
-        if int(str(century) + str(year)) - current_year < 15:
+
+        # handle special case where the 2 digit year started with a 0
+        # int("07") = 7
+        if len(str(year)) == 1:
+            year = '0' + str(year)
+        else:
+            year = str(year)
+        if int(str(century) + year) - current_year < 15:
             # if year is less than 15 years in the future, it is considered
             # a future date
-            return int(str(century) + str(year))
+            return int(str(century) + year)
         else:
             # else, it is treated as a past date
-            return int(str(century - 1) + str(year))
+            return int(str(century - 1) + year)
 
     def _set_year(self, year):
         """ Set and normalise the date year
