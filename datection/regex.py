@@ -130,8 +130,8 @@ FR_DATE_INTERVAL = re.compile(
 _FR_NUMERIC_DATE_INTERVAL = r"""
     (?<={prefix}\s)
     (?P<start_day>{day})/ # day number
-    (?P<start_month_name>{month_name})/  # month
-    (?P<start_year>{year})\s # year
+    (?P<start_month_name>{month_name})\s* # month
+    (/(?P<start_year>{year})\s)? # year
     {suffix}\s  # prefix
     (?P<end_day>{day})/ # day number # day number
     (?P<end_month_name>{month_name})/  # month
