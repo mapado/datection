@@ -695,9 +695,18 @@ class DateTimeInterval(Timepoint):
             lang=self.lang)
 
     def _set_date_interval(self):
+        # if the end month name (always prewent) is a number,
+        # it means that the date is written numerically
+        # so a numeric date interval regex must be used
+        # otherwise, the date is written "normally", so a litteral date
+        # interval regex is used
+        if isinstance(self.data['end_month_name'], basestring):
+            re_date_interval = TIMEPOINT_REGEX[self.lang]['date_interval'][0]
+        else:
+            re_date_interval = TIMEPOINT_REGEX[self.lang]['date_interval'][1]
         return DateInterval(
             re.search(
-                TIMEPOINT_REGEX[self.lang]['date_interval'][0],
+                re_date_interval,
                 self.text
             ).groupdict(),
             lang=self.lang)

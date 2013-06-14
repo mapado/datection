@@ -159,9 +159,16 @@ FR_DATETIME = re.compile(r"""
 # * du 15 au 18 Mars de 20h30 à 23h
 FR_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(date_interval=_FR_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
+    {date_interval}
+    [^\d]{{,4}}
+    {time}
+    """.format(date_interval=_FR_NUMERIC_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # A date list is a list of independant dates, linkes by a prefix and a suffix
@@ -290,7 +297,7 @@ TIMEPOINT_REGEX = {
         'datetime': [FR_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
         'datetime_recurrence': [FR_DATETIME_RECURRENCE],
-        'datetime_interval': [FR_DATETIME_INTERVAL],
+        'datetime_interval': [FR_DATETIME_INTERVAL, FR_NUMERIC_DATETIME_INTERVAL],
     }
 }
 

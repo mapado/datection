@@ -427,7 +427,7 @@ class TestSerializeFrDateInterval(unittest.TestCase):
 class TestSerializeFrDateTimeInterval(unittest.TestCase):
     """ Test class of the DateTimeInterval serialize with french data """
 
-    def test_valid_format(self):
+    def test_litteral_format(self):
         """ Test the serialize """
         dti = parse(u'du 15 au 17 février 2013 de 14h à 18h30', 'fr')[0]
         assert dti.valid
@@ -444,6 +444,20 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
         assert datetime_interval[2][0] == datetime.datetime(
             year=2013, month=2, day=17, hour=14, minute=0)
         assert datetime_interval[2][1] == datetime.datetime(
+            year=2013, month=2, day=17, hour=18, minute=30)
+
+    def test_numeric_format(self):
+        dti = parse(u'du 16/02 au 17/02/13 : de 14h à 18h30', 'fr')[0]
+        assert dti.valid
+        datetime_interval = dti.to_python()
+
+        assert datetime_interval[0][0] == datetime.datetime(
+            year=2013, month=2, day=16, hour=14, minute=0)
+        assert datetime_interval[0][1] == datetime.datetime(
+            year=2013, month=2, day=16, hour=18, minute=30)
+        assert datetime_interval[1][0] == datetime.datetime(
+            year=2013, month=2, day=17, hour=14, minute=0)
+        assert datetime_interval[1][1] == datetime.datetime(
             year=2013, month=2, day=17, hour=18, minute=30)
 
     def test_to_db(self):
