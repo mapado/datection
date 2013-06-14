@@ -128,7 +128,7 @@ FR_DATE_INTERVAL = re.compile(
 
 
 _FR_NUMERIC_DATE_INTERVAL = r"""
-    (?<={prefix}\s)
+    ({prefix}\s)?
     (?P<start_day>{day})/ # day number
     (?P<start_month_name>{month_name})\s* # month
     (/(?P<start_year>{year})\s)? # year
@@ -148,7 +148,7 @@ FR_NUMERIC_DATE_INTERVAL = re.compile(
 # le 15 août 2013 de 15h30 à 16h45
 FR_DATETIME = re.compile(r"""
     {date}\s*
-    (,|:)?\s*
+    [^\d]{{,4}}
     {time}
     """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -237,7 +237,7 @@ FR_DATE_LIST = re.compile(
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 de 20h à 20h30
 FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
     {datelist}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(datelist=_FR_DATE_LIST_WEEKDAY, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -245,7 +245,7 @@ FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
 # datetime list with *no* weekday
 FR_DATETIME_LIST = re.compile(r"""
     {datelist}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(datelist=_FR_DATE_LIST, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -279,7 +279,7 @@ FR_DATE_RECURRENCE = re.compile(
 # * le lundi et mardi, à 15h30
 FR_DATETIME_RECURRENCE = re.compile(r"""
     {recurrence}
-    ,?\s
+    [^\d]{{,4}}
     {time_interval}
     """.format(recurrence=_FR_DATE_RECURRENCE, time_interval=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
