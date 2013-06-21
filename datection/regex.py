@@ -59,15 +59,17 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 # (ex: dd/mm/2012 or dd/mm/12)
 NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
+NUMERIC_DATE_SEPARATOR = r'[/\.]'
 # Dates of format dd/mm(/(yy)yy)
 _FR_NUMERIC_DATE = r"""
     (?P<day>{day})
-    /  # separator
+    {sep}  # separator
     (?P<month_name>{month})
-    (/)? # optional separator (if year not present)
+    ({sep})? # optional separator (if year not present)
     (?P<year>{year})?  # year (optional)
     """.format(
     day=DAY_NUMBER,
+    sep=NUMERIC_DATE_SEPARATOR,
     month=NUMERIC_MONTH,
     year=NUMERIC_YEAR)
 
@@ -130,15 +132,21 @@ FR_DATE_INTERVAL = re.compile(
 
 _FR_NUMERIC_DATE_INTERVAL = r"""
     ({prefix}\s)?
-    (?P<start_day>{day})/ # day number
+    (?P<start_day>{day}) # day number
+    {sep}
     (?P<start_month_name>{month_name})\s* # month
-    (/(?P<start_year>{year})\s)? # year
+    (
+        {sep}
+        (?P<start_year>{year})\s  # year
+    )?
     {suffix}\s  # prefix
-    (?P<end_day>{day})/ # day number # day number
-    (?P<end_month_name>{month_name})/  # month
+    (?P<end_day>{day})  # day number # day number
+    {sep}
+    (?P<end_month_name>{month_name})  # month
+    {sep}
     (?P<end_year>{year})  # year
     """.format(
-    prefix=INTERVAL_PREFIX, day=DAY_NUMBER,
+    prefix=INTERVAL_PREFIX, day=DAY_NUMBER, sep=NUMERIC_DATE_SEPARATOR,
     month_name=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
 FR_NUMERIC_DATE_INTERVAL = re.compile(
     _FR_NUMERIC_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
