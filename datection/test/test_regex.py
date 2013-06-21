@@ -100,6 +100,19 @@ class TestDateRegex(unittest.TestCase):
         assert date.groupdict()['month_name'] == 'juin'
         assert date.groupdict()['year'] == '2012'
 
+    def test_abbreviated_month(self):
+        # without trailing dot
+        date = re.search(FR_DATE, "plop le 5 fev 2012 lala")
+        assert date.groupdict()['day'] == '5'
+        assert date.groupdict()['month_name'] == 'fev'
+        assert date.groupdict()['year'] == '2012'
+
+        # with trailing dot
+        date = re.search(FR_DATE, "plop le 5 fev. 2012 lala")
+        assert date.groupdict()['day'] == '5'
+        assert date.groupdict()['month_name'] == 'fev.'
+        assert date.groupdict()['year'] == '2012'
+
 
 class TestNumericDateRegex(unittest.TestCase):
     """ Test class for the extraction of numeric dates of format dd/mm/yyyy """

@@ -13,7 +13,8 @@ FR_WEEKDAY = r'(%s)' % ('|'.join(WEEKDAY['fr'].keys()))
 # first the whole month number, then the abbreviated
 # otherwhise, 'oct' might be matched in 'october', thus breaking
 # the whole date structure
-FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + SHORT_MONTH['fr'].keys()))
+FR_SHORT_MONTH = [k + r'\.?' for k in SHORT_MONTH['fr'].keys()]
+FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + FR_SHORT_MONTH))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (

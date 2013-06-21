@@ -150,8 +150,10 @@ class Date(Timepoint):
             if month_name.lower() in MONTH[self.lang]:
                 return MONTH[self.lang][month_name.lower()]
             # if month name is abbreviated
-            elif month_name.lower() in SHORT_MONTH[self.lang]:
-                return SHORT_MONTH[self.lang][month_name.lower()]
+            else:
+                month_name = month_name.rstrip('.')  # remove trailing dot, if any
+                if month_name.lower() in SHORT_MONTH[self.lang]:
+                    return SHORT_MONTH[self.lang][month_name.lower()]
         elif isinstance(month_name, int):  # numeric date
             return month_name
         else:

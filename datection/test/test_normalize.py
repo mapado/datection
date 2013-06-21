@@ -102,6 +102,23 @@ class TestSerializeFrDates(unittest.TestCase):
         assert Date._normalize_2digit_year(30) == 1930
         assert Date._normalize_2digit_year(80) == 1980
 
+    def test_serialize_abbreviated_month(self):
+        """ Test that an abbreviated month is correctlyt serialized, with or
+            without trailing dot.
+
+        """
+        dates = to_db(u'le lundi 5 mar 2013', 'fr')[0]  # no trailing dot
+        assert len(dates) == 1
+        date = dates[0]
+        assert date[0].month == 3
+        assert date[1].month == 3
+
+        dates = to_db(u'le lundi 5 mar. 2013', 'fr')[0]  # no trailing dot
+        assert len(dates) == 1
+        date = dates[0]
+        assert date[0].month == 3
+        assert date[1].month == 3
+
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
     """ Test class of the Time serializer on french data. """
