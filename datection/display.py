@@ -2,170 +2,323 @@
 
 import datetime
 
-from export import to_mongo
+from collections import defaultdict
 
-text = "Du 2 au 5 juin 2013 de 15h à 18h plop plop le 29 juin 2013 de 15h à 18h plop 27 juillet 2014 à 16h"
-data = to_mongo(text, 'fr')
-
-# THe main hypothesis tested by this prototype is that we can work
-# without keeping the datamined contexts, only with a flat list
-# containing datetimes
-
-# Here, we flatten the data
-context_free = []
-for context in data:
-    context_free.extend(context)
-data = context_free
+from datection.datenames import REVERSE_MONTH
 
 
-def consecutives(date1, date2):
-    """ If two dates are consecutive, return True, else False
-
-    date1 and date2 are consecutive if date1.day == date2.day +/- 1
-    in the same year
+class _TimepointGrouper(object):
+    """ Object in charge of grouping the result of a to_mongo export,
+        to pass it to a TimepointFormatter.
 
     """
-    if date1['start'].year != date2['start'].year:
-        return False
-    return abs(date1['start'].day - date2['start'].day) == 1
+    def __init__(self, schedule):
+        """ Flatten the list of list of schedules into a flat list,
+            and sort it by start time.
 
+        """
+        schedule = self._flatten(schedule)
+        self.schedule = sorted(schedule, key=lambda x: x['start'])
 
-def group_schedules_by_consecutive_dates(schedules):
-    """ Group the input schedule list by gathering consecutive dates together
+    @staticmethod
+    def _flatten(schedule):
+        """ Flatten the contextual schedule into a non-contextual one """
+        if not isinstance(schedule[0], list):
+            return schedule
+        return [timepoint for context in schedule for timepoint in context]
 
-    Example:
-    Input: [01/02/2013, 03/02/2013, 04/02/2013, 06/02/2013]
-    Output: [[01/02/2013], [03/02/2013, 04/02/2013], [06/02/2013]]
+    @staticmethod
+    def _consecutives(date1, date2):
+        """ If two dates are consecutive, return True, else False
 
-    """
-    conseq = []
-    schedules = sorted(schedules, key=lambda x: x['start'])
-    start = 0
-    for i, schedule in enumerate(schedules):
-        if i != len(schedules) - 1:
-            if consecutives(schedule, schedules[i+1]):
-                continue
-            else:
-                conseq.append(schedules[start: i+1])
-                start = i + 1
-        else:  # special case of the last item in the list
-            if consecutives(schedule, schedules[i-1]):
-                conseq.append(schedules[start: i+1])
-            else:
-                conseq.append([schedule])
+        date1 and date2 are consecutive if date1.day == date2.day +/- 1
+        in the same year and month
 
-    return conseq
+        """
+        if (date1['start'].year != date2['start'].year
+                or date1['start'].month != date2['start'].month):
+            return False
+        return abs(date1['start'].day - date2['start'].day) == 1
 
+    def groupby_time(self):
+        """ Group the self.schedule list by start/end time
 
-def group_schedule_by_time(schedules):
-    """ Group the input schedule list by time
+        All the schedules with the same start/end time are grouped together
 
-    All the schedules with the same start/end time are grouped together
+        """
+        times = defaultdict(list)
+        for date in self.schedule:
+            start_time, end_time = date['start'].time(), date['end'].time()
+            grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
+            times[grp].append(date)  # group dates by time
+        return times.values()
 
-    """
-    times = {}
-    for schedule in schedules:
-        start, end = schedule['start'], schedule['end']
-        start_time = datetime.time(hour=start.hour, minute=start.minute)
-        end_time = datetime.time(hour=end.hour, minute=end.minute)
-        display_time = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
-        if display_time not in times:
-            times[display_time] = [schedule]
-        else:
-            times[display_time].append(schedule)
-    return times.values()
+    def groupby_consecutive_dates(self, time_groups):
+        """ Group each group in input time_groups by gathering consecutive dates together
 
+        Example:
+        Input: [01/02/2013, 03/02/2013, 04/02/2013, 06/02/2013]
+        Output: [[01/02/2013], [03/02/2013, 04/02/2013], [06/02/2013]]
 
-def format_single_date(sched):
-    """ Format a single date """
-    date = datetime.date(year=sched.year, month=sched.month, day=sched.day)
-    return u'le ' + datetime.date.isoformat(date)
-
-
-def format_sparse_dates(dates):
-    # group the sparse dates by year first
-    yeargroups = list(set([date['start'].year for date in dates]))
-    out = []
-    for year in yeargroups:
-        monthgroups = list(set([date['start'].month for date in dates if date['start'].year == year]))
-        if len(monthgroups) == 1:
-            month = monthgroups[0]
-            monthdates = [
-                date for date in dates
-                if date['start'].year == year
-                and date['start'].month == month]
-            prefix = 'le ' if len(monthdates) == 1 else 'les '
-            fmt = prefix + ', '.join([str(date['start'].day) for date in monthdates]) + ' %d %d' % (
-                month, year)
-            out.append(fmt)
-        else:
-            for month in monthgroups:
-                fmt = 'les '
-                for i, month in enumerate(monthgroups):
-                    monthgroup = [date for date in dates if date['start'].year == year and date['start'].month == month]
-                    fmt += ', '.join([str(date['start'].day) for date in monthgroup]) + ' %d' % (month)
-                    if i != len(monthgroups) - 1:
-                        if len(monthgroups) == 2:
-                            fmt += ' et '
-                        else:
-                            fmt += ', '
+        """
+        out = []
+        for group in time_groups:
+            conseq = []
+            start = 0
+            for i, date in enumerate(group):
+                if i != len(group) - 1:  # if date is not the last item
+                    if self._consecutives(date, group[i+1]):
+                        continue
                     else:
-                        fmt += ' %d' % (year)
-            out.append(fmt)
-    return out
+                        conseq.append(group[start: i+1])
+                        start = i + 1  # next group starts at next item
+                else:  # special case of the last item in the list: border effect
+                    # we text the consecutivity with the previous date
+                    if self._consecutives(date, group[i-1]):
+                        # add last item to last group
+                        conseq.append(group[start: i+1])
+                    else:
+                        # create new group with only last date
+                        conseq.append([date])
+            out.append(conseq)
+        return out
+
+    def group(self):
+        """ Group self.schedule by time and also by consecutivity
+
+        The schedules are first grouped by time, ie, all schedules
+        occuring at the same start/end time are grouped together.
+
+        Then, each time group is divised into subgroups, containing
+        consecutive items.
+
+        Examples (using human readable representations):
+        Schedule: [
+            15 mars 2013 à 20h,
+            16 mars 2013 à 20h,
+            18 mars 2013 à 20h,
+            20 mars 2013 à 21h]
+        Time groups: [
+            '20h': [15 mars 2013, 16 mars 2013, 18 mars 2013]
+            '21h': [20 mars 2013]
+        ]
+        Consecutive time groups: [
+        '20h': [[15 mars 2013, 16 mars 2013], [18 mars 2013]]
+        '21h': [[20 mars 2013]]
+        ]
+
+        Both representations are returned.
+
+        """
+        time_groups = self.groupby_time()
+        for group in time_groups:
+            group.sort(key=lambda date: date['start'])
+        return time_groups, self.groupby_consecutive_dates(time_groups)
 
 
-def format_date_interval(group):
-    """ Format a date interval """
-    start_day = group[0]['start'].day
-    start_year = group[0]['start'].year
-    end_day = group[-1]['start'].day
-    end_month = group[-1]['start'].month
-    end_year = group[-1]['start'].year
-    if start_year != end_year:
-        interval = u'du %s au %s' % (group[0]['start'].isoformat(), group[-1]['end'].isoformat())
-    else:
-        interval = u'du %d au %d/%d/%d' % (start_day, end_day, end_month, end_year)
-    return interval
+class TimepointFormatter(object):
+    """ Object in charge of generating the shortest human readable
+        representation of a datection context-free schedule list
 
+    """
+    def __init__(self, schedule, lang):
+        """ Group the input schedule by time and consecutivity.
 
-def format_time(sched):
-    """ Format a single time or a time interval """
-    start_hour = sched['start'].hour
-    start_minute = sched['start'].minute
-    end_hour = sched['end'].hour
-    end_minute = sched['end'].minute
+        The time groups are used by the date list formatting technique,
+        and the consecutive time groups are used by the time range formatting
+        technique.
 
-    if start_hour == end_hour and start_minute == end_minute:
-        interval = u'à %dh%s' % (start_hour, start_minute or '')
-    else:
-        interval = u'de %dh%s à %dh%s' % (start_hour, start_minute or '', end_hour, end_minute or '')
-    return interval
+        """
+        self.time_groups, self.consecutive_groups = _TimepointGrouper(
+            schedule).group()
+        self.lang = lang
 
+    @staticmethod
+    def _filterby_year_and_month(dates, year, month):
+        """ Return all dates in dates occuring at argument year and month """
+        return [
+            date for date in dates
+            if date['start'].year == year
+            and date['start'].month == month
+        ]
 
-def display(groups):
-    out = []
-    for time_group in groups:
-        fmt = []
-        for conseq_group in time_group:
+    def _litteral_month(self, month_number):
+        """ Return the litteral month name associated with input month number
+            in the language defined by self.lang
+
+        """
+        return REVERSE_MONTH[self.lang][str(month_number)]
+
+    @staticmethod
+    def format_day(day):
+        return u'1er' if day == 1 else unicode(day)
+
+    def format_date(self, schedule):
+        """ Format a single date using the litteral montn name
+
+        Example: date(2013, 5, 6) -> 6 mai 2013 (in French)
+
+        """
+        date = schedule.date()
+        return '%s %s %s' % (
+            self.format_day(date.day),
+            self._litteral_month(date.month),
+            date.year)
+
+    def format_date_interval(self, group):
+        """ Format a date interval, using the litteral month names
+
+        3 cases are taken into account:
+        1 - different years
+        2 - same year but different months
+        3 - same year and same month
+
+        Examples:
+        1 - 1/2/2013 - 1/2/2014: u"du 1er février 2013 au 1er février 2014"
+        2 - 2/4/2013 - 4/6/2013: u"du 2 avril au 4 juin 2013"
+        3 - 2/7/2013 - 5/7/2013: u"du 2 au 7 juillet 2013"
+
+        """
+        start_day = group[0]['start'].day
+        start_year = group[0]['start'].year
+        end_year = group[-1]['start'].year
+        start_month = group[0]['start'].month
+        end_month = group[-1]['start'].month
+        if start_year != end_year:  # different year
+            interval = u'du %s au %s' % (
+                self.format_date(group[0]['start']),
+                self.format_date(group[-1]['end']))
+        elif start_month != end_month:  # same year, different month
+            interval = u'du %s %s au %s' % (
+                self.format_day(start_day),
+                self._litteral_month(start_month),
+                self.format_date(group[-1]['end']))
+        else:  # same year, same month
+            interval = u'du %s au %s' % (
+                self.format_day(start_day), self.format_date(group[-1]['end']))
+        return interval
+
+    @staticmethod
+    def format_time(sched):
+        """ Format a single time or a time interval
+
+        In the case where minute = 0, only the hour is displayed
+
+        Examples of single times (where start = end):
+        * time(10, 30) -> u"10h30"
+        * time(20, 30) -> u"20h"
+
+        Examples of time interval
+        * time(10, 20), time(15, 30) -> u"de 10h20 à 15h30"
+        * time(10, 0), time(15, 30) -> u"de 10h à 15h30"
+
+        """
+        start_hour = sched['start'].hour
+        start_minute = sched['start'].minute
+        end_hour = sched['end'].hour
+        end_minute = sched['end'].minute
+
+        if start_hour == end_hour and start_minute == end_minute:
+            interval = u'à %dh%s' % (start_hour, start_minute or '')
+        else:
+            interval = u'de %dh%s à %dh%s' % (
+                start_hour, start_minute or '', end_hour, end_minute or '')
+        return interval
+
+    def format_single_dates_and_interval(self, time_group):
+        """ First formatting technique, using dates interval
+
+        This formatting technique uses self.consecutive_groups,
+        and displays single dates using the self.format_date method
+        and date intervals using the format_date_interval method.
+
+        Example: [[15 mars 2013], [17 mars 2013, 18 mars 2013]]
+        Output: u"le 15 mars 2013, du 17 au 18 mars 2013"
+
+        """
+        out = []
+        for i, conseq_group in enumerate(time_group):
             if len(conseq_group) == 1:
                 date = conseq_group[0]['start']
-                fmt.append(format_single_date(date))
+                # Add prefix before the first date of the group
+                fmt = 'le ' + self.format_date(date) if i == 0 else self.format_date(date)
+                out.append(fmt)
             else:
-                fmt.append(format_date_interval(conseq_group))
-        fmt.append(format_time(time_group[0][0]))
-        out.append(', '.join(fmt))
-    return out
+                out.append(self.format_date_interval(conseq_group))
+        return out
+
+    def format_date_list(self, time_group):
+        """ Second formatting technique, using non-consecutive dates lists
+
+        All the non-consecutive dates are first grouped by years and then by
+        months, and displayed as a simple list.
+
+        Example:
+        Input: [1 mars 2013, 4 mars 2013, 6 juin 2013, 5 juillet 2014]
+        Output: u"le 1er, 4 mars 2013, le 6 juin 2013, le 5 juillet 2014"
+
+        """
+        # group the sparse dates by year first
+        years = list(set([date['start'].year for date in time_group]))
+        out = []
+        for year in years:
+            # now group the dates by month
+            months = list(set([
+                date['start'].month
+                for date in time_group
+                if date['start'].year == year
+            ]))
+
+            # all dates happen in the same month
+            if len(months) == 1:
+                month = months[0]
+                monthdates = self._filterby_year_and_month(time_group, year, month)
+                fmt = u'{prefix} {day_list} {month}'.format(
+                    prefix='le' if len(monthdates) == 1 else 'les',
+                    day_list=', '.join(
+                        [self.format_day(date['start'].day) for date in monthdates]),
+                    month=self._litteral_month(month))
+                out.append(fmt)
+            else:  # the dates happen in different months
+
+                for month in months:
+                    fmt = 'les '
+                    for i, month in enumerate(months):
+                        monthdates = self._filterby_year_and_month(time_group, year, month)
+                        fmt += u'{day_list} {month}'.format(
+                            day_list=', '.join(
+                                [self.format_day(date['start'].day) for date in monthdates]),
+                            month=self._litteral_month(month))
+                        if i != len(months) - 1:
+                            if i == len(months) - 2:
+                                fmt += ' et '
+                            else:
+                                fmt += ', '
+                out.append(fmt)
+            # add the year after the last date in the month group
+            out[-1] += ' %d' % (year)
+        return out
+
+    def display(self):
+        fmt = []
+        for time_group, conseq_time_group in zip(self.time_groups, self.consecutive_groups):
+            list_fmt = ', '.join(self.format_date_list(time_group))
+            conseq_fmt = ', '.join(self.format_single_dates_and_interval(conseq_time_group))
+            shortest_fmt = sorted([list_fmt, conseq_fmt], key=len)[0]
+            time_fmt = ' ' + self.format_time(time_group[0])
+            fmt.append(shortest_fmt + time_fmt)
+        return self.sentencize(fmt)
+
+    @staticmethod
+    def sentencize(fmt):
+        return '\n'.join([item.capitalize() + '.' for item in fmt])
+
+
 
 if __name__ == '__main__':
-    by_time = group_schedule_by_time(data)
-    conseq = []
-    for i, group in enumerate(by_time):
-        conseq.append(group_schedules_by_consecutive_dates(group))
-
-    print u' | '.join(display(conseq))
-    dates = [{'end': datetime.datetime(2013, 6, 14, 20, 0),
-   'start': datetime.datetime(2013, 6, 14, 20, 0)},
+    import datetime
+    schedule = [[{'end': datetime.datetime(2013, 6, 1, 20, 0),
+   'start': datetime.datetime(2013, 6, 1, 20, 0)},
   {'end': datetime.datetime(2013, 6, 18, 20, 0),
    'start': datetime.datetime(2013, 6, 18, 20, 0)},
   {'end': datetime.datetime(2013, 6, 20, 20, 0),
@@ -176,12 +329,15 @@ if __name__ == '__main__':
    'start': datetime.datetime(2013, 6, 22, 20, 0)},
   {'end': datetime.datetime(2013, 6, 25, 20, 0),
    'start': datetime.datetime(2013, 6, 25, 20, 0)},
-  {'end': datetime.datetime(2014, 7, 26, 20, 0),
-   'start': datetime.datetime(2014, 7, 26, 20, 0)}]
-    print format_sparse_dates(dates)
-    by_time = group_schedule_by_time(dates)
-    conseq = []
-    for i, group in enumerate(by_time):
-        conseq.append(group_schedules_by_consecutive_dates(group))
+  {'end': datetime.datetime(2013, 6, 26, 20, 0),
+   'start': datetime.datetime(2013, 6, 26, 20, 0)}],
+ [{'end': datetime.datetime(2013, 6, 23, 15, 0),
+   'start': datetime.datetime(2013, 6, 23, 15, 0)}],
+ [{'end': datetime.datetime(2013, 6, 12, 20, 0),
+   'start': datetime.datetime(2013, 6, 12, 15, 0)},
+  {'end': datetime.datetime(2013, 7, 15, 20, 0),
+   'start': datetime.datetime(2013, 7, 15, 15, 0)}]]
 
-    print u' | '.join(display(conseq))
+
+    fmt = TimepointFormatter(schedule, 'fr')
+    print fmt.display()
