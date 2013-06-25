@@ -61,7 +61,7 @@ REVERSE_MONTH = {
         '7': u'juillet',
         '8': u'août',
         '9': u'septembre',
-        '10': u'ocotbre',
+        '10': u'octobre',
         '11': u'novembre',
         '12': u'décembre'
     }
