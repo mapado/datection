@@ -135,7 +135,7 @@ class ScheduleFormatter(object):
 
     @staticmethod
     def _sentencize(fmt):
-        return '\n'.join([item.capitalize() + '.' for item in fmt])
+        return '\n'.join([item.capitalize().strip() + '.' for item in fmt])
 
     @staticmethod
     def _shortest(item1, item2):
@@ -220,17 +220,22 @@ class ScheduleFormatter(object):
         * time(10, 20), time(15, 30) -> u"de 10h20 à 15h30"
         * time(10, 0), time(15, 30) -> u"de 10h à 15h30"
 
-        """
-        start_hour = sched['start'].hour
-        start_minute = sched['start'].minute
-        end_hour = sched['end'].hour
-        end_minute = sched['end'].minute
+        If start == time(0, 0, 0) and end == time(23, 59, 59), then
+        it means that no time must be displayed.
 
-        if start_hour == end_hour and start_minute == end_minute:
-            interval = u'à %dh%s' % (start_hour, start_minute or '')
-        else:
+        """
+        start = sched['start'].time()
+        end = sched['end'].time()
+
+        # case of no specified time (entire day)
+        if start == datetime.time(0, 0, 0) and end == datetime.time(23, 59, 59):
+            interval = ''
+        # case of a single time (no end time)
+        elif start.hour == end.hour and start.minute == end.minute:
+            interval = u'à %dh%s' % (start.hour, start.minute or '')
+        else:  # start time and end time
             interval = u'de %dh%s à %dh%s' % (
-                start_hour, start_minute or '', end_hour, end_minute or '')
+                start.hour, start.minute or '', end.hour, end.minute or '')
         return interval
 
     def format_single_dates_and_interval(self, time_group):
