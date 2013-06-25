@@ -251,10 +251,13 @@ class ScheduleFormatter(object):
         """
         out = []
         for i, conseq_group in enumerate(time_group):
-            if len(conseq_group) == 1:
-                date = conseq_group[0]['start']
-                # Add prefix before the first date of the group
-                fmt = 'le ' + self.format_date(date) if i == 0 else self.format_date(date)
+            if len(conseq_group) == 1:  # single start/end datetime in group
+                start, end = conseq_group[0]['start'], conseq_group[0]['end']
+                if start.date() == end.date():  # a single date
+                    # Add prefix before the first date of the group
+                    fmt = 'le ' + self.format_date(start) if i == 0 else self.format_date(start)
+                else:  # a date interval
+                    fmt = self.format_date_interval(conseq_group)
                 out.append(fmt)
             else:
                 out.append(self.format_date_interval(conseq_group))
