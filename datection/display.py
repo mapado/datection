@@ -139,7 +139,7 @@ class ScheduleFormatter(object):
 
     @staticmethod
     def _shortest(item1, item2):
-        return item1 if len(item1) > len(item2) else item2
+        return item1 if len(item1) < len(item2) else item2
 
     @staticmethod
     def _filterby_year_and_month(dates, year, month):
