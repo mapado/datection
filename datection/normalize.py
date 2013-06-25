@@ -26,6 +26,8 @@ def timepoint_factory(detector, data, **kwargs):
         return DateTimeList(data, **kwargs)
     elif detector == 'datetime_interval':
         return DateTimeInterval(data, **kwargs)
+    elif detector == 'date_recurrence':
+        return DateRecurrence(data, **kwargs)
     else:
         raise NotImplementedError(
             detector + " normalisation is not yet handled.")
@@ -812,3 +814,21 @@ class DateTimeInterval(Timepoint):
 
         """
         return self.date_interval.end_date.future(reference)
+
+
+class DateRecurrence(Timepoint):
+
+    def __init__(self, data={}, **kwargs):
+        super(DateRecurrence, self).__init__(data, **kwargs)
+        self.weekdays = self._set_weekdays()
+
+    def _set_weekdays(self):
+        """ Return the list of reccurent days number
+
+        For example, if self.data['weekdays'] == 'le lundi, mardi et mercredi',
+        it returns [1, 2, 3]
+
+        """
+        return sorted([
+            WEEKDAY[self.lang][day.group(0)] for day in
+            re.finditer(r'|'.join(WEEKDAY[self.lang].keys()), self.data['weekdays'])])

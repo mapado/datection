@@ -262,22 +262,22 @@ FR_DATETIME_LIST = re.compile(r"""
 
 # Recurrence are recurrent dates, linked by a prefix and a suffix
 # Examples:
-# * du lundi au mardi
-# * les lundis et mardis
+# * les lundis, mardis et mercredis
 # * le lundi
-RECURRENCE_PREFIX = r'(du|le(s)?)'
-RECURRENCE_SUFFIX = r'(au|et|,)'
+RECURRENCE_PREFIX = r'le(s)?'
+RECURRENCE_SUFFIX = r'\set\s|,\s'
 
 _FR_DATE_RECURRENCE = r"""
-    ((?P<prefix>{prefix})  # prefix
-    \s*
-    (?P<start_weekday_name>{weekday_name})(s)?)(?!\s{day})  # day, not followed by a date
-    (\s*(?P<suffix>{suffix})?  # prefix (optional)
-    \s*
-    (?P<end_weekday_name>{weekday_name}?)(s)?(?!\s{day}))  # day, not followed by a date (optional)
+    {prefix}\s
+    (?P<weekdays>
+        (
+            {weekday}
+            ({suffix})?
+        )+
+    )
     """.format(
-    prefix=RECURRENCE_PREFIX, weekday_name=FR_WEEKDAY,
-    suffix=RECURRENCE_SUFFIX, day=DAY_NUMBER)
+    prefix=RECURRENCE_PREFIX, weekday=FR_WEEKDAY,
+    suffix=RECURRENCE_SUFFIX)
 
 FR_DATE_RECURRENCE = re.compile(
     _FR_DATE_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
