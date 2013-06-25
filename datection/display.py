@@ -325,30 +325,3 @@ class ScheduleFormatter(object):
 
 def display(schedule, lang):
     return ScheduleFormatter(schedule, lang).display()
-
-
-if __name__ == '__main__':
-    import datetime
-    schedule = [[{'end': datetime.datetime(2013, 6, 1, 20, 0),
-   'start': datetime.datetime(2013, 6, 1, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 18, 20, 0),
-   'start': datetime.datetime(2013, 6, 18, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 20, 20, 0),
-   'start': datetime.datetime(2013, 6, 20, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 21, 20, 0),
-   'start': datetime.datetime(2013, 6, 21, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 22, 20, 0),
-   'start': datetime.datetime(2013, 6, 22, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 25, 20, 0),
-   'start': datetime.datetime(2013, 6, 25, 20, 0)},
-  {'end': datetime.datetime(2013, 6, 26, 20, 0),
-   'start': datetime.datetime(2013, 6, 26, 20, 0)}],
- [{'end': datetime.datetime(2013, 6, 23, 15, 0),
-   'start': datetime.datetime(2013, 6, 23, 15, 0)}],
- [{'end': datetime.datetime(2013, 6, 12, 20, 0),
-   'start': datetime.datetime(2013, 6, 12, 15, 0)},
-  {'end': datetime.datetime(2013, 7, 15, 20, 0),
-   'start': datetime.datetime(2013, 7, 15, 15, 0)}]]
-
-    fmt = ScheduleFormatter(schedule, 'fr')
-    print fmt.display()
