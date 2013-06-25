@@ -228,7 +228,9 @@ class ScheduleFormatter(object):
         end = sched['end'].time()
 
         # case of no specified time (entire day)
-        if start == datetime.time(0, 0, 0) and end == datetime.time(23, 59, 59):
+        if (start == datetime.time(0, 0, 0) and
+            (end == datetime.time(23, 59, 59) or
+                end == datetime.time(0, 0, 0))):
             interval = ''
         # case of a single time (no end time)
         elif start.hour == end.hour and start.minute == end.minute:
