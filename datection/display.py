@@ -116,7 +116,7 @@ class _TimepointGrouper(object):
         return time_groups, self.groupby_consecutive_dates(time_groups)
 
 
-class TimepointFormatter(object):
+class ScheduleFormatter(object):
     """ Object in charge of generating the shortest human readable
         representation of a datection context-free schedule list
 
@@ -132,6 +132,14 @@ class TimepointFormatter(object):
         self.time_groups, self.consecutive_groups = _TimepointGrouper(
             schedule).group()
         self.lang = lang
+
+    @staticmethod
+    def _sentencize(fmt):
+        return '\n'.join([item.capitalize() + '.' for item in fmt])
+
+    @staticmethod
+    def _shortest(item1, item2):
+        return item1 if len(item1) > len(item2) else item2
 
     @staticmethod
     def _filterby_year_and_month(dates, year, month):
@@ -304,15 +312,10 @@ class TimepointFormatter(object):
         for time_group, conseq_time_group in zip(self.time_groups, self.consecutive_groups):
             list_fmt = ', '.join(self.format_date_list(time_group))
             conseq_fmt = ', '.join(self.format_single_dates_and_interval(conseq_time_group))
-            shortest_fmt = sorted([list_fmt, conseq_fmt], key=len)[0]
+            date_fmt = self._shortest(list_fmt, conseq_fmt)
             time_fmt = ' ' + self.format_time(time_group[0])
-            fmt.append(shortest_fmt + time_fmt)
-        return self.sentencize(fmt)
-
-    @staticmethod
-    def sentencize(fmt):
-        return '\n'.join([item.capitalize() + '.' for item in fmt])
-
+            fmt.append(date_fmt + time_fmt)
+        return self._sentencize(fmt)
 
 
 if __name__ == '__main__':
@@ -338,6 +341,5 @@ if __name__ == '__main__':
   {'end': datetime.datetime(2013, 7, 15, 20, 0),
    'start': datetime.datetime(2013, 7, 15, 15, 0)}]]
 
-
-    fmt = TimepointFormatter(schedule, 'fr')
+    fmt = ScheduleFormatter(schedule, 'fr')
     print fmt.display()

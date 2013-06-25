@@ -49,6 +49,25 @@ MONTH = {
     }
 }
 
+REVERSE_MONTH = {
+    'fr':
+    {
+        '1': u'janvier',
+        '2': u'février',
+        '3': u'mars',
+        '4': u'avril',
+        '5': u'mai',
+        '6': u'juin',
+        '7': u'juillet',
+        '8': u'août',
+        '9': u'septembre',
+        '10': u'ocotbre',
+        '11': u'novembre',
+        '12': u'décembre'
+    }
+}
+
+
 SHORT_MONTH = {
 # Untested for now!
     'fr':
