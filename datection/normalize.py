@@ -43,7 +43,7 @@ class Timepoint(object):
 
         """
         for k, v in data.items():
-            if v:
+            if v and isinstance(v, basestring):
                 if v.isdigit():
                     data[k] = int(v)
         self.data = data
@@ -76,7 +76,12 @@ class Date(Timepoint):
             # if the year is None, set its value to datetime.MINYEAR (= 1)
             # in this case, the date will be considered as invalid
             if year:
-                self.year = int(year)
+                if len(str(year)) == 4:
+                    self.year = int(year)
+                else:
+                    # if a 2 digit year has been passed as argument, it needs
+                    # to be normalized
+                    self.year = self._normalize_2digit_year(year)
             else:
                 self.year = datetime.MINYEAR
 
@@ -91,27 +96,51 @@ class Date(Timepoint):
 
             self.day = int(day)
 
+    @staticmethod
+    def _normalize_2digit_year(year):
+        """ Normalize a 2 digit year into a 4 digit one
+
+        Example: xx/xx/12 --> xx/xx/2012
+
+        WARNING: if a past date is written in this format (ex: 01/06/78)
+        it is impossible to know if it references the year 1978 or 2078.
+        If the 2-digit date is less than 15 years in the future,
+        we consider that it takes place in our century, otherwise,
+        it is considered as a past date
+
+        """
+        current_year = datetime.date.today().year
+        century = int(str(current_year)[:2])
+
+        # handle special case where the 2 digit year started with a 0
+        # int("07") = 7
+        if len(str(year)) == 1:
+            year = '0' + str(year)
+        else:
+            year = str(year)
+        if int(str(century) + year) - current_year < 15:
+            # if year is less than 15 years in the future, it is considered
+            # a future date
+            return int(str(century) + year)
+        else:
+            # else, it is treated as a past date
+            return int(str(century - 1) + year)
+
     def _set_year(self, year):
+        """ Set and normalise the date year
+
+        If year is None (missing year) we replace it by the current year
+        Elif the year is numeric but only 2 digit long, we guess in which
+        century it is (ex: dd/mm/13 -> 1913, 2013, etc ?)
+        Else, make sure the year is an int
+
+        """
         if not year:
-            return datetime.MINYEAR
+            return datetime.date.today().year
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
-            # ex xx/xx/12 --> xx/xx/2012
-            # WARNING: if a past date is written in this format (ex: 01/06/78)
-            # it is impossible to know if it references the year 1978 or 2078.
-            # If the 2-digit date is less than 15 years in the future,
-            # we consider that it takes place in our century, otherwise,
-            # it is considered as a past date
-            current_year = datetime.date.today().year
-            century = int(str(current_year)[:2])
-            if int(str(century) + str(year)) - current_year < 15:
-                # if year is less than 15 years in the future, it is considered
-                # a future date
-                return int(str(century) + str(year))
-            else:
-                # else, it is treated as a past date
-                return int(str(century - 1) + str(year))
+            return self._normalize_2digit_year(year)
         else:
             return int(self.data['year'])
 
@@ -121,8 +150,10 @@ class Date(Timepoint):
             if month_name.lower() in MONTH[self.lang]:
                 return MONTH[self.lang][month_name.lower()]
             # if month name is abbreviated
-            elif month_name.lower() in SHORT_MONTH[self.lang]:
-                return SHORT_MONTH[self.lang][month_name.lower()]
+            else:
+                month_name = month_name.rstrip('.')  # remove trailing dot, if any
+                if month_name.lower() in SHORT_MONTH[self.lang]:
+                    return SHORT_MONTH[self.lang][month_name.lower()]
         elif isinstance(month_name, int):  # numeric date
             return month_name
         else:
@@ -148,8 +179,12 @@ class Date(Timepoint):
             return False
 
     def to_python(self):
-        return datetime.date(
-            year=self.year, month=self.month, day=self.day)
+        try:
+            return datetime.date(
+                year=self.year, month=self.month, day=self.day)
+        except TypeError:
+            # Eg: if one of the attributes is None
+            return None
 
     def to_db(self):
         start_datetime = datetime.datetime(
@@ -201,13 +236,24 @@ class DateList(Timepoint):
                 TIMEPOINT_REGEX[self.lang]['_date_in_list'][0],
                 self.data['date_list']
         ):
-            dates.append(Date(date.groupdict(), lang=self.lang))
+            # Assign datetime.MINYEAR to year, if year is None
+            # It will be a marker allowing the year to be replaced
+            # by the same value as the last year of the list
+            # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
+            if not date.groupdict()['year']:
+                groupdict = dict(date.groupdict())
+                groupdict['year'] = datetime.MINYEAR
+                dates.append(Date(groupdict, lang=self.lang))
+            else:
+                dates.append(Date(date.groupdict(), lang=self.lang))
         return dates
 
     def _set_year(self):
         """ All dates without a year will inherit from the end date year """
         end_date = self.dates[-1]
         if end_date.year:
+            if end_date.year == datetime.MINYEAR:
+                end_date.year = datetime.date.today().year
             for date in self.dates[:-1]:
                 if date.year == datetime.MINYEAR:
                     date.year = end_date.year
@@ -285,8 +331,8 @@ class DateInterval(Timepoint):
         if not self.data['start_year'] and self.data['end_year']:
             self.data['start_year'] = self.data['end_year']
         elif not (self.data['start_year'] or self.data['end_year']):
-            self.data['start_year'] = datetime.MINYEAR
-            self.data['end_year'] = datetime.MINYEAR
+            self.data['start_year'] = datetime.date.today().year
+            self.data['end_year'] = datetime.date.today().year
         if not self.data['start_month_name'] and self.data['end_month_name']:
             self.data['start_month_name'] = self.data['end_month_name']
 
@@ -441,7 +487,7 @@ class DateTime(Timepoint):
         if time:
             self.time = time
         if not (date and time):
-            year = self.data.get('year')
+            year = self.data.get('year') or datetime.date.today().year
             month_name = self.data.get('month_name')
             day = self.data.get('day')
             start_time = self.data.get('start_time')
@@ -651,9 +697,18 @@ class DateTimeInterval(Timepoint):
             lang=self.lang)
 
     def _set_date_interval(self):
+        # if the end month name (always prewent) is a number,
+        # it means that the date is written numerically
+        # so a numeric date interval regex must be used
+        # otherwise, the date is written "normally", so a litteral date
+        # interval regex is used
+        if isinstance(self.data['end_month_name'], basestring):
+            re_date_interval = TIMEPOINT_REGEX[self.lang]['date_interval'][0]
+        else:
+            re_date_interval = TIMEPOINT_REGEX[self.lang]['date_interval'][1]
         return DateInterval(
             re.search(
-                TIMEPOINT_REGEX[self.lang]['date_interval'][0],
+                re_date_interval,
                 self.text
             ).groupdict(),
             lang=self.lang)

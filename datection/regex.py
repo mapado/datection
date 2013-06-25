@@ -13,7 +13,8 @@ FR_WEEKDAY = r'(%s)' % ('|'.join(WEEKDAY['fr'].keys()))
 # first the whole month number, then the abbreviated
 # otherwhise, 'oct' might be matched in 'october', thus breaking
 # the whole date structure
-FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + SHORT_MONTH['fr'].keys()))
+FR_SHORT_MONTH = [k + r'\.?' for k in SHORT_MONTH['fr'].keys()]
+FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + FR_SHORT_MONTH))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (
@@ -58,18 +59,21 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 # (ex: dd/mm/2012 or dd/mm/12)
 NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
+NUMERIC_DATE_SEPARATOR = r'[/\.]'
 # Dates of format dd/mm(/(yy)yy)
-FR_NUMERIC_DATE = re.compile(r"""
+_FR_NUMERIC_DATE = r"""
     (?P<day>{day})
-    /  # separator
+    {sep}  # separator
     (?P<month_name>{month})
-    (/)? # optional separator (if year not present)
+    ({sep})? # optional separator (if year not present)
     (?P<year>{year})?  # year (optional)
     """.format(
     day=DAY_NUMBER,
+    sep=NUMERIC_DATE_SEPARATOR,
     month=NUMERIC_MONTH,
-    year=NUMERIC_YEAR),
-    flags=re.VERBOSE)
+    year=NUMERIC_YEAR)
+
+FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 
 # separator bewteen hour and minutes
 # example: 10h50, 10:50, 10h
@@ -125,13 +129,35 @@ _FR_DATE_INTERVAL = r"""
 FR_DATE_INTERVAL = re.compile(
     _FR_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
+
+_FR_NUMERIC_DATE_INTERVAL = r"""
+    ({prefix}\s)?
+    (?P<start_day>{day}) # day number
+    {sep}
+    (?P<start_month_name>{month_name})\s* # month
+    (
+        {sep}
+        (?P<start_year>{year})\s  # year
+    )?
+    {suffix}\s  # prefix
+    (?P<end_day>{day})  # day number # day number
+    {sep}
+    (?P<end_month_name>{month_name})  # month
+    {sep}
+    (?P<end_year>{year})  # year
+    """.format(
+    prefix=INTERVAL_PREFIX, day=DAY_NUMBER, sep=NUMERIC_DATE_SEPARATOR,
+    month_name=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
+FR_NUMERIC_DATE_INTERVAL = re.compile(
+    _FR_NUMERIC_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
 # Datetime: a date and a time
 # Examples:
 # le mercredi 18 juin 2013 à 20h30
 # le 15 août 2013 de 15h30 à 16h45
 FR_DATETIME = re.compile(r"""
     {date}\s*
-    (,|:)?\s*
+    [^\d]{{,4}}
     {time}
     """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -142,9 +168,16 @@ FR_DATETIME = re.compile(r"""
 # * du 15 au 18 Mars de 20h30 à 23h
 FR_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(date_interval=_FR_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
+    {date_interval}
+    [^\d]{{,4}}
+    {time}
+    """.format(date_interval=_FR_NUMERIC_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # A date list is a list of independant dates, linkes by a prefix and a suffix
@@ -213,7 +246,7 @@ FR_DATE_LIST = re.compile(
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 de 20h à 20h30
 FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
     {datelist}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(datelist=_FR_DATE_LIST_WEEKDAY, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -221,7 +254,7 @@ FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
 # datetime list with *no* weekday
 FR_DATETIME_LIST = re.compile(r"""
     {datelist}
-    ,?\s*
+    [^\d]{{,4}}
     {time}
     """.format(datelist=_FR_DATE_LIST, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -255,7 +288,7 @@ FR_DATE_RECURRENCE = re.compile(
 # * le lundi et mardi, à 15h30
 FR_DATETIME_RECURRENCE = re.compile(r"""
     {recurrence}
-    ,?\s
+    [^\d]{{,4}}
     {time_interval}
     """.format(recurrence=_FR_DATE_RECURRENCE, time_interval=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -266,14 +299,14 @@ TIMEPOINT_REGEX = {
         'date': [FR_DATE, FR_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
-        'date_interval': [FR_DATE_INTERVAL],
+        'date_interval': [FR_DATE_INTERVAL, FR_NUMERIC_DATE_INTERVAL],
         'date_recurrence': [FR_DATE_RECURRENCE],
         '_time': [FR_TIME],  # "private" sub-regex
         'time_interval': [FR_TIME_INTERVAL],
         'datetime': [FR_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
         'datetime_recurrence': [FR_DATETIME_RECURRENCE],
-        'datetime_interval': [FR_DATETIME_INTERVAL],
+        'datetime_interval': [FR_DATETIME_INTERVAL, FR_NUMERIC_DATETIME_INTERVAL],
     }
 }
 

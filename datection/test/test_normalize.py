@@ -9,7 +9,7 @@ import datetime
 
 from datection.parse import parse
 from datection.export import to_db, to_python
-from ..serialize import *
+from ..normalize import *
 
 
 # We pretend to be in the future
@@ -37,10 +37,19 @@ class TestSerializeFrDates(unittest.TestCase):
         date_norm = date.to_python()
         assert date_norm == datetime.date(year=2013, month=3, day=5)
 
-    def test_invalid_dates(self):
-        """ Check that missing date leads to invalid structure. """
-        assert parse(u'5/03', 'fr', valid=False)[0].valid is False
-        assert parse(u' lundi 5 mars', 'fr', valid=False)[0].valid is False
+    def test_missing_year(self):
+        """ Check that missing year does not lead to invalid structure.
+
+        A missing year will be set to the current year
+
+        """
+        assert parse(u'5/03', 'fr')[0].valid
+        assert parse(u' lundi 5 mars', 'fr')[0].valid
+
+        d_no_year = parse(u'le 15 février de 15h à 20h, plop', 'fr')[0]
+        assert d_no_year.date.year == datetime.date.today().year
+        assert d_no_year.valid
+        assert d_no_year.date.valid
 
     def test_to_db(self):
         """ Test the return format for sql insert """
@@ -87,12 +96,28 @@ class TestSerializeFrDates(unittest.TestCase):
         dates = parse(u'le 15 février 2013, plop, 15/02/2013', 'fr')
         assert len(dates) == 1
 
-    def test_missing_year(self):
-        """ Test the normalization of date in the case of a missing year. """
-        d_no_year = parse(u'le 15 février de 15h à 20h, plop', 'fr', valid=False)[0]
-        assert d_no_year.date.year == datetime.MINYEAR
-        assert d_no_year.valid is False
-        assert d_no_year.date.valid is False
+    def test_serialize_2digit_year(self):
+        assert Date._normalize_2digit_year(12) == 2012
+        assert Date._normalize_2digit_year(20) == 2020
+        assert Date._normalize_2digit_year(30) == 1930
+        assert Date._normalize_2digit_year(80) == 1980
+
+    def test_serialize_abbreviated_month(self):
+        """ Test that an abbreviated month is correctlyt serialized, with or
+            without trailing dot.
+
+        """
+        dates = to_db(u'le lundi 5 mar 2013', 'fr')[0]  # no trailing dot
+        assert len(dates) == 1
+        date = dates[0]
+        assert date[0].month == 3
+        assert date[1].month == 3
+
+        dates = to_db(u'le lundi 5 mar. 2013', 'fr')[0]  # no trailing dot
+        assert len(dates) == 1
+        date = dates[0]
+        assert date[0].month == 3
+        assert date[1].month == 3
 
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
@@ -158,12 +183,19 @@ class TestSerializeFrDateList(unittest.TestCase):
         assert datelist_norm[2] == datetime.date(year=2013, month=10, day=7)
 
     def test_missing_year(self):
-        """ Test the serializer on a date with no year."""
-        datelist = parse(u'le 5, 6 et 7 octobre', 'fr', valid=False)[0]
-        assert not datelist.valid
-        assert not datelist.dates[0].valid
-        assert not datelist.dates[1].valid
-        assert not datelist.dates[2].valid
+        """ Test the serializer on a date with no year.
+
+        If the year is missing, the current year is assigned
+
+        """
+        datelist = parse(u'le 5, 6 et 7 octobre', 'fr')[0]
+        assert datelist.valid
+        assert datelist.dates[0].valid
+        assert datelist.dates[0].year == datetime.date.today().year
+        assert datelist.dates[1].valid
+        assert datelist.dates[1].year == datetime.date.today().year
+        assert datelist.dates[2].valid
+        assert datelist.dates[2].year == datetime.date.today().year
 
     def test_to_db(self):
         """ Test the sql serializer on a valid date list."""
@@ -251,11 +283,11 @@ class TestSerializeFrDateTime(unittest.TestCase):
 
     def test_missing_year(self):
         """ test the normalisation of a datetime with a missing year """
-        dt = parse(u'le 8 octobre à 20h30', 'fr', valid=False)[0]
-        assert dt.date.year == datetime.MINYEAR
-        assert dt.valid is False
-        assert dt.date.valid is False
-        assert dt.time.valid is True
+        dt = parse(u'le 8 octobre à 20h30', 'fr')[0]
+        assert dt.date.year == datetime.date.today().year
+        assert dt.valid
+        assert dt.date.valid
+        assert dt.time.valid
 
 
 class TestSerializeFrDateTimeList(unittest.TestCase):
@@ -325,23 +357,44 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
             where the date is missing
 
         """
-        dtl = parse(u'le 6, 7, 8 octobre à 20h30', 'fr', valid=False)[0]
-        assert dtl.valid is False
-        assert dtl.datetimes[0].date.year == datetime.MINYEAR
-        assert dtl.datetimes[1].date.year == datetime.MINYEAR
-        assert dtl.datetimes[2].date.year == datetime.MINYEAR
+        dtl = parse(u'le 6, 7, 8 octobre à 20h30', 'fr')[0]
+        assert dtl.valid
+        assert dtl.datetimes[0].date.year == datetime.date.today().year
+        assert dtl.datetimes[1].date.year == datetime.date.today().year
+        assert dtl.datetimes[2].date.year == datetime.date.today().year
 
 
 class TestSerializeFrDateInterval(unittest.TestCase):
     """ Test class of the DateInterval serializer with french data """
 
-    def test_valid_format(self):
-        """ Test the serialize """
+    def test_litteral_format(self):
+        """ Test the serializer """
         di = parse(u'du 15 au 18 février 2013', 'fr')[0]
         assert di.valid
         dateinterval = di.to_python()
         assert dateinterval[0] == datetime.date(year=2013, month=2, day=15)
         assert dateinterval[1] == datetime.date(year=2013, month=2, day=18)
+
+    def test_numeric_format(self):
+        di = parse(u'du 03/04/2011 au 05/06/2012', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2011, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2012, month=6, day=5)
+
+    def test_numeric_format_2digit_year(self):
+        di = parse(u'du 03/04/11 au 05/06/12', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2011, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2012, month=6, day=5)
+
+        # Test the special case where the 2 digit year starts with 0
+        di = parse(u'du 03/04/07 au 05/06/07', 'fr')[0]
+        assert di.valid
+        dateinterval = di.to_python()
+        assert dateinterval[0] == datetime.date(year=2007, month=4, day=3)
+        assert dateinterval[1] == datetime.date(year=2007, month=6, day=5)
 
     def test_all_formats(self):
         di1 = parse(u'du 15 au 18 février 2013', 'fr')[0]
@@ -368,18 +421,30 @@ class TestSerializeFrDateInterval(unittest.TestCase):
             in the case of a missing year
 
         """
-        di = parse(u'du 6 au 9 octobre', 'fr', valid=False)[0]
-        assert di.start_date.valid is False
-        assert di.end_date.valid is False
-        assert di.start_date.year == datetime.MINYEAR
-        assert di.end_date.year == datetime.MINYEAR
-        assert di.valid is False
+        di = parse(u'du 6 au 9 octobre', 'fr')[0]
+        assert di.start_date.valid
+        assert di.end_date.valid
+        assert di.start_date.year == datetime.date.today().year
+        assert di.end_date.year == datetime.date.today().year
+        assert di.valid
+
+    def test_numeric_dates_missing_first_year(self):
+        """ Test then normalisation of a datetimeinterval in the case of
+            numeric dates with the first year missing
+
+        """
+        di = parse(u'du 01/12 au 05/04/07 il pleuvra', 'fr')[0]
+        assert di.start_date.valid
+        assert di.end_date.valid
+        assert di.start_date.year == di.end_date.year
+        assert di.end_date.year == 2007
+        assert di.valid
 
 
 class TestSerializeFrDateTimeInterval(unittest.TestCase):
     """ Test class of the DateTimeInterval serialize with french data """
 
-    def test_valid_format(self):
+    def test_litteral_format(self):
         """ Test the serialize """
         dti = parse(u'du 15 au 17 février 2013 de 14h à 18h30', 'fr')[0]
         assert dti.valid
@@ -396,6 +461,20 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
         assert datetime_interval[2][0] == datetime.datetime(
             year=2013, month=2, day=17, hour=14, minute=0)
         assert datetime_interval[2][1] == datetime.datetime(
+            year=2013, month=2, day=17, hour=18, minute=30)
+
+    def test_numeric_format(self):
+        dti = parse(u'du 16/02 au 17/02/13 : de 14h à 18h30', 'fr')[0]
+        assert dti.valid
+        datetime_interval = dti.to_python()
+
+        assert datetime_interval[0][0] == datetime.datetime(
+            year=2013, month=2, day=16, hour=14, minute=0)
+        assert datetime_interval[0][1] == datetime.datetime(
+            year=2013, month=2, day=16, hour=18, minute=30)
+        assert datetime_interval[1][0] == datetime.datetime(
+            year=2013, month=2, day=17, hour=14, minute=0)
+        assert datetime_interval[1][1] == datetime.datetime(
             year=2013, month=2, day=17, hour=18, minute=30)
 
     def test_to_db(self):

@@ -100,6 +100,19 @@ class TestDateRegex(unittest.TestCase):
         assert date.groupdict()['month_name'] == 'juin'
         assert date.groupdict()['year'] == '2012'
 
+    def test_abbreviated_month(self):
+        # without trailing dot
+        date = re.search(FR_DATE, "plop le 5 fev 2012 lala")
+        assert date.groupdict()['day'] == '5'
+        assert date.groupdict()['month_name'] == 'fev'
+        assert date.groupdict()['year'] == '2012'
+
+        # with trailing dot
+        date = re.search(FR_DATE, "plop le 5 fev. 2012 lala")
+        assert date.groupdict()['day'] == '5'
+        assert date.groupdict()['month_name'] == 'fev.'
+        assert date.groupdict()['year'] == '2012'
+
 
 class TestNumericDateRegex(unittest.TestCase):
     """ Test class for the extraction of numeric dates of format dd/mm/yyyy """
@@ -146,6 +159,19 @@ class TestNumericDateRegex(unittest.TestCase):
         # Unrecognized formats
         text = "Plop 12/1/2012 plop"
         assert re.search(FR_NUMERIC_DATE, text) is None
+
+    def test_dot_separator(self):
+        """ Test the extraction of a numeric french date using a dot for
+            separation : dd.mm.yyyy
+
+        """
+        text = """ Adulte : 19 € Tarif réduit : 13 €
+                19.03.2012 : de 20h à 21h20."""
+        date = re.search(FR_NUMERIC_DATE, text)
+        assert date.group(0).strip() == '19.03.2012'
+        assert date.groupdict()['day'] == '19'
+        assert date.groupdict()['month_name'] == '03'
+        assert date.groupdict()['year'] == '2012'
 
 
 class TestDateIntervalRegex(unittest.TestCase):
@@ -195,6 +221,46 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['end_day'] == '7'
         assert interval.groupdict()['end_month_name'] == 'avril'
         assert interval.groupdict()['end_year'] == '2013'
+
+    def test_numeric_date_interval(self):
+        text = "ohai du 01/12/2005 au 05/04/2007 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] == '2005'
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '2007'
+
+    def test_numeric_date_interval_fot_separator(self):
+        text = "ohai du 01.12.2005 - 05.04.2007 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] == '2005'
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '2007'
+
+    def test_numeric_date_interval_2digit_year(self):
+        text = "ohai du 01/12/05 au 05/04/07 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] == '05'
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '07'
+
+    def test_numeric_date_interval_no_first_year(self):
+        text = "ohai du 01/12 au 05/04/07 lala"
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '01'
+        assert interval.groupdict()['start_month_name'] == '12'
+        assert interval.groupdict()['start_year'] is None
+        assert interval.groupdict()['end_day'] == '05'
+        assert interval.groupdict()['end_month_name'] == '04'
+        assert interval.groupdict()['end_year'] == '07'
 
 
 class TestTimeRegex(unittest.TestCase):

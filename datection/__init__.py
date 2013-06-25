@@ -23,10 +23,10 @@ No external dependencies are required.
 """
 
 __title__ = 'datection'
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 __author__ = 'Balthazar Rouberol'
 
 from datection.parse import parse
 from datection.context import probe
 from datection.export import to_db, to_python, to_mongo
-from datection.future import is_future
+from datection.future import is_future, filter_future

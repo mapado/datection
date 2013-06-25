@@ -79,6 +79,7 @@ def _remove_subsets(timepoints):
         Output: [(match4, 'time'), (match1, 'datetime')]
 
         """
+
         out = timepoints[:]  # shallow copy
         for t1 in timepoints:
             for t2 in timepoints:
