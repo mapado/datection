@@ -323,6 +323,10 @@ class ScheduleFormatter(object):
         return self._sentencize(fmt)
 
 
+def display(schedule, lang):
+    return ScheduleFormatter(schedule, lang).display()
+
+
 if __name__ == '__main__':
     import datetime
     schedule = [[{'end': datetime.datetime(2013, 6, 1, 20, 0),
