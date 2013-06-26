@@ -4,13 +4,13 @@
 WEEKDAY = {
     'fr':
     {
-        'lundi': 1,
-        'mardi': 2,
-        'mercredi': 3,
-        'jeudi': 4,
-        'vendredi': 5,
-        'samedi': 6,
-        'dimanche': 7,
+        'lundi': 0,
+        'mardi': 1,
+        'mercredi': 2,
+        'jeudi': 3,
+        'vendredi': 4,
+        'samedi': 5,
+        'dimanche': 6,
     }
 }
 
@@ -18,13 +18,13 @@ SHORT_WEEKDAY = {
 # Untested for now!
     'fr':
     {
-        'lun': 1,
-        'mar': 2,
-        'mer': 3,
-        'jeu': 4,
-        'ven': 5,
-        'sam': 6,
-        'dim': 7,
+        'lun': 0,
+        'mar': 1,
+        'mer': 2,
+        'jeu': 3,
+        'ven': 4,
+        'sam': 5,
+        'dim': 6,
     }
 }
 
