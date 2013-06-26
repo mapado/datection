@@ -115,6 +115,7 @@ FR_TIME_INTERVAL = re.compile(
 INTERVAL_PREFIX = r'du'
 INTERVAL_SUFFIX = r'(au|-)'
 _FR_DATE_INTERVAL = r"""
+    ({prefix}\s)?
     ((?P<start_day>{day})(er)?)\s* # day number
     (?P<start_month_name>{month_name})?\s*  # month (optional)
     (?P<start_year>{year})?\s* # year (optional)
@@ -260,39 +261,68 @@ FR_DATETIME_LIST = re.compile(r"""
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 
-# Recurrence are recurrent dates, linked by a prefix and a suffix
+# Reccurent weekdays bewteen a (possibly implicit) date interval
 # Examples:
 # * les lundis, mardis et mercredis
-# * le lundi
-RECURRENCE_PREFIX = r'le(s)?'
-RECURRENCE_SUFFIX = r'\set\s|,\s'
+# * le lundi du 5 au 13 mars 2013
+FR_WEEKDAY_LIST_PREFIX = r'le(s)?'
+FR_WEEKDAY_LIST_SUFFIX = r'\set\s|,\s'
 
-_FR_DATE_RECURRENCE = r"""
+_FR_WEEKDAY_RECURRENCE = r"""
     {prefix}\s
     (?P<weekdays>
         (
-            {weekday}
+            {weekday}(?!\s\d)  # recurrent weekday not followed by a date num
             ({suffix})?
         )+
     )
+    \s?(?P<date_interval>{date_interval})?
+    (([,\s]+)?(?P<time_interval>{time_interval}))?
     """.format(
-    prefix=RECURRENCE_PREFIX, weekday=FR_WEEKDAY,
-    suffix=RECURRENCE_SUFFIX)
+    prefix=FR_WEEKDAY_LIST_PREFIX, weekday=FR_WEEKDAY,
+    suffix=FR_WEEKDAY_LIST_SUFFIX, date_interval=_FR_DATE_INTERVAL,
+    time_interval=_FR_TIME_INTERVAL)
 
-FR_DATE_RECURRENCE = re.compile(
-    _FR_DATE_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+FR_WEEKDAY_RECURRENCE = re.compile(
+    _FR_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-# A time interval related to a recurrent dates
+# Reccurent weekdays interval bewteen a (possibly implicit) date interval
 # Examples:
-# * les lundis, de 15h30 à 16h
-# * le lundi et mardi, à 15h30
-FR_DATETIME_RECURRENCE = re.compile(r"""
-    {recurrence}
-    [^\d]{{,4}}
-    {time_interval}
-    """.format(recurrence=_FR_DATE_RECURRENCE, time_interval=_FR_TIME_INTERVAL),
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+# * du lundi au mercredi
+# * du  lundi au vendredi du 5 au 13 mars 2013
+FR_WEEKDAY_INTERVAL_PREFIX = r'du'
+FR_WEEKDAY_INTERVAL_SUFFIX = r'\sau\s'
 
+_FR_WEEKDAY_INTERVAL_RECURRENCE = r"""
+    {prefix}\s
+    (?P<start_weekday>{weekday}(?!\s\d))  # weekday with no date
+    {suffix}
+    (?P<end_weekday>{weekday}(?!\s\d))
+    ([,\s]+(?P<date_interval>{date_interval}))?
+    (\s(?P<time_interval>{time_interval}))?
+    """.format(
+    prefix=FR_WEEKDAY_INTERVAL_PREFIX, weekday=FR_WEEKDAY,
+    suffix=FR_WEEKDAY_INTERVAL_SUFFIX, date_interval=_FR_DATE_INTERVAL,
+    time_interval=_FR_TIME_INTERVAL)
+
+FR_WEEKDAY_INTERVAL_RECURRENCE = re.compile(
+    _FR_WEEKDAY_INTERVAL_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
+
+# Recurrent 'all days' expression
+FR_ALL_WEEKDAYS = r'tous\sles\sjours(,)?'
+
+_FR_ALL_WEEKDAY_RECURRENCE = r"""
+    {prefix}
+    \s
+    (?P<date_interval>{date_interval})?
+    (,?\s(?P<time_interval>{time_interval}))?
+    """.format(
+    prefix=FR_ALL_WEEKDAYS, date_interval=_FR_DATE_INTERVAL,
+    time_interval=_FR_TIME_INTERVAL)
+
+FR_ALL_WEEKDAY_RECURRENCE = re.compile(
+    _FR_ALL_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 TIMEPOINT_REGEX = {
     'fr': {
@@ -300,13 +330,14 @@ TIMEPOINT_REGEX = {
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
         'date_interval': [FR_DATE_INTERVAL, FR_NUMERIC_DATE_INTERVAL],
-        'date_recurrence': [FR_DATE_RECURRENCE],
         '_time': [FR_TIME],  # "private" sub-regex
         'time_interval': [FR_TIME_INTERVAL],
         'datetime': [FR_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
-        'datetime_recurrence': [FR_DATETIME_RECURRENCE],
         'datetime_interval': [FR_DATETIME_INTERVAL, FR_NUMERIC_DATETIME_INTERVAL],
+        'weekday_recurrence': [FR_WEEKDAY_RECURRENCE],
+        'weekday_interval_recurrence': [FR_WEEKDAY_INTERVAL_RECURRENCE],
+        'allweekday_recurrence': [FR_ALL_WEEKDAY_RECURRENCE]
     }
 }
 

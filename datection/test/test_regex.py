@@ -512,91 +512,98 @@ class TestDateTimeIntervalRegex(unittest.TestCase):
         assert dti.groupdict()['end_time'] == '21h20'
 
 
+class TestWeekdayListRecurrenceRegex(unittest.TestCase):
+    """ Test class for the extraction of recurrent weekdays in (possibly implicit)
+    datetime intervals.
 
-class TestRecurrenceRegex(unittest.TestCase):
-    """ Test class for the extraction of recurrent dates.
-
-    Examples: les lundis, le lundi et mardi, les lundis et mardis
+    Examples:
+    * les lundis
+    * le lundi et mardi
+    * les lundis, mardis et dimanches
+    * les lundi et mardi, du 5 au 15 mars 2013
+    * les lundi et mardi, de 15 au 30 avril 2013, de 15h à 18h30
+    * les lundi et mardi, de 15h à 18h30
 
     """
     def test_recurrent_days(self):
         """ Test the extraction of reccurent days, of form 'le(s) lundi(s)' """
         text = """ Adulte : 19 € Tarif réduit : 13 € les lundis de 20h à 21h20."""
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
-        assert recurrence.groupdict()['prefix'] == 'les'
-        assert recurrence.groupdict()['start_weekday_name'] == 'lundi'
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi'
 
         text = """ Adulte : 19 € Tarif réduit : 13 € le lundi de 20h à 21h20."""
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
-        assert recurrence.groupdict()['prefix'] == 'le'
-        assert recurrence.groupdict()['start_weekday_name'] == 'lundi'
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi'
 
         text = """ Adulte : 19 € Tarif réduit : 13 € les lundi et vendredis de 20h à 21h20."""
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
-        assert recurrence.groupdict()['prefix'] == 'les'
-        assert recurrence.groupdict()['start_weekday_name'] == 'lundi'
-        assert recurrence.groupdict()['suffix'] == 'et'
-        assert recurrence.groupdict()['end_weekday_name'] == 'vendredi'
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi et vendredi'
 
-    def test_reccurent_intervals(self):
-        """ Test the extraction of reccurent intervals; of form 'du lundi au vendredi'. """
-        text = """ Adulte : 19 € Tarif réduit : 13 € du lundi au vendredi de 20h à 21h20."""
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
-        assert recurrence.groupdict()['prefix'] == 'du'
-        assert recurrence.groupdict()['start_weekday_name'] == 'lundi'
-        assert recurrence.groupdict()['suffix'] == 'au'
-        assert recurrence.groupdict()['end_weekday_name'] == 'vendredi'
+    def test_weekdays_list(self):
+        text = """ le loto aura lieu le lundi, mardi et mercredi """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et mercredi'
 
+    def test_recurrent_weedays_in_date_interval(self):
+        text = """ le loto aura lieu le lundi, mardi et mercredi du 15 au 30 juin 2013 """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et mercredi'
+        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()['start_day'] == '15'
+        assert recurrence.groupdict()['start_month_name'] is None
+        assert recurrence.groupdict()['start_year'] is None
+        assert recurrence.groupdict()['end_day'] == '30'
+        assert recurrence.groupdict()['end_month_name'] == 'juin'
+        assert recurrence.groupdict()['end_year'] == '2013'
+
+        text = """ le loto aura lieu le lundi, mardi et mercredi, du 15 au 30 juin 2013 """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et mercredi, '
+        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+
+    def test_recurrent_weedays_in_datetime_interval(self):
+        text = """ le loto aura lieu le lundi, mardi, vendredi du 15 au 30 juin 2013 de 15h à 16h30 """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi, vendredi'
+        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()['start_day'] == '15'
+        assert recurrence.groupdict()['start_month_name'] is None
+        assert recurrence.groupdict()['start_year'] is None
+        assert recurrence.groupdict()['end_day'] == '30'
+        assert recurrence.groupdict()['end_month_name'] == 'juin'
+        assert recurrence.groupdict()['end_year'] == '2013'
+        assert recurrence.groupdict()['time_interval'] == 'de 15h à 16h30'
+        assert recurrence.groupdict()['start_time'] == '15h'
+        assert recurrence.groupdict()['end_time'] == '16h30'
+
+        text = """ le loto aura lieu le lundi, mardi et dimanche, du 15 au 30 juin 2013, de 15h à 16h30 """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et dimanche, '
+        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()['time_interval'] == 'de 15h à 16h30'
+
+    def test_recurrent_weedays_in_time_interval(self):
+        text = """ le loto aura lieu le lundi, mardi, vendredi de 15h à 16h30 """
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
+        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi, vendredi'
+        assert recurrence.groupdict()['date_interval'] is None
+        assert recurrence.groupdict()['time_interval'] == 'de 15h à 16h30'
+        assert recurrence.groupdict()['start_time'] == '15h'
+        assert recurrence.groupdict()['end_time'] == '16h30'
 
     def test_bad_formats(self):
         text = "fermé le lundi 8"
         dates = re.findall(DAY_NUMBER, text)
         assert dates
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert not recurrence
 
         text = 'plop Le lundi 18 mars plop'
         dates = re.findall(DAY_NUMBER, text)
         assert dates
-        recurrence = re.search(FR_DATE_RECURRENCE, text)
+        recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert not recurrence
 
 
-class TestDateTimeRecurrenceRegex(unittest.TestCase):
-    """ Test class for the extraction of recurrent time intervals.
-
-    Examples: 'les lundis, de 10h à 15h', 'le lundi et mardi, entre 20h et 22h'.
-
-    """
-    def test_all_formats(self):
-        text = 'tous les lundis, de 15h à 16h30'
-        rec_ttinverval = re.search(FR_DATETIME_RECURRENCE, text)
-        assert rec_ttinverval.groupdict()['start_weekday_name'] == 'lundi'
-        assert rec_ttinverval.groupdict()['start_time'] == '15h'
-        assert rec_ttinverval.groupdict()['end_time'] == '16h30'
-
-        text = 'tous les lundis, entre 15h et 16h30'
-        rec_ttinverval = re.search(FR_DATETIME_RECURRENCE, text)
-        assert rec_ttinverval.groupdict()['start_weekday_name'] == 'lundi'
-        assert rec_ttinverval.groupdict()['start_time'] == '15h'
-        assert rec_ttinverval.groupdict()['end_time'] == '16h30'
-
-        text = 'tous les lundis entre 15h et 16h30'
-        rec_ttinverval = re.search(FR_DATETIME_RECURRENCE, text)
-        assert rec_ttinverval.groupdict()['start_weekday_name'] == 'lundi'
-        assert rec_ttinverval.groupdict()['start_time'] == '15h'
-        assert rec_ttinverval.groupdict()['end_time'] == '16h30'
-
-        text = 'tous les mardis, dimanches de 6h à 13h'
-        rec_ttinverval = re.search(FR_DATETIME_RECURRENCE, text)
-        assert rec_ttinverval.groupdict()['start_weekday_name'] == 'mardi'
-        assert rec_ttinverval.groupdict()['end_weekday_name'] == 'dimanche'
-        assert rec_ttinverval.groupdict()['start_time'] == '6h'
-        assert rec_ttinverval.groupdict()['end_time'] == '13h'
-
-        text = 'tous les mardis et dimanches de 6h à 13h'
-        rec_ttinverval = re.search(FR_DATETIME_RECURRENCE, text)
-        assert rec_ttinverval.groupdict()['start_weekday_name'] == 'mardi'
-        assert rec_ttinverval.groupdict()['end_weekday_name'] == 'dimanche'
-        assert rec_ttinverval.groupdict()['start_time'] == '6h'
-        assert rec_ttinverval.groupdict()['end_time'] == '13h'
+class TestWeekdayIntervalRecurrenceRegex(unittest.TestCase):
+    pass
