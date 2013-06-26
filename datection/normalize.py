@@ -394,11 +394,11 @@ class Time(Timepoint):
 
     def __init__(self, data={}, hour=None, minute=None, **kwargs):
         super(Time, self).__init__(data, **kwargs)
-        if hour:
+        if hour is not None:
             self.hour = hour
-        if minute:
+        if minute is not None:
             self.minute = minute
-        if not (hour and minute):
+        if hour is None and minute is None:
             self.minute = self._set_minute(self.data.get('minute'))
             self.hour = int(self.data['hour']) if self.data['hour'] else None
 
