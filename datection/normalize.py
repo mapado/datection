@@ -3,7 +3,10 @@
 import re
 import datetime
 
-from regex import *
+from dateutil.rrule import *
+
+from datection.regex import *
+from datection.utils import isoformat_concat
 
 
 def timepoint_factory(detector, data, **kwargs):
@@ -26,8 +29,12 @@ def timepoint_factory(detector, data, **kwargs):
         return DateTimeList(data, **kwargs)
     elif detector == 'datetime_interval':
         return DateTimeInterval(data, **kwargs)
-    elif detector == 'date_recurrence':
-        return DateRecurrence(data, **kwargs)
+    elif detector == 'weekday_recurrence':
+        return WeekdayRecurrence(data, **kwargs)
+    elif detector == 'weekday_interval_recurrence':
+        return WeekdayIntervalRecurrence(data, **kwargs)
+    elif detector == 'allweekday_recurrence':
+        return AllWeekdayRecurrence(data, **kwargs)
     else:
         raise NotImplementedError(
             detector + " normalisation is not yet handled.")
@@ -816,19 +823,130 @@ class DateTimeInterval(Timepoint):
         return self.date_interval.end_date.future(reference)
 
 
-class DateRecurrence(Timepoint):
+class WeekdayRecurrence(Timepoint):
+    """ Object in charge of normalizing a weekday recurrence extraction result
 
+    The normalized result is a dateutil.rrule.rrule object, generating datetimes
+    using the recurrence rule.
+
+    This rrule can be formatted to the RFC standard format using the __str__
+    method.
+
+    """
     def __init__(self, data={}, **kwargs):
-        super(DateRecurrence, self).__init__(data, **kwargs)
+        super(WeekdayRecurrence, self).__init__(data, **kwargs)
         self.weekdays = self._set_weekdays()
+        self.start_datetime, self.end_datetime = self._set_datetime_interval()
+
+    def __str__(self):
+        """ Generate a full description of the recurrence rule
+
+        The description comprises:
+        * the start datetime (DTSTART)
+        * the recurrence rule (RRULE)
+        * the end datetime (UNTIL)
+        """
+        return """DTSTART:{start}\nRRULE:{rule};UNTIL={stop}""" .format(
+            start=isoformat_concat(self.start_datetime),
+            rule=str(self.to_python()),
+            stop=isoformat_concat(self.end_datetime))
+
+    def __eq__(self, other):
+        """ Equality is based on the RFC syntax """
+        return str(self) == str(other)
 
     def _set_weekdays(self):
-        """ Return the list of reccurent days number
+        """ Return the list of reccurent days index
 
         For example, if self.data['weekdays'] == 'le lundi, mardi et mercredi',
-        it returns [1, 2, 3]
+        it returns [0, 1, 2]
 
         """
         return sorted([
             WEEKDAY[self.lang][day.group(0)] for day in
             re.finditer(r'|'.join(WEEKDAY[self.lang].keys()), self.data['weekdays'])])
+
+    def _set_datetime_interval(self):
+        """ Return the start and end date of the recurrence.
+
+        If not specified, the default start date value is datetime.now().
+        If not specified, the default end date value is one year after
+        datetime.now().
+
+        """
+        if self.data['date_interval'] and self.data['time_interval']:
+            datetime_interval = DateTimeInterval(
+                data=self.data,
+                lang=self.lang,
+                text=self.data['date_interval'] + ' ' + self.data['time_interval']).\
+                to_python()
+            start_datetime = datetime_interval[0][0]
+            end_datetime = datetime_interval[-1][-1]
+        elif self.data['date_interval'] and not self.data['time_interval']:
+            # normalize darte interval from regex matches
+            date_interval = DateInterval(
+                data=self.data,
+                lang=self.lang,
+                text=self.data['date_interval'])
+            # extract the start and end dates from date interval
+            start_date = date_interval.start_date.to_python()
+            end_date = date_interval.end_date.to_python()
+
+            # Create datetimes from the start and end dates by associatng
+            # each of them with a default time
+            start_time = datetime.time(hour=0, minute=0, second=0)
+            start_datetime = datetime.datetime.combine(start_date, start_time)
+            end_time = datetime.time(hour=23, minute=59, second=59)
+            end_datetime = datetime.datetime.combine(end_date, end_time)
+        else:
+            start_datetime = datetime.datetime.now()
+            # if not specified, the end date is one year after the start date
+            end_datetime = start_datetime + datetime.timedelta(days=365)
+        return start_datetime, end_datetime
+
+    @property
+    def valid(self):
+        """ A recurrence is valid if it applies on at least one weekday.
+
+        Otherwhise it would be a nonsense
+
+        """
+        return len(self.weekdays) >= 0
+
+    def to_python(self):
+        return rrule(
+            WEEKLY,
+            dtstart=self.start_datetime,
+            until=self.end_datetime,
+            byweekday=self.weekdays
+        )
+
+
+class WeekdayIntervalRecurrence(WeekdayRecurrence):
+    """ Object in charge of normalizing recurrent weekdays *intervals*
+
+    The only logic differing from the WeekdayRecurrence class is the
+    way the weekdays are set.
+
+    """
+    def _set_weekdays(self):
+        """ Return the list of reccurent days index
+
+        Example: if 'start_day' == 'lundi' and 'end_day' == 'vendredi',
+        the output is [0, 1, 2, 3, 4]
+
+        """
+        start_weekday = self.data['start_weekday']
+        start_weekday_number = WEEKDAY[self.lang][start_weekday]
+        end_weekday = self.data['end_weekday']
+        end_weekday_number = WEEKDAY[self.lang][end_weekday]
+        return sorted(range(start_weekday_number, end_weekday_number + 1))
+
+
+class AllWeekdayRecurrence(WeekdayRecurrence):
+    """ Object in charge of the normalisation of a recurrence rule ocurring
+        all days of the week
+
+    """
+    def _set_weekdays(self):
+        return range(0, 7)
