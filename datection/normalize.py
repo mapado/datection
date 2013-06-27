@@ -798,22 +798,12 @@ class WeekdayRecurrence(Timepoint):
         self.weekdays = self._set_weekdays()
         self.start_datetime, self.end_datetime = self._set_datetime_interval()
 
-    def __str__(self):
-        """ Generate a full description of the recurrence rule
-
-        The description comprises:
-        * the start datetime (DTSTART)
-        * the recurrence rule (RRULE)
-        * the end datetime (UNTIL)
-        """
-        return """DTSTART:{start}\nRRULE:{rule};UNTIL={stop}""" .format(
-            start=isoformat_concat(self.start_datetime),
-            rule=str(self.to_python()),
-            stop=isoformat_concat(self.end_datetime))
-
     def __eq__(self, other):
         """ Equality is based on the RFC syntax """
         return str(self) == str(other)
+
+    def __str__(self):
+        return self.rrulestr
 
     def _set_weekdays(self):
         """ Return the list of reccurent days index
@@ -859,10 +849,26 @@ class WeekdayRecurrence(Timepoint):
             end_time = datetime.time(hour=23, minute=59, second=59)
             end_datetime = datetime.datetime.combine(end_date, end_time)
         else:
-            start_datetime = datetime.datetime.now()
+            start_datetime = datetime.datetime.utcnow()
+            # limit resolution to the second
+            start_datetime = start_datetime.replace(microsecond=0)
             # if not specified, the end date is one year after the start date
             end_datetime = start_datetime + datetime.timedelta(days=365)
         return start_datetime, end_datetime
+
+    @property
+    def rrulestr(self):
+        """ Generate a full description of the recurrence rule
+
+        The description comprises:
+        * the start datetime (DTSTART)
+        * the recurrence rule (RRULE)
+        * the end datetime (UNTIL)
+        """
+        return makerrulestr(
+            self.start_datetime,
+            end=self.end_datetime,
+            rule=self.to_python())
 
     @property
     def valid(self):
@@ -874,12 +880,28 @@ class WeekdayRecurrence(Timepoint):
         return len(self.weekdays) >= 0
 
     def to_python(self):
-        return rrule(
-            WEEKLY,
-            dtstart=self.start_datetime,
-            until=self.end_datetime,
-            byweekday=self.weekdays
-        )
+        st = self.start_datetime.time()
+        start_h, start_min = st.hour, st.minute
+        if start_h and start_min:
+            return rrule(
+                WEEKLY,
+                byweekday=self.weekdays,
+                byhour=start_h,
+                byminute=start_min)
+        else:
+            return rrule(
+                WEEKLY,
+                byweekday=self.weekdays)
+
+    def to_db(self):
+        # measure the duration
+        end_time = datetime.datetime.combine(
+            self.start_datetime, self.end_datetime.time())
+        duration = (end_time - self.start_datetime).seconds / 60
+        return {
+            'rrule': self.rrulestr,
+            'duration': duration
+        }
 
 
 class WeekdayIntervalRecurrence(WeekdayRecurrence):
