@@ -16,10 +16,19 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
 
     """
     timepoints = parse(text, lang, valid)
-    if only_future:
-        return [timepoint.to_db() for timepoint in timepoints
-                if timepoint.future(**kwargs)]
-    return [timepoint.to_db() for timepoint in timepoints]
+    out = []
+    for timepoint in timepoints:
+        rrules = timepoint.to_db()
+        if isinstance(rrules, list):
+            for rrule in rrules:
+                if only_future:
+                    if rrule.future(**kwargs):
+                        out.append(rrule)
+                else:
+                    out.append(rrule)
+        else:
+            out.append(rrules)
+    return out
 
 
 def to_mongo(text, lang, valid=True, only_future=True, **kwargs):
