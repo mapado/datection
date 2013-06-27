@@ -47,9 +47,7 @@ def parse(text, lang, valid=True):
                         )
                     except NotImplementedError:
                         pass
-                    except AttributeError:
-                        # exception often raised when a false detection occurs
-                        pass
+
         timepoints = _remove_subsets(timepoints)  # rm overlapping timepoints
         out.extend(timepoints)
 
