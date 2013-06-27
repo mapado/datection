@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Datection exporters to python and SQL/mongo compliant formats.
+Datection exporters to python and database compliant formats.
 """
 
 from datection.parse import parse
@@ -10,8 +10,10 @@ from datection.parse import parse
 def to_db(text, lang, valid=True):
     """ Perform a date detection on text with all timepoint regex.
 
-    Returns a list of datetime tuples
-    ([start_datetime, end_datetime]) for sql insertion
+    Returns a list of dicts, each containing a recurrence rule
+    describing the extracted time reference, and a duration,
+    linking each start date/time to an end date/time
+
     """
     out = [
         timepoint.to_db() for timepoint in parse(text, lang, valid)
@@ -20,30 +22,11 @@ def to_db(text, lang, valid=True):
 
 
 def to_mongo(text, lang, valid=True):
-    """ Detect and normalize all timepoints in the text and convert the
-        result into a mongoDB-tailored format, a list of dict
+    """ Obsolete function, kept for backwards compatibility reasons
 
-        [
-            {'start': start_datetime, 'end': end_datetime},
-            ...
-        ]
-
+    Now, it's just a proxy to the to_db function
     """
-    out = []
-    # parse the text and normalize the result into database format
-    timepoints = [
-        timepoint.to_db()
-        for timepoint in parse(text, lang, valid)
-    ]
-
-    # convert the database format into specific mongodb format
-    timepoints = [item for item in timepoints if item]
-    for i, tp_group in enumerate(timepoints):
-        out.append(list())
-        for tp in tp_group:
-            start, end = tp
-            out[i].append({'start': start, 'end': end})
-    return out
+    return to_db(text, lang, valid)
 
 
 def to_python(text, lang, valid=True):
