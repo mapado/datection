@@ -8,11 +8,11 @@ sys.path.insert(0, '..')
 import datetime
 
 from datection.parse import parse
-from datection.export import to_db, to_python
+from datection.export import to_python
 from ..normalize import *
 
 
-# We pretend to be in the future
+# We pretend to be in the past
 today = datetime.date(day=5, month=10, year=2008)
 
 
@@ -396,7 +396,7 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
             year=2013, month=2, day=17, hour=18, minute=30)
 
     def test_to_python(self):
-        datetime_interval_list = to_python(u'du 15 au 16 février 2013 à 18h30', 'fr')[0]
+        datetime_interval_list = parse(u'du 15 au 16 février 2013 à 18h30', 'fr')[0].to_python()
 
         assert len(datetime_interval_list) == 2
 
