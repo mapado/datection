@@ -6,7 +6,10 @@ import datetime
 from dateutil.rrule import *
 
 from datection.regex import *
-from datection.utils import isoformat_concat
+from datection.utils import makerrulestr
+
+
+ALL_DAY = 1439  # number of minutes from midnight to 23:59
 
 
 def timepoint_factory(detector, data, **kwargs):
@@ -187,6 +190,13 @@ class Date(Timepoint):
         else:
             return False
 
+    @property
+    def rrulestr(self):
+        """ Return a reccurence rule string tailored for a single Date """
+        start = self.to_python()
+        end = start
+        return makerrulestr(start, end, count=1, byhour=0, byminute=0)
+
     def to_python(self):
         try:
             return datetime.date(
@@ -196,23 +206,14 @@ class Date(Timepoint):
             return None
 
     def to_db(self):
-        start_datetime = datetime.datetime(
-            year=self.year,
-            month=self.month,
-            day=self.day,
-            hour=0,
-            minute=0,
-            second=0,
-        )
-        end_datetime = datetime.datetime(
-            year=self.year,
-            month=self.month,
-            day=self.day,
-            hour=23,
-            minute=59,
-            second=59,
-        )
-        return [(start_datetime, end_datetime)]
+        """ Return a dict containing the recurrence rule and the duration
+            (in min)
+
+        """
+        return {
+            'rrule': self.rrulestr,
+            'duration': ALL_DAY  # 23 hours 59 minutes
+        }
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the Date is located in the future.
@@ -284,26 +285,7 @@ class DateList(Timepoint):
         return [date.to_python() for date in self.dates]
 
     def to_db(self):
-        out = []
-        for date in self.dates:
-            start_datetime = datetime.datetime(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=0,
-                minute=0,
-                second=0,
-            )
-            end_datetime = datetime.datetime(
-                year=date.year,
-                month=date.month,
-                day=date.day,
-                hour=23,
-                minute=59,
-                second=59,
-            )
-            out.append((start_datetime, end_datetime))
-        return out
+        return [date.to_db() for date in self.dates]
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the DateList is located in the future.
@@ -365,18 +347,25 @@ class DateInterval(Timepoint):
         """ Check that start and end date are valid. """
         return all([self.start_date.valid, self.end_date.valid])
 
+    @property
+    def rrulestr(self):
+        """ Return a reccurence rule string tailored for a date interval """
+        start = self.start_date.to_python()
+        end = self.end_date.to_python()
+        return makerrulestr(start, end, interval=1, byhour=0, byminute=0)
+
     def to_python(self):
         return [date.to_python() for date in self]
 
     def to_db(self):
-        """ convert for sql insert """
-        start_datetime = datetime.datetime(
-            year=self.start_date.year, month=self.start_date.month,
-            day=self.start_date.day, hour=0, minute=0, second=0)
-        end_datetime = datetime.datetime(
-            year=self.end_date.year, month=self.end_date.month,
-            day=self.end_date.day, hour=23, minute=59, second=59)
-        return [(start_datetime, end_datetime)]
+        """ Return a dict containing the recurrence rule and the duration
+            (in min)
+
+        """
+        return {
+            'rrule': self.rrulestr,
+            'duration': ALL_DAY
+        }
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the DateInterval is located in the future.
@@ -522,6 +511,15 @@ class DateTime(Timepoint):
         """ Checks that both self.time and self.date are valid. """
         return all([self.time.valid and self.date.valid])
 
+    @property
+    def rrulestr(self):
+        """ Return a reccurence rule string tailored for a DateTime """
+        start = self.date.to_python()
+        st = self.time.start_time
+        return makerrulestr(
+            start,
+            count=1, byhour=st.hour, byminute=st.minute)
+
     def to_python(self):
         start_datetime = datetime.datetime(
             year=self.date.year,
@@ -546,29 +544,25 @@ class DateTime(Timepoint):
             return start_datetime
 
     def to_db(self):
-        """ Export Datetime to sql """
-        start_datetime = datetime.datetime(
-            year=self.date.year,
-            month=self.date.month,
-            day=self.date.day,
-            hour=self.time.start_time.hour,
-            minute=self.time.start_time.minute,
-            second=0
-        )
+        """ Return a dict containing the recurrence rule and the duration
+            (in min)
 
+        """
+        # measure the duration
         if self.time.end_time:
-            end_datetime = datetime.datetime(
-                year=self.date.year,
-                month=self.date.month,
-                day=self.date.day,
-                hour=self.time.end_time.hour,
-                minute=self.time.end_time.minute,
-                second=0
-            )
+            start_dt = datetime.datetime.combine(
+                self.date.to_python(),
+                self.time.start_time.to_python())
+            end_dt = datetime.datetime.combine(
+                self.date.to_python(),
+                self.time.end_time.to_python())
+            duration = (end_dt - start_dt).seconds / 60
         else:
-            end_datetime = start_datetime
-
-        return [(start_datetime, end_datetime)]
+            duration = 0
+        return {
+            'rrule': self.rrulestr,
+            'duration': duration
+        }
 
     def future(self, reference=datetime.date.today()):
         """Return whether the datetime is located in the future.
@@ -644,34 +638,7 @@ class DateTimeList(Timepoint):
         return all([dt.valid for dt in self.datetimes])
 
     def to_db(self):
-        """ Export Datetime to sql """
-        out = []
-
-        for dt in self.datetimes:
-            start_datetime = datetime.datetime(
-                year=dt.date.year,
-                month=dt.date.month,
-                day=dt.date.day,
-                hour=dt.time.start_time.hour,
-                minute=dt.time.start_time.minute,
-                second=0
-            )
-
-            if dt.time.end_time:
-                end_datetime = datetime.datetime(
-                    year=dt.date.year,
-                    month=dt.date.month,
-                    day=dt.date.day,
-                    hour=dt.time.end_time.hour,
-                    minute=dt.time.end_time.minute,
-                    second=0
-                )
-            else:
-                end_datetime = start_datetime
-
-            out.append((start_datetime, end_datetime))
-
-        return out
+        return [dt.to_db() for dt in self.datetimes]
 
     def to_python(self):
         return self.to_db()
@@ -727,6 +694,25 @@ class DateTimeInterval(Timepoint):
         """ Checks that start and end datetimes are valid. """
         return all([self.date_interval.valid, self.time_interval.valid])
 
+    @property
+    def rrulestr(self):
+        """ Return a reccurence rule string tailored for a DateTimeInterval """
+        st = self.time_interval.start_time
+        start = datetime.datetime.combine(
+            self.date_interval.start_date.to_python(),
+            self.time_interval.start_time.to_python())
+        if self.time_interval.end_time:
+            end = datetime.datetime.combine(
+                self.date_interval.end_date.to_python(),
+                self.time_interval.end_time.to_python())
+        else:
+            end = datetime.datetime.combine(
+                self.date_interval.end_date.to_python(),
+                self.time_interval.start_time.to_python())
+        return makerrulestr(
+            start, end,
+            interval=1, byhour=st.hour, byminute=st.minute)
+
     def to_python(self):
         out = []
 
@@ -769,47 +755,21 @@ class DateTimeInterval(Timepoint):
         return out
 
     def to_db(self):
-        """ Export DateTimeInterval to sql """
-        out = []
-
-        # getting date interval
-        sd = self.date_interval.start_date
-        ed = self.date_interval.end_date
-
-        start_date = datetime.date(year=sd.year, month=sd.month, day=sd.day)
-        end_date = datetime.date(year=ed.year, month=ed.month, day=ed.day)
-        delta = end_date - start_date
-
-        # getting time interval
-        start_time = self.time_interval.start_time
-        end_time = self.time_interval.end_time
-
-        nb_days = range(0, delta.days + 1)
-        for i in nb_days:
-            i_date = start_date + datetime.timedelta(days=i)
-            i_start_datetime = datetime.datetime(
-                year=i_date.year,
-                month=i_date.month,
-                day=i_date.day,
-                hour=start_time.hour,
-                minute=start_time.minute,
-                second=0
-            )
-            if end_time:
-                i_end_datetime = datetime.datetime(
-                    year=i_date.year,
-                    month=i_date.month,
-                    day=i_date.day,
-                    hour=end_time.hour,
-                    minute=end_time.minute,
-                    second=0
-                )
-            else:
-                i_end_datetime = i_start_datetime
-
-            out.append((i_start_datetime, i_end_datetime))
-
-        return out
+        # measure the duration
+        if self.time_interval.end_time:
+            start_dt = datetime.datetime.combine(
+                self.date_interval.start_date.to_python(),
+                self.time_interval.start_time.to_python())
+            end_dt = datetime.datetime.combine(
+                self.date_interval.start_date.to_python(),
+                self.time_interval.end_time.to_python())
+            duration = (end_dt - start_dt).seconds / 60
+        else:
+            duration = 0
+        return {
+            'rrule': self.rrulestr,
+            'duration': duration
+        }
 
     def future(self, reference=datetime.date.today()):
         """Returns whether the DateTimeInterval is located in the future.
