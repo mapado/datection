@@ -922,7 +922,11 @@ class WeekdayIntervalRecurrence(WeekdayRecurrence):
         start_weekday_number = WEEKDAY[self.lang][start_weekday]
         end_weekday = self.data['end_weekday']
         end_weekday_number = WEEKDAY[self.lang][end_weekday]
-        return sorted(range(start_weekday_number, end_weekday_number + 1))
+
+        if start_weekday_number < end_weekday_number:
+            return range(start_weekday_number, end_weekday_number + 1)
+        else:
+            return range(start_weekday_number, 7) + range(end_weekday_number + 1)
 
 
 class AllWeekdayRecurrence(WeekdayRecurrence):
