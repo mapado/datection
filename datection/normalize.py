@@ -641,7 +641,7 @@ class DateTimeList(Timepoint):
         return [dt.to_db() for dt in self.datetimes]
 
     def to_python(self):
-        return self.to_db()
+        return [dt.to_python() for dt in self.datetimes]
 
 
 class DateTimeInterval(Timepoint):

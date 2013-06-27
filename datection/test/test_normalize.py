@@ -92,17 +92,11 @@ class TestSerializeFrDates(unittest.TestCase):
             without trailing dot.
 
         """
-        dates = to_db(u'le lundi 5 mar 2013', 'fr')[0]  # no trailing dot
-        assert len(dates) == 1
-        date = dates[0]
-        assert date[0].month == 3
-        assert date[1].month == 3
+        date = parse(u'le lundi 5 mar 2013', 'fr')[0]  # no trailing dot
+        assert date.month == 3
 
-        dates = to_db(u'le lundi 5 mar. 2013', 'fr')[0]  # no trailing dot
-        assert len(dates) == 1
-        date = dates[0]
-        assert date[0].month == 3
-        assert date[1].month == 3
+        date = parse(u'le lundi 5 mar. 2013', 'fr')[0]  # no trailing dot
+        assert date.month == 3
 
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
@@ -261,7 +255,7 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         assert dtl1 == dtl2 == dtl3
 
     def test_to_python(self):
-        datetimelist = to_db(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0]
+        datetimelist = parse(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0].to_python()
 
         # le 6
         date = datetimelist[0]
