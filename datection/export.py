@@ -17,15 +17,13 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
     """
     timepoints = parse(text, lang, valid)
     out = []
+    # filter out all past timepoints, if only_future == True
+    if only_future:
+        timepoints = [tp for tp in timepoints if tp.future(**kwargs)]
     for timepoint in timepoints:
         rrules = timepoint.to_db()
         if isinstance(rrules, list):
-            for rrule in rrules:
-                if only_future:
-                    if rrule.future(**kwargs):
-                        out.append(rrule)
-                else:
-                    out.append(rrule)
+            out.extend(rrules)
         else:
             out.append(rrules)
     return out
