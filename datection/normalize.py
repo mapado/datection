@@ -697,17 +697,10 @@ class DateTimeInterval(Timepoint):
     def rrulestr(self):
         """ Return a reccurence rule string tailored for a DateTimeInterval """
         st = self.time_interval.start_time
-        start = datetime.datetime.combine(
-            self.date_interval.start_date.to_python(),
-            self.time_interval.start_time.to_python())
-        if self.time_interval.end_time:
-            end = datetime.datetime.combine(
-                self.date_interval.end_date.to_python(),
-                self.time_interval.end_time.to_python())
-        else:
-            end = datetime.datetime.combine(
-                self.date_interval.end_date.to_python(),
-                self.time_interval.start_time.to_python())
+        start = self.date_interval.start_date.to_python()
+        end = datetime.datetime.combine(
+            self.date_interval.end_date.to_python(),
+            datetime.time(23, 59, 59))
         return makerrulestr(
             start, end,
             interval=1, byhour=st.hour, byminute=st.minute)
@@ -857,16 +850,10 @@ class WeekdayRecurrence(Timepoint):
 
     @property
     def rrulestr(self):
-        """ Generate a full description of the recurrence rule
-
-        The description comprises:
-        * the start datetime (DTSTART)
-        * the recurrence rule (RRULE)
-        * the end datetime (UNTIL)
-        """
+        """ Generate a full description of the recurrence rule"""
         return makerrulestr(
-            self.start_datetime,
-            end=self.end_datetime,
+            self.start_datetime.date(),
+            end=self.end_datetime.date(),
             rule=self.to_python())
 
     @property
@@ -881,7 +868,7 @@ class WeekdayRecurrence(Timepoint):
     def to_python(self):
         st = self.start_datetime.time()
         start_h, start_min = st.hour, st.minute
-        if start_h and start_min:
+        if start_h or start_min:
             return rrule(
                 WEEKLY,
                 byweekday=self.weekdays,

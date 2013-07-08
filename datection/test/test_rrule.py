@@ -170,8 +170,8 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
         rrulestr = self.interval.rrulestr
-        target = ('DTSTART:20130325T150000\nRRULE:FREQ=DAILY;BYHOUR=15;'
-            'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T160000')
+        target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=15;'
+            'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T235959')
         self.assertEqual(rrulestr, target)
 
     def test_to_db(self):
@@ -199,8 +199,8 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         text = "du 25 au 30 mars 2013 à 15h"
         interval = parse(text, self.lang)[0]
         rrulestr = interval.rrulestr
-        target = ('DTSTART:20130325T150000\nRRULE:FREQ=DAILY;BYHOUR=15;'
-            'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T150000')
+        target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=15;'
+            'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T235959')
         self.assertEqual(rrulestr, target)
 
     def test_to_db_no_endtime(self):
@@ -268,8 +268,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
 
         """
         rrulestr = self.rec_notime.rrulestr
-        target = ('DTSTART:20130301T000000\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
-            'UNTIL=20130315T235959')
+        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
+            'UNTIL=20130315')
         self.assertEqual(rrulestr, target)
 
     def test_to_db_no_time(self):
@@ -297,8 +297,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
     def test_rrulestr_fulldata(self):
         """ Test the format of the sstrrule """
         rrulestr = self.rec_full.rrulestr
-        target = ('DTSTART:20130301T050000\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
-            'UNTIL=20130315T070000')
+        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
+            'BYHOUR=5;BYMINUTE=0;UNTIL=20130315')
         self.assertEqual(rrulestr, target)
 
     def test_to_db_fulldata(self):
