@@ -27,8 +27,7 @@ class TestDateRecurrence(unittest.TestCase):
         """ Test the format of the recurrence rule string """
         rrulestr = self.date.rrulestr
         start = datetime.date(2013, 1, 25)
-        end = start
-        target = makerrulestr(start, end, count=1, byhour=0, byminute=0)
+        target = makerrulestr(start, count=1, byhour=0, byminute=0)
         self.assertEqual(rrulestr, target)
 
     def test_to_db(self):
@@ -266,7 +265,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         self.assertEqual(
             len(list(rrulestr(self.rec_nodatetime.rrulestr))),
-            52)
+            53)
 
     def test_rrulestr_no_time(self):
         """ Test the format of the sstrrule when no start/end time is

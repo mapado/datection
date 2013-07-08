@@ -194,8 +194,7 @@ class Date(Timepoint):
     def rrulestr(self):
         """ Return a reccurence rule string tailored for a single Date """
         start = self.to_python()
-        end = start
-        return makerrulestr(start, end, count=1, byhour=0, byminute=0)
+        return makerrulestr(start, count=1, byhour=0, byminute=0)
 
     def to_python(self):
         try:
