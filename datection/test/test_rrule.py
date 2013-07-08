@@ -12,7 +12,6 @@ from dateutil.rrule import *
 
 from datection import parse
 from datection.normalize import *
-from datection.utils import makerrulestr
 
 
 class TestDateRecurrence(unittest.TestCase):
