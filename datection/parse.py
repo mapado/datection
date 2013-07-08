@@ -24,7 +24,7 @@ def parse(text, lang, valid=True):
     # if not event simple date markers could be found, stop here
     contexts = probe(text, lang)
     if not contexts:
-        return {}
+        return []
 
     timepoint_families = [
         det for det in TIMEPOINT_REGEX[lang].keys()
