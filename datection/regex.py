@@ -159,7 +159,7 @@ FR_NUMERIC_DATE_INTERVAL = re.compile(
 # le 15 août 2013 de 15h30 à 16h45
 FR_DATETIME = re.compile(r"""
     {date}\s*
-    [^\d]{{,4}}
+    [^\d]{{,6}}
     {time}
     """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -170,14 +170,14 @@ FR_DATETIME = re.compile(r"""
 # * du 15 au 18 Mars de 20h30 à 23h
 FR_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    [^\d]{{,4}}
+    [^\d]{{,6}}
     {time}
     """.format(date_interval=_FR_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    [^\d]{{,4}}
+    [^\d]{{,6}}
     {time}
     """.format(date_interval=_FR_NUMERIC_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
