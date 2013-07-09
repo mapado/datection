@@ -7,7 +7,8 @@ from datenames import *
 # words located before a date, giving hints about how it relates
 # to other dates
 DAYS_PREFIX = r'le'
-FR_WEEKDAY = r'(%s)' % ('|'.join(WEEKDAY['fr'].keys()))
+FR_WEEKDAY = r'(%s)' % ('|'.join(
+    [wkd + r's?' for wkd in (WEEKDAY['fr'].keys())]))
 
 
 # first the whole month number, then the abbreviated

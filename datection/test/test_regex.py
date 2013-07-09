@@ -529,15 +529,15 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
         """ Test the extraction of reccurent days, of form 'le(s) lundi(s)' """
         text = """ Adulte : 19 € Tarif réduit : 13 € les lundis de 20h à 21h20."""
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
-        assert recurrence.groupdict()['weekdays'] == 'lundi'
+        assert recurrence.groupdict()['weekdays'] == 'lundis'
 
         text = """ Adulte : 19 € Tarif réduit : 13 € le lundi de 20h à 21h20."""
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert recurrence.groupdict()['weekdays'] == 'lundi'
 
-        text = """ Adulte : 19 € Tarif réduit : 13 € les lundi et vendredis de 20h à 21h20."""
+        text = """ Adulte : 19 € Tarif réduit : 13 € les lundis et vendredis de 20h à 21h20."""
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
-        assert recurrence.groupdict()['weekdays'] == 'lundi et vendredi'
+        assert recurrence.groupdict()['weekdays'] == 'lundis et vendredis'
 
     def test_weekdays_list(self):
         text = """ le loto aura lieu le lundi, mardi et mercredi """

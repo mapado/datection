@@ -907,9 +907,9 @@ class WeekdayIntervalRecurrence(WeekdayRecurrence):
         the output is [0, 1, 2, 3, 4]
 
         """
-        start_weekday = self.data['start_weekday']
+        start_weekday = self.data['start_weekday'].rstrip('s')
         start_weekday_number = WEEKDAY[self.lang][start_weekday]
-        end_weekday = self.data['end_weekday']
+        end_weekday = self.data['end_weekday'].rstrip('s')
         end_weekday_number = WEEKDAY[self.lang][end_weekday]
 
         if start_weekday_number < end_weekday_number:

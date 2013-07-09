@@ -359,6 +359,11 @@ class TestWeekdayRecurrence(unittest.TestCase):
         self.assertTrue(
             self.rec_full.future(reference=datetime.date(2012, 1, 1)))
 
+    def test_plural_weekdays(self):
+        text = "les lundis, mardis et mercredis"
+        wkrec = parse(text, "fr")[0]
+        self.assertEqual(wkrec.weekdays, [0, 1, 2])
+
 
 class TestWeekdayIntervalRecurrence(unittest.TestCase):
 
