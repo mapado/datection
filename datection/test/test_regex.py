@@ -606,4 +606,13 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
 
 
 class TestWeekdayIntervalRecurrenceRegex(unittest.TestCase):
-    pass
+
+    def test_detection(self):
+        text = "du lundi au vendredi"
+        match = re.search(FR_WEEKDAY_INTERVAL_RECURRENCE, text)
+        self.assertEqual(match.group(), text)
+
+    def test_detection_time(self):
+        text = "du lundi au vendredi, de 5h à 8h"
+        match = re.search(FR_WEEKDAY_INTERVAL_RECURRENCE, text)
+        self.assertEqual(match.group(), text)

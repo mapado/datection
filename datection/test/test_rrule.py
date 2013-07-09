@@ -380,6 +380,33 @@ class TestWeekdayIntervalRecurrence(unittest.TestCase):
 
 class TestAllDayWeekdayRecurrence(unittest.TestCase):
 
-    def test_weekdays_list(self):
+    def test_allweekdays_date(self):
         rec = parse("tous les jours, du 5 au 15 mars 2013", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 7))
+        self.assertEqual(
+            rec.start_datetime, datetime.datetime(2013, 03, 5, 0, 0, 0))
+        self.assertEqual(
+            rec.end_datetime, datetime.datetime(2013, 03, 15, 23, 59, 59))
+
+    def test_allweekdays_time(self):
+        rec = parse("tous les jours, de 4h à 8h", "fr")[0]
+        self.assertEqual(rec.weekdays, range(0, 7))
+        self.assertEqual(
+            rec.start_datetime,
+            datetime.datetime.combine(
+                datetime.date.today(),
+                datetime.time(4, 0, 0)))
+        self.assertEqual(
+            rec.end_datetime,
+            datetime.datetime.combine(
+                datetime.date.today() + datetime.timedelta(days=365),
+                datetime.time(8, 0, 0)))
+
+    def test_allweekdays_datetime(self):
+        rec = parse(
+            "tous les jours, du 5 au 15 mars 2013, de 4h à 8h", "fr")[0]
+        self.assertEqual(rec.weekdays, range(0, 7))
+        self.assertEqual(
+            rec.start_datetime, datetime.datetime(2013, 03, 5, 4, 0, 0))
+        self.assertEqual(
+            rec.end_datetime, datetime.datetime(2013, 03, 15, 8, 0, 0))

@@ -816,7 +816,7 @@ class WeekdayRecurrence(Timepoint):
         datetime.now().
 
         """
-        if self.data['date_interval'] and self.data['time_interval']:
+        if self.data.get('date_interval') and self.data.get('time_interval'):
             datetime_interval = DateTimeInterval(
                 data=self.data,
                 lang=self.lang,
@@ -824,7 +824,7 @@ class WeekdayRecurrence(Timepoint):
                 to_python()
             start_datetime = datetime_interval[0][0]
             end_datetime = datetime_interval[-1][-1]
-        elif self.data['date_interval'] and not self.data['time_interval']:
+        elif self.data.get('date_interval') and not self.data.get('time_interval'):
             # normalize darte interval from regex matches
             date_interval = DateInterval(
                 data=self.data,
@@ -840,6 +840,23 @@ class WeekdayRecurrence(Timepoint):
             start_datetime = datetime.datetime.combine(start_date, start_time)
             end_time = datetime.time(hour=23, minute=59, second=59)
             end_datetime = datetime.datetime.combine(end_date, end_time)
+        elif self.data.get('time_interval') and not self.data.get('date_interval'):
+            # normalize darte interval from regex matches
+            time_interval = TimeInterval(
+                data=self.data,
+                lang=self.lang,
+                text=self.data['time_interval'])
+            # extract the start and end times from date interval
+            start_time = time_interval.start_time.to_python()
+            end_time = time_interval.end_time.to_python()
+
+            # Create datetimes from the start and end times by associatng
+            # each of them with a default date
+            start_date = datetime.date.today()
+            start_datetime = datetime.datetime.combine(start_date, start_time)
+            end_date = start_datetime.date() + datetime.timedelta(days=365)
+            end_datetime = datetime.datetime.combine(
+                end_date, end_time)
         else:
             start_datetime = datetime.datetime.utcnow()
             # limit resolution to the second

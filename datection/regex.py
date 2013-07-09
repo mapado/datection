@@ -300,7 +300,7 @@ _FR_WEEKDAY_INTERVAL_RECURRENCE = r"""
     {suffix}
     (?P<end_weekday>{weekday}(?!\s\d))
     ([,\s]+(?P<date_interval>{date_interval}))?
-    (\s(?P<time_interval>{time_interval}))?
+    ([,\s]+(?P<time_interval>{time_interval}))?
     """.format(
     prefix=FR_WEEKDAY_INTERVAL_PREFIX, weekday=FR_WEEKDAY,
     suffix=FR_WEEKDAY_INTERVAL_SUFFIX, date_interval=_FR_DATE_INTERVAL,
@@ -311,13 +311,12 @@ FR_WEEKDAY_INTERVAL_RECURRENCE = re.compile(
 
 
 # Recurrent 'all days' expression
-FR_ALL_WEEKDAYS = r'tous\sles\sjours(,)?'
+FR_ALL_WEEKDAYS = r'tous\sles\sjours'
 
 _FR_ALL_WEEKDAY_RECURRENCE = r"""
     {prefix}
-    \s
-    (?P<date_interval>{date_interval})?
-    (,?\s(?P<time_interval>{time_interval}))?
+    ([,\s]+(?P<date_interval>{date_interval}))?
+    ([,\s]+(?P<time_interval>{time_interval}))?
     """.format(
     prefix=FR_ALL_WEEKDAYS, date_interval=_FR_DATE_INTERVAL,
     time_interval=_FR_TIME_INTERVAL)
