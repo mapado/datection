@@ -865,6 +865,9 @@ class WeekdayRecurrence(Timepoint):
         """
         return len(self.weekdays) >= 0
 
+    def future(self, reference=datetime.date.today()):
+        return self.end_datetime.date() > reference
+
     def to_python(self):
         st = self.start_datetime.time()
         start_h, start_min = st.hour, st.minute

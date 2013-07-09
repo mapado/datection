@@ -41,6 +41,10 @@ class TestDateRecurrence(unittest.TestCase):
         target = [datetime.datetime(2013, 1, 25, 0, 0)]
         self.assertEqual(list(rrulestr(self.date.rrulestr)), target)
 
+    def test_future(self):
+        self.assertFalse(self.date.future())
+        self.assertTrue(self.date.future(reference=datetime.date(2012, 1, 1)))
+
 
 class TestDateListRecurrence(unittest.TestCase):
     """ Test the generation of recurrence rules for datection DateList objects
@@ -64,6 +68,11 @@ class TestDateListRecurrence(unittest.TestCase):
             }
         ]
         self.assertEqual(self.datelist.to_db(), target)
+
+    def test_future(self):
+        self.assertFalse(self.datelist.future())
+        self.assertTrue(
+            self.datelist.future(reference=datetime.date(2012, 1, 1)))
 
 
 class TestDateIntervalRecurrence(unittest.TestCase):
@@ -102,6 +111,11 @@ class TestDateIntervalRecurrence(unittest.TestCase):
             datetime.datetime(2013, 3, 30, 0, 0, 0),
         ]
         self.assertEqual(list(rrulestr(self.interval.rrulestr)), target)
+
+    def test_future(self):
+        self.assertFalse(self.interval.future())
+        self.assertTrue(
+            self.interval.future(reference=datetime.date(2012, 1, 1)))
 
 
 class TestDateTimeRecurrence(unittest.TestCase):
@@ -154,6 +168,11 @@ class TestDateTimeRecurrence(unittest.TestCase):
             'duration': 210
         }
         self.assertEqual(dt.to_db(), target)
+
+    def test_future(self):
+        self.assertFalse(self.datetime.future())
+        self.assertTrue(
+            self.datetime.future(reference=datetime.date(2012, 1, 1)))
 
 
 class TestDateTimeIntervalRecurrence(unittest.TestCase):
@@ -226,6 +245,11 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         ]
         self.assertEqual(list(rrulestr(interval.rrulestr)), target)
 
+    def test_future(self):
+        self.assertFalse(self.interval.future())
+        self.assertTrue(
+            self.interval.future(reference=datetime.date(2012, 1, 1)))
+
 
 class TestWeekdayRecurrence(unittest.TestCase):
     """ Test the generation of recurrence rules for datection
@@ -235,8 +259,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
     def setUp(self):
         lang = 'fr'
         text_nodatetime = 'le lundi'
-        text_notime = 'le lundi du 1 au 15 mars 2013'
-        text_full = 'le lundi du 1 au 15 mars 2013, de 5h à 7h'
+        text_notime = 'le lundi, du 1 au 15 mars 2013'
+        text_full = 'le lundi du 1er au 15 mars 2013, de 5h à 7h'
         self.rec_nodatetime = parse(text_nodatetime, lang)[0]
         self.rec_notime = parse(text_notime, lang)[0]
         self.rec_full = parse(text_full, lang)[0]
@@ -260,6 +284,11 @@ class TestWeekdayRecurrence(unittest.TestCase):
         self.assertIn(
             len(list(rrulestr(self.rec_nodatetime.rrulestr))),
             range(52, 53))
+
+    def test_future_no_datetime(self):
+        self.assertTrue(self.rec_nodatetime.future())
+        self.assertTrue(
+            self.rec_nodatetime.future(reference=datetime.date(2012, 1, 1)))
 
     def test_rrulestr_no_time(self):
         """ Test the format of the sstrrule when no start/end time is
@@ -293,6 +322,11 @@ class TestWeekdayRecurrence(unittest.TestCase):
         ]
         self.assertEqual(list(rrulestr(self.rec_notime.rrulestr)), target)
 
+    def test_future_no_time(self):
+        self.assertFalse(self.rec_notime.future())
+        self.assertTrue(
+            self.rec_notime.future(reference=datetime.date(2012, 1, 1)))
+
     def test_rrulestr_fulldata(self):
         """ Test the format of the sstrrule """
         rrulestr = self.rec_full.rrulestr
@@ -319,6 +353,11 @@ class TestWeekdayRecurrence(unittest.TestCase):
             datetime.datetime(2013, 3, 11, 5, 0),
         ]
         self.assertEqual(list(rrulestr(self.rec_full.rrulestr)), target)
+
+    def test_future_fulldata(self):
+        self.assertFalse(self.rec_full.future())
+        self.assertTrue(
+            self.rec_full.future(reference=datetime.date(2012, 1, 1)))
 
 
 class TestWeekdayIntervalRecurrence(unittest.TestCase):
