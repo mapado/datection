@@ -848,7 +848,10 @@ class WeekdayRecurrence(Timepoint):
                 text=self.data['time_interval'])
             # extract the start and end times from date interval
             start_time = time_interval.start_time.to_python()
-            end_time = time_interval.end_time.to_python()
+            if time_interval.end_time:
+                end_time = time_interval.end_time.to_python()
+            else:
+                end_time = time_interval.start_time.to_python()
 
             # Create datetimes from the start and end times by associatng
             # each of them with a default date
