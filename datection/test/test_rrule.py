@@ -267,7 +267,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
 
         """
         rrulestr = self.rec_notime.rrulestr
-        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
+        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
             'UNTIL=20130315')
         self.assertEqual(rrulestr, target)
 
@@ -296,7 +296,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
     def test_rrulestr_fulldata(self):
         """ Test the format of the sstrrule """
         rrulestr = self.rec_full.rrulestr
-        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYWEEKDAY=MO;'
+        target = ('DTSTART:20130301\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
             'BYHOUR=5;BYMINUTE=0;UNTIL=20130315')
         self.assertEqual(rrulestr, target)
 

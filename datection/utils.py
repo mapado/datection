@@ -26,6 +26,7 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         until = ''
     if rule:
         rulestr = "RRULE:" + str(rule) + ";"
+        rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')
     else:
         rulestr = "RRULE:FREQ=%s;" % (freq)
         for arg, val in kwargs.items():
