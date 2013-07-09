@@ -257,9 +257,9 @@ class TestWeekdayRecurrence(unittest.TestCase):
             when no start/end datetime is specified
 
         """
-        self.assertEqual(
+        self.assertIn(
             len(list(rrulestr(self.rec_nodatetime.rrulestr))),
-            53)
+            range(52, 53))
 
     def test_rrulestr_no_time(self):
         """ Test the format of the sstrrule when no start/end time is
