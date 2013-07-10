@@ -24,7 +24,7 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
         rrules = timepoint.to_db()
         if isinstance(rrules, list):
             out.extend(rrules)
-        else:
+        elif isinstance(rrules, dict):
             out.append(rrules)
     return out
 
