@@ -228,6 +228,14 @@ class TestSerializeFrDateTime(unittest.TestCase):
         assert dt.date.valid
         assert dt.time.valid
 
+    def test_numerical_format(self):
+        dt = parse(u'01/04/2014 20h30', 'fr')[0]
+        assert dt.date.day == 1
+        assert dt.date.month == 4
+        assert dt.date.year == 2014
+        assert dt.time.start_time.hour == 20
+        assert dt.time.start_time.minute == 30
+
 
 class TestSerializeFrDateTimeList(unittest.TestCase):
     """ Test class of the DateTimeList serializer with french data."""

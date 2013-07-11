@@ -164,6 +164,13 @@ FR_DATETIME = re.compile(r"""
     """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
+FR_NUMERIC_DATETIME = re.compile(r"""
+    {date}\s*
+    [^\d]{{,6}}
+    {time}
+    """.format(date=_FR_NUMERIC_DATE, time=_FR_TIME_INTERVAL),
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
 # an interval of dates with a time information
 # Examples
 # * du samedi 19 au mercredi 23 octobre 2013, à 15h30
@@ -332,7 +339,7 @@ TIMEPOINT_REGEX = {
         'date_interval': [FR_DATE_INTERVAL, FR_NUMERIC_DATE_INTERVAL],
         '_time': [FR_TIME],  # "private" sub-regex
         'time_interval': [FR_TIME_INTERVAL],
-        'datetime': [FR_DATETIME],
+        'datetime': [FR_DATETIME, FR_NUMERIC_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
         'datetime_interval': [FR_DATETIME_INTERVAL, FR_NUMERIC_DATETIME_INTERVAL],
         'weekday_recurrence': [FR_WEEKDAY_RECURRENCE],

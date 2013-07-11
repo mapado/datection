@@ -445,6 +445,15 @@ class TestDateTimeRegex(unittest.TestCase):
         assert tstamp_time_int.groupdict()['start_time'] == '20h'
         assert tstamp_time_int.groupdict()['end_time'] == '21h20'
 
+    def test_numerical_format(self):
+        text = '01/08/2013 21:30'
+        tstamp_time_int = re.search(FR_NUMERIC_DATETIME, text)
+        assert tstamp_time_int.groupdict()['day'] == '01'
+        assert tstamp_time_int.groupdict()['month_name'] == '08'
+        assert tstamp_time_int.groupdict()['year'] == '2013'
+        assert tstamp_time_int.groupdict()['start_time'] == '21:30'
+        assert tstamp_time_int.groupdict()['end_time'] is None
+
 
 class TestDateListRegex(unittest.TestCase):
     """ Test class for extractio of date list.
