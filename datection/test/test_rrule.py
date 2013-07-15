@@ -283,7 +283,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         self.assertIn(
             len(list(rrulestr(self.rec_nodatetime.rrulestr))),
-            range(52, 53))
+            range(52, 53+1))
 
     def test_future_no_datetime(self):
         self.assertTrue(self.rec_nodatetime.future())
