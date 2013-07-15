@@ -67,6 +67,19 @@ REVERSE_MONTH = {
     }
 }
 
+REVERSE_WEEKDAY = {
+    'fr':
+    {
+        0: u'lundi',
+        1: u'mardi',
+        2: u'mercredi',
+        3: u'jeudi',
+        4: u'vendredi',
+        5: u'samedi',
+        6: u'dimanche',
+    }
+}
+
 
 SHORT_MONTH = {
 # Untested for now!
