@@ -863,9 +863,9 @@ class WeekdayRecurrence(Timepoint):
             end_datetime = datetime.datetime.combine(
                 end_date, end_time)
         else:
-            start_datetime = datetime.datetime.utcnow()
-            # limit resolution to the second
-            start_datetime = start_datetime.replace(microsecond=0)
+            start_datetime = datetime.datetime.combine(
+                datetime.date.today(),
+                datetime.time(0, 0, 0))
             # if not specified, the end date is one year after the start date
             end_datetime = start_datetime + datetime.timedelta(days=365)
         return start_datetime, end_datetime
