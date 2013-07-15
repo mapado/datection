@@ -292,7 +292,7 @@ class ScheduleFormatter(object):
                 'end': rrule.until
             }]
             if (dates[0]['end'] - dates[0]['start']).days == 365:
-                interval = u"toute l'année"
+                interval = u""
             else:
                 interval = self.format_date_interval(dates)
 
