@@ -59,16 +59,10 @@ class _TimepointGrouper(object):
 
     @staticmethod
     def _consecutives(date1, date2):
-        """ If two dates are consecutive, return True, else False
-
-        date1 and date2 are consecutive if date1.day == date2.day +/- 1
-        in the same year and month
-
-        """
-        if (date1['start'].year != date2['start'].year
-                or date1['start'].month != date2['start'].month):
-            return False
-        return abs(date1['start'].day - date2['start'].day) == 1
+        """ If two dates are consecutive, return True, else False"""
+        return (
+            date1['start'] + datetime.timedelta(days=1) == date2['start']
+            or date1['start'] + datetime.timedelta(days=-1) == date2['start'])
 
     def groupby_consecutive_dates(self, time_groups):
         """ Group each group in input time_groups by gathering consecutive dates together
