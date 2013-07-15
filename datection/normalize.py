@@ -806,7 +806,9 @@ class WeekdayRecurrence(Timepoint):
         """
         return sorted([
             WEEKDAY[self.lang][day.group(0)] for day in
-            re.finditer(r'|'.join(WEEKDAY[self.lang].keys()), self.data['weekdays'])])
+            re.finditer(
+                r'|'.join(WEEKDAY[self.lang].keys()),
+                self.data['weekdays'].lower())])
 
     def _set_datetime_interval(self):
         """ Return the start and end date of the recurrence.
