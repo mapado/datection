@@ -221,7 +221,7 @@ class ScheduleFormatter(object):
         start_day = group[0]['start'].day
         start_year = group[0]['start'].year
         end_year = group[-1]['end'].year
-        start_month = group[0]['end'].month
+        start_month = group[0]['start'].month
         end_month = group[-1]['end'].month
         if start_year != end_year:  # different year
             interval = u'du %s au %s' % (
