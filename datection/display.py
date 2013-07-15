@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Module in charge of transforming a rrule + duraction object into the shortest
+human-readable string possible.
+"""
 
 import datetime
 
+from dateutil.rrule import *
 from collections import defaultdict
 
-from datection.datenames import REVERSE_MONTH
+from datection.datenames import REVERSE_MONTH, REVERSE_WEEKDAY
+from datection.normalize import ALL_DAY
 
 
 class _TimepointGrouper(object):
@@ -17,15 +23,39 @@ class _TimepointGrouper(object):
             and sort it by start time.
 
         """
-        schedule = self._flatten(schedule)
-        self.schedule = sorted(schedule, key=lambda x: x['start'])
+        self.recurring, non_recurring = self.classify_rrules(schedule)
+        self.non_recurring = []
+        for non_rec in non_recurring:
+            self.non_recurring.extend(self.generate_start_end_struct(non_rec))
 
     @staticmethod
-    def _flatten(schedule):
-        """ Flatten the contextual schedule into a non-contextual one """
-        if not isinstance(schedule[0], list):
-            return schedule
-        return [timepoint for context in schedule for timepoint in context]
+    def generate_start_end_struct(struct):
+        out = []
+        rrule = rrulestr(struct['rrule'])
+        for start_date in list(rrule):
+            start = datetime.datetime.combine(
+                start_date,
+                datetime.time(rrule.byhour[0], rrule.byminute[0]))
+            end = datetime.datetime.combine(
+                start_date,
+                datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
+                    datetime.timedelta(minutes=struct['duration'])
+            out.append({'start': start, 'end': end})
+        return out
+
+    @staticmethod
+    def classify_rrules(schedule):
+        """Classify the rrules into 4 groups:
+        recurrent, allday, punctual and time_slot
+        """
+        # classify the rrules bewteen recurring and non-recurring
+        non_recurring = [
+            struct for struct in schedule
+            if 'BYDAY' not in struct['rrule']]
+        recurring = [
+            struct for struct in schedule
+            if struct not in non_recurring]
+        return recurring, non_recurring
 
     @staticmethod
     def _consecutives(date1, date2):
@@ -39,19 +69,6 @@ class _TimepointGrouper(object):
                 or date1['start'].month != date2['start'].month):
             return False
         return abs(date1['start'].day - date2['start'].day) == 1
-
-    def groupby_time(self):
-        """ Group the self.schedule list by start/end time
-
-        All the schedules with the same start/end time are grouped together
-
-        """
-        times = defaultdict(list)
-        for date in self.schedule:
-            start_time, end_time = date['start'].time(), date['end'].time()
-            grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
-            times[grp].append(date)  # group dates by time
-        return times.values()
 
     def groupby_consecutive_dates(self, time_groups):
         """ Group each group in input time_groups by gathering consecutive dates together
@@ -83,8 +100,21 @@ class _TimepointGrouper(object):
             out.append(conseq)
         return out
 
+    def groupby_time(self):
+        """ Group the self.schedule list by start/end time
+
+        All the schedules with the same start/end time are grouped together
+
+        """
+        times = defaultdict(list)
+        for date in self.non_recurring:
+            start_time, end_time = date['start'].time(), date['end'].time()
+            grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
+            times[grp].append(date)  # group dates by time
+        return times.values()
+
     def group(self):
-        """ Group self.schedule by time and also by consecutivity
+        """ Group self.non_recurring by time and also by consecutivity
 
         The schedules are first grouped by time, ie, all schedules
         occuring at the same start/end time are grouped together.
@@ -129,8 +159,9 @@ class ScheduleFormatter(object):
         technique.
 
         """
-        self.time_groups, self.consecutive_groups = _TimepointGrouper(
-            schedule).group()
+        tp = _TimepointGrouper(schedule)
+        self.time_groups, self.consecutive_groups = tp.group()
+        self.recurring = tp.recurring
         self.lang = lang
 
     @staticmethod
@@ -220,7 +251,7 @@ class ScheduleFormatter(object):
         * time(10, 20), time(15, 30) -> u"de 10h20 à 15h30"
         * time(10, 0), time(15, 30) -> u"de 10h à 15h30"
 
-        If start == time(0, 0, 0) and end == time(23, 59, 59), then
+        If start == time(0, 0, 0) and end == time(23, 59, 0), then
         it means that no time must be displayed.
 
         """
@@ -229,7 +260,7 @@ class ScheduleFormatter(object):
 
         # case of no specified time (entire day)
         if (start == datetime.time(0, 0, 0) and
-            (end == datetime.time(23, 59, 59) or
+            (end == datetime.time(23, 59, 0) or
                 end == datetime.time(0, 0, 0))):
             interval = ''
         # case of a single time (no end time)
@@ -239,6 +270,54 @@ class ScheduleFormatter(object):
             interval = u'de %dh%s à %dh%s' % (
                 start.hour, start.minute or '', end.hour, end.minute or '')
         return interval
+
+    def format_rrule(self, item):
+        """Format a recurrence rule associated with a duration"""
+        rrule = rrulestr(item['rrule'])
+
+        # format weekdays
+        if len(rrule.byweekday) == 1:
+            weekdays = 'le ' + REVERSE_WEEKDAY[self.lang][rrule.byweekday[0].weekday]
+        else:
+            start_wkd, end_wkd = rrule.byweekday[0], rrule.byweekday[-1]
+            weekdays_index = [wk.weekday for wk in rrule.byweekday]
+            if weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
+                weekdays = 'du %s au %s' % (
+                    REVERSE_WEEKDAY[self.lang][start_wkd.weekday],
+                    REVERSE_WEEKDAY[self.lang][end_wkd.weekday])
+            elif weekdays_index == range(0, 7):
+                weekdays = 'tous les jours'
+            else:
+                weekdays = 'le ' + ', '.join(
+                    [REVERSE_WEEKDAY[self.lang][i] for iu in weekdays_index])
+
+        # format dates boundaries
+        if rrule.until:
+            dates = [{
+                'start': rrule.dtstart,
+                'end': rrule.until
+            }]
+            if (dates[0]['end'] - dates[0]['start']).days == 365:
+                interval = u"toute l'année"
+            else:
+                interval = self.format_date_interval(dates)
+
+        # format time interval
+        if not rrule.byhour and not rrule.byminute:
+            start = datetime.datetime.combine(
+                datetime.date.today(),
+                datetime.time(0, 0))
+        else:
+            start = datetime.datetime.combine(
+                datetime.date.today(),
+                datetime.time(rrule.byhour[0], rrule.byminute[0]))
+        end = start + datetime.timedelta(minutes=item['duration'])
+        dates = {'start': start, 'end': end}
+        times = self.format_time(dates)
+
+        # assemble
+        fmt = ', '.join([part for part in [weekdays, interval, times] if part])
+        return fmt
 
     def format_single_dates_and_interval(self, time_group):
         """ First formatting technique, using dates interval
@@ -319,6 +398,8 @@ class ScheduleFormatter(object):
 
     def display(self):
         fmt = []
+        for rec in self.recurring:
+            fmt.append(self.format_rrule(rec))
         for time_group, conseq_time_group in zip(self.time_groups, self.consecutive_groups):
             list_fmt = ', '.join(self.format_date_list(time_group))
             conseq_fmt = ', '.join(self.format_single_dates_and_interval(conseq_time_group))

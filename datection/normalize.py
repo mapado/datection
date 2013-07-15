@@ -824,6 +824,7 @@ class WeekdayRecurrence(Timepoint):
                 to_python()
             start_datetime = datetime_interval[0][0]
             end_datetime = datetime_interval[-1][-1]
+
         elif self.data.get('date_interval') and not self.data.get('time_interval'):
             # normalize darte interval from regex matches
             date_interval = DateInterval(
@@ -840,6 +841,7 @@ class WeekdayRecurrence(Timepoint):
             start_datetime = datetime.datetime.combine(start_date, start_time)
             end_time = datetime.time(hour=23, minute=59, second=59)
             end_datetime = datetime.datetime.combine(end_date, end_time)
+
         elif self.data.get('time_interval') and not self.data.get('date_interval'):
             # normalize darte interval from regex matches
             time_interval = TimeInterval(
