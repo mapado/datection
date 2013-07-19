@@ -283,7 +283,7 @@ class ScheduleFormatter(object):
                 weekdays = 'tous les jours'
             else:
                 weekdays = 'le ' + ', '.join(
-                    [REVERSE_WEEKDAY[self.lang][i] for iu in weekdays_index])
+                    [REVERSE_WEEKDAY[self.lang][i] for i in weekdays_index])
 
         # format dates boundaries
         if rrule.until:
