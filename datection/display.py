@@ -159,7 +159,7 @@ class ScheduleFormatter(object):
 
     @staticmethod
     def _sentencize(fmt):
-        return '\n'.join([item.capitalize().strip() + '.' for item in fmt])
+        return '\n'.join([item.capitalize().strip() for item in fmt])
 
     @staticmethod
     def _shortest(item1, item2):
