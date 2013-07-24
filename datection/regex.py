@@ -145,8 +145,10 @@ _FR_NUMERIC_DATE_INTERVAL = r"""
     (?P<end_day>{day})  # day number # day number
     {sep}
     (?P<end_month_name>{month_name})  # month
-    {sep}
-    (?P<end_year>{year})  # year
+    (
+        {sep}
+        (?P<end_year>{year})
+    )?  # year
     """.format(
     prefix=INTERVAL_PREFIX, day=DAY_NUMBER, sep=NUMERIC_DATE_SEPARATOR,
     month_name=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
@@ -159,14 +161,14 @@ FR_NUMERIC_DATE_INTERVAL = re.compile(
 # le 15 août 2013 de 15h30 à 16h45
 FR_DATETIME = re.compile(r"""
     {date}\s*
-    [^\d]{{,6}}
+    [^\d/]{{1,6}}
     {time}
     """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 FR_NUMERIC_DATETIME = re.compile(r"""
     {date}\s*
-    [^\d]{{,6}}
+    [^\d/]{{1,6}}
     {time}
     """.format(date=_FR_NUMERIC_DATE, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -177,14 +179,14 @@ FR_NUMERIC_DATETIME = re.compile(r"""
 # * du 15 au 18 Mars de 20h30 à 23h
 FR_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    [^\d]{{,6}}
+    [^\d/]{{1,6}}
     {time}
     """.format(date_interval=_FR_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
     {date_interval}
-    [^\d]{{,6}}
+    [^\d/]{{1,6}}
     {time}
     """.format(date_interval=_FR_NUMERIC_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
