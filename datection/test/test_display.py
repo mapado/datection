@@ -91,3 +91,9 @@ class DisplayTest(unittest.TestCase):
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, 'fr')
         self.assertEqual(output, u'Le lundi, du 15 au 30 janvier 2013, de 15h à 18h.')
+
+    def test_weekday_recurrence_all_days(self):
+        text = u'du lundi au dimanche, du 15 au 30 janvier 2013 de 15h à 18h'
+        schedule = datection.to_db(text, self.lang, only_future=False)
+        output = datection.display(schedule, self.lang)
+        self.assertEqual(output, u'Tous les jours, du 15 au 30 janvier 2013, de 15h à 18h.')

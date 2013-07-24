@@ -268,19 +268,18 @@ class ScheduleFormatter(object):
     def format_rrule(self, item):
         """Format a recurrence rule associated with a duration"""
         rrule = rrulestr(item['rrule'])
-
         # format weekdays
         if len(rrule.byweekday) == 1:
             weekdays = 'le ' + REVERSE_WEEKDAY[self.lang][rrule.byweekday[0].weekday]
         else:
             start_wkd, end_wkd = rrule.byweekday[0], rrule.byweekday[-1]
             weekdays_index = [wk.weekday for wk in rrule.byweekday]
-            if weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
+            if weekdays_index == range(0, 7):
+                weekdays = 'tous les jours'
+            elif weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
                 weekdays = 'du %s au %s' % (
                     REVERSE_WEEKDAY[self.lang][start_wkd.weekday],
                     REVERSE_WEEKDAY[self.lang][end_wkd.weekday])
-            elif weekdays_index == range(0, 7):
-                weekdays = 'tous les jours'
             else:
                 weekdays = 'le ' + ', '.join(
                     [REVERSE_WEEKDAY[self.lang][i] for i in weekdays_index])
