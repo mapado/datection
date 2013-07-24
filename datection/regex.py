@@ -86,7 +86,7 @@ FR_TIME = r'(?P<hour>{hour})(\s)?{sep}(?P<minute>{minute})?'.format(
 
 # Same that FR_TIME, but with no group. Use it when several
 # times are matched (ex: time intervals)
-_FR_TIME = r'({hour})(\s)?({sep})({minute})?'.format(
+_FR_TIME = r'((?<![^\s-]){hour})(\s)?({sep})({minute})?'.format(
     hour=HOUR, sep=TIME_SEPARATOR, minute=MINUTE)
 
 # Time interval: one time or two times linked by a prefix and a suffix
