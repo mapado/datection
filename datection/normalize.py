@@ -316,15 +316,15 @@ class DateInterval(Timepoint):
 
     def _set_dates(self):
         """ Restore all missing data and serialize the start and end date """
-        # start year inherits from the end date year and month name
+        # start date inherits from end month name if necessary
+        if not self.data['start_month_name'] and self.data['end_month_name']:
+            self.data['start_month_name'] = self.data['end_month_name']
 
         if not self.data['start_year'] and self.data['end_year']:
             self.data['start_year'] = self.data['end_year']
         elif not (self.data['start_year'] or self.data['end_year']):
             self.data['start_year'] = datetime.date.today().year
             self.data['end_year'] = datetime.date.today().year
-        if not self.data['start_month_name'] and self.data['end_month_name']:
-            self.data['start_month_name'] = self.data['end_month_name']
 
         # Create normalised start date of Date type
         if not hasattr(self, 'start_date'):
@@ -340,6 +340,11 @@ class DateInterval(Timepoint):
                 month_name=self.data['end_month_name'],
                 day=self.data['end_day'],
                 lang=self.lang)
+
+        # warning, if end month occurs before start month, then end month
+        # is next year
+        if self.end_date.month < self.start_date.month:
+            self.end_date.year += 1
 
     @property
     def valid(self):
