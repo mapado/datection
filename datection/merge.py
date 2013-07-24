@@ -55,22 +55,37 @@ def _merge_date_bounds(bounded, weekday_recurrences):
     out = []
     for rec in weekday_recurrences:
         if isinstance(bounded, DateTimeInterval):
+            # make the weekday recurrence inherit from the datetime
+            # boudaries of the DateTimeInterval
             start = datetime.datetime.combine(
                 bounded.date_interval.start_date.to_python(),
                 bounded.time_interval.start_time.to_python())
             rec.start_datetime = start
             end = datetime.datetime.combine(
                 bounded.date_interval.end_date.to_python(),
-                bounded.time_interval.end_time.to_python())
+                (bounded.time_interval.end_time
+                    or bounded.time_interval.start_time).to_python())
             rec.end_datetime = end
         else:
+            # make the weekday recurrence inherit from the date
+            # boundaries of the DateInterval, combining them with the
+            # (possible) time boundaries of the weekday recurrence
+            if rec.start_datetime.time() != datetime.time(0, 0):
+                start_time = rec.start_datetime.time()
+            else:
+                start_time = datetime.time(0, 0)
+            if rec.end_datetime.time() != datetime.time(23, 59):
+                end_time = rec.end_datetime.time()
+            else:
+                end_time = datetime.time(23, 59)
+
             start = datetime.datetime.combine(
                 bounded.start_date.to_python(),
-                datetime.time(0, 0))
+                start_time)
             rec.start_datetime = start
             end = datetime.datetime.combine(
                 bounded.end_date.to_python(),
-                datetime.time(23, 59))
+                end_time)
             rec.end_datetime = end
         out.append(rec)
     return out
