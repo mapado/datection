@@ -359,12 +359,30 @@ class TestSerializeFrDateInterval(unittest.TestCase):
             numeric dates with the first year missing
 
         """
-        di = parse(u'du 01/12 au 05/04/07 il pleuvra', 'fr')[0]
+        di = parse(u'du 01/03 au 05/04/07 il pleuvra', 'fr')[0]
         assert di.start_date.valid
         assert di.end_date.valid
         assert di.start_date.year == di.end_date.year
         assert di.end_date.year == 2007
         assert di.valid
+
+    def test_numeric_dates_end_date_next_year(self):
+        """ Test then normalisation of a datetimeinterval in the case of
+            end month in the year after the start date
+
+        """
+        di = parse(u'du 01/12 au 05/04/07 il pleuvra', 'fr')[0]
+        assert di.start_date.year == 2006
+        assert di.end_date.year == 2007
+
+    def test_numeric_dates_end_date_next_year_implicit(self):
+        """ Test then normalisation of a datetimeinterval in the case of
+            end month in the year after the start date with implicit years
+
+        """
+        di = parse(u'du 01/12 au 05/04 il pleuvra', 'fr')[0]
+        assert di.start_date.year == datetime.date.today().year
+        assert di.end_date.year == datetime.date.today().year + 1
 
 
 class TestSerializeFrDateTimeInterval(unittest.TestCase):

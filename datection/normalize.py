@@ -321,22 +321,26 @@ class DateInterval(Timepoint):
             self.data['start_month_name'] = self.data['end_month_name']
 
         if not self.data['start_year'] and self.data['end_year']:
-            self.data['start_year'] = self.data['end_year']
+            start_year = self.data['end_year']
+            end_year = self.data['end_year']
         elif not (self.data['start_year'] or self.data['end_year']):
-            self.data['start_year'] = datetime.date.today().year
-            self.data['end_year'] = datetime.date.today().year
+            start_year = datetime.date.today().year
+            end_year = datetime.date.today().year
+        else:
+            start_year = self.data['start_year']
+            end_year = self.data['end_year']
 
         # Create normalised start date of Date type
         if not hasattr(self, 'start_date'):
             self.start_date = Date(
-                year=self.data['start_year'],
+                year=start_year,
                 month_name=self.data['start_month_name'],
                 day=self.data['start_day'],
                 lang=self.lang)
         # create serialized end date of Date type
         if not hasattr(self, 'end_date'):
             self.end_date = Date(
-                year=self.data['end_year'],
+                year=end_year,
                 month_name=self.data['end_month_name'],
                 day=self.data['end_day'],
                 lang=self.lang)
@@ -344,7 +348,10 @@ class DateInterval(Timepoint):
         # warning, if end month occurs before start month, then end month
         # is next year
         if self.end_date.month < self.start_date.month:
-            self.end_date.year += 1
+            if self.data['end_year'] and not self.data['start_year']:
+                self.start_date.year -= 1
+            elif not self.data['end_year']:
+                self.end_date.year += 1
 
     @property
     def valid(self):

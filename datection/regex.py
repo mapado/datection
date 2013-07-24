@@ -19,7 +19,7 @@ FR_MONTH = r'(?<!\w)(%s)(?!\w)' % ('|'.join(MONTH['fr'].keys() + FR_SHORT_MONTH)
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (
-    r'(?<!\d)'  # not preceeded by a digit
+    r'(?<![\d/])'  # not preceeded by a digit
     r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'  # OK: (0)1..(0)9...10...29, 30, 31
     r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
     # to avoid matching (20)13 in a year, (20)€ or (15)h
