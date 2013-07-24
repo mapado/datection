@@ -21,13 +21,18 @@ INTERVALS = (DateInterval, DateTimeInterval)
 def merge(timepoints):
     intervals = [t for t in timepoints if isinstance(t, INTERVALS)]
     wk_rec = [t for t in timepoints if isinstance(t, WEEKDAY_REC)]
-    if len(intervals) == 1 and len(wk_rec) > 0:
+    if len(wk_rec) > 0:
         merged_wk_rec = _merge_weekdays(wk_rec)
-        merged_bounds = _merge_date_bounds(
-            bounded=intervals[0],
-            weekday_recurrences=merged_wk_rec)
-        filtered = [t for t in timepoints if t not in wk_rec if t not in intervals]
-        return filtered + merged_bounds
+        if len(intervals) == 1:
+            # merged_wk_rec = _merge_weekdays(wk_rec)
+            merged_bounds = _merge_date_bounds(
+                bounded=intervals[0],
+                weekday_recurrences=merged_wk_rec)
+            filtered = [t for t in timepoints if t not in wk_rec if t not in intervals]
+            return filtered + merged_bounds
+        else:
+            filtered = [t for t in timepoints if t not in wk_rec]
+            return filtered + merged_wk_rec
     else:
         return timepoints
 
