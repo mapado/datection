@@ -10,7 +10,6 @@ from dateutil.rrule import *
 from collections import defaultdict
 
 from datection.datenames import REVERSE_MONTH, REVERSE_WEEKDAY
-from datection.normalize import ALL_DAY
 
 
 class _TimepointGrouper(object):
@@ -39,7 +38,7 @@ class _TimepointGrouper(object):
             end = datetime.datetime.combine(
                 start_date,
                 datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
-                    datetime.timedelta(minutes=struct['duration'])
+                datetime.timedelta(minutes=struct['duration'])
             out.append({'start': start, 'end': end})
         return out
 
@@ -91,7 +90,7 @@ class _TimepointGrouper(object):
                     else:
                         # create new group with only last date
                         conseq.append([date])
-            out.append(conseq)
+            out.append(sorted(conseq, key=lambda item: item[0]['start']))
         return out
 
     def groupby_time(self):
@@ -105,7 +104,7 @@ class _TimepointGrouper(object):
             start_time, end_time = date['start'].time(), date['end'].time()
             grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
             times[grp].append(date)  # group dates by time
-        return times.values()
+        return [sorted(group, key=lambda item: item['start']) for group in times.values()]
 
     def group(self):
         """ Group self.non_recurring by time and also by consecutivity
@@ -353,11 +352,10 @@ class ScheduleFormatter(object):
         out = []
         for year in years:
             # now group the dates by month
-            months = list(set([
+            months = sorted(list(set([
                 date['start'].month
                 for date in time_group
-                if date['start'].year == year
-            ]))
+                if date['start'].year == year])))
 
             # all dates happen in the same month
             if len(months) == 1:
