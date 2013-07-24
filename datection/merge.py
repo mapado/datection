@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+
+"""
+Merge several datection Timepoints objects together
+"""
+
+import itertools
+import datetime
+
+from .normalize import DateInterval, DateTimeInterval, WeekdayRecurrence, \
+    WeekdayIntervalRecurrence, AllWeekdayRecurrence
+
+WEEKDAY_REC = (
+    WeekdayRecurrence,
+    WeekdayIntervalRecurrence,
+    AllWeekdayRecurrence)
+
+INTERVALS = (DateInterval, DateTimeInterval)
+
+
+def merge(timepoints):
+    intervals = [t for t in timepoints if isinstance(t, INTERVALS)]
+    wk_rec = [t for t in timepoints if isinstance(t, WEEKDAY_REC)]
+    if len(intervals) == 1 and len(wk_rec) > 0:
+        merged_wk_rec = _merge_weekdays(wk_rec)
+        merged_bounds = _merge_date_bounds(
+            bounded=intervals[0],
+            weekday_recurrences=merged_wk_rec)
+        filtered = [t for t in timepoints if t not in wk_rec if t not in intervals]
+        return filtered + merged_bounds
+    else:
+        return timepoints
+
+
+def _merge_weekdays(weekday_recurrences):
+    """Merge weekday recurrences sharing the same start/end bounds"""
+    merges = []
+    boundaries = lambda wk: (wk.start_datetime, wk.end_datetime)
+    weekday_recurrences = sorted(
+        weekday_recurrences, key=boundaries)
+    for bounds, group in itertools.groupby(weekday_recurrences, key=boundaries):
+        weekday_set = list(set([day for rec in group for day in rec.weekdays]))
+        merge = WeekdayRecurrence(
+            weekdays=weekday_set, start=bounds[0], end=bounds[1])
+        merges.append(merge)
+    return merges
+
+
+def _merge_date_bounds(bounded, weekday_recurrences):
+    out = []
+    for rec in weekday_recurrences:
+        if isinstance(bounded, DateTimeInterval):
+            start = datetime.datetime.combine(
+                bounded.date_interval.start_date.to_python(),
+                bounded.time_interval.start_time.to_python())
+            rec.start_datetime = start
+            end = datetime.datetime.combine(
+                bounded.date_interval.end_date.to_python(),
+                bounded.time_interval.end_time.to_python())
+            rec.end_datetime = end
+        else:
+            start = datetime.datetime.combine(
+                bounded.start_date.to_python(),
+                datetime.time(0, 0))
+            rec.start_datetime = start
+            end = datetime.datetime.combine(
+                bounded.end_date.to_python(),
+                datetime.time(23, 59))
+            rec.end_datetime = end
+        out.append(rec)
+    return out

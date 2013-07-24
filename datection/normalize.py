@@ -785,10 +785,13 @@ class WeekdayRecurrence(Timepoint):
     method.
 
     """
-    def __init__(self, data={}, **kwargs):
+    def __init__(self, data={}, weekdays=None, start=None, end=None, **kwargs):
         super(WeekdayRecurrence, self).__init__(data, **kwargs)
-        self.weekdays = self._set_weekdays()
-        self.start_datetime, self.end_datetime = self._set_datetime_interval()
+        self.weekdays = self._set_weekdays() if not weekdays else weekdays
+        if not start and not end:
+            self.start_datetime, self.end_datetime = self._set_datetime_interval()
+        else:
+            self.start_datetime, self.end_datetime = start, end
 
     def __eq__(self, other):
         """ Equality is based on the RFC syntax """

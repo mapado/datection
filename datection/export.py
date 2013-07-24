@@ -5,6 +5,7 @@ Datection exporters to python and database compliant formats.
 """
 
 from datection.parse import parse
+from datection.merge import merge
 
 
 def to_db(text, lang, valid=True, only_future=True, **kwargs):
@@ -16,6 +17,7 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
 
     """
     timepoints = parse(text, lang, valid)
+    timepoints = merge(timepoints)
     out = []
     # filter out all past timepoints, if only_future == True
     if only_future:
