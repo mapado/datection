@@ -19,3 +19,4 @@ from datection.context import probe
 from datection.export import to_db, to_python, to_mongo
 from datection.display import display
 from datection.future import is_future
+from datection.similarity import similarity
