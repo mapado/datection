@@ -16,6 +16,7 @@ WEEKDAY_REC = (
     AllWeekdayRecurrence)
 
 INTERVALS = (DateInterval, DateTimeInterval)
+DAY_START_END = [datetime.time(0, 0, 0), datetime.time(23, 59, 59)]
 
 
 def merge(timepoints):
@@ -37,16 +38,33 @@ def merge(timepoints):
         return timepoints
 
 
-def _merge_weekdays(weekday_recurrences):
-    """Merge weekday recurrences sharing the same start/end bounds"""
+def _merge_weekdays(recurrences):
+    """Merge weekday recurrences sharing the same start/end date bounds"""
     merges = []
-    boundaries = lambda wk: (wk.start_datetime, wk.end_datetime)
-    weekday_recurrences = sorted(
-        weekday_recurrences, key=boundaries)
-    for bounds, group in itertools.groupby(weekday_recurrences, key=boundaries):
+    # group weekday recurrences by date
+    boundaries = lambda wk: (wk.start_datetime.date(), wk.end_datetime.date())
+    day_start_end = lambda t: True if t not in DAY_START_END else False
+
+    recurrences = sorted(recurrences, key=boundaries)
+    for bounds, group in itertools.groupby(recurrences, key=boundaries):
+        group = list(group)
         weekday_set = list(set([day for rec in group for day in rec.weekdays]))
+
+        # As we grouped together weekday recurrences with potential different
+        # start/end time, we need to select the most specific one
+        # ie: not 00:00:00 and 23:59:59
+        start_time = (filter(
+            day_start_end,
+            [rec.start_datetime.time() for rec in group])
+            or [datetime.time(0, 0)])
+        end_time = (filter(
+            day_start_end,
+            [rec.end_datetime.time() for rec in group])
+            or [datetime.time(23, 59)])
+        start = datetime.datetime.combine(bounds[0], start_time[0])
+        end = datetime.datetime.combine(bounds[1], end_time[0])
         merge = WeekdayRecurrence(
-            weekdays=weekday_set, start=bounds[0], end=bounds[1])
+            weekdays=weekday_set, start=start, end=end)
         merges.append(merge)
     return merges
 
