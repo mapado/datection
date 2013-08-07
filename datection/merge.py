@@ -61,11 +61,16 @@ def _merge_weekdays(recurrences):
             day_start_end,
             [rec.end_datetime.time() for rec in group])
             or [datetime.time(23, 59)])
-        start = datetime.datetime.combine(bounds[0], start_time[0])
-        end = datetime.datetime.combine(bounds[1], end_time[0])
-        merge = WeekdayRecurrence(
-            weekdays=weekday_set, start=start, end=end)
-        merges.append(merge)
+
+        # if several start/end times coexist, do not merge the group
+        if len(set(start_time)) > 1 or len(set(end_time)) > 1:
+            merges.extend(group)
+        else:
+            start = datetime.datetime.combine(bounds[0], start_time[0])
+            end = datetime.datetime.combine(bounds[1], end_time[0])
+            merge = WeekdayRecurrence(
+                weekdays=weekday_set, start=start, end=end)
+            merges.append(merge)
     return merges
 
 
