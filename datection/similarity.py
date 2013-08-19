@@ -39,7 +39,7 @@ def discretise_schedule(schedule):
         for timepoint in list(rrule):
             discrete_interval = discretise_day_interval(
                 start=timepoint,
-                end=timepoint + timedelta(minutes=rrule_struct['duration']))
+                end=timepoint + timedelta(minutes=int(rrule_struct['duration'])))
             for d_timepoint in discrete_interval:
                 sc_set.add(d_timepoint)
     return sc_set

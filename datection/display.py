@@ -38,7 +38,7 @@ class _TimepointGrouper(object):
             end = datetime.datetime.combine(
                 start_date,
                 datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
-                datetime.timedelta(minutes=struct['duration'])
+                datetime.timedelta(minutes=int(struct['duration']))
             out.append({'start': start, 'end': end})
         return out
 
@@ -303,7 +303,7 @@ class ScheduleFormatter(object):
             start = datetime.datetime.combine(
                 datetime.date.today(),
                 datetime.time(rrule.byhour[0], rrule.byminute[0]))
-        end = start + datetime.timedelta(minutes=item['duration'])
+        end = start + datetime.timedelta(minutes=int(item['duration']))
         dates = {'start': start, 'end': end}
         times = self.format_time(dates)
 
