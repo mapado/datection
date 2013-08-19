@@ -3,202 +3,164 @@
 Module in charge of transforming a rrule + duraction object into the shortest
 human-readable string possible.
 """
-
 import datetime
 
-from dateutil.rrule import *
 from collections import defaultdict
-
+from dateutil.rrule import rrulestr
 from datection.datenames import REVERSE_MONTH, REVERSE_WEEKDAY
 
 
-class _TimepointGrouper(object):
-    """ Object in charge of grouping the result of a to_mongo export,
-        to pass it to a TimepointFormatter.
+def lazy_property(f):
+    """Lazy loading decorator for object properties"""
+    attr_name = '_' + f.__name__
 
-    """
-    def __init__(self, schedule):
-        """ Flatten the list of list of schedules into a flat list,
-            and sort it by start time.
+    @property
+    def wrapper(self, *args, **kwargs):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, f(self, *args, **kwargs))
+        return getattr(self, attr_name)
+    return wrapper
 
-        """
-        self.recurring, non_recurring = self.classify_rrules(schedule)
-        self.non_recurring = []
-        for non_rec in non_recurring:
-            self.non_recurring.extend(self.generate_start_end_struct(non_rec))
 
-    @staticmethod
-    def generate_start_end_struct(struct):
-        out = []
-        rrule = rrulestr(struct['rrule'])
-        for start_date in list(rrule):
+def to_start_end_datetimes(schedule, bound_start=None, bound_end=None):
+    out = []
+    for rrule_struct in schedule:
+        rrule = rrulestr(rrule_struct['rrule'])
+        for start_date in rrule:
             start = datetime.datetime.combine(
                 start_date,
                 datetime.time(rrule.byhour[0], rrule.byminute[0]))
             end = datetime.datetime.combine(
                 start_date,
                 datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
-                datetime.timedelta(minutes=int(struct['duration']))
-            out.append({'start': start, 'end': end})
-        return out
+                datetime.timedelta(minutes=int(rrule_struct['duration']))
+            # filter out all start/end pairs outside of given boundaries
+            if (
+                (bound_start and bound_end
+                    and start >= bound_start and end <= bound_end)
 
-    @staticmethod
-    def classify_rrules(schedule):
-        """Classify the rrules into 4 groups:
-        recurrent, allday, punctual and time_slot
-        """
-        # classify the rrules bewteen recurring and non-recurring
-        non_recurring = [
-            struct for struct in schedule
-            if 'BYDAY' not in struct['rrule']]
-        recurring = [
-            struct for struct in schedule
-            if struct not in non_recurring]
-        return recurring, non_recurring
-
-    @staticmethod
-    def _consecutives(date1, date2):
-        """ If two dates are consecutive, return True, else False"""
-        return (
-            date1['start'] + datetime.timedelta(days=1) == date2['start']
-            or date1['start'] + datetime.timedelta(days=-1) == date2['start'])
-
-    def groupby_consecutive_dates(self, time_groups):
-        """ Group each group in input time_groups by gathering consecutive dates together
-
-        Example:
-        Input: [01/02/2013, 03/02/2013, 04/02/2013, 06/02/2013]
-        Output: [[01/02/2013], [03/02/2013, 04/02/2013], [06/02/2013]]
-
-        """
-        out = []
-        for group in time_groups:
-            conseq = []
-            start = 0
-            for i, date in enumerate(group):
-                if i != len(group) - 1:  # if date is not the last item
-                    if self._consecutives(date, group[i+1]):
-                        continue
-                    else:
-                        conseq.append(group[start: i+1])
-                        start = i + 1  # next group starts at next item
-                else:  # special case of the last item in the list: border effect
-                    # we text the consecutivity with the previous date
-                    if self._consecutives(date, group[i-1]):
-                        # add last item to last group
-                        conseq.append(group[start: i+1])
-                    else:
-                        # create new group with only last date
-                        conseq.append([date])
-            out.append(sorted(conseq, key=lambda item: item[0]['start']))
-        return out
-
-    def groupby_time(self):
-        """ Group the self.schedule list by start/end time
-
-        All the schedules with the same start/end time are grouped together
-
-        """
-        times = defaultdict(list)
-        for date in self.non_recurring:
-            start_time, end_time = date['start'].time(), date['end'].time()
-            grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
-            times[grp].append(date)  # group dates by time
-        return [sorted(group, key=lambda item: item['start']) for group in times.values()]
-
-    def group(self):
-        """ Group self.non_recurring by time and also by consecutivity
-
-        The schedules are first grouped by time, ie, all schedules
-        occuring at the same start/end time are grouped together.
-
-        Then, each time group is divised into subgroups, containing
-        consecutive items.
-
-        Examples (using human readable representations):
-        Schedule: [
-            15 mars 2013 à 20h,
-            16 mars 2013 à 20h,
-            18 mars 2013 à 20h,
-            20 mars 2013 à 21h]
-        Time groups: [
-            '20h': [15 mars 2013, 16 mars 2013, 18 mars 2013]
-            '21h': [20 mars 2013]
-        ]
-        Consecutive time groups: [
-        '20h': [[15 mars 2013, 16 mars 2013], [18 mars 2013]]
-        '21h': [[20 mars 2013]]
-        ]
-
-        Both representations are returned.
-
-        """
-        time_groups = self.groupby_time()
-        for group in time_groups:
-            group.sort(key=lambda date: date['start'])
-        return time_groups, self.groupby_consecutive_dates(time_groups)
+                or (bound_start and not bound_end and start >= bound_start)
+                or (not bound_start and bound_end and end <= bound_end)
+                or (not bound_start and not bound_end)):
+                out.append({'start': start, 'end': end})
+    return out
 
 
-class ScheduleFormatter(object):
-    """ Object in charge of generating the shortest human readable
-        representation of a datection context-free schedule list
+def recurring(schedule):
+    """Select the recurring rrules from schedule"""
+    return [
+        struct for struct in schedule
+        if 'BYDAY' in struct['rrule']]
+
+
+def non_recurring(schedule):
+    """Select the non recurring rrules from schedule"""
+    return [
+        struct for struct in schedule
+        if not 'BYDAY' in struct['rrule']]
+
+
+def consecutives(date1, date2):
+    """ If two dates are consecutive, return True, else False"""
+    return (
+        date1['start'] + datetime.timedelta(days=1) == date2['start']
+        or date1['start'] + datetime.timedelta(days=-1) == date2['start'])
+
+
+def groupby_consecutive_dates(dt_intervals):
+    """Group the members of dt_intervals by consecutivity
+
+    Example:
+    Input: [01/02/2013, 03/02/2013, 04/02/2013, 06/02/2013]
+    Output: [[01/02/2013], [03/02/2013, 04/02/2013], [06/02/2013]]
+
+    """
+    conseq = []
+    start = 0
+    for i, inter in enumerate(dt_intervals):
+        if i != len(dt_intervals) - 1:  # if inter is not the last item
+            if consecutives(inter, dt_intervals[i+1]):
+                continue
+            else:
+                conseq.append(dt_intervals[start: i+1])
+                start = i + 1  # next group starts at next item
+        else:  # special case of the last item in the list: border effect
+            # we text the consecutivity with the previous inter
+            if consecutives(inter, dt_intervals[i-1]):
+                # add last item to last group
+                conseq.append(dt_intervals[start: i+1])
+            else:
+                # create new group with only last inter
+                conseq.append([inter])
+    return sorted(conseq, key=lambda item: item[0]['start'])
+
+
+def groupby_time(dt_intervals):
+    """ Group the dt_intervals list by start/end time
+
+    All the schedules with the same start/end time are grouped together
+    and sorted in increasing order.
+
+    """
+    times = defaultdict(list)
+    for inter in dt_intervals:
+        start_time, end_time = inter['start'].time(), inter['end'].time()
+        grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
+        times[grp].append(inter)  # group dates by time
+    return [
+        sorted(group, key=lambda item: item['start'])
+        for group in times.values()]
+
+
+class BaseScheduleFormatter(object):
+    """Base class for all schedule formatters, defining basic
+    formatting methods.
 
     """
     def __init__(self, schedule, lang):
-        """ Group the input schedule by time and consecutivity.
-
-        The time groups are used by the date list formatting technique,
-        and the consecutive time groups are used by the time range formatting
-        technique.
-
-        """
-        tp = _TimepointGrouper(schedule)
-        self.time_groups, self.consecutive_groups = tp.group()
-        self.recurring = tp.recurring
+        self.schedule = schedule
         self.lang = lang
 
+    @lazy_property
+    def recurring(self):
+        """Select recurring rrules from self.schedule"""
+        return recurring(self.schedule)
+
+    @lazy_property
+    def non_recurring(self):
+        """Select non recurring rrules from self.schedule"""
+        return non_recurring(self.schedule)
+
     @staticmethod
-    def _sentencize(fmt):
+    def format_output(fmt):
         return '\n'.join([item.capitalize().strip() for item in fmt])
 
-    @staticmethod
-    def _shortest(item1, item2):
-        return item1 if len(item1) < len(item2) else item2
-
-    @staticmethod
-    def _filterby_year_and_month(dates, year, month):
-        """ Return all dates in dates occuring at argument year and month """
-        return [
-            date for date in dates
-            if date['start'].year == year
-            and date['start'].month == month
-        ]
-
-    def _litteral_month(self, month_number):
+    def litteral_month(self, month_number):
         """ Return the litteral month name associated with input month number
-            in the language defined by self.lang
+            in the language defined by lang
 
         """
         return REVERSE_MONTH[self.lang][str(month_number)]
 
-    @staticmethod
-    def format_day(day):
+    def format_day(self, day):
         return u'1er' if day == 1 else unicode(day)
 
-    def format_date(self, schedule):
-        """ Format a single date using the litteral montn name
+    def format_date(self, dtime):
+        """ Format a single date using the litteral month name
 
         Example: date(2013, 5, 6) -> 6 mai 2013 (in French)
 
         """
-        date = schedule.date()
+        date = dtime.date()
         return '%s %s %s' % (
             self.format_day(date.day),
-            self._litteral_month(date.month),
+            self.litteral_month(date.month),
             date.year)
 
-    def format_date_interval(self, group):
+    def format_date_interval(self, dt_intervals):
         """ Format a date interval, using the litteral month names
+
+        The dt_intervals list is expected to be sorted.
 
         3 cases are taken into account:
         1 - different years
@@ -211,27 +173,27 @@ class ScheduleFormatter(object):
         3 - 2/7/2013 - 5/7/2013: u"du 2 au 7 juillet 2013"
 
         """
-        start_day = group[0]['start'].day
-        start_year = group[0]['start'].year
-        end_year = group[-1]['end'].year
-        start_month = group[0]['start'].month
-        end_month = group[-1]['end'].month
+        start_day = dt_intervals[0]['start'].day
+        start_year = dt_intervals[0]['start'].year
+        end_year = dt_intervals[-1]['end'].year
+        start_month = dt_intervals[0]['start'].month
+        end_month = dt_intervals[-1]['end'].month
         if start_year != end_year:  # different year
             interval = u'du %s au %s' % (
-                self.format_date(group[0]['start']),
-                self.format_date(group[-1]['end']))
+                self.format_date(dt_intervals[0]['start']),
+                self.format_date(dt_intervals[-1]['end']))
         elif start_month != end_month:  # same year, different month
             interval = u'du %s %s au %s' % (
                 self.format_day(start_day),
-                self._litteral_month(start_month),
-                self.format_date(group[-1]['end']))
+                self.litteral_month(start_month),
+                self.format_date(dt_intervals[-1]['end']))
         else:  # same year, same month
             interval = u'du %s au %s' % (
-                self.format_day(start_day), self.format_date(group[-1]['end']))
+                self.format_day(start_day),
+                self.format_date(dt_intervals[-1]['end']))
         return interval
 
-    @staticmethod
-    def format_time(sched):
+    def format_time(self, dt_interval):
         """ Format a single time or a time interval
 
         In the case where minute = 0, only the hour is displayed
@@ -248,8 +210,8 @@ class ScheduleFormatter(object):
         it means that no time must be displayed.
 
         """
-        start = sched['start'].time()
-        end = sched['end'].time()
+        start = dt_interval['start'].time()
+        end = dt_interval['end'].time()
 
         # case of no specified time (entire day)
         if (start == datetime.time(0, 0, 0) and
@@ -264,9 +226,9 @@ class ScheduleFormatter(object):
                 start.hour, start.minute or '', end.hour, end.minute or '')
         return interval
 
-    def format_rrule(self, item):
-        """Format a recurrence rule associated with a duration"""
-        rrule = rrulestr(item['rrule'])
+    def format_rrule(self, rrule_struct):
+        """Format a weekday recurrence rule associated with a duration"""
+        rrule = rrulestr(rrule_struct['rrule'])
         # format weekdays
         if len(rrule.byweekday) == 1:
             weekdays = 'le ' + REVERSE_WEEKDAY[self.lang][rrule.byweekday[0].weekday]
@@ -303,13 +265,51 @@ class ScheduleFormatter(object):
             start = datetime.datetime.combine(
                 datetime.date.today(),
                 datetime.time(rrule.byhour[0], rrule.byminute[0]))
-        end = start + datetime.timedelta(minutes=int(item['duration']))
-        dates = {'start': start, 'end': end}
-        times = self.format_time(dates)
+        end = start + datetime.timedelta(minutes=int(rrule_struct['duration']))
+        times = self.format_time({'start': start, 'end': end})
 
         # assemble
         fmt = ', '.join([part for part in [weekdays, interval, times] if part])
         return fmt
+
+
+class LongScheduleFormatter(BaseScheduleFormatter):
+    """Object in charge of generating the shortest human readable
+    representation of a datection context-free schedule list
+
+    """
+    @lazy_property
+    def time_groups(self):
+        """Non recurring rrules grouped by start/end datetimes"""
+        _time_groups = to_start_end_datetimes(self.non_recurring)
+        # convert rrule structures to start/end datetime lists
+        _time_groups = groupby_time(_time_groups)
+        for group in _time_groups:
+            group.sort(key=lambda date: date['start'])
+        return _time_groups
+
+    @lazy_property
+    def conseq_groups(self):
+        """Group each time group by consecutivity"""
+        _conseq_groups = []
+        for group in self.time_groups:
+            conseq = groupby_consecutive_dates(group)
+            _conseq_groups.append(conseq)
+        return _conseq_groups
+
+    @staticmethod
+    def _shortest(item1, item2):
+        """Return item with shortest lenght"""
+        return item1 if len(item1) < len(item2) else item2
+
+    @staticmethod
+    def _filterby_year_and_month(dates, year, month):
+        """ Return all dates in dates occuring at argument year and month """
+        return [
+            date for date in dates
+            if date['start'].year == year
+            and date['start'].month == month
+        ]
 
     def format_single_dates_and_interval(self, time_group):
         """ First formatting technique, using dates interval
@@ -328,7 +328,8 @@ class ScheduleFormatter(object):
                 start, end = conseq_group[0]['start'], conseq_group[0]['end']
                 if start.date() == end.date():  # a single date
                     # Add prefix before the first date of the group
-                    fmt = 'le ' + self.format_date(start) if i == 0 else self.format_date(start)
+                    fmt = 'le ' + self.format_date(start) if i == 0 \
+                        else self.format_date(start)
                 else:  # a date interval
                     fmt = self.format_date_interval(conseq_group)
                 out.append(fmt)
@@ -340,7 +341,8 @@ class ScheduleFormatter(object):
         """ Second formatting technique, using non-consecutive dates lists
 
         All the non-consecutive dates are first grouped by years and then by
-        months, and displayed as a simple list.
+        months, and returned as a simple list of human readable time expressions,
+        expressed in self.lang.
 
         Example:
         Input: [1 mars 2013, 4 mars 2013, 6 juin 2013, 5 juillet 2014]
@@ -365,7 +367,7 @@ class ScheduleFormatter(object):
                     prefix='le' if len(monthdates) == 1 else 'les',
                     day_list=', '.join(
                         [self.format_day(date['start'].day) for date in monthdates]),
-                    month=self._litteral_month(month))
+                    month=self.litteral_month(month))
                 out.append(fmt)
             else:  # the dates happen in different months
 
@@ -376,7 +378,7 @@ class ScheduleFormatter(object):
                         fmt += u'{day_list} {month}'.format(
                             day_list=', '.join(
                                 [self.format_day(date['start'].day) for date in monthdates]),
-                            month=self._litteral_month(month))
+                            month=self.litteral_month(month))
                         if i != len(months) - 1:
                             if i == len(months) - 2:
                                 fmt += ' et '
@@ -389,15 +391,27 @@ class ScheduleFormatter(object):
 
     def display(self):
         fmt = []
+        # format recurring rrules
         for rec in self.recurring:
             fmt.append(self.format_rrule(rec))
-        for time_group, conseq_time_group in zip(self.time_groups, self.consecutive_groups):
-            list_fmt = ', '.join(self.format_date_list(time_group))
-            conseq_fmt = ', '.join(self.format_single_dates_and_interval(conseq_time_group))
+
+        # format non recurring rrules
+        for time_group, conseq_group in zip(self.time_groups, self.conseq_groups):
+            list_fmt = ', '.join(
+                self.format_date_list(time_group))
+            conseq_fmt = ', '.join(
+                self.format_single_dates_and_interval(conseq_group))
+
+            # pick shortest render
             date_fmt = self._shortest(list_fmt, conseq_fmt)
+
+            # concatenate dates and time
             time_fmt = ' ' + self.format_time(time_group[0])
             fmt.append(date_fmt + time_fmt)
-        return self._sentencize(fmt)
+
+        # finally, apply global formatting rules
+        return self.format_output(fmt)
+
 
 
 def display(schedule, lang):

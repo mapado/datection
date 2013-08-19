@@ -9,8 +9,8 @@ import unittest
 import datection
 
 
-class DisplayTest(unittest.TestCase):
-
+class LongDisplayTest(unittest.TestCase):
+    """Test the output of the LongScheduleFormatter formatter"""
     def setUp(self):
         self.lang = 'fr'
 
