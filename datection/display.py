@@ -22,7 +22,7 @@ def lazy_property(f):
     return wrapper
 
 
-def to_start_end_datetimes(schedule, bound_start=None, bound_end=None):
+def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     out = []
     for rrule_struct in schedule:
         rrule = rrulestr(rrule_struct['rrule'])
@@ -34,14 +34,23 @@ def to_start_end_datetimes(schedule, bound_start=None, bound_end=None):
                 start_date,
                 datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
                 datetime.timedelta(minutes=int(rrule_struct['duration']))
+
+            # convert the bounds to datetime if dates were given
+            if isinstance(start_bound, datetime.date):
+                start_bound = datetime.datetime.combine(
+                    start_bound, datetime.time(0, 0, 0))
+            if isinstance(end_bound, datetime.date):
+                end_bound = datetime.datetime.combine(
+                    end_bound, datetime.time(23, 59, 59))
+
             # filter out all start/end pairs outside of given boundaries
             if (
-                (bound_start and bound_end
-                    and start >= bound_start and end <= bound_end)
+                (start_bound and end_bound
+                    and start >= start_bound and end <= end_bound)
 
-                or (bound_start and not bound_end and start >= bound_start)
-                or (not bound_start and bound_end and end <= bound_end)
-                or (not bound_start and not bound_end)):
+                or (start_bound and not end_bound and start >= start_bound)
+                or (not start_bound and end_bound and end <= end_bound)
+                or (not start_bound and not end_bound)):
                 out.append({'start': start, 'end': end})
     return out
 
@@ -111,6 +120,21 @@ def groupby_time(dt_intervals):
         sorted(group, key=lambda item: item['start'])
         for group in times.values()]
 
+
+def groupby_date(dt_intervals):
+    """ Group the dt_intervals list by start date
+
+    All the schedules with the same start time are grouped together
+    and sorted in increasing order.
+
+    """
+    dates = defaultdict(list)
+    for inter in dt_intervals:
+        start_date = inter['start'].date()
+        dates[start_date.isoformat()].append(inter)  # group dates by time
+    return [
+    sorted(group, key=lambda item: item['start'])
+        for group in dates.values()]
 
 class BaseScheduleFormatter(object):
     """Base class for all schedule formatters, defining basic
@@ -413,6 +437,86 @@ class LongScheduleFormatter(BaseScheduleFormatter):
         return self.format_output(fmt)
 
 
+class ShortScheduleFormatter(BaseScheduleFormatter):
+    """Object in charge of generating the shortest human readable
+    representation of a datection schedule list, using a temporal
+    reference.
 
-def display(schedule, lang):
-    return ScheduleFormatter(schedule, lang).display()
+    """
+    def __init__(self, schedule, start, end, lang):
+        super(ShortScheduleFormatter, self).__init__(schedule, lang)
+        self.start, self.end  = start, end
+
+    @lazy_property
+    def dates(self):
+        # convert self.schedule to a start/end datetime list and filter
+        # out the obtained values outside of the (self.start, self.end)
+        # datetime range
+        dtimes = to_start_end_datetimes(self.schedule, self.start, self.end)
+        # group the filtered values by date
+        return groupby_date(dtimes)
+
+    def format_output(self, text):
+        return ', '.join(text).capitalize()
+
+    def format_date(self, dtime, reference):
+        d = dtime.date()
+        if d == reference:
+            return u"aujourd'hui"  # TODO: trad
+        elif d == reference + datetime.timedelta(days=1):
+            return u"demain"
+        elif d < reference + datetime.timedelta(days=6):
+            # if d is next week, use its weekday name
+            return REVERSE_WEEKDAY[self.lang][d.isocalendar()[2]]
+        else:
+            return 'le %s' % self.format_short_date(dtime)
+
+    def format_short_date(self, dtime):
+        """ Format a single date using the abbreviated litteral month name
+
+        Example: date(2013, 12, 6) -> 6 déc. (in French)
+
+        """
+        date = dtime.date()
+        month = self.litteral_month(date.month)
+        if len(month) in (3, 4):
+            short_month = month
+        else:
+            short_month = month[:3] + '.'
+        return '%s %s' % (
+            self.format_day(date.day),
+            short_month)
+
+    def display(self, reference):
+        out = []
+        dt_intervals = self.dates[0]
+        fmt_date = self.format_date(dt_intervals[0]['start'], reference)
+        fmt_times = [
+            self.format_time(dt_interval) for dt_interval in dt_intervals]
+        if len(fmt_times) <= 1:
+            fmt = u'%s %s' % (fmt_date, fmt_times[0])
+        else:
+            fmt = u'%s %s' % (
+                fmt_date,
+                ', '.join(fmt_times[:-1]) + ' et ' + fmt_times[-1])
+        out.append(fmt)
+        if len(self.dates) > 1:
+            out.append('+ %d dates' % (len(self.dates) - 1))
+        return self.format_output(out)
+
+
+def display(
+        schedule, lang,
+        short=False, bounds=(None, None), reference=datetime.date.today()):
+    """Format a schedule into the shortest human readable sentence possible
+
+    args:
+        schedule: (list) a list of rrule dicts, containing a duration and a RFC rrule
+        lang: (str) the wanted output language
+        short: (bool) if True
+    """
+    if short:
+        start, end = bounds
+        return ShortScheduleFormatter(schedule, start, end, lang).display(reference)
+    else:
+        return LongScheduleFormatter(schedule, lang).display()
