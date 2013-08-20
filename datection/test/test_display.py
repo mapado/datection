@@ -39,31 +39,31 @@ class LongDisplayTest(unittest.TestCase):
         text = u'15 novembre 2013, 15h30'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le 15 novembre 2013 à 15h30')
+        self.assertEqual(output, u'Le 15 novembre 2013 à 15 h 30')
 
     def test_datetime_with_time_interval(self):
         text = u'15 novembre 2013, 15h30 - 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le 15 novembre 2013 de 15h30 à 18h')
+        self.assertEqual(output, u'Le 15 novembre 2013 de 15 h 30 à 18 h')
 
     def test_datetime_interval(self):
         text = u'du 15 au 25 novembre 2013, 15h30 - 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Du 15 au 25 novembre 2013 de 15h30 à 18h')
+        self.assertEqual(output, u'Du 15 au 25 novembre 2013 de 15 h 30 à 18 h')
 
     def test_datetime_interval_several_months(self):
         text = u'du 15 avril au 25 novembre 2013, 15h30 - 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Du 15 avril au 25 novembre 2013 de 15h30 à 18h')
+        self.assertEqual(output, u'Du 15 avril au 25 novembre 2013 de 15 h 30 à 18 h')
 
     def test_datetime_list(self):
         text = u'le 5 avril à 15h30 et le 18 mai 2013 à 16h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le 5 avril 2013 à 15h30\nLe 18 mai 2013 à 16h')
+        self.assertEqual(output, u'Le 5 avril 2013 à 15 h 30\nLe 18 mai 2013 à 16 h')
 
     def test_weekday_recurrence_all_year(self):
         text = u'tous les lundis'
@@ -75,13 +75,13 @@ class LongDisplayTest(unittest.TestCase):
         text = u'le lundi à 19h30'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le lundi, à 19h30')
+        self.assertEqual(output, u'Le lundi, à 19 h 30')
 
     def test_weekday_recurrence_time_interval2(self):
         text = u'le lundi de 19h30 à 22h30'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le lundi, de 19h30 à 22h30')
+        self.assertEqual(output, u'Le lundi, de 19 h 30 à 22 h 30')
 
     def test_weekday_recurrence_date_interval(self):
         text = u'le lundi, du 15 au 30 janvier 2013'
@@ -93,13 +93,13 @@ class LongDisplayTest(unittest.TestCase):
         text = u'le lundi, du 15 au 30 janvier 2013 de 15h à 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le lundi, du 15 au 30 janvier 2013, de 15h à 18h')
+        self.assertEqual(output, u'Le lundi, du 15 au 30 janvier 2013, de 15 h à 18 h')
 
     def test_weekday_recurrence_all_days(self):
         text = u'du lundi au dimanche, du 15 au 30 janvier 2013 de 15h à 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Tous les jours, du 15 au 30 janvier 2013, de 15h à 18h')
+        self.assertEqual(output, u'Tous les jours, du 15 au 30 janvier 2013, de 15 h à 18 h')
 
 
 class ShortDisplayTest(unittest.TestCase):
@@ -119,7 +119,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 11, 0, 0),
             datetime.datetime(2013, 8, 11, 23, 59))
-        expected = u"Aujourd'hui de 22h30 à 23h30"
+        expected = u"Aujourd'hui de 22 h 30 à 23 h 30"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -137,7 +137,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 11, 0, 0),
             datetime.datetime(2013, 8, 11, 23, 59))
-        expected = u"Demain de 22h30 à 23h30"
+        expected = u"Demain de 22 h 30 à 23 h 30"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -155,7 +155,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 14, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
-        expected = u"Dimanche de 22h30 à 23h30, + 1 date"
+        expected = u"Dimanche de 22 h 30 à 23 h 30, + 1 date"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -173,7 +173,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 10, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
-        expected = u"Le 11 août de 22h30 à 23h30, + 4 dates"
+        expected = u"Le 11 août de 22 h 30 à 23 h 30, + 4 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -191,7 +191,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 11, 19, 0, 0),
             datetime.datetime(2013, 11, 25, 23, 59))
-        expected = u"Le 19 nov. de 22h30 à 23h30, + 6 dates"
+        expected = u"Le 19 nov. de 22 h 30 à 23 h 30, + 6 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),

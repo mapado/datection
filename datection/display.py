@@ -240,12 +240,12 @@ class BaseScheduleFormatter(object):
         In the case where minute = 0, only the hour is displayed
 
         Examples of single times (where start = end):
-        * time(10, 30) -> u"10h30"
-        * time(20, 30) -> u"20h"
+        * time(10, 30) -> u"10 h 30"
+        * time(20, 30) -> u"20 h"
 
         Examples of time interval
-        * time(10, 20), time(15, 30) -> u"de 10h20 à 15h30"
-        * time(10, 0), time(15, 30) -> u"de 10h à 15h30"
+        * time(10, 20), time(15, 30) -> u"de 10 h 20 à 15 h 30"
+        * time(10, 0), time(15, 30) -> u"de 10 h à 15 h 30"
 
         If start == time(0, 0, 0) and end == time(23, 59, 0), then
         it means that no time must be displayed.
@@ -261,10 +261,14 @@ class BaseScheduleFormatter(object):
             interval = ''
         # case of a single time (no end time)
         elif start.hour == end.hour and start.minute == end.minute:
-            interval = u'à %dh%s' % (start.hour, start.minute or '')
+            interval = u'à %d h %s' % (start.hour, start.minute or '')
         else:  # start time and end time
-            interval = u'de %dh%s à %dh%s' % (
+            interval = u'de %d h %s à %d h %s'.strip() % (
                 start.hour, start.minute or '', end.hour, end.minute or '')
+
+        # replace potential double spaces (ex: "de 15 h  à ..")
+        # because minute == ''
+        interval = interval.replace('  ', ' ')
         return interval
 
     def format_rrule(self, rrule_struct):
