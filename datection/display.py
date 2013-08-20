@@ -501,7 +501,9 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
                 ', '.join(fmt_times[:-1]) + ' et ' + fmt_times[-1])
         out.append(fmt)
         if len(self.dates) > 1:
-            out.append('+ %d dates' % (len(self.dates) - 1))
+            out.append('+ %d date%s' % (
+                len(self.dates) - 1,
+                's' if len(self.dates) > 2 else ''))
         return self.format_output(out)
 
 
