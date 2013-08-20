@@ -72,8 +72,8 @@ def non_recurring(schedule):
 def consecutives(date1, date2):
     """ If two dates are consecutive, return True, else False"""
     return (
-        date1['start'] + datetime.timedelta(days=1) == date2['start']
-        or date1['start'] + datetime.timedelta(days=-1) == date2['start'])
+        date1['start'].date() + datetime.timedelta(days=1) == date2['start'].date()
+        or date1['start'].date() + datetime.timedelta(days=-1) == date2['start'].date())
 
 
 def groupby_consecutive_dates(dt_intervals):
