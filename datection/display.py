@@ -454,7 +454,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         # datetime range
         dtimes = to_start_end_datetimes(self.schedule, self.start, self.end)
         # group the filtered values by date
-        return groupby_date(dtimes)
+        return sorted(groupby_date(dtimes))
 
     def format_output(self, text):
         return ', '.join(text).capitalize()
