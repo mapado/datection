@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-
 WEEKDAY = {
     'fr':
     {
@@ -48,38 +47,6 @@ MONTH = {
         'decembre': 12,
     }
 }
-
-REVERSE_MONTH = {
-    'fr':
-    {
-        '1': u'janvier',
-        '2': u'février',
-        '3': u'mars',
-        '4': u'avril',
-        '5': u'mai',
-        '6': u'juin',
-        '7': u'juillet',
-        '8': u'août',
-        '9': u'septembre',
-        '10': u'octobre',
-        '11': u'novembre',
-        '12': u'décembre'
-    }
-}
-
-REVERSE_WEEKDAY = {
-    'fr':
-    {
-        0: u'lundi',
-        1: u'mardi',
-        2: u'mercredi',
-        3: u'jeudi',
-        4: u'vendredi',
-        5: u'samedi',
-        6: u'dimanche',
-    }
-}
-
 
 SHORT_MONTH = {
 # Untested for now!

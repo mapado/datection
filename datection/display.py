@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+
 """
 Module in charge of transforming a rrule + duraction object into the shortest
 human-readable string possible.
 """
+
 import datetime
+import calendar
 
 from collections import defaultdict
 from dateutil.rrule import rrulestr
-from datection.datenames import REVERSE_MONTH, REVERSE_WEEKDAY
+
+from datection.lang import getlocale
 
 
 def lazy_property(f):
@@ -27,12 +31,14 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     for rrule_struct in schedule:
         rrule = rrulestr(rrule_struct['rrule'])
         for start_date in rrule:
+            hour = rrule.byhour[0] if rrule.byhour else 0
+            minute = rrule.byminute[0] if rrule.byminute else 0
             start = datetime.datetime.combine(
                 start_date,
-                datetime.time(rrule.byhour[0], rrule.byminute[0]))
+                datetime.time(hour, minute))
             end = datetime.datetime.combine(
                 start_date,
-                datetime.time(rrule.byhour[0], rrule.byminute[0])) + \
+                datetime.time(hour, minute)) + \
                 datetime.timedelta(minutes=int(rrule_struct['duration']))
 
             # convert the bounds to datetime if dates were given
@@ -136,6 +142,7 @@ def groupby_date(dt_intervals):
     sorted(group, key=lambda item: item['start'])
         for group in dates.values()]
 
+
 class BaseScheduleFormatter(object):
     """Base class for all schedule formatters, defining basic
     formatting methods.
@@ -159,15 +166,25 @@ class BaseScheduleFormatter(object):
     def format_output(fmt):
         return '\n'.join([item.capitalize().strip() for item in fmt])
 
-    def litteral_month(self, month_number):
-        """ Return the litteral month name associated with input month number
-            in the language defined by lang
-
-        """
-        return REVERSE_MONTH[self.lang][str(month_number)]
-
-    def format_day(self, day):
+    @staticmethod
+    def format_day(day):
         return u'1er' if day == 1 else unicode(day)
+
+    @staticmethod
+    def dayname(day):
+        return calendar.day_name[day].decode('utf-8')
+
+    @staticmethod
+    def abbr_dayname(day):
+        return calendar.day_abbr[day].decode('utf-8')
+
+    @staticmethod
+    def monthname(month):
+        return calendar.month_name[month].decode('utf-8')
+
+    @staticmethod
+    def abbr_monthname(month):
+        return calendar.month_abbr[month].decode('utf-8')
 
     def format_date(self, dtime):
         """ Format a single date using the litteral month name
@@ -178,7 +195,7 @@ class BaseScheduleFormatter(object):
         date = dtime.date()
         return '%s %s %s' % (
             self.format_day(date.day),
-            self.litteral_month(date.month),
+            self.monthname(date.month),
             date.year)
 
     def format_date_interval(self, dt_intervals):
@@ -209,7 +226,7 @@ class BaseScheduleFormatter(object):
         elif start_month != end_month:  # same year, different month
             interval = u'du %s %s au %s' % (
                 self.format_day(start_day),
-                self.litteral_month(start_month),
+                self.monthname(start_month),
                 self.format_date(dt_intervals[-1]['end']))
         else:  # same year, same month
             interval = u'du %s au %s' % (
@@ -255,19 +272,19 @@ class BaseScheduleFormatter(object):
         rrule = rrulestr(rrule_struct['rrule'])
         # format weekdays
         if len(rrule.byweekday) == 1:
-            weekdays = 'le ' + REVERSE_WEEKDAY[self.lang][rrule.byweekday[0].weekday]
+            weekdays = u'le ' + self.dayname(rrule.byweekday[0].weekday)
         else:
             start_wkd, end_wkd = rrule.byweekday[0], rrule.byweekday[-1]
             weekdays_index = [wk.weekday for wk in rrule.byweekday]
             if weekdays_index == range(0, 7):
                 weekdays = 'tous les jours'
             elif weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
-                weekdays = 'du %s au %s' % (
-                    REVERSE_WEEKDAY[self.lang][start_wkd.weekday],
-                    REVERSE_WEEKDAY[self.lang][end_wkd.weekday])
+                weekdays = u'du %s au %s' % (
+                    self.dayname(start_wkd.weekday),
+                    self.dayname(end_wkd.weekday))
             else:
-                weekdays = 'le ' + ', '.join(
-                    [REVERSE_WEEKDAY[self.lang][i] for i in weekdays_index])
+                weekdays = u'le ' + ', '.join(
+                    [self.dayname(i) for i in weekdays_index])
 
         # format dates boundaries
         if rrule.until:
@@ -389,9 +406,9 @@ class LongScheduleFormatter(BaseScheduleFormatter):
                 monthdates = self._filterby_year_and_month(time_group, year, month)
                 fmt = u'{prefix} {day_list} {month}'.format(
                     prefix='le' if len(monthdates) == 1 else 'les',
-                    day_list=', '.join(
+                    day_list=u', '.join(
                         [self.format_day(date['start'].day) for date in monthdates]),
-                    month=self.litteral_month(month))
+                    month=self.monthname(month))
                 out.append(fmt)
             else:  # the dates happen in different months
 
@@ -400,9 +417,9 @@ class LongScheduleFormatter(BaseScheduleFormatter):
                     for i, month in enumerate(months):
                         monthdates = self._filterby_year_and_month(time_group, year, month)
                         fmt += u'{day_list} {month}'.format(
-                            day_list=', '.join(
+                            day_list=u', '.join(
                                 [self.format_day(date['start'].day) for date in monthdates]),
-                            month=self.litteral_month(month))
+                            month=self.monthname(month))
                         if i != len(months) - 1:
                             if i == len(months) - 2:
                                 fmt += ' et '
@@ -467,7 +484,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             return u"demain"
         elif d < reference + datetime.timedelta(days=6):
             # if d is next week, use its weekday name
-            return REVERSE_WEEKDAY[self.lang][d.isocalendar()[2] - 1]
+            return self.dayname(d.isocalendar()[2] - 1)
         else:
             return 'le %s' % self.format_short_date(dtime)
 
@@ -478,14 +495,9 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
 
         """
         date = dtime.date()
-        month = self.litteral_month(date.month)
-        if len(month) in (3, 4):
-            short_month = month
-        else:
-            short_month = month[:3] + '.'
         return '%s %s' % (
             self.format_day(date.day),
-            short_month)
+            self.abbr_monthname(date.month))
 
     def display(self, reference):
         out = []
@@ -517,8 +529,9 @@ def display(
         lang: (str) the wanted output language
         short: (bool) if True
     """
-    if short:
-        start, end = bounds
-        return ShortScheduleFormatter(schedule, start, end, lang).display(reference)
-    else:
-        return LongScheduleFormatter(schedule, lang).display()
+    with calendar.TimeEncoding(getlocale(lang)):
+        if short:
+            start, end = bounds
+            return ShortScheduleFormatter(schedule, start, end, lang).display(reference)
+        else:
+            return LongScheduleFormatter(schedule, lang).display()
