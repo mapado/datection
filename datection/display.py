@@ -467,7 +467,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             return u"demain"
         elif d < reference + datetime.timedelta(days=6):
             # if d is next week, use its weekday name
-            return REVERSE_WEEKDAY[self.lang][d.isocalendar()[2]]
+            return REVERSE_WEEKDAY[self.lang][d.isocalendar()[2] - 1]
         else:
             return 'le %s' % self.format_short_date(dtime)
 
