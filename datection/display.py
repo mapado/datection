@@ -542,10 +542,6 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         fmt_date = self.format_date(dt_intervals[0]['start'], reference)
         fmt_times = [
             self.format_time(dt_interval) for dt_interval in dt_intervals]
-
-        # filter empty results to avoid formatting problems
-        fmt_times = filter(lambda x: x, fmt_times)
-
         if len(fmt_times) == 1:
             msg = u'%s %s' % (fmt_date, fmt_times[0])
         else:
