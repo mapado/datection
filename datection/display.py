@@ -7,12 +7,20 @@ human-readable string possible.
 
 import datetime
 import calendar
+import gettext
+
+# Set up message catalog access
+from os.path import abspath, join, dirname
+popath = abspath(join(dirname(__file__), '..', 'po'))
 
 from collections import defaultdict
 from dateutil.rrule import rrulestr
 
 from datection.lang import getlocale
 
+
+# define _ translator in global variables
+_ = None
 
 def lazy_property(f):
     """Lazy loading decorator for object properties"""
@@ -534,6 +542,14 @@ def display(
         short: (bool) if True
     """
     with calendar.TimeEncoding(getlocale(lang)):
+        gettext_lang = getlocale(lang).replace('.UTF-8', '')
+        t = gettext.translation(
+            domain='display',
+            localedir=popath,
+            languages=[gettext_lang],
+            fallback=True)
+        global _
+        _ = t.ugettext
         if short:
             start, end = bounds
             return ShortScheduleFormatter(schedule, start, end, lang).display(reference)
