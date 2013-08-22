@@ -11,7 +11,7 @@ import gettext
 
 # Set up message catalog access
 from os.path import abspath, join, dirname
-popath = abspath(join(dirname(__file__), '..', 'po'))
+popath = abspath(join(dirname(__file__), 'po'))
 
 from collections import defaultdict
 from dateutil.rrule import rrulestr

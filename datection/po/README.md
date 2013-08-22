@@ -13,7 +13,7 @@ If not, here's a quick summary, I'm feeling light-hearted:
 Use the following command to generate the `pot` file.
 
 ```bash
-$ find ../datection -type f -iname "*.py" | xgettext -f - --output datection.pot
+$ find ../ -type f -iname "*.py" | xgettext -f - --output datection.pot
 ```
 
 Complete the version, copyright, email, etc, information.

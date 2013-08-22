@@ -8,6 +8,7 @@ setup(
     author=["Balthazar Rouberol"],
     author_email=['balthazar@mapado.com'],
     packages=find_packages(),
-    test_suite='nose.collector',
-    tests_require=['nose'],
+    # test_suite='nose.collector'
+    # tests_require=['nose'],
+    include_package_data=True
     )
