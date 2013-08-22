@@ -228,18 +228,18 @@ class BaseScheduleFormatter(object):
         start_month = dt_intervals[0]['start'].month
         end_month = dt_intervals[-1]['end'].month
         if start_year != end_year:  # different year
-            interval = u'du %s au %s' % (
-                self.format_date(dt_intervals[0]['start']),
-                self.format_date(dt_intervals[-1]['end']))
+            interval = _(u'du %(start)s au %(end)s') % {
+                'start': self.format_date(dt_intervals[0]['start']),
+                'end': self.format_date(dt_intervals[-1]['end'])}
         elif start_month != end_month:  # same year, different month
-            interval = u'du %s %s au %s' % (
-                self.format_day(start_day),
-                self.monthname(start_month),
-                self.format_date(dt_intervals[-1]['end']))
+            interval = _(u'du %(start_day)s %(start_month)s au %(end)s') % {
+                'start_day': self.format_day(start_day),
+                'start_month': self.monthname(start_month),
+                'end': self.format_date(dt_intervals[-1]['end'])}
         else:  # same year, same month
-            interval = u'du %s au %s' % (
-                self.format_day(start_day),
-                self.format_date(dt_intervals[-1]['end']))
+            interval = _(u'du %(start)s au %(end)s') % {
+                'start': self.format_day(start_day),
+                'end': self.format_date(dt_intervals[-1]['end'])}
         return interval
 
     def format_time(self, dt_interval):
@@ -269,14 +269,19 @@ class BaseScheduleFormatter(object):
             interval = ''
         # case of a single time (no end time)
         elif start.hour == end.hour and start.minute == end.minute:
-            interval = u'à %d h %s' % (start.hour, start.minute or '')
+            interval = _(u'à %(hour)s h %(minute)s') % {
+            'hour': start.hour,
+            'minute': start.minute or ''}
         else:  # start time and end time
-            interval = u'de %d h %s à %d h %s'.strip() % (
-                start.hour, start.minute or '', end.hour, end.minute or '')
+            interval = _(u'de %(st_hour)s h %(st_minute)s à %(en_hour)s h %(en_minute)s') % {
+                'st_hour': start.hour or '',
+                'st_minute': start.minute or '',
+                'en_hour': end.hour or '',
+                'en_minute': end.minute or ''}
 
         # replace potential double spaces (ex: "de 15 h  à ..")
         # because minute == ''
-        interval = interval.replace('  ', ' ')
+        interval = interval.replace('  ', ' ').strip()
         return interval
 
     def format_rrule(self, rrule_struct):
@@ -291,11 +296,11 @@ class BaseScheduleFormatter(object):
             if weekdays_index == range(0, 7):
                 weekdays = 'tous les jours'
             elif weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
-                weekdays = u'du %s au %s' % (
-                    self.dayname(start_wkd.weekday),
-                    self.dayname(end_wkd.weekday))
+                weekdays = _(u'du %(start_day)s au %(end_day)s') % {
+                    'start_day': self.dayname(start_wkd.weekday),
+                    'end_day': self.dayname(end_wkd.weekday)}
             else:
-                weekdays = u'le ' + ', '.join(
+                weekdays = _(u'le') + ' ' + ', '.join(
                     [self.dayname(i) for i in weekdays_index])
 
         # format dates boundaries
@@ -417,7 +422,7 @@ class LongScheduleFormatter(BaseScheduleFormatter):
                 month = months[0]
                 monthdates = self._filterby_year_and_month(time_group, year, month)
                 fmt = u'{prefix} {day_list} {month}'.format(
-                    prefix='le' if len(monthdates) == 1 else 'les',
+                    prefix=_(u'le') if len(monthdates) == 1 else _(u'les'),
                     day_list=u', '.join(
                         [self.format_day(date['start'].day) for date in monthdates]),
                     month=self.monthname(month))
@@ -425,7 +430,7 @@ class LongScheduleFormatter(BaseScheduleFormatter):
             else:  # the dates happen in different months
 
                 for month in months:
-                    fmt = 'les '
+                    fmt = _('les') + ' '
                     for i, month in enumerate(months):
                         monthdates = self._filterby_year_and_month(time_group, year, month)
                         fmt += u'{day_list} {month}'.format(
@@ -434,7 +439,7 @@ class LongScheduleFormatter(BaseScheduleFormatter):
                             month=self.monthname(month))
                         if i != len(months) - 1:
                             if i == len(months) - 2:
-                                fmt += ' et '
+                                fmt += ' ' + _(u'et') + ' '
                             else:
                                 fmt += ', '
                 out.append(fmt)
@@ -491,14 +496,15 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
     def format_date(self, dtime, reference):
         d = dtime.date()
         if d == reference:
-            return u"aujourd'hui"  # TODO: trad
+            return _(u"aujourd'hui")
         elif d == reference + datetime.timedelta(days=1):
             return u"demain"
         elif d < reference + datetime.timedelta(days=6):
             # if d is next week, use its weekday name
             return self.dayname(d.isocalendar()[2] - 1)
         else:
-            return 'le %s' % self.format_short_date(dtime)
+            return _(u'le %(shortdate)s') % {
+                'shortdate': self.format_short_date(dtime)}
 
     def format_short_date(self, dtime):
         """ Format a single date using the abbreviated litteral month name
@@ -511,6 +517,20 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             self.format_day(date.day),
             self.abbr_monthname(date.month))
 
+    def format_date_summary(self):
+        """Format the next dates summary
+
+        Examples:
+            * + 1 date
+            * + 3 dates
+
+        """
+        num = len(self.dates) - 1
+        # handle plural/singular case
+        msg = gettext.ngettext(
+            '+ %(num)d date', '+ %(num)d dates', num) % {'num': num}
+        return msg
+
     def display(self, reference):
         out = []
         dt_intervals = self.dates[0]
@@ -520,14 +540,14 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         if len(fmt_times) <= 1:
             fmt = u'%s %s' % (fmt_date, fmt_times[0])
         else:
-            fmt = u'%s %s' % (
-                fmt_date,
-                ', '.join(fmt_times[:-1]) + ' et ' + fmt_times[-1])
-        out.append(fmt)
+
+            msg = _('%(date)s %(times)s et %(last_time)s') % {
+                'date': fmt_date,
+                'times': ', '.join(fmt_times[:-1]),
+                'last_time': fmt_times[-1]}
+        out.append(msg)
         if len(self.dates) > 1:
-            out.append('+ %d date%s' % (
-                len(self.dates) - 1,
-                's' if len(self.dates) > 2 else ''))
+            out.append(self.format_date_summary())
         return self.format_output(out)
 
 
