@@ -494,7 +494,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         return sorted(groupby_date(dtimes))
 
     def format_output(self, text):
-        return ', '.join(text).capitalize()
+        return ' '.join(text).capitalize()
 
     def format_date(self, dtime, reference):
         d = dtime.date()
@@ -549,7 +549,6 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         if len(fmt_times) == 1:
             msg = u'%s %s' % (fmt_date, fmt_times[0])
         else:
-
             msg = _('%(date)s %(times)s et %(last_time)s') % {
                 'date': fmt_date,
                 'times': ', '.join(fmt_times[:-1]),
