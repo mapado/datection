@@ -77,3 +77,7 @@ msgstr[1] "+ %(num)d dates"
 #, python-format
 msgid "%(date)s %(times)s et %(last_time)s"
 msgstr "%(date)s %(times)s et %(last_time)s"
+
+#: ../datection/display.py:179
+msgid "1er"
+msgstr "1er"

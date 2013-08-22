@@ -176,7 +176,7 @@ class BaseScheduleFormatter(object):
 
     @staticmethod
     def format_day(day):
-        return u'1er' if day == 1 else unicode(day)
+        return _(u'1er') if day == 1 else unicode(day)
 
     @staticmethod
     def dayname(day):
