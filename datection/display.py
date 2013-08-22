@@ -501,8 +501,8 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         if d == reference:
             return _(u"aujourd'hui")
         elif d == reference + datetime.timedelta(days=1):
-            return u"demain"
-        elif d < reference + datetime.timedelta(days=6):
+            return _(u"demain")
+        elif reference < d < reference + datetime.timedelta(days=6):
             # if d is next week, use its weekday name
             return self.dayname(d.isocalendar()[2] - 1)
         else:
