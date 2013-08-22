@@ -483,10 +483,13 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
 
     @lazy_property
     def dates(self):
-        # convert self.schedule to a start/end datetime list and filter
-        # out the obtained values outside of the (self.start, self.end)
-        # datetime range
-        dtimes = to_start_end_datetimes(self.schedule, self.start, self.end)
+        """Convert self.schedule to a start/end datetime list and filter
+        out the obtained values outside of the (self.start, self.end)
+        datetime range
+
+        """
+        start = self.start or datetime.date.today()  # filter out passed dates
+        dtimes = to_start_end_datetimes(self.schedule, start, self.end)
         # group the filtered values by date
         return sorted(groupby_date(dtimes))
 
