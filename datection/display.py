@@ -536,12 +536,14 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
 
     def display(self, reference):
         out = []
+        if not self.dates:
+            return ''
         dt_intervals = self.dates[0]
         fmt_date = self.format_date(dt_intervals[0]['start'], reference)
         fmt_times = [
             self.format_time(dt_interval) for dt_interval in dt_intervals]
-        if len(fmt_times) <= 1:
-            fmt = u'%s %s' % (fmt_date, fmt_times[0])
+        if len(fmt_times) == 1:
+            msg = u'%s %s' % (fmt_date, fmt_times[0])
         else:
 
             msg = _('%(date)s %(times)s et %(last_time)s') % {
@@ -575,6 +577,7 @@ def display(
         _ = t.ugettext
         if short:
             start, end = bounds
-            return ShortScheduleFormatter(schedule, start, end, lang).display(reference)
+            return ShortScheduleFormatter(schedule, start, end, lang).\
+                display(reference)
         else:
             return LongScheduleFormatter(schedule, lang).display()
