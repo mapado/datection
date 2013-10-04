@@ -12,8 +12,11 @@ import datetime
 from datection.display import to_start_end_datetimes, recurring, non_recurring, \
     consecutives, groupby_consecutive_dates, groupby_time, groupby_date
 
+
 class LongDisplayTest(unittest.TestCase):
+
     """Test the output of the LongScheduleFormatter formatter"""
+
     def setUp(self):
         self.lang = 'fr'
 
@@ -51,19 +54,22 @@ class LongDisplayTest(unittest.TestCase):
         text = u'du 15 au 25 novembre 2013, 15h30 - 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Du 15 au 25 novembre 2013 de 15 h 30 à 18 h')
+        self.assertEqual(
+            output, u'Du 15 au 25 novembre 2013 de 15 h 30 à 18 h')
 
     def test_datetime_interval_several_months(self):
         text = u'du 15 avril au 25 novembre 2013, 15h30 - 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Du 15 avril au 25 novembre 2013 de 15 h 30 à 18 h')
+        self.assertEqual(
+            output, u'Du 15 avril au 25 novembre 2013 de 15 h 30 à 18 h')
 
     def test_datetime_list(self):
         text = u'le 5 avril à 15h30 et le 18 mai 2013 à 16h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le 5 avril 2013 à 15 h 30\nLe 18 mai 2013 à 16 h')
+        self.assertEqual(
+            output, u'Le 5 avril 2013 à 15 h 30\nLe 18 mai 2013 à 16 h')
 
     def test_weekday_recurrence_all_year(self):
         text = u'tous les lundis'
@@ -93,25 +99,29 @@ class LongDisplayTest(unittest.TestCase):
         text = u'le lundi, du 15 au 30 janvier 2013 de 15h à 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Le lundi, du 15 au 30 janvier 2013, de 15 h à 18 h')
+        self.assertEqual(
+            output, u'Le lundi, du 15 au 30 janvier 2013, de 15 h à 18 h')
 
     def test_weekday_recurrence_all_days(self):
         text = u'du lundi au dimanche, du 15 au 30 janvier 2013 de 15h à 18h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(output, u'Tous les jours, du 15 au 30 janvier 2013, de 15 h à 18 h')
+        self.assertEqual(
+            output, u'Tous les jours, du 15 au 30 janvier 2013, de 15 h à 18 h')
 
 
 class ShortDisplayTest(unittest.TestCase):
+
     """Test the output of the ShortScheduleFormatter formatter"""
+
     def setUp(self):
         self.lang = 'fr'
 
     def test_display_today(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
@@ -127,9 +137,9 @@ class ShortDisplayTest(unittest.TestCase):
 
     def test_display_tomorrow(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
@@ -145,9 +155,9 @@ class ShortDisplayTest(unittest.TestCase):
 
     def test_display_weekday(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
@@ -155,7 +165,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 14, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
-        expected = u"Dimanche de 22 h 30 à 23 h 30, + 1 date"
+        expected = u"Dimanche de 22 h 30 à 23 h 30 + 1 date"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -163,9 +173,9 @@ class ShortDisplayTest(unittest.TestCase):
 
     def test_display_full_date(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
@@ -173,7 +183,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 10, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
-        expected = u"Le 11 août de 22 h 30 à 23 h 30, + 4 dates"
+        expected = u"Le 11 août de 22 h 30 à 23 h 30 + 4 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -181,9 +191,9 @@ class ShortDisplayTest(unittest.TestCase):
 
     def test_display_full_date_short_month(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
             }
         ]
@@ -191,7 +201,7 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 11, 19, 0, 0),
             datetime.datetime(2013, 11, 25, 23, 59))
-        expected = u"Le 19 nov. de 22 h 30 à 23 h 30, + 6 dates"
+        expected = u"Le 19 nov. de 22 h 30 à 23 h 30 + 6 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
@@ -199,25 +209,26 @@ class ShortDisplayTest(unittest.TestCase):
 
 
 class TestUtilities(unittest.TestCase):
+
     """Tests of all the datection.display utility functions"""
 
     def test_to_start_end_datetimes(self):
         schedule = [
-        {
-            'duration': 60,
-            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
             }
         ]
         expected = [
-        {
-            'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
-        }]
+            {
+                'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            }]
         self.assertEqual(
             to_start_end_datetimes(schedule), expected)
 
@@ -226,14 +237,14 @@ class TestUtilities(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
-                    'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
             }
         ]
         expected = [
-        {
-            'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
-        }]
+            {
+                'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            }]
         start_bound = datetime.date(2013, 8, 8)
         self.assertEqual(
             to_start_end_datetimes(schedule, start_bound=start_bound),
@@ -244,12 +255,12 @@ class TestUtilities(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
-                    'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
             },
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                    'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
         self.assertEqual(recurring(schedule), [schedule[1]])
@@ -259,12 +270,12 @@ class TestUtilities(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
-                    'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
             },
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                    'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
             }
         ]
         self.assertEqual(non_recurring(schedule), [schedule[0]])
@@ -280,7 +291,7 @@ class TestUtilities(unittest.TestCase):
         }
         self.assertTrue(consecutives(d1, d2))
 
-        d3  = {
+        d3 = {
             'start': datetime.datetime(2013, 8, 6, 22, 30, 0),
             'end': datetime.datetime(2013, 8, 6, 23, 30, 0)
         }
@@ -290,54 +301,54 @@ class TestUtilities(unittest.TestCase):
 
     def test_groupby_consecutive_dates(self):
         datetimes = [
-        {
-            'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 10, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 10, 23, 30, 0)
-        }]
+            {
+                'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 10, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 10, 23, 30, 0)
+            }]
 
         expected = [[datetimes[0], datetimes[1]], [datetimes[2]]]
         self.assertEqual(groupby_consecutive_dates(datetimes), expected)
 
     def test_groupby_time(self):
         datetimes = [
-        {
-            'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 10, 21, 0, 0),
-            'end': datetime.datetime(2013, 8, 10, 21, 0, 0)
-        }]
+            {
+                'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 10, 21, 0, 0),
+                'end': datetime.datetime(2013, 8, 10, 21, 0, 0)
+            }]
 
         expected = [[datetimes[0], datetimes[1]], [datetimes[2]]]
         self.assertEqual(groupby_time(datetimes), expected)
 
     def test_groupby_date(self):
         datetimes = [
-        {
-            'start': datetime.datetime(2013, 8, 7, 20, 30, 0),
-            'end': datetime.datetime(2013, 8, 7, 21, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
-            'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
-        },
-        {
-            'start': datetime.datetime(2013, 8, 10, 21, 0, 0),
-            'end': datetime.datetime(2013, 8, 10, 21, 0, 0)
-        }]
+            {
+                'start': datetime.datetime(2013, 8, 7, 20, 30, 0),
+                'end': datetime.datetime(2013, 8, 7, 21, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 7, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 7, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 10, 21, 0, 0),
+                'end': datetime.datetime(2013, 8, 10, 21, 0, 0)
+            }]
 
         expected = [[datetimes[0], datetimes[1]], [datetimes[2]]]
         self.assertEqual(groupby_date(datetimes), expected)
