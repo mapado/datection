@@ -10,12 +10,16 @@ import datetime
 from .normalize import DateInterval, DateTimeInterval, WeekdayRecurrence, \
     WeekdayIntervalRecurrence, AllWeekdayRecurrence
 
+# Recurrence scenarios
 WEEKDAY_REC = (
     WeekdayRecurrence,
     WeekdayIntervalRecurrence,
     AllWeekdayRecurrence)
 
+# Interval scenarios
 INTERVALS = (DateInterval, DateTimeInterval)
+
+# all day interval
 DAY_START_END = [datetime.time(0, 0, 0), datetime.time(23, 59, 59)]
 
 
@@ -76,6 +80,10 @@ def _merge_weekdays(recurrences):
 
 
 def _merge_date_bounds(bounded, weekday_recurrences):
+    """
+
+
+    """
     out = []
     for rec in weekday_recurrences:
         if isinstance(bounded, DateTimeInterval):
@@ -94,6 +102,7 @@ def _merge_date_bounds(bounded, weekday_recurrences):
             # make the weekday recurrence inherit from the date
             # boundaries of the DateInterval, combining them with the
             # (possible) time boundaries of the weekday recurrence
+
             if rec.start_datetime.time() != datetime.time(0, 0):
                 start_time = rec.start_datetime.time()
             else:
