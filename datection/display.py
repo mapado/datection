@@ -187,10 +187,6 @@ class BaseScheduleFormatter(object):
         return calendar.day_name[day].decode('utf-8')
 
     @staticmethod
-    def abbr_dayname(day):
-        return calendar.day_abbr[day].decode('utf-8')
-
-    @staticmethod
     def monthname(month):
         return calendar.month_name[month].decode('utf-8')
 
@@ -293,12 +289,16 @@ class BaseScheduleFormatter(object):
         rrule = rrulestr(rrule_struct['rrule'])
         # format weekdays
         if len(rrule.byweekday) == 1:
-            weekdays = u'le ' + self.dayname(rrule.byweekday[0].weekday)
+            # single weekday formatting
+            weekdays = _(u'le') + ' ' + self.dayname(
+                rrule.byweekday[0].weekday)
         else:
             start_wkd, end_wkd = rrule.byweekday[0], rrule.byweekday[-1]
             weekdays_index = [wk.weekday for wk in rrule.byweekday]
             if weekdays_index == range(0, 7):
                 weekdays = 'tous les jours'
+
+            # weekday interval
             elif weekdays_index == range(start_wkd.weekday, end_wkd.weekday + 1):
                 weekdays = _(u'du %(start_day)s au %(end_day)s') % {
                     'start_day': self.dayname(start_wkd.weekday),
