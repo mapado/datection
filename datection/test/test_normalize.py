@@ -2,8 +2,6 @@
 """ Test suite of the timepoint serialize suite. """
 
 import unittest
-import sys
-sys.path.insert(0, '..')
 
 import datetime
 
@@ -17,6 +15,7 @@ today = datetime.date(day=5, month=10, year=2008)
 
 
 class TestSerializeFrDates(unittest.TestCase):
+
     """ Test class of the Date serializer with french data"""
 
     def test_valid_litteral_date(self):
@@ -100,6 +99,7 @@ class TestSerializeFrDates(unittest.TestCase):
 
 
 class TestSerializeFrTimeInterval(unittest.TestCase):
+
     """ Test class of the Time serializer on french data. """
 
     def test_valid_time(self):
@@ -129,7 +129,8 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
         """ Test that all supported formats lead to equivalent serialized forms."""
         assert parse(u'15h30', 'fr')[0] == parse(u'15:30', 'fr')[0]
         assert parse(u'de 15h à 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
-        assert parse(u'entre 15h et 18h', 'fr')[0] == parse(u'15h-18h', 'fr')[0]
+        assert parse(u'entre 15h et 18h', 'fr')[
+            0] == parse(u'15h-18h', 'fr')[0]
 
     def test_to_python_no_end_time(self):
         """Test the format of the to_python method when no end_time is found
@@ -149,6 +150,7 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
 
 
 class TestSerializeFrDateList(unittest.TestCase):
+
     """ Test class of the DateList serializer with french data. """
 
     def test_valid_format(self):
@@ -194,6 +196,7 @@ class TestSerializeFrDateList(unittest.TestCase):
 
 
 class TestSerializeFrDateTime(unittest.TestCase):
+
     """ Test class of the DateTime serializer with french data. """
 
     def test_valid_format(self):
@@ -238,6 +241,7 @@ class TestSerializeFrDateTime(unittest.TestCase):
 
 
 class TestSerializeFrDateTimeList(unittest.TestCase):
+
     """ Test class of the DateTimeList serializer with french data."""
 
     def test_valid_format(self):
@@ -263,17 +267,22 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         assert dtl1 == dtl2 == dtl3
 
     def test_to_python(self):
-        datetimelist = parse(u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0].to_python()
+        datetimelist = parse(
+            u'les 6 et 9 octobre 2013 de 15h à 20h', 'fr')[0].to_python()
 
         # le 6
         date = datetimelist[0]
-        assert date[0] == datetime.datetime(year=2013, month=10, day=6, hour=15, minute=0, second=0)
-        assert date[1] == datetime.datetime(year=2013, month=10, day=6, hour=20, minute=0, second=0)
+        assert date[0] == datetime.datetime(
+            year=2013, month=10, day=6, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(
+            year=2013, month=10, day=6, hour=20, minute=0, second=0)
 
         # le 7
         date = datetimelist[1]
-        assert date[0] == datetime.datetime(year=2013, month=10, day=9, hour=15, minute=0, second=0)
-        assert date[1] == datetime.datetime(year=2013, month=10, day=9, hour=20, minute=0, second=0)
+        assert date[0] == datetime.datetime(
+            year=2013, month=10, day=9, hour=15, minute=0, second=0)
+        assert date[1] == datetime.datetime(
+            year=2013, month=10, day=9, hour=20, minute=0, second=0)
 
     def test_future_datetime_list(self):
         """ Test that the datetime is in the future. """
@@ -298,6 +307,7 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
 
 
 class TestSerializeFrDateInterval(unittest.TestCase):
+
     """ Test class of the DateInterval serializer with french data """
 
     def test_litteral_format(self):
@@ -386,6 +396,7 @@ class TestSerializeFrDateInterval(unittest.TestCase):
 
 
 class TestSerializeFrDateTimeInterval(unittest.TestCase):
+
     """ Test class of the DateTimeInterval serialize with french data """
 
     def test_litteral_format(self):
@@ -422,17 +433,20 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
             year=2013, month=2, day=17, hour=18, minute=30)
 
     def test_to_python(self):
-        datetime_interval_list = parse(u'du 15 au 16 février 2013 à 18h30', 'fr')[0].to_python()
+        datetime_interval_list = parse(
+            u'du 15 au 16 février 2013 à 18h30', 'fr')[0].to_python()
 
         assert len(datetime_interval_list) == 2
 
         # 2013-02-15
         datetime_interval = datetime_interval_list[0]
-        assert datetime_interval == datetime.datetime(year=2013, month=2, day=15, hour=18, minute=30, second=0)
+        assert datetime_interval == datetime.datetime(
+            year=2013, month=2, day=15, hour=18, minute=30, second=0)
 
         # 2013-02-16
         datetime_interval = datetime_interval_list[1]
-        assert datetime_interval == datetime.datetime(year=2013, month=2, day=16, hour=18, minute=30, second=0)
+        assert datetime_interval == datetime.datetime(
+            year=2013, month=2, day=16, hour=18, minute=30, second=0)
 
     def test_future_datetime_interval(self):
         """ Test that the datetime is in the future. """

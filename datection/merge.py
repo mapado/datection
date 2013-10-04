@@ -29,7 +29,8 @@ def merge(timepoints):
             merged_bounds = _merge_date_bounds(
                 bounded=intervals[0],
                 weekday_recurrences=merged_wk_rec)
-            filtered = [t for t in timepoints if t not in wk_rec if t not in intervals]
+            filtered = [
+                t for t in timepoints if t not in wk_rec if t not in intervals]
             return filtered + merged_bounds
         else:
             filtered = [t for t in timepoints if t not in wk_rec]

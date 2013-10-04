@@ -13,10 +13,11 @@ it makes sense to use it only when necessary.
 
 import re
 
-from datection.regex import TIMEPOINT_PROBE
+from .regex import TIMEPOINT_PROBE
 
 
 class Context(object):
+
     """ An object representing the textual context around a temporal reference
         detected in a text, by the datection regexes.
 
@@ -30,6 +31,7 @@ class Context(object):
         between the chars of index 80 and 187.
 
     """
+
     def __init__(self, match_start, match_end, text, size=30):
         # deduce Context start and end index from match start/end index
         # and context size

@@ -2,9 +2,9 @@
 
 import re
 
-from datection.regex import TIMEPOINT_REGEX
-from datection.normalize import timepoint_factory
-from datection.context import probe
+from .regex import TIMEPOINT_REGEX
+from .normalize import timepoint_factory
+from .context import probe
 
 
 def parse(text, lang, valid=True):

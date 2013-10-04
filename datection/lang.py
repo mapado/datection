@@ -7,6 +7,7 @@ DEFAULT_LOCALES = {
     'en': 'en_US.UTF-8'
 }
 
+
 def getlocale(lang):
     if lang in DEFAULT_LOCALES:
         return DEFAULT_LOCALES[lang]

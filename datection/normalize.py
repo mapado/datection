@@ -5,8 +5,8 @@ import datetime
 
 from dateutil.rrule import *
 
-from datection.regex import *
-from datection.utils import makerrulestr
+from .regex import *
+from .utils import makerrulestr
 
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
@@ -44,6 +44,7 @@ def timepoint_factory(detector, data, **kwargs):
 
 
 class Timepoint(object):
+
     """ The mother class for all timepoint classes. """
 
     def __init__(self, data, **kwargs):
@@ -163,7 +164,8 @@ class Date(Timepoint):
                 return MONTH[self.lang][month_name.lower()]
             # if month name is abbreviated
             else:
-                month_name = month_name.rstrip('.')  # remove trailing dot, if any
+                # remove trailing dot, if any
+                month_name = month_name.rstrip('.')
                 if month_name.lower() in SHORT_MONTH[self.lang]:
                     return SHORT_MONTH[self.lang][month_name.lower()]
         elif isinstance(month_name, int):  # numeric date
@@ -434,11 +436,13 @@ class Time(Timepoint):
 
 
 class TimeInterval(Timepoint):
+
     """ A class representing a simple time interval.
 
     Examples: 15h30-18h, de 15h à 18h
 
     """
+
     def __init__(self, data={}, start_time=None, end_time=None, **kwargs):
         super(TimeInterval, self).__init__(data, **kwargs)
         # store TimeInterval specific arguments
@@ -508,12 +512,14 @@ class DateTime(Timepoint):
         return Date(year=year, month_name=month_name, day=day, lang=self.lang)
 
     def _set_time(self, start_time, end_time):
-        st_match = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], start_time)
+        st_match = re.search(
+            TIMEPOINT_REGEX[self.lang]['_time'][0], start_time)
         st = Time(st_match.groupdict())
         if not end_time:
             return TimeInterval(start_time=st, end_time=None)
         else:
-            et_match = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], end_time)
+            et_match = re.search(
+                TIMEPOINT_REGEX[self.lang]['_time'][0], end_time)
             et = Time(et_match.groupdict())
             return TimeInterval(start_time=st, end_time=et)
 
@@ -594,7 +600,8 @@ class DateTimeList(Timepoint):
             start_time = self.data.get('start_time')
             end_time = self.data.get('end_time')
             date_list = self.data.get('date_list')
-            self.datetimes = self._set_datetimes(date_list, start_time, end_time)
+            self.datetimes = self._set_datetimes(
+                date_list, start_time, end_time)
 
     def __iter__(self):
         """ Iteration over self.datetimes list """
@@ -656,7 +663,9 @@ class DateTimeList(Timepoint):
 
 
 class DateTimeInterval(Timepoint):
+
     """ A datetime interval refers to a interval of date, with specified time. """
+
     def __init__(self, data={}, date_interval=None, time_interval=None, **kwargs):
 
         super(DateTimeInterval, self).__init__(data, **kwargs)
@@ -788,6 +797,7 @@ class DateTimeInterval(Timepoint):
 
 
 class WeekdayRecurrence(Timepoint):
+
     """ Object in charge of normalizing a weekday recurrence extraction result
 
     The normalized result is a dateutil.rrule.rrule object, generating datetimes
@@ -797,11 +807,13 @@ class WeekdayRecurrence(Timepoint):
     method.
 
     """
+
     def __init__(self, data={}, weekdays=None, start=None, end=None, **kwargs):
         super(WeekdayRecurrence, self).__init__(data, **kwargs)
         self.weekdays = self._set_weekdays() if not weekdays else weekdays
         if not start and not end:
-            self.start_datetime, self.end_datetime = self._set_datetime_interval()
+            self.start_datetime, self.end_datetime = self._set_datetime_interval(
+            )
         else:
             self.start_datetime, self.end_datetime = start, end
 
@@ -933,12 +945,14 @@ class WeekdayRecurrence(Timepoint):
 
 
 class WeekdayIntervalRecurrence(WeekdayRecurrence):
+
     """ Object in charge of normalizing recurrent weekdays *intervals*
 
     The only logic differing from the WeekdayRecurrence class is the
     way the weekdays are set.
 
     """
+
     def _set_weekdays(self):
         """ Return the list of reccurent days index
 
@@ -958,9 +972,11 @@ class WeekdayIntervalRecurrence(WeekdayRecurrence):
 
 
 class AllWeekdayRecurrence(WeekdayRecurrence):
+
     """ Object in charge of the normalisation of a recurrence rule ocurring
         all days of the week
 
     """
+
     def _set_weekdays(self):
         return range(0, 7)

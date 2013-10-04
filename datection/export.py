@@ -4,8 +4,8 @@
 Datection exporters to python and database compliant formats.
 """
 
-from datection.parse import parse
-from datection.merge import merge
+from .parse import parse
+from .merge import merge
 
 
 def to_db(text, lang, valid=True, only_future=True, **kwargs):

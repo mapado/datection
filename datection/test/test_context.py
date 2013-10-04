@@ -30,9 +30,9 @@ Dates et horaires
 Du 6 octobre 2012 au 13 juillet 2013."""
         self.lang = 'fr'
         self.c1 = datection.context.Context(
-            match_start=60, match_end=100, text=' '*200, size=50)
+            match_start=60, match_end=100, text=' ' * 200, size=50)
         self.c2 = datection.context.Context(
-            match_start=70, match_end=115, text=' '*200, size=50)
+            match_start=70, match_end=115, text=' ' * 200, size=50)
 
     def test_context_init(self):
         assert self.c1.start == 10  # 60 - 50
@@ -51,7 +51,8 @@ Du 6 octobre 2012 au 13 juillet 2013."""
         indies = datection.context.probe(self.text, self.lang)
         # indies = datection.context.independants(probes)
         # 5 elements will be probed: '1h', 'octobre', '2012', 'juillet' & '2013'
-        # However, the last 4 all overlap, so they will be merged into one context
+        # However, the last 4 all overlap, so they will be merged into one
+        # context
         assert len(indies) == 2
 
 

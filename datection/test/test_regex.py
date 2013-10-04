@@ -5,19 +5,19 @@ Test suite of the timepoint regexes.
 """
 
 import unittest
-import sys
 import re
 
-sys.path.insert(0, '..')
 from ..regex import *
 
 
 class TestDateRegex(unittest.TestCase):
+
     """ Test class for the extraction of dates from strings.
 
     Examples: 13 février 2013, mardi 13 février, mardi 13 février 2013
 
     """
+
     def test_extract_perfect_date(self):
         """Test the extraction of a perfectly formatted french date."""
         text = """ Adulte : 19 € Tarif réduit : 13 €
@@ -115,6 +115,7 @@ class TestDateRegex(unittest.TestCase):
 
 
 class TestNumericDateRegex(unittest.TestCase):
+
     """ Test class for the extraction of numeric dates of format dd/mm/yyyy """
 
     def test_standard_format(self):
@@ -175,11 +176,13 @@ class TestNumericDateRegex(unittest.TestCase):
 
 
 class TestDateIntervalRegex(unittest.TestCase):
+
     """ Test class for the extraction of date intervals.
 
     Examples: du lundi 17 au mercredi 23 octobre, du 5 au 8 octobre 2013.
 
     """
+
     def test_day_number_and_month(self):
         """ Extract date intervals of the form 'du X au Y MM YYYY' """
         text = "du lundi 17 au mercredi 23 octobre 2012: de 20h à 21h20."
@@ -264,11 +267,13 @@ class TestDateIntervalRegex(unittest.TestCase):
 
 
 class TestTimeRegex(unittest.TestCase):
+
     """ Test class for the extraction of times.
 
     Examples: 20h30, 20h, 20 h, 7h, 7h00, 21:20
 
     """
+
     def test_minute_and_hour(self):
         """ Extract an time composed of both minute and hour stamps."""
         text = """ Adulte : 19 € Tarif réduit :
@@ -309,11 +314,13 @@ class TestTimeRegex(unittest.TestCase):
 
 
 class TestTimeIntervalRegex(unittest.TestCase):
+
     """ Test class for the extraction of time intervals.
 
     Examples: de 20h à 23h, entre 8h et 10h, 15h-16h30
 
     """
+
     def test_perfect_format(self):
         """ Extract a time interval from a perfectly formatted string. """
         text = """ Adulte : 19 € Tarif réduit :
@@ -371,12 +378,14 @@ class TestTimeIntervalRegex(unittest.TestCase):
 
 
 class TestDateTimeRegex(unittest.TestCase):
+
     """ Test class for the extraction of datetimes.
 
     Example: le mardi 13 février 2013 à 15h30, 8 février 2013, 15h
         le mardi 15 mars, de 15h à 16h
 
     """
+
     def test_perfect_format(self):
         """ Extract a datetime from a perfectly formatted string. """
         text = """ Adulte : 19 € Tarif réduit :
@@ -428,7 +437,7 @@ class TestDateTimeRegex(unittest.TestCase):
         """ Test the extraction of a datetime time interval will all prefixes/suffixes."""
         # entre / et
         tstamp_time_int = re.search(FR_DATETIME,
-            'le mardi 13 septembre entre 20h et 21h20.')
+                                    'le mardi 13 septembre entre 20h et 21h20.')
         assert tstamp_time_int.groupdict()['day'] == '13'
         assert tstamp_time_int.groupdict()['month_name'] == 'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
@@ -437,11 +446,11 @@ class TestDateTimeRegex(unittest.TestCase):
 
         # , / -
         tstamp_time_int = re.search(FR_DATETIME,
-            'le mardi 13 septembre, 20h - 21h20.')
+                                    'le mardi 13 septembre, 20h - 21h20.')
         assert tstamp_time_int.groupdict()['start_time'] == '20h'
         assert tstamp_time_int.groupdict()['end_time'] == '21h20'
         tstamp_time_int = re.search(FR_DATETIME,
-            'le mardi 13 septembre, 20h-21h20.')
+                                    'le mardi 13 septembre, 20h-21h20.')
         assert tstamp_time_int.groupdict()['start_time'] == '20h'
         assert tstamp_time_int.groupdict()['end_time'] == '21h20'
 
@@ -456,11 +465,13 @@ class TestDateTimeRegex(unittest.TestCase):
 
 
 class TestDateListRegex(unittest.TestCase):
+
     """ Test class for extractio of date list.
 
     Example: les 25, 26 et 27 février 2013.
 
     """
+
     def test_extract(self):
         """Test the extraction of a list of the form Day X, Day Y, et Day X Month."""
         text = """ Adulte : 19 € Tarif réduit :
@@ -477,23 +488,27 @@ class TestDateListRegex(unittest.TestCase):
 
 
 class TestDateTimeListRegex(unittest.TestCase):
+
     """Test class for the extraction of date time lists.
 
     Examples: les 25, 26 et 27 février 2013, mercredi 14 et jeudi 15 mars,
         les 25, 26 et 27 février 2013 à 15h, les 25, 26 et 27 février 2013, 15h-16h
 
     """
+
     def test_date_and_or_comma(self):
         """Checks that the date list prefix can be either 'et' or ','. """
         text = """ Adulte : 19 € Tarif réduit :
             13 € les 25, 26 et 27 février 2013 de 20h à 21h20."""
         datelist = re.search(FR_DATETIME_LIST, text)
-        assert datelist.groupdict()['date_list'].strip() == '25, 26 et 27 février 2013'
+        assert datelist.groupdict()[
+            'date_list'].strip() == '25, 26 et 27 février 2013'
 
         text = """ Adulte : 19 € Tarif réduit :
             13 € les 25, 26, 27 février 2013 de 20h à 21h20."""
         datelist = re.search(FR_DATETIME_LIST, text)
-        assert datelist.groupdict()['date_list'].strip() == '25, 26, 27 février 2013'
+        assert datelist.groupdict()[
+            'date_list'].strip() == '25, 26, 27 février 2013'
 
     def test_date_time_list(self):
         text = """ Adulte : 19 € Tarif réduit :
@@ -522,6 +537,7 @@ class TestDateTimeIntervalRegex(unittest.TestCase):
 
 
 class TestWeekdayListRecurrenceRegex(unittest.TestCase):
+
     """ Test class for the extraction of recurrent weekdays in (possibly implicit)
     datetime intervals.
 
@@ -534,6 +550,7 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
     * les lundi et mardi, de 15h à 18h30
 
     """
+
     def test_recurrent_days(self):
         """ Test the extraction of reccurent days, of form 'le(s) lundi(s)' """
         text = """ Adulte : 19 € Tarif réduit : 13 € les lundis de 20h à 21h20."""
@@ -557,7 +574,8 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
         text = """ le loto aura lieu le lundi, mardi et mercredi du 15 au 30 juin 2013 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et mercredi'
-        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()[
+            'date_interval'] == 'du 15 au 30 juin 2013'
         assert recurrence.groupdict()['start_day'] == '15'
         assert recurrence.groupdict()['start_month_name'] is None
         assert recurrence.groupdict()['start_year'] is None
@@ -567,14 +585,17 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
 
         text = """ le loto aura lieu le lundi, mardi et mercredi, du 15 au 30 juin 2013 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
-        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et mercredi, '
-        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()[
+            'weekdays'] == 'lundi, mardi et mercredi, '
+        assert recurrence.groupdict()[
+            'date_interval'] == 'du 15 au 30 juin 2013'
 
     def test_recurrent_weedays_in_datetime_interval(self):
         text = """ le loto aura lieu le lundi, mardi, vendredi du 15 au 30 juin 2013 de 15h à 16h30 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert recurrence.groupdict()['weekdays'] == 'lundi, mardi, vendredi'
-        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()[
+            'date_interval'] == 'du 15 au 30 juin 2013'
         assert recurrence.groupdict()['start_day'] == '15'
         assert recurrence.groupdict()['start_month_name'] is None
         assert recurrence.groupdict()['start_year'] is None
@@ -587,8 +608,10 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
 
         text = """ le loto aura lieu le lundi, mardi et dimanche, du 15 au 30 juin 2013, de 15h à 16h30 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
-        assert recurrence.groupdict()['weekdays'] == 'lundi, mardi et dimanche, '
-        assert recurrence.groupdict()['date_interval'] == 'du 15 au 30 juin 2013'
+        assert recurrence.groupdict()[
+            'weekdays'] == 'lundi, mardi et dimanche, '
+        assert recurrence.groupdict()[
+            'date_interval'] == 'du 15 au 30 juin 2013'
         assert recurrence.groupdict()['time_interval'] == 'de 15h à 16h30'
 
     def test_recurrent_weedays_in_time_interval(self):

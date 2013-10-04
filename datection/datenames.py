@@ -14,7 +14,7 @@ WEEKDAY = {
 }
 
 SHORT_WEEKDAY = {
-# Untested for now!
+    # Untested for now!
     'fr':
     {
         'lun': 0,
@@ -49,7 +49,7 @@ MONTH = {
 }
 
 SHORT_MONTH = {
-# Untested for now!
+    # Untested for now!
     'fr':
     {
         'jan': 1,

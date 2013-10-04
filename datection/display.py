@@ -22,6 +22,7 @@ from datection.lang import getlocale
 # define _ translator in global variables
 _ = None
 
+
 def lazy_property(f):
     """Lazy loading decorator for object properties"""
     attr_name = '_' + f.__name__
@@ -86,7 +87,8 @@ def non_recurring(schedule):
 def consecutives(date1, date2):
     """ If two dates are consecutive, return True, else False"""
     return (
-        date1['start'].date() + datetime.timedelta(days=1) == date2['start'].date()
+        date1['start'].date() + datetime.timedelta(
+            days=1) == date2['start'].date()
         or date1['start'].date() + datetime.timedelta(days=-1) == date2['start'].date())
 
 
@@ -102,16 +104,16 @@ def groupby_consecutive_dates(dt_intervals):
     start = 0
     for i, inter in enumerate(dt_intervals):
         if i != len(dt_intervals) - 1:  # if inter is not the last item
-            if consecutives(inter, dt_intervals[i+1]):
+            if consecutives(inter, dt_intervals[i + 1]):
                 continue
             else:
-                conseq.append(dt_intervals[start: i+1])
+                conseq.append(dt_intervals[start: i + 1])
                 start = i + 1  # next group starts at next item
         else:  # special case of the last item in the list: border effect
             # we text the consecutivity with the previous inter
-            if consecutives(inter, dt_intervals[i-1]):
+            if consecutives(inter, dt_intervals[i - 1]):
                 # add last item to last group
-                conseq.append(dt_intervals[start: i+1])
+                conseq.append(dt_intervals[start: i + 1])
             else:
                 # create new group with only last inter
                 conseq.append([inter])
@@ -147,15 +149,17 @@ def groupby_date(dt_intervals):
         start_date = inter['start'].date()
         dates[start_date.isoformat()].append(inter)  # group dates by time
     return [
-    sorted(group, key=lambda item: item['start'])
+        sorted(group, key=lambda item: item['start'])
         for group in dates.values()]
 
 
 class BaseScheduleFormatter(object):
+
     """Base class for all schedule formatters, defining basic
     formatting methods.
 
     """
+
     def __init__(self, schedule, lang):
         self.schedule = schedule
         self.lang = lang
@@ -270,8 +274,8 @@ class BaseScheduleFormatter(object):
         # case of a single time (no end time)
         elif start.hour == end.hour and start.minute == end.minute:
             interval = _(u'à %(hour)s h %(minute)s') % {
-            'hour': start.hour,
-            'minute': start.minute or ''}
+                'hour': start.hour,
+                'minute': start.minute or ''}
         else:  # start time and end time
             interval = _(u'de %(st_hour)s h %(st_minute)s à %(en_hour)s h %(en_minute)s') % {
                 'st_hour': start.hour or '',
@@ -332,6 +336,7 @@ class BaseScheduleFormatter(object):
 
 
 class LongScheduleFormatter(BaseScheduleFormatter):
+
     """Object in charge of generating the shortest human readable
     representation of a datection context-free schedule list
 
@@ -420,11 +425,13 @@ class LongScheduleFormatter(BaseScheduleFormatter):
             # all dates happen in the same month
             if len(months) == 1:
                 month = months[0]
-                monthdates = self._filterby_year_and_month(time_group, year, month)
+                monthdates = self._filterby_year_and_month(
+                    time_group, year, month)
                 fmt = u'{prefix} {day_list} {month}'.format(
                     prefix=_(u'le') if len(monthdates) == 1 else _(u'les'),
                     day_list=u', '.join(
-                        [self.format_day(date['start'].day) for date in monthdates]),
+                        [self.format_day(
+                            date['start'].day) for date in monthdates]),
                     month=self.monthname(month))
                 out.append(fmt)
             else:  # the dates happen in different months
@@ -432,10 +439,13 @@ class LongScheduleFormatter(BaseScheduleFormatter):
                 for month in months:
                     fmt = _('les') + ' '
                     for i, month in enumerate(months):
-                        monthdates = self._filterby_year_and_month(time_group, year, month)
+                        monthdates = self._filterby_year_and_month(
+                            time_group, year, month)
                         fmt += u'{day_list} {month}'.format(
                             day_list=u', '.join(
-                                [self.format_day(date['start'].day) for date in monthdates]),
+                                [self.format_day(
+                                    date[
+                                        'start'].day) for date in monthdates]),
                             month=self.monthname(month))
                         if i != len(months) - 1:
                             if i == len(months) - 2:
@@ -472,14 +482,16 @@ class LongScheduleFormatter(BaseScheduleFormatter):
 
 
 class ShortScheduleFormatter(BaseScheduleFormatter):
+
     """Object in charge of generating the shortest human readable
     representation of a datection schedule list, using a temporal
     reference.
 
     """
+
     def __init__(self, schedule, start, end, lang):
         super(ShortScheduleFormatter, self).__init__(schedule, lang)
-        self.start, self.end  = start, end
+        self.start, self.end = start, end
 
     @lazy_property
     def dates(self):
