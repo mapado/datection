@@ -15,7 +15,7 @@ def jaccard_distance(set1, set2):
     Return the length of the insersection of the 2 sets over the length
     of their union
     """
-    if not set1.union(set2):
+    if not set1.intersection(set2):
         return 0
     return len(set1.intersection(set2)) / len(set1.union(set2))
 
