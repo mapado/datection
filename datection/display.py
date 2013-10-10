@@ -308,14 +308,13 @@ class BaseScheduleFormatter(object):
                     [self.dayname(i) for i in weekdays_index])
 
         # format dates boundaries
+        interval = u""
         if rrule.until:
             dates = [{
                 'start': rrule.dtstart,
                 'end': rrule.until
             }]
-            if (dates[0]['end'] - dates[0]['start']).days == 365:
-                interval = u""
-            else:
+            if (dates[0]['end'] - dates[0]['start']).days != 365:
                 interval = self.format_date_interval(dates)
 
         # format time interval
