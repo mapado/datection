@@ -37,7 +37,7 @@ class MergeScheduleTest(unittest.TestCase):
         rrule = merged.to_db()['rrule']
         duration = merged.to_db()['duration']
         self.assertEqual(rrule, ('DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                                 'BYHOUR=5;BYMINUTE=0;UNTIL=20130328'))
+                                 'BYHOUR=5;BYMINUTE=0;UNTIL=20130328T235959'))
         self.assertEqual(duration, 180)
 
     def test_merge_time_bounds(self):
@@ -48,7 +48,7 @@ class MergeScheduleTest(unittest.TestCase):
         rrule = merged.to_db()['rrule']
         duration = merged.to_db()['duration']
         self.assertEqual(rrule, ('DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                                 'BYHOUR=5;BYMINUTE=0;UNTIL=20130328'))
+                                 'BYHOUR=5;BYMINUTE=0;UNTIL=20130328T235959'))
         self.assertEqual(duration, 180)
 
     @unittest.skip("Corner case not yet handled")
@@ -60,7 +60,7 @@ class MergeScheduleTest(unittest.TestCase):
         rrule = merged.to_db()['rrule']
         duration = merged.to_db()['duration']
         self.assertEqual(rrule, ('DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                                 'UNTIL=20130328'))
+                                 'UNTIL=20130328T235959'))
         self.assertEqual(duration, 1439)
 
     def test_merge(self):
@@ -74,6 +74,6 @@ class MergeScheduleTest(unittest.TestCase):
         expected = {
             'duration': 60,
             'rrule': ('DTSTART:20120305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20120325')
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20120325T235959')
         }
         self.assertEqual(merged[0].to_db(), expected)

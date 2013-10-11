@@ -137,7 +137,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
             }
         ]
         d = datetime.date(2013, 8, 11)  # the 'today' of the test
@@ -155,7 +155,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
             }
         ]
         d = datetime.date(2013, 8, 10)  # the 'today' of the test
@@ -173,7 +173,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
             }
         ]
         d = datetime.date(2013, 8, 14)  # the 'today' of the test
@@ -191,7 +191,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
             }
         ]
         d = datetime.date(2013, 8, 2)  # the 'today' of the test
@@ -209,7 +209,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20131130T235959')
             }
         ]
         d = datetime.date(2013, 11, 8)  # the 'today' of the test
@@ -232,7 +232,7 @@ class TestUtilities(unittest.TestCase):
             DurationRRule({
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
+                'BYHOUR=22;BYMINUTE=30;UNTIL=20130809T235959')
             })
         ]
         expected = [
@@ -243,6 +243,10 @@ class TestUtilities(unittest.TestCase):
             {
                 'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
                 'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 9, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 9, 23, 30, 0)
             }]
         self.assertEqual(
             to_start_end_datetimes(schedule), expected)
@@ -252,13 +256,17 @@ class TestUtilities(unittest.TestCase):
             DurationRRule({
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
-                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130809T235959')
             })
         ]
         expected = [
             {
                 'start': datetime.datetime(2013, 8, 8, 22, 30, 0),
                 'end': datetime.datetime(2013, 8, 8, 23, 30, 0)
+            },
+            {
+                'start': datetime.datetime(2013, 8, 9, 22, 30, 0),
+                'end': datetime.datetime(2013, 8, 9, 23, 30, 0)
             }]
         start_bound = datetime.date(2013, 8, 8)
         self.assertEqual(

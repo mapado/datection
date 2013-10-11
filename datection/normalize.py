@@ -904,7 +904,8 @@ class WeekdayRecurrence(Timepoint):
         """ Generate a full description of the recurrence rule"""
         return makerrulestr(
             self.start_datetime.date(),
-            end=self.end_datetime.date(),
+            end=datetime.datetime.combine(
+                self.end_datetime.date(), datetime.time(23, 59, 59)),
             rule=self.to_python())
 
     @property
