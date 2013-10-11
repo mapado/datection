@@ -15,6 +15,7 @@ from datection.normalize import *
 
 
 class TestDateRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection Date objects """
 
     def setUp(self):
@@ -47,9 +48,11 @@ class TestDateRecurrence(unittest.TestCase):
 
 
 class TestDateListRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection DateList objects
 
     """
+
     def setUp(self):
         lang = 'fr'
         text = "Le 25, 26 janvier 2013"
@@ -76,10 +79,12 @@ class TestDateListRecurrence(unittest.TestCase):
 
 
 class TestDateIntervalRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection
         DateInterval objects
 
     """
+
     def setUp(self):
         lang = 'fr'
         text = "du 25 au 30 mars 2013"
@@ -89,7 +94,7 @@ class TestDateIntervalRecurrence(unittest.TestCase):
         """ Test the format of the recurrence rule string """
         rrulestr = self.interval.rrulestr
         target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=0;'
-            'BYMINUTE=0;INTERVAL=1;UNTIL=20130330')
+                  'BYMINUTE=0;INTERVAL=1;UNTIL=20130330')
         self.assertEqual(rrulestr, target)
 
     def test_to_db(self):
@@ -119,10 +124,12 @@ class TestDateIntervalRecurrence(unittest.TestCase):
 
 
 class TestDateTimeRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection
         DateTime objects
 
     """
+
     def setUp(self):
         self.lang = 'fr'
         text = "Le 30 mars 2013 à 15h30"
@@ -132,7 +139,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         """ Test the format of the recurrence rule string """
         rrulestr = self.datetime.rrulestr
         target = ('DTSTART:20130330\nRRULE:FREQ=DAILY;COUNT=1;'
-            'BYMINUTE=30;BYHOUR=15')
+                  'BYMINUTE=30;BYHOUR=15')
         self.assertEqual(rrulestr, target)
 
     def test_to_db(self):
@@ -156,7 +163,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         text = "Le 30 mars 2013 de 12h à 15h30"
         dt = parse(text, self.lang)[0]
         target = ('DTSTART:20130330\nRRULE:FREQ=DAILY;COUNT=1;'
-            'BYMINUTE=0;BYHOUR=12')
+                  'BYMINUTE=0;BYHOUR=12')
         self.assertEqual(dt.rrulestr, target)
 
     def test_to_db_with_endtime(self):
@@ -176,10 +183,12 @@ class TestDateTimeRecurrence(unittest.TestCase):
 
 
 class TestDateTimeIntervalRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection
         DateInterval objects
 
     """
+
     def setUp(self):
         self.lang = 'fr'
         text = "du 25 au 30 mars 2013 de 15h à 16h"
@@ -252,10 +261,12 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
 
 
 class TestWeekdayRecurrence(unittest.TestCase):
+
     """ Test the generation of recurrence rules for datection
         WeekdayRecurrence objects
 
     """
+
     def setUp(self):
         lang = 'fr'
         text_nodatetime = 'le lundi'
@@ -283,7 +294,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         self.assertIn(
             len(list(rrulestr(self.rec_nodatetime.rrulestr))),
-            range(52, 53+1))
+            range(52, 53 + 1))
 
     def test_future_no_datetime(self):
         self.assertTrue(self.rec_nodatetime.future())
