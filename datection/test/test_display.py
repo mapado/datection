@@ -110,6 +110,13 @@ class LongDisplayTest(unittest.TestCase):
         self.assertEqual(
             output, u'Du 15 au 30 janvier 2013 de 15 h à 18 h')
 
+    def test_weekday_recurrence_all_days2(self):
+        text = u'tous les jours, du 15 au 30 janvier 2013 de 15h à 18h'
+        schedule = datection.to_db(text, self.lang, only_future=False)
+        output = datection.display(schedule, self.lang)
+        self.assertEqual(
+            output, u'Du 15 au 30 janvier 2013 de 15 h à 18 h')
+
     def test_display_disjoint_weekdays(self):
         text = u'Le lundi, mercredi, vendredi de 5h à 8h'
         schedule = datection.to_db(text, self.lang, only_future=False)
