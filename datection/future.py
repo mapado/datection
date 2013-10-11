@@ -2,16 +2,15 @@
 
 import datetime
 
-from dateutil.rrule import *
+from .utils import DurationRRule
 
 
-def is_future(rrules, reference=datetime.datetime.now()):
+def is_future(schedule, reference=datetime.datetime.now()):
     """Return True if any of the input schedule is future, else False"""
     future = False
-    for rrule_item in rrules:
-        if any(
-            [date for date in list(rrulestr(rrule_item['rrule']))
-                if date > reference]):
+    for duration_rrule in schedule:
+        drr = DurationRRule(duration_rrule)
+        if any([date for date in list(drr.rrule) if date > reference]):
             future = True
             break
     return future

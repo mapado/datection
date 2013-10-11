@@ -6,6 +6,18 @@ from dateutil.rrule import rrulestr
 from datetime import timedelta
 
 
+def lazy_property(f):
+    """Lazy loading decorator for object properties"""
+    attr_name = '_' + f.__name__
+
+    @property
+    def wrapper(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, f(self))
+        return getattr(self, attr_name)
+    return wrapper
+
+
 class DurationRRule(object):
 
     """Wrapper around a rrule + duration object"""
@@ -13,7 +25,7 @@ class DurationRRule(object):
     def __init__(self, duration_rrule):
         self.duration_rrule = duration_rrule
 
-    @property
+    @lazy_property
     def rrule(self):
         return rrulestr(self.duration_rrule['rrule'])
 

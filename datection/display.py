@@ -14,41 +14,28 @@ from os.path import abspath, join, dirname
 popath = abspath(join(dirname(__file__), 'po'))
 
 from collections import defaultdict
-from dateutil.rrule import rrulestr
 
-from datection.lang import getlocale
+from .lang import getlocale
+from .utils import DurationRRule, lazy_property
 
 
 # define _ translator in global variables
 _ = None
 
 
-def lazy_property(f):
-    """Lazy loading decorator for object properties"""
-    attr_name = '_' + f.__name__
-
-    @property
-    def wrapper(self, *args, **kwargs):
-        if not hasattr(self, attr_name):
-            setattr(self, attr_name, f(self, *args, **kwargs))
-        return getattr(self, attr_name)
-    return wrapper
-
-
 def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     out = []
-    for rrule_struct in schedule:
-        rrule = rrulestr(rrule_struct['rrule'])
-        for start_date in rrule:
-            hour = rrule.byhour[0] if rrule.byhour else 0
-            minute = rrule.byminute[0] if rrule.byminute else 0
+    for drr in schedule:
+        for start_date in drr.rrule:
+            hour = drr.rrule.byhour[0] if drr.rrule.byhour else 0
+            minute = drr.rrule.byminute[0] if drr.rrule.byminute else 0
             start = datetime.datetime.combine(
                 start_date,
                 datetime.time(hour, minute))
             end = datetime.datetime.combine(
                 start_date,
                 datetime.time(hour, minute)) + \
-                datetime.timedelta(minutes=int(rrule_struct['duration']))
+                datetime.timedelta(minutes=drr.duration)
 
             # convert the bounds to datetime if dates were given
             if isinstance(start_bound, datetime.date):
@@ -68,20 +55,6 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
                 or (not start_bound and not end_bound)):
                 out.append({'start': start, 'end': end})
     return out
-
-
-def recurring(schedule):
-    """Select the recurring rrules from schedule"""
-    return [
-        struct for struct in schedule
-        if 'BYDAY' in struct['rrule']]
-
-
-def non_recurring(schedule):
-    """Select the non recurring rrules from schedule"""
-    return [
-        struct for struct in schedule
-        if not 'BYDAY' in struct['rrule']]
 
 
 def consecutives(date1, date2):
@@ -161,18 +134,18 @@ class BaseScheduleFormatter(object):
     """
 
     def __init__(self, schedule, lang):
-        self.schedule = schedule
+        self.schedule = [DurationRRule(drr) for drr in schedule]
         self.lang = lang
 
     @lazy_property
     def recurring(self):
         """Select recurring rrules from self.schedule"""
-        return recurring(self.schedule)
+        return [drr for drr in self.schedule if drr.is_recurring]
 
     @lazy_property
     def non_recurring(self):
         """Select non recurring rrules from self.schedule"""
-        return non_recurring(self.schedule)
+        return [drr for drr in self.schedule if not drr.is_recurring]
 
     @staticmethod
     def format_output(fmt):
@@ -284,9 +257,9 @@ class BaseScheduleFormatter(object):
         interval = interval.replace('  ', ' ').strip()
         return interval
 
-    def format_rrule(self, rrule_struct):
+    def format_rrule(self, duration_rrule):
         """Format a weekday recurrence rule associated with a duration"""
-        rrule = rrulestr(rrule_struct['rrule'])
+        rrule = duration_rrule.rrule
         # format weekdays
         if len(rrule.byweekday) == 1:
             # single weekday formatting
@@ -326,7 +299,7 @@ class BaseScheduleFormatter(object):
             start = datetime.datetime.combine(
                 datetime.date.today(),
                 datetime.time(rrule.byhour[0], rrule.byminute[0]))
-        end = start + datetime.timedelta(minutes=int(rrule_struct['duration']))
+        end = start + datetime.timedelta(minutes=duration_rrule.duration)
         times = self.format_time({'start': start, 'end': end})
 
         # assemble

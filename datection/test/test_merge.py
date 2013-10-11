@@ -17,10 +17,9 @@ class MergeScheduleTest(unittest.TestCase):
 
         merged = _merge_weekdays(reccurences)[0]
         output = merged.to_db()
-        self.assertEqual(
-            output['rrule'],
-            ('DTSTART:20131004\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
-             'BYMINUTE=0;UNTIL=20141004'))
+        self.assertIn(
+            'RRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;BYMINUTE=0;',
+            output['rrule'])
         self.assertEqual(output['duration'], 60)
 
     def test_merge_weekdays_different_start_end_bounds(self):

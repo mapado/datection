@@ -5,8 +5,8 @@ Inter rrule distance calculation module
 
 from __future__ import division
 
-from dateutil.rrule import rrulestr
 from datetime import timedelta
+from .utils import DurationRRule
 
 
 def jaccard_distance(set1, set2):
@@ -21,7 +21,7 @@ def jaccard_distance(set1, set2):
 
 
 def discretise_day_interval(start_datetime, end_datetime):
-    """Discretise the day interval of rrule_struct by 1 day slots
+    """Discretise the day interval of duration_rrule by 1 day slots
     """
     out = []
     current = start_datetime
@@ -34,13 +34,13 @@ def discretise_day_interval(start_datetime, end_datetime):
 def discretise_schedule(schedule):
     """Discretise the schedule in chunks of 30 minutes"""
     sc_set = set()
-    for rrule_struct in schedule:
-        rrule = rrulestr(rrule_struct['rrule'])
-        for timepoint in list(rrule):
+    for duration_rrule in schedule:
+        drr = DurationRRule(duration_rrule)
+        for timepoint in list(drr.rrule):
             discrete_interval = discretise_day_interval(
                 start_datetime=timepoint,
                 end_datetime=timepoint + timedelta(
-                    minutes=int(rrule_struct['duration'])))
+                    minutes=drr.duration))
             for d_timepoint in discrete_interval:
                 sc_set.add(d_timepoint)
     return sc_set

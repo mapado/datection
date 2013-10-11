@@ -9,8 +9,9 @@ import unittest
 import datection
 import datetime
 
-from datection.display import to_start_end_datetimes, recurring, non_recurring, \
+from ..display import to_start_end_datetimes, \
     consecutives, groupby_consecutive_dates, groupby_time, groupby_date
+from ..utils import DurationRRule
 
 
 class LongDisplayTest(unittest.TestCase):
@@ -228,11 +229,11 @@ class TestUtilities(unittest.TestCase):
 
     def test_to_start_end_datetimes(self):
         schedule = [
-            {
+            DurationRRule({
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
                 'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
-            }
+            })
         ]
         expected = [
             {
@@ -248,11 +249,11 @@ class TestUtilities(unittest.TestCase):
 
     def test_to_start_end_datetimes_start_bound(self):
         schedule = [
-            {
+            DurationRRule({
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
                           'BYHOUR=22;BYMINUTE=30;UNTIL=20130809')
-            }
+            })
         ]
         expected = [
             {
@@ -263,36 +264,6 @@ class TestUtilities(unittest.TestCase):
         self.assertEqual(
             to_start_end_datetimes(schedule, start_bound=start_bound),
             expected)
-
-    def test_recurring(self):
-        schedule = [
-            {
-                'duration': 60,
-                'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
-                          'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
-            },
-            {
-                'duration': 60,
-                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
-            }
-        ]
-        self.assertEqual(recurring(schedule), [schedule[1]])
-
-    def test_non_recurring(self):
-        schedule = [
-            {
-                'duration': 60,
-                'rrule': ('DTSTART:20131107\nRRULE:FREQ=DAILY;'
-                          'BYHOUR=22;BYMINUTE=30;UNTIL=20131130')
-            },
-            {
-                'duration': 60,
-                'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130831')
-            }
-        ]
-        self.assertEqual(non_recurring(schedule), [schedule[0]])
 
     def test_consecutives(self):
         d1 = {
