@@ -2,6 +2,35 @@
 
 import re
 
+from dateutil.rrule import rrulestr
+from datetime import timedelta
+
+
+class DurationRRule(object):
+
+    """Wrapper around a rrule + duration object"""
+
+    def __init__(self, duration_rrule):
+        self.duration_rrule = duration_rrule
+
+    @property
+    def rrule(self):
+        return rrulestr(self.duration_rrule['rrule'])
+
+    @property
+    def duration(self):
+        return int(self.duration_rrule['duration'])
+
+    @property
+    def is_recurring(self):
+        return 'BYDAY' in self.duration_rrule['rrule']
+
+    @property
+    def is_all_year_recurrence(self):
+        if not self.is_recurring:
+            return False
+        return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
+
 
 def isoformat_concat(datetime):
     """ Strip all dots, dashes and ":" from the input datetime isoformat """
