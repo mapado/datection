@@ -76,6 +76,14 @@ class Timepoint(object):
         """Return whether the timepoint is located in the future."""
         return False
 
+    def text_to_db(self):
+        if not hasattr(self, 'text'):
+            return u''
+        if isinstance(self.text, basestring):
+            return [self.text.decode('utf-8')]
+        elif isinstance(self.text, list):
+            return [text.decode('utf-8') for text in self.text]
+
 
 class Date(Timepoint):
 
@@ -213,7 +221,8 @@ class Date(Timepoint):
         """
         return {
             'rrule': self.rrulestr,
-            'duration': ALL_DAY  # 23 hours 59 minutes
+            'duration': ALL_DAY,  # 23 hours 59 minutes
+            'texts': self.text_to_db()
         }
 
     def future(self, reference=datetime.date.today()):
@@ -254,9 +263,10 @@ class DateList(Timepoint):
             if not date.groupdict()['year']:
                 groupdict = dict(date.groupdict())
                 groupdict['year'] = datetime.MINYEAR
-                dates.append(Date(groupdict, lang=self.lang))
+                dates.append(Date(groupdict, lang=self.lang, text=self.text))
             else:
-                dates.append(Date(date.groupdict(), lang=self.lang))
+                dates.append(
+                    Date(date.groupdict(), lang=self.lang, text=self.text))
         return dates
 
     def _set_year(self):
@@ -338,14 +348,16 @@ class DateInterval(Timepoint):
                 year=start_year,
                 month_name=self.data['start_month_name'],
                 day=self.data['start_day'],
-                lang=self.lang)
+                lang=self.lang,
+                text=self.text)
         # create serialized end date of Date type
         if not hasattr(self, 'end_date'):
             self.end_date = Date(
                 year=end_year,
                 month_name=self.data['end_month_name'],
                 day=self.data['end_day'],
-                lang=self.lang)
+                lang=self.lang,
+                text=self.text)
 
         # warning, if end month occurs before start month, then end month
         # is next year
@@ -377,7 +389,8 @@ class DateInterval(Timepoint):
         """
         return {
             'rrule': self.rrulestr,
-            'duration': ALL_DAY
+            'duration': ALL_DAY,
+            'texts': self.text_to_db()
         }
 
     def future(self, reference=datetime.date.today()):
@@ -509,7 +522,9 @@ class DateTime(Timepoint):
             self.time = self._set_time(start_time, end_time)
 
     def _set_date(self, year, month_name, day):
-        return Date(year=year, month_name=month_name, day=day, lang=self.lang)
+        return Date(
+            year=year, month_name=month_name, day=day,
+            lang=self.lang, text=self.text)
 
     def _set_time(self, start_time, end_time):
         st_match = re.search(
@@ -578,7 +593,8 @@ class DateTime(Timepoint):
             duration = 0
         return {
             'rrule': self.rrulestr,
-            'duration': duration
+            'duration': duration,
+            'texts': self.text_to_db()
         }
 
     def future(self, reference=datetime.date.today()):
@@ -636,7 +652,8 @@ class DateTimeList(Timepoint):
 
         # Populate self.datetimes with Datetimes objects
         for date in date_list:
-            datetimes.append(DateTime(date=date, time=ti, lang=self.lang))
+            datetimes.append(
+                DateTime(date=date, time=ti, lang=self.lang, text=self.text))
         return datetimes
 
     def future(self, reference=datetime.date.today()):
@@ -707,7 +724,7 @@ class DateTimeInterval(Timepoint):
                 re_date_interval,
                 self.text
             ).groupdict(),
-            lang=self.lang)
+            lang=self.lang, text=self.text)
 
     @property
     def valid(self):
@@ -781,7 +798,8 @@ class DateTimeInterval(Timepoint):
             duration = 0
         return {
             'rrule': self.rrulestr,
-            'duration': duration
+            'duration': duration,
+            'texts': self.text_to_db()
         }
 
     def future(self, reference=datetime.date.today()):
@@ -941,7 +959,8 @@ class WeekdayRecurrence(Timepoint):
         duration = (end_time - self.start_datetime).seconds / 60
         return {
             'rrule': self.rrulestr,
-            'duration': duration
+            'duration': duration,
+            'texts': self.text_to_db()
         }
 
 

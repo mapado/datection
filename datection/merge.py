@@ -54,7 +54,6 @@ def _merge_weekdays(recurrences):
     for bounds, group in itertools.groupby(recurrences, key=boundaries):
         group = list(group)
         weekday_set = list(set([day for rec in group for day in rec.weekdays]))
-
         # As we grouped together weekday recurrences with potential different
         # start/end time, we need to select the most specific one
         # ie: not 00:00:00 and 23:59:59
@@ -74,7 +73,8 @@ def _merge_weekdays(recurrences):
             start = datetime.datetime.combine(bounds[0], start_time[0])
             end = datetime.datetime.combine(bounds[1], end_time[0])
             merge = WeekdayRecurrence(
-                weekdays=weekday_set, start=start, end=end)
+                weekdays=weekday_set, start=start, end=end,
+                text=[item.text for item in group])
             merges.append(merge)
     return merges
 
@@ -120,5 +120,12 @@ def _merge_date_bounds(bounded, weekday_recurrences):
                 bounded.end_date.to_python(),
                 end_time)
             rec.end_datetime = end
+
+        # merge all timepoints text together
+        if isinstance(rec.text, basestring):
+            rec.text = [rec.text, bounded.text]
+        else:
+            rec.text.append(bounded.text)
+
         out.append(rec)
     return out

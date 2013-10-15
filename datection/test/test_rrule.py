@@ -20,7 +20,7 @@ class TestDateRecurrence(unittest.TestCase):
 
     def setUp(self):
         lang = 'fr'
-        text = "Le 25 janvier 2013"
+        text = u"Le 25 janvier 2013"
         self.date = parse(text, lang)[0]
 
     def test_to_rrule(self):
@@ -33,7 +33,8 @@ class TestDateRecurrence(unittest.TestCase):
         """ Test the format returned by the 'to_db' Date method """
         target = {
             'rrule': self.date.rrulestr,
-            'duration': 1439
+            'duration': 1439,
+            'texts': ["25 janvier 2013"]
         }
         self.assertEqual(self.date.to_db(), target)
 
@@ -55,7 +56,7 @@ class TestDateListRecurrence(unittest.TestCase):
 
     def setUp(self):
         lang = 'fr'
-        text = "Le 25, 26 janvier 2013"
+        text = u"Le 25, 26 janvier 2013"
         self.datelist = parse(text, lang)[0]
 
     def test_to_db(self):
@@ -63,11 +64,13 @@ class TestDateListRecurrence(unittest.TestCase):
         target = [
             {
                 'rrule': self.datelist.dates[0].rrulestr,
-                'duration': 1439
+                'duration': 1439,
+                'texts': [u"25, 26 janvier 2013"]
             },
             {
                 'rrule': self.datelist.dates[1].rrulestr,
-                'duration': 1439
+                'duration': 1439,
+                'texts': [u"25, 26 janvier 2013"]
             }
         ]
         self.assertEqual(self.datelist.to_db(), target)
@@ -87,8 +90,8 @@ class TestDateIntervalRecurrence(unittest.TestCase):
 
     def setUp(self):
         lang = 'fr'
-        text = "du 25 au 30 mars 2013"
-        self.interval = parse(text, lang)[0]
+        self.text = u"du 25 au 30 mars 2013"
+        self.interval = parse(self.text, lang)[0]
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
@@ -101,7 +104,8 @@ class TestDateIntervalRecurrence(unittest.TestCase):
         """ Test the format returned by the 'to_db' Date method """
         target = {
             'rrule': self.interval.rrulestr,
-            'duration': 1439
+            'duration': 1439,
+            'texts': [self.text]
         }
         self.assertEqual(self.interval.to_db(), target)
 
@@ -132,8 +136,8 @@ class TestDateTimeRecurrence(unittest.TestCase):
 
     def setUp(self):
         self.lang = 'fr'
-        text = "Le 30 mars 2013 à 15h30"
-        self.datetime = parse(text, self.lang)[0]
+        self.text = u"Le 30 mars 2013 à 15h30"
+        self.datetime = parse(self.text, self.lang)[0]
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
@@ -146,7 +150,8 @@ class TestDateTimeRecurrence(unittest.TestCase):
         """ Test the format returned by the 'to_db' Date method """
         target = {
             'rrule': self.datetime.rrulestr,
-            'duration': 0
+            'duration': 0,
+            'texts': [u"30 mars 2013 à 15h30"]
         }
         self.assertEqual(self.datetime.to_db(), target)
 
@@ -160,7 +165,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
             datetime specified an end time.
 
         """
-        text = "Le 30 mars 2013 de 12h à 15h30"
+        text = u"Le 30 mars 2013 de 12h à 15h30"
         dt = parse(text, self.lang)[0]
         target = ('DTSTART:20130330\nRRULE:FREQ=DAILY;COUNT=1;'
                   'BYMINUTE=0;BYHOUR=12')
@@ -168,11 +173,12 @@ class TestDateTimeRecurrence(unittest.TestCase):
 
     def test_to_db_with_endtime(self):
         """ Test the format returned by the 'to_db' Date method """
-        text = "Le 30 mars 2013 de 12h à 15h30"
+        text = u"Le 30 mars 2013 de 12h à 15h30"
         dt = parse(text, self.lang)[0]
         target = {
             'rrule': dt.rrulestr,
-            'duration': 210
+            'duration': 210,
+            'texts': [u"30 mars 2013 de 12h à 15h30"]
         }
         self.assertEqual(dt.to_db(), target)
 
@@ -191,7 +197,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
 
     def setUp(self):
         self.lang = 'fr'
-        text = "du 25 au 30 mars 2013 de 15h à 16h"
+        text = u"du 25 au 30 mars 2013 de 15h à 16h"
         self.interval = parse(text, self.lang)[0]
 
     def test_to_rrule(self):
@@ -205,7 +211,8 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         """ Test the format returned by the 'to_db' Date method """
         target = {
             'rrule': self.interval.rrulestr,
-            'duration': 60
+            'duration': 60,
+            'texts': [u'du 25 au 30 mars 2013 de 15h à 16h']
         }
         self.assertEqual(self.interval.to_db(), target)
 
@@ -223,7 +230,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
 
     def test_to_rrule_no_endtime(self):
         """ Test the format of the recurrence rule string """
-        text = "du 25 au 30 mars 2013 à 15h"
+        text = u"du 25 au 30 mars 2013 à 15h"
         interval = parse(text, self.lang)[0]
         rrulestr = interval.rrulestr
         target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=15;'
@@ -232,17 +239,18 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
 
     def test_to_db_no_endtime(self):
         """ Test the format returned by the 'to_db' Date method """
-        text = "du 25 au 30 mars 2013 à 15h"
+        text = u"du 25 au 30 mars 2013 à 15h"
         interval = parse(text, self.lang)[0]
         target = {
             'rrule': interval.rrulestr,
-            'duration': 0
+            'duration': 0,
+            'texts': [u"du 25 au 30 mars 2013 à 15h"]
         }
         self.assertEqual(interval.to_db(), target)
 
     def test_datetime_generation_no_endtime(self):
         """ Test the format the dates generated by the recurrence rule """
-        text = "du 25 au 30 mars 2013 à 15h"
+        text = u"du 25 au 30 mars 2013 à 15h"
         interval = parse(text, self.lang)[0]
         target = [
             datetime.datetime(2013, 3, 25, 15, 0, 0),
@@ -283,7 +291,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         target = {
             'rrule': self.rec_nodatetime.rrulestr,
-            'duration': 0
+            'duration': 0,
+            'texts': [u'le lundi']
         }
         self.assertEqual(self.rec_nodatetime.to_db(), target)
 
@@ -318,7 +327,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         target = {
             'rrule': self.rec_notime.rrulestr,
-            'duration': 1439
+            'duration': 1439,
+            'texts': [u'le lundi, du 1 au 15 mars 2013']
         }
         self.assertEqual(self.rec_notime.to_db(), target)
 
@@ -351,7 +361,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
         """
         target = {
             'rrule': self.rec_full.rrulestr,
-            'duration': 120
+            'duration': 120,
+            'texts': [u'le lundi du 1er au 15 mars 2013, de 5h à 7h']
         }
         self.assertEqual(self.rec_full.to_db(), target)
 
@@ -371,7 +382,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
             self.rec_full.future(reference=datetime.date(2012, 1, 1)))
 
     def test_plural_weekdays(self):
-        text = "les lundis, mardis et mercredis"
+        text = u"les lundis, mardis et mercredis"
         wkrec = parse(text, "fr")[0]
         self.assertEqual(wkrec.weekdays, [0, 1, 2])
 

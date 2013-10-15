@@ -74,6 +74,7 @@ class MergeScheduleTest(unittest.TestCase):
         expected = {
             'duration': 60,
             'rrule': ('DTSTART:20120305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20120325T235959')
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20120325T235959'),
+            'texts': [u'le lundi', u'le lundi de 8h à 9h', u'du 5 au 25 mars 2012']
         }
         self.assertEqual(merged[0].to_db(), expected)
