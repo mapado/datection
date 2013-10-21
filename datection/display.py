@@ -24,6 +24,10 @@ _ = None
 
 
 def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
+    """Convert each schedule member (DurationRRule instance) to a dict
+    of start/end datetimes.
+
+    """
     out = []
     for drr in schedule:
         for start_date in drr.rrule:
@@ -149,22 +153,27 @@ class BaseScheduleFormatter(object):
 
     @staticmethod
     def format_output(fmt):
+        """Join each line by a \n and add a dot after each line."""
         return '\n'.join([item.capitalize().strip() for item in fmt])
 
     @staticmethod
     def format_day(day):
+        """Formats the day number into the target language."""
         return _(u'1er') if day == 1 else unicode(day)
 
     @staticmethod
     def dayname(day):
+        """Return the name of the input day"""
         return calendar.day_name[day].decode('utf-8')
 
     @staticmethod
     def monthname(month):
+        """Return the name of the input month"""
         return calendar.month_name[month].decode('utf-8')
 
     @staticmethod
     def abbr_monthname(month):
+        """Return the abbreviated name of the input month"""
         return calendar.month_abbr[month].decode('utf-8')
 
     def format_date(self, dtime):
@@ -430,6 +439,10 @@ class LongScheduleFormatter(BaseScheduleFormatter):
         return out
 
     def display(self):
+        """Return a human readable string describing self.schedule as shortly
+        as possible (without using abbreviated forms), in the right language.
+
+        """
         fmt = []
         # format recurring rrules
         for rec in self.recurring:
@@ -519,6 +532,10 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         return msg
 
     def display(self, reference):
+        """Return a human readable string describing self.schedule as shortly
+        as possible (ie: using abbreviated names), in the right language.
+
+        """
         out = []
         if not self.dates:
             return ''
@@ -539,15 +556,17 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         return self.format_output(out)
 
 
-def display(
-        schedule, lang,
-        short=False, bounds=(None, None), reference=datetime.date.today()):
+def display(schedule, lang, short=False, bounds=(None, None),
+            reference=datetime.date.today()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
-        schedule: (list) a list of rrule dicts, containing a duration and a RFC rrule
+        schedule: (list) a list of rrule dicts, containing a duration
+        and a RFC rrule
         lang: (str) the wanted output language
-        short: (bool) if True
+        short: (bool) if True, a shorter sentence will be generated
+        bounds: limit start/end datetimes beyond which the dates will
+        not event be considered
     """
     with calendar.TimeEncoding(getlocale(lang)):
         gettext_lang = getlocale(lang).replace('.UTF-8', '')

@@ -3,9 +3,9 @@
 import re
 import datetime
 
-from dateutil.rrule import *
+from dateutil.rrule import rrule, WEEKLY
 
-from .regex import *
+from .regex import WEEKDAY, MONTH, TIMEPOINT_REGEX, SHORT_MONTH
 from .utils import makerrulestr
 
 
@@ -77,6 +77,7 @@ class Timepoint(object):
         return False
 
     def text_to_db(self):
+        """Make sure self.text is unicode/made of unicode texts."""
         if not hasattr(self, 'text'):
             return u''
         if isinstance(self.text, basestring):
@@ -87,7 +88,10 @@ class Timepoint(object):
 
 class Date(Timepoint):
 
-    def __init__(self, data={}, day=None, month=None, month_name=None, year=None, **kwargs):
+    """Date normalizer, in charge of normalizing date regex matches."""
+
+    def __init__(self, data=dict(), day=None, month=None, month_name=None,
+                 year=None, **kwargs):
         super(Date, self).__init__(data, **kwargs)
         if data:
             self.year = self._set_year(self.data.get('year'))
@@ -166,6 +170,13 @@ class Date(Timepoint):
             return int(self.data['year'])
 
     def _set_month(self, month_name):
+        """Set the date month from the date month name
+
+        If the month name is an integer, return it as is.
+        If the month name is a string, return is numeric value,
+        whether the month name is abbreviated or not.
+
+        """
         if isinstance(month_name, basestring):  # string date
             # if month name is whole
             if month_name.lower() in MONTH[self.lang]:
@@ -182,12 +193,16 @@ class Date(Timepoint):
             return None
 
     def _set_day(self, day):
+        """Return the integer value of day, except if day is None."""
         if not day:
             return None
         return int(day)
 
     @property
     def valid(self):
+        """If the generated datetime.date is valid, return True, else False.
+
+        """
         if all([self.year, self.month, self.day]):
             if self.year == datetime.MINYEAR:
                 return False
@@ -207,6 +222,7 @@ class Date(Timepoint):
         return makerrulestr(start, count=1, byhour=0, byminute=0)
 
     def to_python(self):
+        """Convert a Date object to a datetime.object"""
         try:
             return datetime.date(
                 year=self.year, month=self.month, day=self.day)
@@ -215,8 +231,8 @@ class Date(Timepoint):
             return None
 
     def to_db(self):
-        """ Return a dict containing the recurrence rule and the duration
-            (in min)
+        """ Return a dict containing the recurrence rule, the duration
+            (in min), and the matching text.
 
         """
         return {
@@ -236,7 +252,9 @@ class Date(Timepoint):
 
 class DateList(Timepoint):
 
-    def __init__(self, data={}, dates=None, **kwargs):
+    """Date list normalizer in charge of normalizing date list regex matches"""
+
+    def __init__(self, data=dict(), dates=None, **kwargs):
         """ Initialize the DateList object. """
         super(DateList, self).__init__(data, **kwargs)
         if dates:
@@ -247,15 +265,16 @@ class DateList(Timepoint):
             self._set_month()
 
     def __iter__(self):
+        """Iterate over the list of dates"""
         for date in self.dates:
             yield date
 
     def _set_dates(self, data):
+        """Normalize the dates and return a list of Date objects."""
         dates = []
         for date in re.finditer(
                 TIMEPOINT_REGEX[self.lang]['_date_in_list'][0],
-                self.data['date_list']
-        ):
+                self.data['date_list']):
             # Assign datetime.MINYEAR to year, if year is None
             # It will be a marker allowing the year to be replaced
             # by the same value as the last year of the list
@@ -293,9 +312,11 @@ class DateList(Timepoint):
         return all([date.valid for date in self.dates])
 
     def to_python(self):
+        """Convert self.dates to a list of datetime.date objects."""
         return [date.to_python() for date in self.dates]
 
     def to_db(self):
+        """Convert self.dates to a list of duration rrules."""
         return [date.to_db() for date in self.dates]
 
     def future(self, reference=datetime.date.today()):
@@ -311,6 +332,10 @@ class DateList(Timepoint):
 
 
 class DateInterval(Timepoint):
+
+    """Date normalizer, in charge of normalizing date interval regex matches.
+
+    """
 
     def __init__(self, data={}, start_date=None, end_date=None, **kwargs):
         super(DateInterval, self).__init__(data, **kwargs)
@@ -407,7 +432,9 @@ class DateInterval(Timepoint):
 
 class Time(Timepoint):
 
-    def __init__(self, data={}, hour=None, minute=None, **kwargs):
+    """Time normalizer, in charge of normalizing the time regex matches."""
+
+    def __init__(self, data=dict(), hour=None, minute=None, **kwargs):
         super(Time, self).__init__(data, **kwargs)
         if hour is not None:
             self.hour = hour
@@ -440,6 +467,7 @@ class Time(Timepoint):
             return False
 
     def to_python(self):
+        """Convert a Time object to a datetime.time object."""
         if not self.valid:
             return None
         return datetime.time(hour=int(self.hour), minute=int(self.minute))
@@ -450,13 +478,12 @@ class Time(Timepoint):
 
 class TimeInterval(Timepoint):
 
-    """ A class representing a simple time interval.
-
-    Examples: 15h30-18h, de 15h à 18h
+    """Time interval normalizer, in charge of normalizing time interval regex
+    matches.
 
     """
 
-    def __init__(self, data={}, start_time=None, end_time=None, **kwargs):
+    def __init__(self, data=dict(), start_time=None, end_time=None, **kwargs):
         super(TimeInterval, self).__init__(data, **kwargs)
         # store TimeInterval specific arguments
         if start_time:
@@ -495,6 +522,10 @@ class TimeInterval(Timepoint):
             return self.start_time.valid
 
     def to_python(self):
+        """Return either a tuple (start_time, end_time), or simply start_time
+        if self.end_time is null, as datetime.time objects.
+
+        """
         if self.end_time:
             return (self.start_time.to_python(), self.end_time.to_python())
         else:
@@ -505,6 +536,8 @@ class TimeInterval(Timepoint):
 
 
 class DateTime(Timepoint):
+
+    """Datetime normalizer, in charge of normalizing datetime regex matches."""
 
     def __init__(self, data={}, date=None, time=None, **kwargs):
         super(DateTime, self).__init__(data, **kwargs)
@@ -522,11 +555,13 @@ class DateTime(Timepoint):
             self.time = self._set_time(start_time, end_time)
 
     def _set_date(self, year, month_name, day):
+        """Set the datetime date, as a Date object."""
         return Date(
             year=year, month_name=month_name, day=day,
             lang=self.lang, text=self.text)
 
     def _set_time(self, start_time, end_time):
+        """Set the datetime time, as a TimeInterval object."""
         st_match = re.search(
             TIMEPOINT_REGEX[self.lang]['_time'][0], start_time)
         st = Time(st_match.groupdict())
@@ -608,7 +643,12 @@ class DateTime(Timepoint):
 
 class DateTimeList(Timepoint):
 
-    def __init__(self, data={}, datetimes=None, **kwargs):
+    """Datetime list normalizer, in charge of normalizing datetime list
+    regex matches.
+
+    """
+
+    def __init__(self, data=dict(), datetimes=None, **kwargs):
         super(DateTimeList, self).__init__(data, **kwargs)
         if datetimes:
             self.datetimes = datetimes
