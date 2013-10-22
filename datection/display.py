@@ -30,6 +30,12 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     """
     out = []
     for drr in schedule:
+        # make sure the rrule does not generate an infinite stream of
+        # datetimes if unbounded, by setting the until bound to the
+        # end_bound argument value
+        if not drr.rrule.until:
+            drr.rrule._until = end_bound
+
         for start_date in drr.rrule:
             hour = drr.rrule.byhour[0] if drr.rrule.byhour else 0
             minute = drr.rrule.byminute[0] if drr.rrule.byminute else 0

@@ -229,6 +229,24 @@ class ShortDisplayTest(unittest.TestCase):
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
             expected)
 
+    def test_short_display_unbounded_rrule(self):
+        schedule = [
+            {
+                'duration': 0,
+                # no dtstart, no until!
+                'rrule': ('DTSTART:\nRRULE:FREQ=DAILY;BYHOUR=22;BYMINUTE=30')
+            }
+        ]
+        d = datetime.date(2013, 11, 19)  # the 'today' of the test
+        bounds = (
+            datetime.datetime(2013, 11, 19, 8, 0),
+            datetime.datetime(2013, 11, 19, 23, 59))
+        expected = u"Aujourd'hui à 22 h 30"
+        self.assertEqual(
+            datection.display(
+                schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
 
 class TestUtilities(unittest.TestCase):
 
