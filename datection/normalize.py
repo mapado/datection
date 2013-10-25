@@ -13,34 +13,26 @@ ALL_DAY = 1439  # number of minutes from midnight to 23:59
 
 
 def timepoint_factory(detector, data, **kwargs):
-    """ Return the appropriate Timepoint childclass
+    """ Return an instance of the appropriate Timepoint child class
         given the detector value.
 
     """
-    # kwargs.update({'timepoint': detector})
-    if detector == 'date':
-        return Date(data, **kwargs)
-    elif detector == 'date_interval':
-        return DateInterval(data, **kwargs)
-    elif detector == 'time_interval':
-        return TimeInterval(data, **kwargs)
-    elif detector == 'datetime':
-        return DateTime(data, **kwargs)
-    elif detector == 'date_list':
-        return DateList(data, **kwargs)
-    elif detector == 'datetime_list':
-        return DateTimeList(data, **kwargs)
-    elif detector == 'datetime_interval':
-        return DateTimeInterval(data, **kwargs)
-    elif detector == 'weekday_recurrence':
-        return WeekdayRecurrence(data, **kwargs)
-    elif detector == 'weekday_interval_recurrence':
-        return WeekdayIntervalRecurrence(data, **kwargs)
-    elif detector == 'allweekday_recurrence':
-        return AllWeekdayRecurrence(data, **kwargs)
-    else:
+    factory = {
+        'date': Date,
+        'date_interval': DateInterval,
+        'time_interval': TimeInterval,
+        'datetime': DateTime,
+        'date_list': DateList,
+        'datetime_list': DateTimeList,
+        'datetime_interval': DateTimeInterval,
+        'weekday_recurrence': WeekdayRecurrence,
+        'weekday_interval_recurrence': WeekdayIntervalRecurrence,
+        'allweekday_recurrence': AllWeekdayRecurrence,
+    }
+    if detector not in factory:
         raise NotImplementedError(
             detector + " normalisation is not yet handled.")
+    return factory[detector](data, **kwargs)
 
 
 class Timepoint(object):
