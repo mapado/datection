@@ -11,7 +11,7 @@ import datetime
 
 from ..display import to_start_end_datetimes, \
     consecutives, groupby_consecutive_dates, groupby_time, groupby_date
-from ..utils import DurationRRule
+from ..models import DurationRRule
 
 
 class LongDisplayTest(unittest.TestCase):

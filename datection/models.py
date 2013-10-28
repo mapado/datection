@@ -115,3 +115,20 @@ class DurationRRule(object):
             start_idx = self.weekday_indexes[0]
             end_idx = self.weekday_indexes[-1]
             return range(start_idx, end_idx + 1)
+
+    @property
+    def is_recurring(self):
+        if not 'BYDAY' in self.duration_rrule['rrule']:
+            return False
+        if len(self.rrule.byweekday) == 7 and not self.is_all_year_recurrence:
+            # if a rrule says "every day from DT_START to DT_END", it is
+            # similar to "from DT_START to DT_END", hence it is not a
+            # recurrence!
+            return False
+        return True
+
+    @property
+    def is_all_year_recurrence(self):
+        if not 'BYDAY' in self.duration_rrule['rrule']:
+            return False
+        return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
