@@ -36,6 +36,10 @@ class DurationRRuleTest(unittest.TestCase):
                       'BYMINUTE=0;BYHOUR=14'),
             'texts': [u'5 mars 2013 de 14h à 15h30']
         }
+        self.unbounded_recurrence = {
+            'duration': 1439,
+            'rrule': 'DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO'
+        }
 
     def test_rrule_property(self):
         drr = DurationRRule(self.bounded_recurrence)
@@ -56,6 +60,10 @@ class DurationRRuleTest(unittest.TestCase):
     def test_end_datetime_property_no_until(self):
         drr = DurationRRule(self.one_time)
         self.assertEqual(drr.end_datetime, datetime(2013, 3, 5, 15, 30, 0))
+
+    def test_end_datetime_property_unbounded_recurrence(self):
+        drr = DurationRRule(self.unbounded_recurrence)
+        self.assertEqual(drr.end_datetime, datetime(2014, 3, 5, 23, 59))
 
     def test_end_datetime_property(self):
         drr = DurationRRule(self.bounded_recurrence)
