@@ -502,7 +502,8 @@ class TimeInterval(Timepoint):
         """ Normalize the start time into a Time object """
         if not st:
             return None
-        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], st)
+        st = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], st,
+                       flags=re.IGNORECASE | re.UNICODE)
         return Time(st.groupdict(), lang=self.lang)
 
     def _set_end_time(self, et):
@@ -510,7 +511,8 @@ class TimeInterval(Timepoint):
         # normalization of self.end_time into a Time object
         if not et:
             return None
-        et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], et)
+        et = re.search(TIMEPOINT_REGEX[self.lang]['_time'][0], et,
+                       flags=re.IGNORECASE | re.UNICODE)
         return Time(et.groupdict(), lang=self.lang)
 
     @property
