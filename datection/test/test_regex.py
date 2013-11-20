@@ -225,6 +225,16 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['end_month_name'] == 'avril'
         assert interval.groupdict()['end_year'] == '2013'
 
+    def test_date_interal_separator_superior_sign(self):
+        text = "03 > 07 décembre 2013"
+        interval = re.search(FR_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '03'
+        assert interval.groupdict()['start_month_name'] is None
+        assert interval.groupdict()['start_year'] is None
+        assert interval.groupdict()['end_day'] == '07'
+        assert interval.groupdict()['end_month_name'] == 'décembre'
+        assert interval.groupdict()['end_year'] == '2013'
+
     def test_numeric_date_interval(self):
         text = "ohai du 01/12/2005 au 05/04/2007 lala"
         interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
