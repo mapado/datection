@@ -62,7 +62,7 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 # (ex: dd/mm/2012 or dd/mm/12)
 NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
-NUMERIC_DATE_SEPARATOR = r'[/\.]'
+NUMERIC_DATE_SEPARATOR = r'[/\.-]'
 # Dates of format dd/mm(/(yy)yy)
 _FR_NUMERIC_DATE = r"""
     (?P<day>{day})
