@@ -3,7 +3,8 @@
 import unittest
 import datetime
 
-from ..utils import DurationRRule, isoformat_concat
+from ..models import DurationRRule
+from ..utils import isoformat_concat
 
 
 class UtilsTest(unittest.TestCase):

@@ -16,7 +16,8 @@ popath = abspath(join(dirname(__file__), 'po'))
 from collections import defaultdict
 
 from .lang import getlocale
-from .utils import DurationRRule, lazy_property
+from .utils import lazy_property
+from .models import DurationRRule
 
 
 # define _ translator in global variables

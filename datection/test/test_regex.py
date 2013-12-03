@@ -174,6 +174,19 @@ class TestNumericDateRegex(unittest.TestCase):
         assert date.groupdict()['month_name'] == '03'
         assert date.groupdict()['year'] == '2012'
 
+    def test_dash_separator(self):
+        """ Test the extraction of a numeric french date using a dot for
+            separation : dd-mm-yyyy
+
+        """
+        text = """ Adulte : 19 € Tarif réduit : 13 €
+                19-03-2012 : de 20h à 21h20."""
+        date = re.search(FR_NUMERIC_DATE, text)
+        assert date.group(0).strip() == '19-03-2012'
+        assert date.groupdict()['day'] == '19'
+        assert date.groupdict()['month_name'] == '03'
+        assert date.groupdict()['year'] == '2012'
+
 
 class TestDateIntervalRegex(unittest.TestCase):
 
@@ -223,6 +236,16 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['start_year'] is None
         assert interval.groupdict()['end_day'] == '7'
         assert interval.groupdict()['end_month_name'] == 'avril'
+        assert interval.groupdict()['end_year'] == '2013'
+
+    def test_date_interal_separator_superior_sign(self):
+        text = "03 > 07 décembre 2013"
+        interval = re.search(FR_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == '03'
+        assert interval.groupdict()['start_month_name'] is None
+        assert interval.groupdict()['start_year'] is None
+        assert interval.groupdict()['end_day'] == '07'
+        assert interval.groupdict()['end_month_name'] == 'décembre'
         assert interval.groupdict()['end_year'] == '2013'
 
     def test_numeric_date_interval(self):

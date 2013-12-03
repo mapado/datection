@@ -62,7 +62,7 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 # (ex: dd/mm/2012 or dd/mm/12)
 NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
-NUMERIC_DATE_SEPARATOR = r'[/\.]'
+NUMERIC_DATE_SEPARATOR = r'[/\.-]'
 # Dates of format dd/mm(/(yy)yy)
 _FR_NUMERIC_DATE = r"""
     (?P<day>{day})
@@ -116,7 +116,7 @@ FR_TIME_INTERVAL = re.compile(
 # * du 15 au 18 Mars. (prefix: 'au', suffix: 'du')
 # * du samedi 19 au mercredi 23 octobre 2013
 INTERVAL_PREFIX = r'du'
-INTERVAL_SUFFIX = r'(au|-)'
+INTERVAL_SUFFIX = r'(au|-|>)'
 _FR_DATE_INTERVAL = r"""
     ({prefix}\s)?
     ((?P<start_day>{day})(er)?)\s* # day number
