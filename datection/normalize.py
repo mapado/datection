@@ -154,14 +154,14 @@ class Date(Timepoint):
     def _set_year(self, year):
         """ Set and normalise the date year
 
-        If year is None (missing year) we replace it by the current year
+        If year is None (missing year) we replace it by the next year
         Elif the year is numeric but only 2 digit long, we guess in which
         century it is (ex: dd/mm/13 -> 1913, 2013, etc ?)
         Else, make sure the year is an int
 
         """
         if not year:
-            return datetime.date.today().year
+            return datetime.date.today().year + 1
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
@@ -548,7 +548,7 @@ class DateTime(Timepoint):
         if time:
             self.time = time
         if not (date and time):
-            year = self.data.get('year') or datetime.date.today().year
+            year = self.data.get('year') or datetime.date.today().year + 1
             month_name = self.data.get('month_name')
             day = self.data.get('day')
             start_time = self.data.get('start_time')

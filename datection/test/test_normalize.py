@@ -46,7 +46,7 @@ class TestSerializeFrDates(unittest.TestCase):
         assert parse(u' lundi 5 mars', 'fr')[0].valid
 
         d_no_year = parse(u'le 15 février de 15h à 20h, plop', 'fr')[0]
-        assert d_no_year.date.year == datetime.date.today().year
+        assert d_no_year.date.year == datetime.date.today().year + 1
         assert d_no_year.valid
         assert d_no_year.date.valid
 
@@ -226,7 +226,7 @@ class TestSerializeFrDateTime(unittest.TestCase):
     def test_missing_year(self):
         """ test the normalisation of a datetime with a missing year """
         dt = parse(u'le 8 octobre à 20h30', 'fr')[0]
-        assert dt.date.year == datetime.date.today().year
+        assert dt.date.year == datetime.date.today().year + 1
         assert dt.valid
         assert dt.date.valid
         assert dt.time.valid
