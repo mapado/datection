@@ -69,8 +69,9 @@ class LongDisplayTest(unittest.TestCase):
         text = u'le 5 avril à 15h30 et le 18 mai 2013 à 16h'
         schedule = datection.to_db(text, self.lang, only_future=False)
         output = datection.display(schedule, self.lang)
-        self.assertEqual(
-            output, u'Le 5 avril 2014 à 15 h 30\nLe 18 mai 2013 à 16 h')
+        year = datetime.date.today().year + 1
+        expected = u'Le 18 mai 2013 à 16 h\nLe 5 avril %d à 15 h 30' % (year)
+        self.assertItemsEqual(output, expected)
 
     def test_weekday_recurrence_all_year(self):
         text = u'tous les lundis'
