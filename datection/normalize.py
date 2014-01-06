@@ -853,17 +853,25 @@ class ContinuousDatetimeInterval(Timepoint):
 
     def __init__(self, data, **kwargs):
         super(ContinuousDatetimeInterval, self).__init__(data, **kwargs)
+        st_month = data.get('start_month') or data['start_month_name']
+        end_month = data.get('end_month') or data['end_month_name']
+
+        # Create a DateTime object from start date and time
         start_date = Date(year=self.data['start_year'],
-                          month_name=self.data['start_month_name'],
-                          day=self.data['start_day'], lang=self.lang)
-        start_time = Time(hour=self.data['start_hour'],
-                          minute=self.data['start_minute'])
+                          month_name=st_month, day=self.data['start_day'],
+                          lang=self.lang)
+        _start_time = Time(hour=self.data['start_hour'],
+                           minute=self.data['start_minute'])
+        start_time = TimeInterval(start_time=_start_time)
         self.start_datetime = DateTime(date=start_date, time=start_time)
+
+        # Create a DateTime object from end date and time
         end_date = Date(year=self.data['end_year'],
-                        month_name=self.data['end_month_name'],
+                        month_name=end_month,
                         day=self.data['end_day'], lang=self.lang)
-        end_time = Time(hour=self.data['end_hour'],
-                        minute=self.data['end_minute'])
+        _end_time = Time(hour=self.data['end_hour'],
+                         minute=self.data['end_minute'])
+        end_time = TimeInterval(start_time=_end_time)
         self.end_datetime = DateTime(date=end_date, time=end_time)
 
     @property
@@ -875,8 +883,29 @@ class ContinuousDatetimeInterval(Timepoint):
 
     @property
     def rrulestr(self):
-        """ Return a reccurence rule string tailored for a DateTimeInterval """
-        pass
+        """Return the ContinuousDatetimeInterval RRule string."""
+        start_dt = self.start_datetime.to_python()
+        start_time = start_dt.time()
+        start_date = start_dt.date()
+        end_dt = datetime.datetime.combine(
+            self.end_datetime.to_python().date(),
+            datetime.time(23, 59, 59))
+        return makerrulestr(
+            start_date, end_dt,
+            interval=1, byhour=start_time.hour, byminute=start_time.minute)
+
+    def to_db(self):
+        """Export the ContinuousDatetimeInterval to a database-ready format."""
+        return {
+            'rrule': self.rrulestr,
+            'duration': duration(start=self.start_datetime.to_python(),
+                                 end=self.end_datetime.to_python()),
+            'texts': self.text_to_db(),
+            'continuous': True,
+        }
+
+    def to_python(self):
+        return (self.start_datetime.to_python(), self.end_datetime.to_python())
 
 
 class WeekdayRecurrence(Timepoint):
