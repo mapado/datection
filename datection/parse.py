@@ -40,10 +40,10 @@ def parse(text, lang, valid=True):
                         timepoints.append(
                             timepoint_factory(
                                 family,
+                                lang,
                                 match.groupdict(),
                                 text=match.group(0),
-                                span=match.span(),
-                                lang=lang)
+                                span=match.span())
                         )
                     except NotImplementedError:
                         pass
