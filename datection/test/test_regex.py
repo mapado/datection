@@ -671,3 +671,38 @@ class TestWeekdayIntervalRecurrenceRegex(unittest.TestCase):
         text = "du lundi au vendredi, de 5h à 8h"
         match = re.search(FR_WEEKDAY_INTERVAL_RECURRENCE, text)
         self.assertEqual(match.group(), text)
+
+
+class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
+
+    def test_detection(self):
+        text = u"16 mai 2014, 20h00 au 17 mai 2014, 6h"
+        match = re.search(FR_CONTINUOUS_DATETIME_INTERVAL, text)
+        self.assertIsNotNone(match)
+        gdict = match.groupdict()
+        self.assertEqual(gdict['start_day'], u'16')
+        self.assertEqual(gdict['start_month_name'], u'mai')
+        self.assertEqual(gdict['start_year'], u'2014')
+        self.assertEqual(gdict['start_hour'], u'20')
+        self.assertEqual(gdict['start_minute'], u'00')
+        self.assertEqual(gdict['end_day'], u'17')
+        self.assertEqual(gdict['end_month_name'], u'mai')
+        self.assertEqual(gdict['end_year'], u'2014')
+        self.assertEqual(gdict['end_hour'], u'6')
+        self.assertIsNone(gdict['end_minute'])
+
+    def test_detection_numeric_date(self):
+        text = u"16/05/2014 à 20h00 au 17/05/2014 à 06h"
+        match = re.search(FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL, text)
+        self.assertIsNotNone(match)
+        gdict = match.groupdict()
+        self.assertEqual(gdict['start_day'], u'16')
+        self.assertEqual(gdict['start_month'], u'05')
+        self.assertEqual(gdict['start_year'], u'2014')
+        self.assertEqual(gdict['start_hour'], u'20')
+        self.assertEqual(gdict['start_minute'], u'00')
+        self.assertEqual(gdict['end_day'], u'17')
+        self.assertEqual(gdict['end_month'], u'05')
+        self.assertEqual(gdict['end_year'], u'2014')
+        self.assertEqual(gdict['end_hour'], u'06')
+        self.assertIsNone(gdict['end_minute'])
