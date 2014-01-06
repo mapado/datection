@@ -6,7 +6,7 @@ import datetime
 from dateutil.rrule import rrule, WEEKLY
 
 from .regex import WEEKDAY, MONTH, TIMEPOINT_REGEX, SHORT_MONTH
-from .utils import makerrulestr
+from .utils import makerrulestr, duration
 
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
@@ -609,20 +609,10 @@ class DateTime(Timepoint):
             (in min)
 
         """
-        # measure the duration
-        if self.time.end_time:
-            start_dt = datetime.datetime.combine(
-                self.date.to_python(),
-                self.time.start_time.to_python())
-            end_dt = datetime.datetime.combine(
-                self.date.to_python(),
-                self.time.end_time.to_python())
-            duration = (end_dt - start_dt).seconds / 60
-        else:
-            duration = 0
         return {
             'rrule': self.rrulestr,
-            'duration': duration,
+            'duration': duration(
+                start=self.time.start_time, end=self.time.end_time),
             'texts': self.text_to_db()
         }
 
@@ -819,20 +809,11 @@ class DateTimeInterval(Timepoint):
         return out
 
     def to_db(self):
-        # measure the duration
-        if self.time_interval.end_time:
-            start_dt = datetime.datetime.combine(
-                self.date_interval.start_date.to_python(),
-                self.time_interval.start_time.to_python())
-            end_dt = datetime.datetime.combine(
-                self.date_interval.start_date.to_python(),
-                self.time_interval.end_time.to_python())
-            duration = (end_dt - start_dt).seconds / 60
-        else:
-            duration = 0
         return {
             'rrule': self.rrulestr,
-            'duration': duration,
+            'duration': duration(
+                start=self.time_interval.start_time,
+                end=self.time_interval.end_time),
             'texts': self.text_to_db()
         }
 
@@ -988,12 +969,11 @@ class WeekdayRecurrence(Timepoint):
 
     def to_db(self):
         # measure the duration
-        end_time = datetime.datetime.combine(
+        end_datetime = datetime.datetime.combine(
             self.start_datetime, self.end_datetime.time())
-        duration = (end_time - self.start_datetime).seconds / 60
         return {
             'rrule': self.rrulestr,
-            'duration': duration,
+            'duration': duration(start=self.start_datetime, end=end_datetime),
             'texts': self.text_to_db()
         }
 
