@@ -862,7 +862,7 @@ class WeekdayRecurrence(Timepoint):
 
     def __init__(self, data={}, weekdays=None, start=None, end=None, **kwargs):
         super(WeekdayRecurrence, self).__init__(data, **kwargs)
-        self.weekdays = self._set_weekdays() if not weekdays else weekdays
+        self.weekdays = self._set_weekdays() if weekdays is None else weekdays
         if not start and not end:
             self.start_datetime, self.end_datetime = self._set_datetime_interval(
             )
