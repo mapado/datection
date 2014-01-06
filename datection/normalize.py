@@ -25,6 +25,7 @@ def timepoint_factory(detector, data, **kwargs):
         'date_list': DateList,
         'datetime_list': DateTimeList,
         'datetime_interval': DateTimeInterval,
+        'continuous_datetime_interval': ContinuousDatetimeInterval,
         'weekday_recurrence': WeekdayRecurrence,
         'weekday_interval_recurrence': WeekdayIntervalRecurrence,
         'allweekday_recurrence': AllWeekdayRecurrence,
@@ -846,6 +847,36 @@ class DateTimeInterval(Timepoint):
 
         """
         return self.date_interval.end_date.future(reference)
+
+
+class ContinuousDatetimeInterval(Timepoint):
+
+    def __init__(self, data, **kwargs):
+        super(ContinuousDatetimeInterval, self).__init__(data, **kwargs)
+        start_date = Date(year=self.data['start_year'],
+                          month_name=self.data['start_month_name'],
+                          day=self.data['start_day'], lang=self.lang)
+        start_time = Time(hour=self.data['start_hour'],
+                          minute=self.data['start_minute'])
+        self.start_datetime = DateTime(date=start_date, time=start_time)
+        end_date = Date(year=self.data['end_year'],
+                        month_name=self.data['end_month_name'],
+                        day=self.data['end_day'], lang=self.lang)
+        end_time = Time(hour=self.data['end_hour'],
+                        minute=self.data['end_minute'])
+        self.end_datetime = DateTime(date=end_date, time=end_time)
+
+    @property
+    def valid(self):
+        return all([self.start_datetime.valid, self.end_datetime.valid])
+
+    def future(self, reference=datetime.date.today()):
+        return self.end_datetime.future(reference)
+
+    @property
+    def rrulestr(self):
+        """ Return a reccurence rule string tailored for a DateTimeInterval """
+        pass
 
 
 class WeekdayRecurrence(Timepoint):

@@ -161,19 +161,21 @@ FR_NUMERIC_DATE_INTERVAL = re.compile(
 # Examples:
 # le mercredi 18 juin 2013 à 20h30
 # le 15 août 2013 de 15h30 à 16h45
-FR_DATETIME = re.compile(r"""
+_FR_DATETIME = r"""
     {date}\s*
     [^\d/]{{1,6}}
     {time}
-    """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL),
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    """.format(date=_FR_DATE, time=_FR_TIME_INTERVAL)
+FR_DATETIME = re.compile(_FR_DATETIME,
+                         flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-FR_NUMERIC_DATETIME = re.compile(r"""
+_FR_NUMERIC_DATETIME = r"""
     {date}\s*
     [^\d/]{{1,6}}
     {time}
-    """.format(date=_FR_NUMERIC_DATE, time=_FR_TIME_INTERVAL),
-    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    """.format(date=_FR_NUMERIC_DATE, time=_FR_TIME_INTERVAL)
+FR_NUMERIC_DATETIME = re.compile(_FR_NUMERIC_DATETIME,
+                                 flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # an interval of dates with a time information
 # Examples
@@ -335,8 +337,37 @@ _FR_ALL_WEEKDAY_RECURRENCE = r"""
 FR_ALL_WEEKDAY_RECURRENCE = re.compile(
     _FR_ALL_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
+FR_CONTINUOUS_DATETIME_INTERVAL_PREFIX = 'du'
+FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = 'au'
+_FR_CONTINUOUS_DATETIME_INTERVAL = r"""
+    ({weekday_name})?\s*  # day (optional)
+    ((?P<start_day>{day})(er)?)\s* # day number
+    (?P<start_month_name>{month_name})\s*  # month
+    (?P<start_year>{year})?\s* # year (optional)
+    [^\d]{{,4}}
+    (?P<start_hour>{hour})(\s)?
+    {sep}
+    (?P<start_minute>{minute})?\s
+    {suffix}\s*  # prefix (optional)
+    ({weekday_name})?\s*  # day (optional)
+    ((?P<end_day>{day})(er)?)\s* # day number # day number (optional)
+    (?P<end_month_name>{month_name})\s*  # month
+    (?P<end_year>{year})?  # year (optional)
+    [^\d]{{,4}}
+    (?P<end_hour>{hour})(\s)?
+    {sep}
+    (?P<end_minute>{minute})?
+    """.format(
+    weekday_name=FR_WEEKDAY, day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR,
+    hour=HOUR, minute=MINUTE, prefix=FR_CONTINUOUS_DATETIME_INTERVAL_PREFIX,
+    suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX, sep=TIME_SEPARATOR)
+
+FR_CONTINUOUS_DATETIME_INTERVAL = re.compile(_FR_CONTINUOUS_DATETIME_INTERVAL,
+                                             flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+
 TIMEPOINT_REGEX = {
-    'fr': {
+    'fr':
+    {
         'date': [FR_DATE, FR_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
@@ -346,6 +377,7 @@ TIMEPOINT_REGEX = {
         'datetime': [FR_DATETIME, FR_NUMERIC_DATETIME],
         'datetime_list': [FR_DATETIME_LIST_WEEKDAY, FR_DATETIME_LIST],
         'datetime_interval': [FR_DATETIME_INTERVAL, FR_NUMERIC_DATETIME_INTERVAL],
+        'continuous_datetime_interval': [FR_CONTINUOUS_DATETIME_INTERVAL],
         'weekday_recurrence': [FR_WEEKDAY_RECURRENCE],
         'weekday_interval_recurrence': [FR_WEEKDAY_INTERVAL_RECURRENCE],
         'allweekday_recurrence': [FR_ALL_WEEKDAY_RECURRENCE]
