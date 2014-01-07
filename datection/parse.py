@@ -42,7 +42,7 @@ def parse(text, lang, valid=True):
         for match, family in matches:
             try:
                 timepoint = timepoint_factory(
-                    family, match.groupdict(),
+                    detector=family, data=match.groupdict(),
                     text=match.group(0), lang=lang)
             except NotImplementedError:
                 pass
