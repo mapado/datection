@@ -149,6 +149,20 @@ class LongDisplayTest(unittest.TestCase):
             datection.display(schedule, self.lang, reference=d),
             expected)
 
+    def test_display_continuous_schedule_same_day(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 120,
+                'rrule': ('DTSTART:20140516\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                'BYMINUTE=0;INTERVAL=1;UNTIL=20140517T235959'),
+            }]
+        d = datetime.date(2012, 11, 19)  # the 'today' of the test
+        expected = u"Le 16 mai 2014 de 20 h à 22 h"
+        self.assertEqual(
+            datection.display(schedule, self.lang, reference=d),
+            expected)
+
 
 class ShortDisplayTest(unittest.TestCase):
 

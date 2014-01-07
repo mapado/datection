@@ -341,23 +341,29 @@ class BaseScheduleFormatter(object):
         end_datetime = start_datetime + datetime.timedelta(
             minutes=continuous.duration)
 
-        # format start date
+         # format start date
         start_date_fmt = self.format_date(start_datetime)
 
-        # format start time
-        start_time_interval = {'start': start_datetime, 'end': start_datetime}
-        start_time_fmt = self.format_time(start_time_interval)
+        if start_date == end_datetime.date():
+            time_interval = {'start': start_datetime, 'end': end_datetime}
+            time_interval_fmt = self.format_time(time_interval)
+            fmt = u"Le %s %s" % (start_date_fmt, time_interval_fmt)
+        else:
+            # format start time
+            start_time_interval = {
+                'start': start_datetime, 'end': start_datetime}
+            start_time_fmt = self.format_time(start_time_interval)
 
-        # format end date
-        end_date_fmt = self.format_date(end_datetime)
+            # format end date
+            end_date_fmt = self.format_date(end_datetime)
 
-        # format end time
-        end_time_interval = {'start': end_datetime, 'end': end_datetime}
-        end_time_fmt = self.format_time(end_time_interval)
+            # format end time
+            end_time_interval = {'start': end_datetime, 'end': end_datetime}
+            end_time_fmt = self.format_time(end_time_interval)
 
-        # Assemble everything
-        fmt = u"Du %s %s au %s %s" % (start_date_fmt, start_time_fmt,
-                                      end_date_fmt, end_time_fmt)
+            # Assemble everything
+            fmt = u"Du %s %s au %s %s" % (start_date_fmt, start_time_fmt,
+                                          end_date_fmt, end_time_fmt)
         return fmt
 
 
