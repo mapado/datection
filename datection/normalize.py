@@ -275,7 +275,7 @@ class DateList(Timepoint):
         end_date = dates[-1]
         if end_date.year:
             if end_date.year == datetime.MINYEAR:
-                end_date.year = datetime.date.today().year
+                end_date.year = datetime.date.today().year + 1
             for date in dates[:-1]:
                 if date.year == datetime.MINYEAR:
                     date.year = end_date.year
@@ -334,7 +334,6 @@ class DateInterval(Timepoint):
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
-        groupdict = digit_to_int(groupdict)
         start_date, end_date = cls._set_dates(groupdict, lang, kwargs['text'])
         return DateInterval(start_date, end_date, **kwargs)
 
@@ -349,7 +348,7 @@ class DateInterval(Timepoint):
             groupdict['start_year'] = groupdict['end_year']
         elif not (groupdict['start_year'] or groupdict['end_year']):
             groupdict['start_year'] = datetime.date.today().year + 1
-            groupdict['end_year'] = datetime.date.today().year + 1
+            groupdict['end_year'] = groupdict['start_year']
 
         # Create normalised start date of Date type
         start_date = Date(year=groupdict['start_year'],
@@ -367,7 +366,7 @@ class DateInterval(Timepoint):
         # warning, if end month occurs before start month, then end month
         # is next year
         if end_date.month < start_date.month:
-            if groupdict['end_year'] and not groupdict['start_year']:
+            if start_date.year == end_date.year:
                 start_date.year -= 1
             elif not groupdict['end_year']:
                 end_date.year += 1
