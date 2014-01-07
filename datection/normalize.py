@@ -44,16 +44,9 @@ class Timepoint(object):
 
     """ The mother class for all timepoint classes. """
 
-    def __init__(self, **kwargs):
-        """ Set all key/values in data and kwargs as instance arguments.
-
-        All pure numeric strings are converted to int.
-        All non-pure numeric strings are stripped.
-        All non-string values are inserted as-is.
-
-        """
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    def __init__(self, lang=None, text=None):
+        self.lang = lang
+        self.text = text
 
     def __eq__(self, other):
         return self.to_python() == other.to_python()
@@ -63,6 +56,10 @@ class Timepoint(object):
 
     def __hash__(self):
         return hash(str(self.to_python()))
+
+    def to_python(self):
+        """Converts the Timepoint instance to a pure python value."""
+        return None
 
     def future(self, reference=None):
         """Return whether the timepoint is located in the future."""

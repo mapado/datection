@@ -26,10 +26,8 @@ def parse(text, lang, valid=True):
     if not contexts:
         return []
 
-    timepoint_families = [
-        det for det in TIMEPOINT_REGEX[lang].keys()
-        if not det.startswith('_')
-    ]
+    timepoint_families = (det for det in TIMEPOINT_REGEX[lang].keys()
+                          if not det.startswith('_'))
 
     for context in contexts:
         matches = []
