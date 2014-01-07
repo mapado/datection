@@ -340,7 +340,6 @@ _FR_ALL_WEEKDAY_RECURRENCE = r"""
 FR_ALL_WEEKDAY_RECURRENCE = re.compile(
     _FR_ALL_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-FR_CONTINUOUS_DATETIME_INTERVAL_PREFIX = 'du'
 FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = 'au'
 _FR_CONTINUOUS_DATETIME_INTERVAL = r"""
     ({weekday_name})?\s*  # day (optional)
@@ -348,22 +347,17 @@ _FR_CONTINUOUS_DATETIME_INTERVAL = r"""
     (?P<start_month_name>{month_name})\s*  # month
     (?P<start_year>{year})?\s* # year (optional)
     [^\d]{{,4}}
-    (?P<start_hour>{hour})(\s)?
-    {sep}
-    (?P<start_minute>{minute})?\s
+    (?P<start_time>{time})(\s)?
     {suffix}\s*  # prefix (optional)
     ({weekday_name})?\s*  # day (optional)
     ((?P<end_day>{day})(er)?)\s* # day number # day number (optional)
     (?P<end_month_name>{month_name})\s*  # month
     (?P<end_year>{year})?  # year (optional)
     [^\d]{{,4}}
-    (?P<end_hour>{hour})(\s)?
-    {sep}
-    (?P<end_minute>{minute})?
+    (?P<end_time>{time})
     """.format(
     weekday_name=FR_WEEKDAY, day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR,
-    hour=HOUR, minute=MINUTE, prefix=FR_CONTINUOUS_DATETIME_INTERVAL_PREFIX,
-    suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX, sep=TIME_SEPARATOR)
+    time=_FR_TIME, suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX)
 
 FR_CONTINUOUS_DATETIME_INTERVAL = re.compile(
     _FR_CONTINUOUS_DATETIME_INTERVAL,
@@ -377,9 +371,7 @@ _FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = r"""
     ({sep})? # optional separator (if year not present)
     (?P<start_year>{year})?  # year (optional)
     [^\d]{{,4}}
-    (?P<start_hour>{hour})(\s)?
-    {hour_sep}
-    (?P<start_minute>{minute})?\s
+    (?P<start_time>{time})(\s)?
     {suffix}\s*  # prefix (optional)
     ({weekday_name})?\s*  # day (optional)
     (?P<end_day>{day})
@@ -388,14 +380,11 @@ _FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = r"""
     ({sep})? # optional separator (if year not present)
     (?P<end_year>{year})?  # year (optional)
     [^\d]{{,4}}
-    (?P<end_hour>{hour})(\s)?
-    {hour_sep}
-    (?P<end_minute>{minute})?
+    (?P<end_time>{time})
     """.format(
     weekday_name=FR_WEEKDAY, day=DAY_NUMBER, month=NUMERIC_MONTH,
-    year=NUMERIC_YEAR, hour=HOUR, minute=MINUTE,
-    suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX, hour_sep=TIME_SEPARATOR,
-    sep=NUMERIC_DATE_SEPARATOR)
+    year=NUMERIC_YEAR, time=_FR_TIME, sep=NUMERIC_DATE_SEPARATOR,
+    suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX)
 
 FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = re.compile(
     _FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL,

@@ -474,3 +474,64 @@ class TestSerializeFrDateTimeInterval(unittest.TestCase):
         """ Test that the datetlist is in the past. """
         dti = parse(u'du 7 au 8 octobre 2003 à 20h30', 'fr')[0]
         self.assertFalse(dti.future(reference=today))
+
+
+class TestNormalizeContinuousDatetimeInterval(unittest.TestCase):
+
+    def test_litteral_format(self):
+        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        self.assertEqual(cdti.start_datetime.to_python(),
+                         datetime.datetime(2013, 3, 8, 20, 0))
+        self.assertEqual(cdti.end_datetime.to_python(),
+                         datetime.datetime(2013, 3, 9, 5, 0))
+
+    def test_litteral_format_no_first_year(self):
+        text = u"Du 8 mars à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        self.assertEqual(cdti.start_datetime.to_python(),
+                         datetime.datetime(2013, 3, 8, 20, 0))
+        self.assertEqual(cdti.end_datetime.to_python(),
+                         datetime.datetime(2013, 3, 9, 5, 0))
+
+    def test_numeric_format(self):
+        text = u"Du 8/07/2013 à 23h00 au 9/07/2013 à 2h"
+        cdti = parse(text, 'fr')[0]
+        self.assertEqual(cdti.start_datetime.to_python(),
+                         datetime.datetime(2013, 7, 8, 23, 0))
+        self.assertEqual(cdti.end_datetime.to_python(),
+                         datetime.datetime(2013, 7, 9, 2, 0))
+
+    def test_numeric_format_no_first_year(self):
+        text = u"Du 8/07 à 23h00 au 9/07/2013 à 2h"
+        cdti = parse(text, 'fr')[0]
+        self.assertEqual(cdti.start_datetime.to_python(),
+                         datetime.datetime(2013, 7, 8, 23, 0))
+        self.assertEqual(cdti.end_datetime.to_python(),
+                         datetime.datetime(2013, 7, 9, 2, 0))
+
+    def test_future(self):
+        reference = datetime.date(2012, 8, 17)
+        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        self.assertTrue(cdti.future(reference))
+
+    def test_past(self):
+        reference = datetime.date(2014, 8, 17)
+        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        self.assertFalse(cdti.future(reference))
+
+    def test_rrulestr(self):
+        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        expected = ("DTSTART:20130308\nRRULE:FREQ=DAILY;BYHOUR=20;BYMINUTE=0;"
+                    "INTERVAL=1;UNTIL=20130309T235959")
+        self.assertEqual(cdti.rrulestr, expected)
+
+    def test_to_db(self):
+        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        cdti = parse(text, 'fr')[0]
+        to_db = cdti.to_db()
+        self.assertEqual(to_db['duration'], 540)
+        self.assertTrue(to_db['continuous'])

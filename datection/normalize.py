@@ -340,29 +340,45 @@ class DateInterval(Timepoint):
 
     @classmethod
     def _set_dates(cls, groupdict, lang, text):
-        """ Restore all missing data and serialize the start and end date """
+        """ Restore all missing groupdict and serialize the start and end date """
         # start date inherits from end month name if necessary
-        if not groupdict['start_month_name'] and groupdict['end_month_name']:
+        if (not groupdict.get('start_month_name')
+            and groupdict.get('end_month_name')):
             groupdict['start_month_name'] = groupdict['end_month_name']
 
-        if not groupdict['start_year'] and groupdict['end_year']:
+        if not groupdict.get('start_year') and groupdict.get('end_year'):
             groupdict['start_year'] = groupdict['end_year']
-        elif not (groupdict['start_year'] or groupdict['end_year']):
+        elif not (groupdict.get('start_year') or groupdict.get('end_year')):
             groupdict['start_year'] = datetime.date.today().year + 1
             groupdict['end_year'] = groupdict['start_year']
 
         # Create normalised start date of Date type
-        start_date = Date(year=groupdict['start_year'],
-                          month_name=groupdict['start_month_name'],
-                          day=groupdict['start_day'],
-                          lang=lang,
-                          text=text)
-        # create serialized end date of Date type
-        end_date = Date(year=groupdict['end_year'],
-                        month_name=groupdict['end_month_name'],
-                        day=groupdict['end_day'],
-                        lang=lang,
-                        text=text)
+        if groupdict.get('start_month_name'):
+            start_date = Date(year=groupdict['start_year'],
+                              month_name=groupdict['start_month_name'],
+                              day=groupdict['start_day'],
+                              lang=lang,
+                              text=text)
+        else:
+            start_date = Date(year=groupdict['start_year'],
+                              month=groupdict['start_month'],
+                              day=groupdict['start_day'],
+                              lang=lang,
+                              text=text)
+
+        # create normalized end date of Date type
+        if groupdict.get('end_month_name'):
+            end_date = Date(year=groupdict['end_year'],
+                            month_name=groupdict['end_month_name'],
+                            day=groupdict['end_day'],
+                            lang=lang,
+                            text=text)
+        else:
+            end_date = Date(year=groupdict['end_year'],
+                            month=groupdict['end_month'],
+                            day=groupdict['end_day'],
+                            lang=lang,
+                            text=text)
 
         # warning, if end month occurs before start month, then end month
         # is next year
@@ -463,7 +479,7 @@ class TimeInterval(Timepoint):
 
     """
 
-    def __init__(self, start_time, end_time, **kwargs):
+    def __init__(self, start_time, end_time=None, **kwargs):
         super(TimeInterval, self).__init__(**kwargs)
         self.start_time = start_time
         self.end_time = end_time
@@ -831,28 +847,25 @@ class DateTimeInterval(Timepoint):
 
 class ContinuousDatetimeInterval(Timepoint):
 
-    def __init__(self, data, **kwargs):
-        super(ContinuousDatetimeInterval, self).__init__(data, **kwargs)
-        st_month = data.get('start_month') or data['start_month_name']
-        end_month = data.get('end_month') or data['end_month_name']
+    def __init__(self, start_datetime, end_datetime, **kwargs):
+        super(ContinuousDatetimeInterval, self).__init__(**kwargs)
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
 
-        # Create a DateTime object from start date and time
-        start_date = Date(year=self.data['start_year'],
-                          month_name=st_month, day=self.data['start_day'],
-                          lang=self.lang)
-        _start_time = Time(hour=self.data['start_hour'],
-                           minute=self.data['start_minute'])
-        start_time = TimeInterval(start_time=_start_time)
-        self.start_datetime = DateTime(date=start_date, time=start_time)
+    @classmethod
+    def _from_groupdict(cls, groupdict, lang, **kwargs):
 
-        # Create a DateTime object from end date and time
-        end_date = Date(year=self.data['end_year'],
-                        month_name=end_month,
-                        day=self.data['end_day'], lang=self.lang)
-        _end_time = Time(hour=self.data['end_hour'],
-                         minute=self.data['end_minute'])
-        end_time = TimeInterval(start_time=_end_time)
-        self.end_datetime = DateTime(date=end_date, time=end_time)
+        # normalize the date and time regex matches
+        date_interval = DateInterval._from_groupdict(groupdict, lang, **kwargs)
+        time_interval = TimeInterval._from_groupdict(groupdict, lang, **kwargs)
+
+        # now, combine them into start/end DateTimes
+        start_datetime = DateTime(date_interval.start_date,
+                                  TimeInterval(time_interval.start_time))
+        end_datetime = DateTime(date_interval.end_date,
+                                TimeInterval(time_interval.end_time))
+        return ContinuousDatetimeInterval(
+            start_datetime, end_datetime, **kwargs)
 
     @property
     def valid(self):

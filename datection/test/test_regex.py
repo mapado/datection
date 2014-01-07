@@ -22,6 +22,8 @@ from datection.regex import FR_DATETIME_INTERVAL
 from datection.regex import FR_WEEKDAY_RECURRENCE
 from datection.regex import DAY_NUMBER
 from datection.regex import FR_WEEKDAY_INTERVAL_RECURRENCE
+from datection.regex import FR_CONTINUOUS_DATETIME_INTERVAL
+from datection.regex import FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL
 
 
 class TestDateRegex(unittest.TestCase):
@@ -690,33 +692,57 @@ class TestWeekdayIntervalRecurrenceRegex(unittest.TestCase):
 class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
 
     def test_detection(self):
-        text = u"16 mai 2014, 20h00 au 17 mai 2014, 6h"
+        text = u"du 16 mai 2014 à 20h00 au 17 mai 2014 à 6h"
         match = re.search(FR_CONTINUOUS_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()
         self.assertEqual(gdict['start_day'], u'16')
         self.assertEqual(gdict['start_month_name'], u'mai')
         self.assertEqual(gdict['start_year'], u'2014')
-        self.assertEqual(gdict['start_hour'], u'20')
-        self.assertEqual(gdict['start_minute'], u'00')
+        self.assertEqual(gdict['start_time'], u'20h00')
         self.assertEqual(gdict['end_day'], u'17')
         self.assertEqual(gdict['end_month_name'], u'mai')
         self.assertEqual(gdict['end_year'], u'2014')
-        self.assertEqual(gdict['end_hour'], u'6')
-        self.assertIsNone(gdict['end_minute'])
+        self.assertEqual(gdict['end_time'], u'6h')
+
+    def test_detection_no_year(self):
+        text = u"du 16 mai à 20h00 au 17 mai 2014 à 6h"
+        match = re.search(FR_CONTINUOUS_DATETIME_INTERVAL, text)
+        self.assertIsNotNone(match)
+        gdict = match.groupdict()
+        self.assertEqual(gdict['start_day'], u'16')
+        self.assertEqual(gdict['start_month_name'], u'mai')
+        self.assertIsNone(gdict['start_year'])
+        self.assertEqual(gdict['start_time'], u'20h00')
+        self.assertEqual(gdict['end_day'], u'17')
+        self.assertEqual(gdict['end_month_name'], u'mai')
+        self.assertEqual(gdict['end_year'], u'2014')
+        self.assertEqual(gdict['end_time'], u'6h')
 
     def test_detection_numeric_date(self):
-        text = u"16/05/2014 à 20h00 au 17/05/2014 à 06h"
+        text = u"du 16/05/2014 à 20h00 au 17/05/2014 à 6h"
         match = re.search(FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()
         self.assertEqual(gdict['start_day'], u'16')
         self.assertEqual(gdict['start_month'], u'05')
         self.assertEqual(gdict['start_year'], u'2014')
-        self.assertEqual(gdict['start_hour'], u'20')
-        self.assertEqual(gdict['start_minute'], u'00')
+        self.assertEqual(gdict['start_time'], u'20h00')
         self.assertEqual(gdict['end_day'], u'17')
         self.assertEqual(gdict['end_month'], u'05')
         self.assertEqual(gdict['end_year'], u'2014')
-        self.assertEqual(gdict['end_hour'], u'06')
-        self.assertIsNone(gdict['end_minute'])
+        self.assertEqual(gdict['end_time'], u'6h')
+
+    def test_detection_numeric_date_no_year(self):
+        text = u"du 16/05 à 20h00 au 17/05/2014 à 06h"
+        match = re.search(FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL, text)
+        self.assertIsNotNone(match)
+        gdict = match.groupdict()
+        self.assertEqual(gdict['start_day'], u'16')
+        self.assertEqual(gdict['start_month'], u'05')
+        self.assertIsNone(gdict['start_year'])
+        self.assertEqual(gdict['start_time'], u'20h00')
+        self.assertEqual(gdict['end_day'], u'17')
+        self.assertEqual(gdict['end_month'], u'05')
+        self.assertEqual(gdict['end_year'], u'2014')
+        self.assertEqual(gdict['end_time'], u'06h')
