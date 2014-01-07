@@ -80,3 +80,42 @@ def duration(start, end):
         start_dt = datetime.combine(today, start)
         end_dt = datetime.combine(today, end)
         return (end_dt - start_dt).seconds / 60
+
+
+def normalize_2digit_year(year):
+    """ Normalize a 2 digit year into a 4 digit one
+
+    Example: xx/xx/12 --> xx/xx/2012
+
+    WARNING: if a past date is written in this format (ex: 01/06/78)
+    it is impossible to know if it references the year 1978 or 2078.
+    If the 2-digit date is less than 15 years in the future,
+    we consider that it takes place in our century, otherwise,
+    it is considered as a past date
+
+    """
+    current_year = date.today().year
+    century = int(str(current_year)[:2])
+
+    # handle special case where the 2 digit year started with a 0
+    # int("07") = 7
+    if len(str(year)) == 1:
+        year = '0' + str(year)
+    else:
+        year = str(year)
+    if int(str(century) + year) - current_year < 15:
+        # if year is less than 15 years in the future, it is considered
+        # a future date
+        return int(str(century) + year)
+    else:
+        # else, it is treated as a past date
+        return int(str(century - 1) + year)
+
+
+def digit_to_int(kwargs):
+    """Convert all digit values to integer and return the kwargs dict"""
+    for k, v in kwargs.iteritems():
+        if v and isinstance(v, basestring):
+            if v.isdigit():
+                kwargs[k] = int(v)
+    return kwargs

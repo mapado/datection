@@ -7,7 +7,21 @@ Test suite of the timepoint regexes.
 import unittest
 import re
 
-from ..regex import *
+from datection.regex import FR_DATE
+from datection.regex import FR_NUMERIC_DATE
+from datection.regex import FR_DATE_INTERVAL
+from datection.regex import FR_NUMERIC_DATE_INTERVAL
+from datection.regex import FR_TIME
+from datection.regex import FR_TIME_INTERVAL
+from datection.regex import FR_DATETIME
+from datection.regex import FR_NUMERIC_DATETIME
+from datection.regex import FR_DATE_LIST_WEEKDAY
+from datection.regex import FR_DATETIME_LIST
+from datection.regex import FR_DATETIME_LIST_WEEKDAY
+from datection.regex import FR_DATETIME_INTERVAL
+from datection.regex import FR_WEEKDAY_RECURRENCE
+from datection.regex import DAY_NUMBER
+from datection.regex import FR_WEEKDAY_INTERVAL_RECURRENCE
 
 
 class TestDateRegex(unittest.TestCase):

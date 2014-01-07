@@ -13,7 +13,7 @@ it makes sense to use it only when necessary.
 
 import re
 
-from .regex import TIMEPOINT_PROBE
+from datection.regex import TIMEPOINT_PROBE
 
 
 class Context(object):

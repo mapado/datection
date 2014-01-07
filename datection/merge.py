@@ -7,8 +7,11 @@ Merge several datection Timepoints objects together
 import itertools
 import datetime
 
-from .normalize import DateInterval, DateTimeInterval, WeekdayRecurrence, \
-    WeekdayIntervalRecurrence, AllWeekdayRecurrence
+from datection.normalize import DateInterval
+from datection.normalize import DateTimeInterval
+from datection.normalize import WeekdayRecurrence
+from datection.normalize import WeekdayIntervalRecurrence
+from datection.normalize import AllWeekdayRecurrence
 
 # Recurrence scenarios
 WEEKDAY_REC = (
@@ -73,7 +76,7 @@ def _merge_weekdays(recurrences):
             start = datetime.datetime.combine(bounds[0], start_time[0])
             end = datetime.datetime.combine(bounds[1], end_time[0])
             merge = WeekdayRecurrence(
-                weekdays=weekday_set, start=start, end=end,
+                weekdays=weekday_set, start_datetime=start, end_datetime=end,
                 text=[item.text for item in group])
             merges.append(merge)
     return merges

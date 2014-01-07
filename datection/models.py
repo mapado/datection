@@ -1,11 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Utility models for datection.
 """
 
+from datetime import timedelta
+from datetime import datetime
+from datetime import time
 from dateutil.rrule import rrulestr
-from datetime import timedelta, datetime, time
 
-from .utils import lazy_property
+from datection.utils import lazy_property
 
 
 class DurationRRule(object):

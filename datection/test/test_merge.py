@@ -2,8 +2,10 @@
 
 import unittest
 
-from ..merge import _merge_date_bounds, _merge_weekdays, merge
-from ..parse import parse
+from datection.merge import _merge_date_bounds
+from datection.merge import _merge_weekdays
+from datection.merge import merge
+from datection.parse import parse
 
 
 class MergeScheduleTest(unittest.TestCase):

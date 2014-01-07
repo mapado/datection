@@ -8,9 +8,12 @@ from __future__ import division
 
 import unittest
 
-from ..similarity import jaccard_distance, discretise_day_interval, \
-    discretise_schedule, similarity
 from datetime import datetime
+
+from datection.similarity import jaccard_distance
+from datection.similarity import discretise_day_interval
+from datection.similarity import discretise_schedule
+from datection.similarity import similarity
 
 
 class ScheduleSimilarityTest(unittest.TestCase):

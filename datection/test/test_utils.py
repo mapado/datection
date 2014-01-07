@@ -3,8 +3,9 @@
 import unittest
 import datetime
 
-from ..models import DurationRRule
-from ..utils import isoformat_concat
+from datection.models import DurationRRule
+from datection.utils import isoformat_concat
+from datection.utils import normalize_2digit_year
 
 
 class UtilsTest(unittest.TestCase):
@@ -49,3 +50,9 @@ class UtilsTest(unittest.TestCase):
         wrapper = DurationRRule(duration_rrule)
         self.assertFalse(wrapper.is_recurring)
         self.assertFalse(wrapper.is_all_year_recurrence)
+
+    def test_serialize_2digit_year(self):
+        self.assertEqual(normalize_2digit_year(12), 2012)
+        self.assertEqual(normalize_2digit_year(20), 2020)
+        self.assertEqual(normalize_2digit_year(30), 1930)
+        self.assertEqual(normalize_2digit_year(80), 1980)

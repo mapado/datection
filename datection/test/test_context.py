@@ -7,7 +7,7 @@ datection.context module.
 
 import unittest
 
-from ..context import probe, Context, independants
+from datection.context import probe, Context, independants
 
 
 class TestContext(unittest.TestCase):
