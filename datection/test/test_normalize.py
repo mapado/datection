@@ -7,7 +7,7 @@ import datetime
 
 from datection.parse import parse
 from datection.export import to_python
-from ..normalize import *
+from datection.normalize import *
 
 
 # We pretend to be in the past
@@ -79,12 +79,6 @@ class TestSerializeFrDates(unittest.TestCase):
         """
         dates = parse(u'le 15 février 2013, plop, 15/02/2013', 'fr')
         assert len(dates) == 1
-
-    def test_serialize_2digit_year(self):
-        assert Date._normalize_2digit_year(12) == 2012
-        assert Date._normalize_2digit_year(20) == 2020
-        assert Date._normalize_2digit_year(30) == 1930
-        assert Date._normalize_2digit_year(80) == 1980
 
     def test_serialize_abbreviated_month(self):
         """ Test that an abbreviated month is correctlyt serialized, with or
@@ -301,9 +295,9 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
         """
         dtl = parse(u'le 6, 7, 8 octobre à 20h30', 'fr')[0]
         assert dtl.valid
-        assert dtl.datetimes[0].date.year == datetime.date.today().year
-        assert dtl.datetimes[1].date.year == datetime.date.today().year
-        assert dtl.datetimes[2].date.year == datetime.date.today().year
+        assert dtl.datetimes[0].date.year == datetime.date.today().year + 1
+        assert dtl.datetimes[1].date.year == datetime.date.today().year + 1
+        assert dtl.datetimes[2].date.year == datetime.date.today().year + 1
 
 
 class TestSerializeFrDateInterval(unittest.TestCase):
@@ -360,8 +354,8 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         di = parse(u'du 6 au 9 octobre', 'fr')[0]
         assert di.start_date.valid
         assert di.end_date.valid
-        assert di.start_date.year == datetime.date.today().year
-        assert di.end_date.year == datetime.date.today().year
+        assert di.start_date.year == datetime.date.today().year + 1
+        assert di.end_date.year == datetime.date.today().year + 1
         assert di.valid
 
     def test_numeric_dates_missing_first_year(self):
