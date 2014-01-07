@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+
 """ Test suite of the timepoint serialize suite. """
 
 import unittest
-
 import datetime
 
 from datection.parse import parse
@@ -12,7 +12,7 @@ from datection.parse import parse
 today = datetime.date(day=5, month=10, year=2008)
 
 
-class TestSerializeFrDates(unittest.TestCase):
+class TestNormalizeFrDates(unittest.TestCase):
 
     """ Test class of the Date serializer with french data"""
 
@@ -90,7 +90,7 @@ class TestSerializeFrDates(unittest.TestCase):
         self.assertEqual(date.month, 3)
 
 
-class TestSerializeFrTimeInterval(unittest.TestCase):
+class TestNormalizeFrTimeInterval(unittest.TestCase):
 
     """ Test class of the Time serializer on french data. """
 
@@ -143,7 +143,7 @@ class TestSerializeFrTimeInterval(unittest.TestCase):
              datetime.time(hour=16, minute=0)))
 
 
-class TestSerializeFrDateList(unittest.TestCase):
+class TestNormalizeFrDateList(unittest.TestCase):
 
     """ Test class of the DateList serializer with french data. """
 
@@ -195,7 +195,7 @@ class TestSerializeFrDateList(unittest.TestCase):
         self.assertFalse(datelist.future(reference=today))
 
 
-class TestSerializeFrDateTime(unittest.TestCase):
+class TestNormalizeFrDateTime(unittest.TestCase):
 
     """ Test class of the DateTime serializer with french data. """
 
@@ -240,7 +240,7 @@ class TestSerializeFrDateTime(unittest.TestCase):
         self.assertEqual(dt.time.start_time.minute, 30)
 
 
-class TestSerializeFrDateTimeList(unittest.TestCase):
+class TestNormalizeFrDateTimeList(unittest.TestCase):
 
     """ Test class of the DateTimeList serializer with french data."""
 
@@ -311,7 +311,7 @@ class TestSerializeFrDateTimeList(unittest.TestCase):
             dtl.datetimes[2].date.year, datetime.date.today().year + 1)
 
 
-class TestSerializeFrDateInterval(unittest.TestCase):
+class TestNormalizeFrDateInterval(unittest.TestCase):
 
     """ Test class of the DateInterval serializer with french data """
 
@@ -412,7 +412,7 @@ class TestSerializeFrDateInterval(unittest.TestCase):
         self.assertEqual(di.end_date.year, datetime.date.today().year + 1)
 
 
-class TestSerializeFrDateTimeInterval(unittest.TestCase):
+class TestNormalizeFrDateTimeInterval(unittest.TestCase):
 
     """ Test class of the DateTimeInterval serialize with french data """
 

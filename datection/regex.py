@@ -323,7 +323,8 @@ _FR_WEEKDAY_INTERVAL_RECURRENCE = r"""
     time_interval=_FR_TIME_INTERVAL)
 
 FR_WEEKDAY_INTERVAL_RECURRENCE = re.compile(
-    _FR_WEEKDAY_INTERVAL_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
+    _FR_WEEKDAY_INTERVAL_RECURRENCE,
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 
 # Recurrent 'all days' expression
