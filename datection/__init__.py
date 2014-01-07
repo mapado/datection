@@ -11,7 +11,7 @@ and/or python rrules and datetimes objects.
 """
 
 __title__ = 'datection'
-__version__ = '1.3.0'
+__version__ = '1.4.0'
 __author__ = 'Balthazar Rouberol'
 
 from datection.parse import parse
