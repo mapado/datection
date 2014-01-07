@@ -135,6 +135,20 @@ class LongDisplayTest(unittest.TestCase):
         self.assertEqual(
             output, u'Du lundi au vendredi, de 5 h à 8 h')
 
+    def test_display_continuous_schedule(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 600,
+                'rrule': ('DTSTART:20140516\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                'BYMINUTE=0;INTERVAL=1;UNTIL=20140517T235959'),
+            }]
+        d = datetime.date(2012, 11, 19)  # the 'today' of the test
+        expected = u"Du 16 mai 2014 à 20 h au 17 mai 2014 à 6 h"
+        self.assertEqual(
+            datection.display(schedule, self.lang, reference=d),
+            expected)
+
 
 class ShortDisplayTest(unittest.TestCase):
 
@@ -233,7 +247,7 @@ class ShortDisplayTest(unittest.TestCase):
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
             expected)
 
-    def test_short_display_unbounded_rrule(self):
+    def test_display_unbounded_rrule(self):
         schedule = [
             {
                 'duration': 0,
@@ -249,6 +263,20 @@ class ShortDisplayTest(unittest.TestCase):
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+    def test_display_continuous_schedule(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 600,
+                'rrule': ('DTSTART:20140516\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                'BYMINUTE=0;INTERVAL=1;UNTIL=20140517T235959'),
+            }]
+        d = datetime.date(2012, 11, 19)  # the 'today' of the test
+        expected = u"Le 16 mai de 20 h à 6 h"
+        self.assertEqual(
+            datection.display(schedule, self.lang, reference=d, short=True),
             expected)
 
 

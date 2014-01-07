@@ -49,6 +49,11 @@ class DurationRRule(object):
         return int(self.duration_rrule['duration'])
 
     @property
+    def is_continuous(self):
+        """Whether the rrule is to be taken by intervals, or continuously."""
+        return self.duration_rrule.get('continuous', False)
+
+    @property
     def start_datetime(self):
         """The DurationRRule start is a combination of the rrule.dstart
         and the start time.

@@ -156,7 +156,14 @@ class BaseScheduleFormatter(object):
     @lazy_property
     def non_recurring(self):
         """Select non recurring rrules from self.schedule"""
-        return [drr for drr in self.schedule if not drr.is_recurring]
+        return [drr for drr in self.schedule
+                if not drr.is_continuous
+                if not drr.is_recurring]
+
+    @lazy_property
+    def continuous(self):
+        """Select continuous rrules from self.schedule."""
+        return [drr for drr in self.schedule if drr.is_continuous]
 
     @staticmethod
     def format_output(fmt):
@@ -262,11 +269,12 @@ class BaseScheduleFormatter(object):
                 'hour': start.hour,
                 'minute': start.minute or ''}
         else:  # start time and end time
-            interval = _(u'de %(st_hour)s h %(st_minute)s à %(en_hour)s h %(en_minute)s') % {
-                'st_hour': start.hour or '',
-                'st_minute': start.minute or '',
-                'en_hour': end.hour or '',
-                'en_minute': end.minute or ''}
+            interval = _(u'de %(st_hour)s h %(st_minute)s à %(en_hour)s'
+                         ' h %(en_minute)s') % {
+                             'st_hour': start.hour or '',
+                             'st_minute': start.minute or '',
+                             'en_hour': end.hour or '',
+                             'en_minute': end.minute or ''}
 
         # replace potential double spaces (ex: "de 15 h  à ..")
         # because minute == ''
@@ -320,6 +328,36 @@ class BaseScheduleFormatter(object):
 
         # assemble
         fmt = ', '.join([part for part in [weekdays, interval, times] if part])
+        return fmt
+
+    def format_continuous(self, continuous):
+        """Format a continuous datetime interval associated with a duration."""
+        # reconstruct start/end date/times
+        rrule = continuous.rrule
+        start_date = rrule.dtstart.date()
+        start_time = datetime.time(
+            hour=rrule.byhour[0], minute=rrule.byminute[0])
+        start_datetime = datetime.datetime.combine(start_date, start_time)
+        end_datetime = start_datetime + datetime.timedelta(
+            minutes=continuous.duration)
+
+        # format start date
+        start_date_fmt = self.format_date(start_datetime)
+
+        # format start time
+        start_time_interval = {'start': start_datetime, 'end': start_datetime}
+        start_time_fmt = self.format_time(start_time_interval)
+
+        # format end date
+        end_date_fmt = self.format_date(end_datetime)
+
+        # format end time
+        end_time_interval = {'start': end_datetime, 'end': end_datetime}
+        end_time_fmt = self.format_time(end_time_interval)
+
+        # Assemble everything
+        fmt = u"Du %s %s au %s %s" % (start_date_fmt, start_time_fmt,
+                                      end_date_fmt, end_time_fmt)
         return fmt
 
 
@@ -455,6 +493,10 @@ class LongScheduleFormatter(BaseScheduleFormatter):
         for rec in self.recurring:
             fmt.append(self.format_rrule(rec))
 
+        # format continuous rrules
+        for continuous in self.continuous:
+            fmt.append(self.format_continuous(continuous))
+
         # format non recurring rrules
         for time_group, conseq_group in zip(self.time_groups, self.conseq_groups):
             list_fmt = ', '.join(
@@ -485,10 +527,23 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         super(ShortScheduleFormatter, self).__init__(schedule, lang)
         self.start, self.end = start, end
 
+    def __len__(self):
+        """Return the number of start/end datetime couples.
+
+        Ugly hack: a continuous rrule will generate n start/end intervals,
+        but will only count for one.
+
+        """
+        nb_continuous = len(self.continuous)
+        nb_continuous_days = len(
+            [dt for c in self.continuous for dt in c.rrule])
+        nb_tot = len(self.dates)
+        return nb_tot - nb_continuous_days + nb_continuous
+
     @lazy_property
     def dates(self):
-        """Convert self.schedule to a start/end datetime list and filter
-        out the obtained values outside of the (self.start, self.end)
+        """Convert self.schedule to a start / end datetime list and filter
+        out the obtained values outside of the(self.start, self.end)
         datetime range
 
         """
@@ -516,7 +571,8 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
     def format_short_date(self, dtime):
         """ Format a single date using the abbreviated litteral month name
 
-        Example: date(2013, 12, 6) -> 6 déc. (in French)
+        Example:
+            date(2013, 12, 6) -> 6 déc. (in French)
 
         """
         date = dtime.date()
@@ -532,7 +588,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             * + 3 dates
 
         """
-        num = len(self.dates) - 1
+        num = len(self) - 1
         # handle plural/singular case
         msg = gettext.ngettext(
             '+ %(num)d date', '+ %(num)d dates', num) % {'num': num}
@@ -540,7 +596,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
 
     def display(self, reference):
         """Return a human readable string describing self.schedule as shortly
-        as possible (ie: using abbreviated names), in the right language.
+        as possible(ie: using abbreviated names), in the right language.
 
         """
         out = []
@@ -558,7 +614,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
                 'times': ', '.join(fmt_times[:-1]),
                 'last_time': fmt_times[-1]}
         out.append(msg)
-        if len(self.dates) > 1:
+        if len(self) > 1:
             out.append(self.format_date_summary())
         return self.format_output(out)
 
@@ -568,11 +624,15 @@ def display(schedule, lang, short=False, bounds=(None, None),
     """Format a schedule into the shortest human readable sentence possible
 
     args:
-        schedule: (list) a list of rrule dicts, containing a duration
+        schedule:
+            (list) a list of rrule dicts, containing a duration
         and a RFC rrule
-        lang: (str) the wanted output language
-        short: (bool) if True, a shorter sentence will be generated
-        bounds: limit start/end datetimes beyond which the dates will
+        lang:
+            (str) the wanted output language
+        short:
+            (bool) if True, a shorter sentence will be generated
+        bounds:
+            limit start / end datetimes beyond which the dates will
         not event be considered
     """
     with calendar.TimeEncoding(getlocale(lang)):
