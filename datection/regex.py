@@ -341,7 +341,7 @@ _FR_ALL_WEEKDAY_RECURRENCE = r"""
 FR_ALL_WEEKDAY_RECURRENCE = re.compile(
     _FR_ALL_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = 'au'
+FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = r'(au|à)'
 _FR_CONTINUOUS_DATETIME_INTERVAL = r"""
     ({weekday_name})?\s*  # day (optional)
     ((?P<start_day>{day})(er)?)\s* # day number

@@ -692,7 +692,7 @@ class TestWeekdayIntervalRecurrenceRegex(unittest.TestCase):
 class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
 
     def test_detection(self):
-        text = u"du 16 mai 2014 à 20h00 au 17 mai 2014 à 6h"
+        text = u"du 16 mai 2014 à 20h00 à 17 mai 2014 à 6h".encode('utf-8')
         match = re.search(FR_CONTINUOUS_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()
@@ -706,7 +706,7 @@ class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
         self.assertEqual(gdict['end_time'], u'6h')
 
     def test_detection_no_year(self):
-        text = u"du 16 mai à 20h00 au 17 mai 2014 à 6h"
+        text = u"du 16 mai à 20h00 au 17 mai 2014 à 6h".encode('utf-8')
         match = re.search(FR_CONTINUOUS_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()
@@ -720,7 +720,7 @@ class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
         self.assertEqual(gdict['end_time'], u'6h')
 
     def test_detection_numeric_date(self):
-        text = u"du 16/05/2014 à 20h00 au 17/05/2014 à 6h"
+        text = u"du 16/05/2014 à 20h00 au 17/05/2014 à 6h".encode('utf-8')
         match = re.search(FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()
@@ -734,7 +734,7 @@ class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
         self.assertEqual(gdict['end_time'], u'6h')
 
     def test_detection_numeric_date_no_year(self):
-        text = u"du 16/05 à 20h00 au 17/05/2014 à 06h"
+        text = u"du 16/05 à 20h00 à 17/05/2014 à 06h".encode('utf-8')
         match = re.search(FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL, text)
         self.assertIsNotNone(match)
         gdict = match.groupdict()

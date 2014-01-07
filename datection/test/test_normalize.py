@@ -503,7 +503,7 @@ class TestNormalizeContinuousDatetimeInterval(unittest.TestCase):
                          datetime.datetime(2013, 7, 9, 2, 0))
 
     def test_numeric_format_no_first_year(self):
-        text = u"Du 8/07 à 23h00 au 9/07/2013 à 2h"
+        text = u"Du 8/07 à 23:00 au 9/07/2013 à 2:00"
         cdti = parse(text, 'fr')[0]
         self.assertEqual(cdti.start_datetime.to_python(),
                          datetime.datetime(2013, 7, 8, 23, 0))
@@ -512,13 +512,13 @@ class TestNormalizeContinuousDatetimeInterval(unittest.TestCase):
 
     def test_future(self):
         reference = datetime.date(2012, 8, 17)
-        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        text = u"Du 8 mars 2013 - 20h00 au 9 mars 2013 - 5h"
         cdti = parse(text, 'fr')[0]
         self.assertTrue(cdti.future(reference))
 
     def test_past(self):
         reference = datetime.date(2014, 8, 17)
-        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        text = u"8 mars 2013 à 20h00 à 9 mars 2013 à 5h"
         cdti = parse(text, 'fr')[0]
         self.assertFalse(cdti.future(reference))
 
@@ -530,7 +530,7 @@ class TestNormalizeContinuousDatetimeInterval(unittest.TestCase):
         self.assertEqual(cdti.rrulestr, expected)
 
     def test_to_db(self):
-        text = u"Du 8 mars 2013 à 20h00 au 9 mars 2013 à 5h"
+        text = u"Du 8 mars 2013 à 20h00 à 9 mars 2013 à 5h"
         cdti = parse(text, 'fr')[0]
         to_db = cdti.to_db()
         self.assertEqual(to_db['duration'], 540)
