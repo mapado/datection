@@ -2,7 +2,7 @@
 
 import datetime
 
-from .models import DurationRRule
+from datection.models import DurationRRule
 
 
 def is_future(schedule, reference=datetime.datetime.now()):

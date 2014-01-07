@@ -4,7 +4,8 @@ import unittest
 import datetime
 
 from datection.models import DurationRRule
-from datection.utils import isoformat_concat, normalize_2digit_year
+from datection.utils import isoformat_concat
+from datection.utils import normalize_2digit_year
 
 
 class UtilsTest(unittest.TestCase):

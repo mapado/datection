@@ -4,9 +4,11 @@
 
 import unittest
 
-from ..models import DurationRRule
+from datection.models import DurationRRule
 from dateutil.rrule import rrule
-from datetime import datetime, time, date
+from datetime import datetime
+from datetime import date
+from datetime import time
 
 
 class DurationRRuleTest(unittest.TestCase):

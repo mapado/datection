@@ -7,8 +7,11 @@ Merge several datection Timepoints objects together
 import itertools
 import datetime
 
-from .normalize import DateInterval, DateTimeInterval, WeekdayRecurrence, \
-    WeekdayIntervalRecurrence, AllWeekdayRecurrence
+from datection.normalize import DateInterval
+from datection.normalize import DateTimeInterval
+from datection.normalize import WeekdayRecurrence
+from datection.normalize import WeekdayIntervalRecurrence
+from datection.normalize import AllWeekdayRecurrence
 
 # Recurrence scenarios
 WEEKDAY_REC = (

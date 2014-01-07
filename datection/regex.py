@@ -2,7 +2,10 @@
 
 import re
 
-from .datenames import WEEKDAY, MONTH, SHORT_MONTH
+from datection.datenames import WEEKDAY
+from datection.datenames import MONTH
+from datection.datenames import SHORT_MONTH
+
 
 # words located before a date, giving hints about how it relates
 # to other dates

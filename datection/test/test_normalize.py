@@ -6,8 +6,6 @@ import unittest
 import datetime
 
 from datection.parse import parse
-from datection.export import to_python
-from datection.normalize import *
 
 
 # We pretend to be in the past

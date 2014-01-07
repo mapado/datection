@@ -8,10 +8,9 @@ of a timepoint
 import unittest
 import datetime
 
-from dateutil.rrule import *
+from dateutil.rrule import rrulestr
 
 from datection import parse
-from datection.normalize import *
 
 
 class TestDateRecurrence(unittest.TestCase):
@@ -25,9 +24,8 @@ class TestDateRecurrence(unittest.TestCase):
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
-        rrulestr = self.date.rrulestr
         target = 'DTSTART:20130125\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
-        self.assertEqual(rrulestr, target)
+        self.assertEqual(self.date.rrulestr, target)
 
     def test_to_db(self):
         """ Test the format returned by the 'to_db' Date method """
@@ -95,10 +93,9 @@ class TestDateIntervalRecurrence(unittest.TestCase):
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
-        rrulestr = self.interval.rrulestr
         target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=0;'
                   'BYMINUTE=0;INTERVAL=1;UNTIL=20130330')
-        self.assertEqual(rrulestr, target)
+        self.assertEqual(self.interval.rrulestr, target)
 
     def test_to_db(self):
         """ Test the format returned by the 'to_db' Date method """
@@ -141,10 +138,9 @@ class TestDateTimeRecurrence(unittest.TestCase):
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
-        rrulestr = self.datetime.rrulestr
         target = ('DTSTART:20130330\nRRULE:FREQ=DAILY;COUNT=1;'
                   'BYMINUTE=30;BYHOUR=15')
-        self.assertEqual(rrulestr, target)
+        self.assertEqual(self.datetime.rrulestr, target)
 
     def test_to_db(self):
         """ Test the format returned by the 'to_db' Date method """
@@ -202,10 +198,10 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
 
     def test_to_rrule(self):
         """ Test the format of the recurrence rule string """
-        rrulestr = self.interval.rrulestr
+        _rrulestr = self.interval.rrulestr
         target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=15;'
                   'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T235959')
-        self.assertEqual(rrulestr, target)
+        self.assertEqual(_rrulestr, target)
 
     def test_to_db(self):
         """ Test the format returned by the 'to_db' Date method """
@@ -232,10 +228,9 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         """ Test the format of the recurrence rule string """
         text = u"du 25 au 30 mars 2013 à 15h"
         interval = parse(text, self.lang)[0]
-        rrulestr = interval.rrulestr
         target = ('DTSTART:20130325\nRRULE:FREQ=DAILY;BYHOUR=15;'
                   'BYMINUTE=0;INTERVAL=1;UNTIL=20130330T235959')
-        self.assertEqual(rrulestr, target)
+        self.assertEqual(interval.rrulestr, target)
 
     def test_to_db_no_endtime(self):
         """ Test the format returned by the 'to_db' Date method """

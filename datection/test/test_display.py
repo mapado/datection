@@ -9,9 +9,12 @@ import unittest
 import datection
 import datetime
 
-from ..display import to_start_end_datetimes, \
-    consecutives, groupby_consecutive_dates, groupby_time, groupby_date
-from ..models import DurationRRule
+from datection.display import to_start_end_datetimes
+from datection.display import consecutives
+from datection.display import groupby_consecutive_dates
+from datection.display import groupby_time
+from datection.display import groupby_date
+from datection.models import DurationRRule
 
 
 class LongDisplayTest(unittest.TestCase):

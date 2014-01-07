@@ -6,7 +6,7 @@ Inter rrule distance calculation module
 from __future__ import division
 
 from datetime import timedelta
-from .models import DurationRRule
+from datection.models import DurationRRule
 
 
 def jaccard_distance(set1, set2):
