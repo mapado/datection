@@ -66,13 +66,7 @@ def duration(start, end):
 
     # return the difference bewteen the end datetime and start datetime
     if isinstance(start, datetime) and isinstance(end, datetime):
-        start_date = start.date()
-        end_date = end.date()
-        if start_date != end_date:
-            delta_days = (end_date - start_date).days
-            return delta_days * 24 * 60 + (end - start).seconds / 60
-        else:
-            return (end - start).seconds / 60
+        return int((end - start).total_seconds() / 60)
 
     # return the difference bewteen the two times
     if (isinstance(start, time) and isinstance(end, time)):

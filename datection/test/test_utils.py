@@ -6,6 +6,8 @@ import datetime
 from datection.models import DurationRRule
 from datection.utils import isoformat_concat
 from datection.utils import normalize_2digit_year
+from datection.utils import duration
+from datection.normalize import Time
 
 
 class UtilsTest(unittest.TestCase):
@@ -56,3 +58,28 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(normalize_2digit_year(20), 2020)
         self.assertEqual(normalize_2digit_year(30), 1930)
         self.assertEqual(normalize_2digit_year(80), 1980)
+
+    def test_duration_time(self):
+        start_time = datetime.time(20, 0)
+        end_time = datetime.time(21, 0)
+        self.assertEqual(duration(start_time, end_time), 60)
+
+    def test_duration_Time(self):
+        start_time = Time(hour=20, minute=0)
+        end_time = Time(hour=21, minute=0)
+        self.assertEqual(duration(start_time, end_time), 60)
+
+    def test_duration_datetime_same_day(self):
+        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime.datetime(2013, 8, 4, 21, 0)
+        self.assertEqual(duration(start_datetime, end_datetime), 60)
+
+    def test_duration_datetime_next_day(self):
+        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime.datetime(2013, 8, 5, 21, 0)
+        self.assertEqual(duration(start_datetime, end_datetime), 1500)
+
+    def test_duration_datetime(self):
+        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime.datetime(2013, 8, 6, 18, 0)
+        self.assertEqual(duration(start_datetime, end_datetime), 2760)
