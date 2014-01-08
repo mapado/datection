@@ -21,7 +21,7 @@ def jaccard_distance(set1, set2):
 
 
 def discretise_day_interval(start_datetime, end_datetime):
-    """Discretise the day interval of duration_rrule by 1 day slots
+    """Discretise the day interval of duration_rrule by 30 minutes slots
     """
     out = []
     current = start_datetime
