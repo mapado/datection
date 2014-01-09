@@ -346,6 +346,16 @@ class TestTimeRegex(unittest.TestCase):
         assert datetime.groupdict()['hour'] == '7'
         assert datetime.groupdict()['minute'] == '20'
 
+    def test_midnight(self):
+        """ Extract a time when hour is midnight"""
+        datetime = re.search(FR_TIME, "00h30")
+        assert datetime.groupdict()['hour'] == '00'
+        assert datetime.groupdict()['minute'] == '30'
+
+        datetime = re.search(FR_TIME, "0h30")
+        assert datetime.groupdict()['hour'] == '0'
+        assert datetime.groupdict()['minute'] == '30'
+
     def test_bad_formats(self):
         """ Checks that badly formatted strings are not extracted. """
         assert re.search(FR_TIME, "Dimanche 30 mai 2013 h30") is None

@@ -118,7 +118,9 @@ class TestNormalizeFrTimeInterval(unittest.TestCase):
         self.assertEqual(time_norm, (st_time, end_time))
 
     def test_all_interval_formats(self):
-        """ Test that all supported formats lead to equivalent serialized forms."""
+        """ Test that all supported formats lead to equivalent serialized forms
+
+        """
         self.assertIsNotNone(
             parse(u'15h30', 'fr')[0], parse(u'15:30', 'fr')[0])
         self.assertIsNotNone(
@@ -141,6 +143,12 @@ class TestNormalizeFrTimeInterval(unittest.TestCase):
             time_norm,
             (datetime.time(hour=15, minute=0),
              datetime.time(hour=16, minute=0)))
+
+    def test_midnight(self):
+        """Test the normalization of midnihght times."""
+        time = parse(u'00h12', 'fr')[0]
+        time_norm = time.to_python()
+        self.assertEqual(time_norm, datetime.time(hour=0, minute=12))
 
 
 class TestNormalizeFrDateList(unittest.TestCase):

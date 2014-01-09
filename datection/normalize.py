@@ -440,8 +440,8 @@ class Time(Timepoint):
     @classmethod
     def _from_groupdict(cls, groupdict, **kwargs):
         groupdict = digit_to_int(groupdict)
-        minute = groupdict.get('minute') if groupdict.get('minute') else 0
-        hour = groupdict['hour'] if groupdict['hour'] else None
+        minute = groupdict['minute'] if groupdict.get('minute') else 0
+        hour = groupdict['hour']
         return Time(hour, minute, **kwargs)
 
     @property

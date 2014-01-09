@@ -39,7 +39,7 @@ YEAR = r'2\d{3}'
 # hour: between 00 and 24. Can be 2 digit or 1-digit long.
 # The hour it must not be preceded by another digit
 # The minute must not be followed by another digit
-HOUR = r'(?<!\d)(0[1-9]|1[0-9]|2[0-4]|[0-9])(?!\d)'
+HOUR = r'(?<!\d)(0[0-9]|1[0-9]|2[0-4]|[0-9])(?!\d)'
 
 # Minute: bewteen 00 and 59
 MINUTE = r'[0-5][0-9]'
