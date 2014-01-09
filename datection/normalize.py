@@ -335,11 +335,11 @@ class DateInterval(Timepoint):
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
-        start_date, end_date = cls._set_dates(groupdict, lang, kwargs['text'])
+        start_date, end_date = cls._set_dates(groupdict, lang)
         return DateInterval(start_date, end_date, **kwargs)
 
     @classmethod
-    def _set_dates(cls, groupdict, lang, text):
+    def _set_dates(cls, groupdict, lang):
         """ Restore all missing groupdict and serialize the start and end date """
         # start date inherits from end month name if necessary
         if (not groupdict.get('start_month_name')
@@ -357,28 +357,24 @@ class DateInterval(Timepoint):
             start_date = Date(year=groupdict['start_year'],
                               month_name=groupdict['start_month_name'],
                               day=groupdict['start_day'],
-                              lang=lang,
-                              text=text)
+                              lang=lang)
         else:
             start_date = Date(year=groupdict['start_year'],
                               month=groupdict['start_month'],
                               day=groupdict['start_day'],
-                              lang=lang,
-                              text=text)
+                              lang=lang)
 
         # create normalized end date of Date type
         if groupdict.get('end_month_name'):
             end_date = Date(year=groupdict['end_year'],
                             month_name=groupdict['end_month_name'],
                             day=groupdict['end_day'],
-                            lang=lang,
-                            text=text)
+                            lang=lang)
         else:
             end_date = Date(year=groupdict['end_year'],
                             month=groupdict['end_month'],
                             day=groupdict['end_day'],
-                            lang=lang,
-                            text=text)
+                            lang=lang)
 
         # warning, if end month occurs before start month, then end month
         # is next year
@@ -735,36 +731,17 @@ class DateTimeInterval(Timepoint):
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         groupdict = digit_to_int(groupdict)
-        st = groupdict.get('start_time')
-        et = groupdict.get('end_time')
-        text = kwargs['text']
-        time_interval = cls._set_time_interval(st, et, lang)
-        date_interval = cls._set_date_interval(groupdict, lang, text)
+        time_interval = cls._set_time_interval(groupdict, lang)
+        date_interval = cls._set_date_interval(groupdict, lang)
         return DateTimeInterval(date_interval, time_interval, **kwargs)
 
     @classmethod
-    def _set_time_interval(self, start_time, end_time, lang):
-        return TimeInterval._from_groupdict(
-            {
-                'start_time': start_time,
-                'end_time': end_time
-            },
-            lang=lang)
+    def _set_time_interval(self, groupdict, lang):
+        return TimeInterval._from_groupdict(groupdict, lang)
 
     @classmethod
-    def _set_date_interval(cls, groupdict, lang, text):
-        # if the end month name (always prewent) is a number,
-        # it means that the date is written numerically
-        # so a numeric date interval regex must be used
-        # otherwise, the date is written "normally", so a litteral date
-        # interval regex is used
-        if isinstance(groupdict['end_month_name'], basestring):
-            re_date_interval = TIMEPOINT_REGEX[lang]['date_interval'][0]
-        else:
-            re_date_interval = TIMEPOINT_REGEX[lang]['date_interval'][1]
-        return DateInterval._from_groupdict(
-            re.search(re_date_interval, text).groupdict(),
-            lang=lang, text=text)
+    def _set_date_interval(cls, groupdict, lang):
+        return DateInterval._from_groupdict(groupdict, lang)
 
     @property
     def valid(self):
@@ -960,8 +937,7 @@ class WeekdayRecurrence(Timepoint):
         if groupdict.get('date_interval') and groupdict.get('time_interval'):
             datetime_interval = DateTimeInterval._from_groupdict(
                 groupdict,
-                lang=lang,
-                text=groupdict['date_interval'] + ' ' + groupdict['time_interval']).\
+                lang=lang).\
                 to_python()
             start_datetime = datetime_interval[0][0]
             end_datetime = datetime_interval[-1][-1]
