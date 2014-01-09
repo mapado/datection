@@ -797,7 +797,7 @@ class DateTimeInterval(Timepoint):
                 )
                 out.append((i_start_datetime, i_end_datetime))
             else:
-                out.append(i_start_datetime)
+                out.append((i_start_datetime, i_start_datetime))
 
         return out
 

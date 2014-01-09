@@ -465,13 +465,17 @@ class TestNormalizeFrDateTimeInterval(unittest.TestCase):
 
         # 2013-02-15
         datetime_interval = datetime_interval_list[0]
-        self.assertEqual(datetime_interval, datetime.datetime(
-            year=2013, month=2, day=15, hour=18, minute=30, second=0))
+        expected = (
+            datetime.datetime(2013, 2, 15, 18, 30),
+            datetime.datetime(2013, 2, 15, 18, 30))
+        self.assertEqual(datetime_interval, expected)
 
         # 2013-02-16
         datetime_interval = datetime_interval_list[1]
-        self.assertEqual(datetime_interval, datetime.datetime(
-            year=2013, month=2, day=16, hour=18, minute=30, second=0))
+        expected = (
+            datetime.datetime(2013, 2, 16, 18, 30),
+            datetime.datetime(2013, 2, 16, 18, 30))
+        self.assertEqual(datetime_interval, expected)
 
     def test_future_datetime_interval(self):
         """ Test that the datetime is in the future. """
