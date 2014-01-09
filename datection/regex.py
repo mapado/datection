@@ -86,8 +86,12 @@ FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 TIME_SEPARATOR = r'(h|:)'
 
 # Time, of form hhhmm, or hh:mm
-FR_TIME = r'(?P<hour>{hour})(\s)?{sep}(?P<minute>{minute})?'.format(
-    hour=HOUR, sep=TIME_SEPARATOR, minute=MINUTE)
+FR_TIME = re.compile(r"""
+    (?P<hour>{hour})(\s)?
+    {sep}
+    (?P<minute>{minute})?""".format(
+    hour=HOUR, sep=TIME_SEPARATOR, minute=MINUTE),
+    flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Same that FR_TIME, but with no group. Use it when several
 # times are matched (ex: time intervals)

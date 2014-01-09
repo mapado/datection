@@ -497,8 +497,7 @@ class TimeInterval(Timepoint):
         """ Normalize the start time into a Time object """
         if not start_time_text:
             return None
-        match = re.search(TIMEPOINT_REGEX[lang]['_time'][0], start_time_text,
-                          flags=re.IGNORECASE | re.UNICODE)
+        match = re.search(TIMEPOINT_REGEX[lang]['_time'][0], start_time_text)
         return Time._from_groupdict(match.groupdict(), lang=lang)
 
     @classmethod
@@ -507,8 +506,7 @@ class TimeInterval(Timepoint):
         # normalization of self.end_time into a Time object
         if not end_time_text:
             return None
-        match = re.search(TIMEPOINT_REGEX[lang]['_time'][0], end_time_text,
-                          flags=re.IGNORECASE | re.UNICODE)
+        match = re.search(TIMEPOINT_REGEX[lang]['_time'][0], end_time_text)
         return Time._from_groupdict(match.groupdict(), lang=lang)
 
     @property
@@ -581,11 +579,10 @@ class DateTime(Timepoint):
     @property
     def rrulestr(self):
         """ Return a reccurence rule string tailored for a DateTime """
-        start = self.date.to_python()
-        st = self.time.start_time
-        return makerrulestr(
-            start,
-            count=1, byhour=st.hour, byminute=st.minute)
+        start_date = self.date.to_python()
+        start_time = self.time.start_time
+        return makerrulestr(start_date, count=1, byhour=start_time.hour,
+                            byminute=start_time.minute)
 
     def to_python(self):
         start_datetime = datetime.datetime(
@@ -593,9 +590,7 @@ class DateTime(Timepoint):
             month=self.date.month,
             day=self.date.day,
             hour=self.time.start_time.hour,
-            minute=self.time.start_time.minute,
-            second=0
-        )
+            minute=self.time.start_time.minute)
 
         if self.time.end_time:
             end_datetime = datetime.datetime(
@@ -603,9 +598,7 @@ class DateTime(Timepoint):
                 month=self.date.month,
                 day=self.date.day,
                 hour=self.time.end_time.hour,
-                minute=self.time.end_time.minute,
-                second=0
-            )
+                minute=self.time.end_time.minute)
             return (start_datetime, end_datetime)
         else:
             return start_datetime
