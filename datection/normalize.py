@@ -458,8 +458,8 @@ class TimeInterval(Timepoint):
 
     def __iter__(self):
         """ Iteration over the start and end time. """
-        for time in [self.start_time, self.end_time]:
-            yield time
+        for _time in [self.start_time, self.end_time]:
+            yield _time
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
@@ -712,7 +712,7 @@ class DateTimeInterval(Timepoint):
         return DateTimeInterval(date_interval, time_interval, **kwargs)
 
     @classmethod
-    def _set_time_interval(self, groupdict, lang):
+    def _set_time_interval(cls, groupdict, lang):
         return TimeInterval._from_groupdict(groupdict, lang)
 
     @classmethod
@@ -1015,14 +1015,14 @@ class WeekdayIntervalRecurrence(WeekdayRecurrence):
 
         """
         start_weekday = groupdict['start_weekday'].rstrip('s').lower()
-        start_weekday_number = WEEKDAY[lang][start_weekday]
+        start_weekday_nb = WEEKDAY[lang][start_weekday]
         end_weekday = groupdict['end_weekday'].rstrip('s').lower()
-        end_weekday_number = WEEKDAY[lang][end_weekday]
+        end_weekday_nb = WEEKDAY[lang][end_weekday]
 
-        if start_weekday_number < end_weekday_number:
-            return range(start_weekday_number, end_weekday_number + 1)
+        if start_weekday_nb < end_weekday_nb:
+            return range(start_weekday_nb, end_weekday_nb + 1)
         else:
-            return range(start_weekday_number, 7) + range(end_weekday_number + 1)
+            return range(start_weekday_nb, 7) + range(end_weekday_nb + 1)
 
 
 class AllWeekdayRecurrence(WeekdayRecurrence):
