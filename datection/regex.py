@@ -51,9 +51,9 @@ MINUTE = r'[0-5][0-9]'
 # redudancy and un-maintainability
 _FR_DATE = r"""
     ((?P<day>{day})(er)?)\s* # day number (optional)
-    (?P<month_name>{month_name})\s*  # month
+    (?P<month>{month})\s*  # month
     (?P<year>{year})?  # year (optional)
-    """.format(day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+    """.format(day=DAY_NUMBER, month=FR_MONTH, year=YEAR)
 
 FR_DATE = re.compile(
     _FR_DATE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -71,7 +71,7 @@ _FR_NUMERIC_DATE = r"""
     (?<!/)  # not preceeded by a slash (to be safe)
     (?P<day>{day})
     {sep}  # separator
-    (?P<month_name>{month})
+    (?P<month>{month})
     ({sep})? # optional separator (if year not present)
     (?P<year>{year})?  # year (optional)
     """.format(
@@ -86,7 +86,7 @@ FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 _BACKWARDS_NUMERIC_DATE = r"""
     (?P<year>{year})  # year
     {sep}  # separator
-    (?P<month_name>{month})
+    (?P<month>{month})
     {sep} # separator
     (?P<day>{day})
     """.format(
@@ -144,16 +144,16 @@ INTERVAL_SUFFIX = r'(au|-|>)'
 _FR_DATE_INTERVAL = r"""
     ({prefix}\s)?
     ((?P<start_day>{day})(er)?)\s* # day number
-    (?P<start_month_name>{month_name})?\s*  # month (optional)
+    (?P<start_month>{month})?\s*  # month (optional)
     (?P<start_year>{year})?\s* # year (optional)
     (?P<suffix>{suffix})\s*  # prefix
     ({weekday_name})?\s*  # day (optional)
     ((?P<end_day>{day})(er)?)\s* # day number # day number (optional)
-    (?P<end_month_name>{month_name})?\s*  # month (optional)
+    (?P<end_month>{month})?\s*  # month (optional)
     (?P<end_year>{year})?  # year (optional)
     """.format(
     prefix=INTERVAL_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
-    month_name=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
+    month=FR_MONTH, year=YEAR, suffix=INTERVAL_SUFFIX)
 FR_DATE_INTERVAL = re.compile(
     _FR_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
@@ -162,7 +162,7 @@ _FR_NUMERIC_DATE_INTERVAL = r"""
     ({prefix}\s)?
     (?P<start_day>{day}) # day number
     {sep}
-    (?P<start_month_name>{month_name})\s* # month
+    (?P<start_month>{month})\s* # month
     (
         {sep}
         (?P<start_year>{year})\s  # year
@@ -170,14 +170,14 @@ _FR_NUMERIC_DATE_INTERVAL = r"""
     {suffix}\s  # prefix
     (?P<end_day>{day})  # day number # day number
     {sep}
-    (?P<end_month_name>{month_name})  # month
+    (?P<end_month>{month})  # month
     (
         {sep}
         (?P<end_year>{year})
     )?  # year
     """.format(
     prefix=INTERVAL_PREFIX, day=DAY_NUMBER, sep=NUMERIC_DATE_SEPARATOR,
-    month_name=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
+    month=NUMERIC_MONTH, year=NUMERIC_YEAR, suffix=INTERVAL_SUFFIX)
 FR_NUMERIC_DATE_INTERVAL = re.compile(
     _FR_NUMERIC_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
@@ -229,11 +229,11 @@ FR_DATE_LIST_SUFFIX = r'et'
 _FR_DATE_IN_LIST = r"""
         (?P<weekday_name>{weekday_name})?\s*  # day (optional)
         (?P<day>{day})\s* # day number
-        (?P<month_name>{month_name})?\s*
+        (?P<month>{month})?\s*
         (?P<year>{year})?\s*
     """.format(
     prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
-    month_name=FR_MONTH, year=YEAR)
+    month=FR_MONTH, year=YEAR)
 FR_DATE_IN_LIST = re.compile(
     _FR_DATE_IN_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
@@ -248,12 +248,12 @@ _FR_DATE_LIST_WEEKDAY = r"""
         ({suffix}\s*)?  # separator
         ({weekday_name})?\s*  # day (optional)
         {day}\s* # day number
-        {month_name}\s*
+        {month}\s*
         ({year})?\s*
     )
     """.format(
     suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
-    day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+    day=DAY_NUMBER, month=FR_MONTH, year=YEAR)
 
 FR_DATE_LIST_WEEKDAY = re.compile(
     _FR_DATE_LIST_WEEKDAY, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -268,12 +268,12 @@ _FR_DATE_LIST = r"""
         )+
         ({suffix}\s*)?  # separator
         {day}\s* # day number
-        {month_name}\s*
+        {month}\s*
         ({year})?\s*
     )
     """.format(
     suffix=FR_DATE_LIST_SUFFIX, weekday_name=FR_WEEKDAY,
-    day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR)
+    day=DAY_NUMBER, month=FR_MONTH, year=YEAR)
 
 FR_DATE_LIST = re.compile(
     _FR_DATE_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -366,19 +366,19 @@ FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = r'(au|à)'
 _FR_CONTINUOUS_DATETIME_INTERVAL = r"""
     ({weekday_name})?\s*  # day (optional)
     ((?P<start_day>{day})(er)?)\s* # day number
-    (?P<start_month_name>{month_name})\s*  # month
+    (?P<start_month>{month})\s*  # month
     (?P<start_year>{year})?\s* # year (optional)
     [^\d]{{,4}}
     (?P<start_time>{time})(\s)?
     {suffix}\s*  # prefix (optional)
     ({weekday_name})?\s*  # day (optional)
     ((?P<end_day>{day})(er)?)\s* # day number # day number (optional)
-    (?P<end_month_name>{month_name})\s*  # month
+    (?P<end_month>{month})\s*  # month
     (?P<end_year>{year})?  # year (optional)
     [^\d]{{,4}}
     (?P<end_time>{time})
     """.format(
-    weekday_name=FR_WEEKDAY, day=DAY_NUMBER, month_name=FR_MONTH, year=YEAR,
+    weekday_name=FR_WEEKDAY, day=DAY_NUMBER, month=FR_MONTH, year=YEAR,
     time=_FR_TIME, suffix=FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX)
 
 FR_CONTINUOUS_DATETIME_INTERVAL = re.compile(

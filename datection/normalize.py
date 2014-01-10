@@ -5,8 +5,8 @@ import datetime
 
 from dateutil.rrule import rrule, WEEKLY
 from datection.regex import WEEKDAY
-from datection.regex import MONTH
 from datection.regex import TIMEPOINT_REGEX
+from datection.regex import MONTH
 from datection.regex import SHORT_MONTH
 from datection.utils import makerrulestr
 from datection.utils import normalize_2digit_year
@@ -80,32 +80,11 @@ class Date(Timepoint):
 
     """Date normalizer, in charge of normalizing date regex matches."""
 
-    def __init__(self, year, day, month=None, month_name=None, **kwargs):
+    def __init__(self, year, month, day, **kwargs):
         super(Date, self).__init__(**kwargs)
-        # if the year is None, set its value to datetime.MINYEAR (= 1)
-        # in this case, the date will be considered as invalid
-        if year:
-            if len(str(year)) == 4:
-                self.year = int(year)
-            elif len(str(year)) == 2:
-                # if a 2 digit year has been passed as argument, it needs
-                # to be normalized
-                self.year = normalize_2digit_year(year)
-            else:
-                self.year = year
-        else:
-            self.year = datetime.MINYEAR
-
-        # if month is not given but month name is, deduce month from it
-        if month:
-            self.month = int(month)
-        elif month_name:
-            # deduce month number from month name
-            self.month = self._set_month(month_name, kwargs['lang'])
-        else:
-            self.month = None
-
-        self.day = int(day)
+        self.year = year
+        self.month = month
+        self.day = day
 
     def __repr__(self):
         return '{d}/{m}/{y}'.format(d=self.day, m=self.month, y=self.year)
@@ -114,9 +93,9 @@ class Date(Timepoint):
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         """Create a Date instance from a regex match groupdict."""
         year = cls._set_year(groupdict.get('year'))
-        month = cls._set_month(groupdict.get('month_name'), lang)
+        month = cls._set_month(groupdict['month'], lang)
         day = cls._set_day(groupdict.get('day'))
-        return Date(year=year, month=month, day=day, **kwargs)
+        return Date(year=year, month=month, day=day, lang=lang, **kwargs)
 
     @classmethod
     def _set_year(cls, year):
@@ -129,7 +108,7 @@ class Date(Timepoint):
 
         """
         if not year:
-            # if year is not given, set year as next year
+        # if year is not given, set year as next year
             return datetime.date.today().year + 1
 
         # Case of a numeric date with short year format
@@ -139,30 +118,26 @@ class Date(Timepoint):
             return int(year)
 
     @classmethod
-    def _set_month(cls, month_name, lang):
-        """Set the date month from the date month name
+    def _set_month(cls, month, lang):
+        """Return the month number from the month name
 
-        If the month name is an integer, return it as is.
-        If the month name is a string, return is numeric value,
-        whether the month name is abbreviated or not.
+        If the month is an integer, or a digit string, return its int
+        version.
+        The month name can be abbreviated or whole.
 
         """
-        if isinstance(month_name, basestring):  # string date
-            if month_name.isdigit():
-                return int(month_name)
-            # if month name is whole
-            elif month_name.lower() in MONTH[lang]:
-                return MONTH[lang][month_name.lower()]
-            # if month name is abbreviated
-            else:
-                # remove trailing dot, if any
-                month_name = month_name.rstrip('.')
-                if month_name.lower() in SHORT_MONTH[lang]:
-                    return SHORT_MONTH[lang][month_name.lower()]
-        elif isinstance(month_name, int):  # numeric date
-            return month_name
-        else:
-            return None
+        if not month:
+            return
+        if isinstance(month, int):
+            return month
+        elif month.isdigit():
+            return int(month)
+
+        # if month name is abbreviated
+        month = month.rstrip('.').lower()
+        if month in SHORT_MONTH[lang]:
+            return SHORT_MONTH[lang][month]
+        return MONTH[lang][month]
 
     @classmethod
     def _set_day(cls, day):
@@ -258,10 +233,6 @@ class DateList(Timepoint):
         dates = []
         for date in re.finditer(TIMEPOINT_REGEX[lang]['_date_in_list'][0],
                                 groupdict['date_list']):
-            # Assign datetime.MINYEAR to year, if year is None
-            # It will be a marker allowing the year to be replaced
-            # by the same value as the last year of the list
-            # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
             groupdict = date.groupdict()
             if not groupdict['year']:
                 groupdict['year'] = datetime.MINYEAR
@@ -273,6 +244,10 @@ class DateList(Timepoint):
     @staticmethod
     def _set_year(dates):
         """ All dates without a year will inherit from the end date year """
+        # Assign datetime.MINYEAR to year, if year is None
+        # It will be a marker allowing the year to be replaced
+        # by the same value as the last year of the list
+        # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
         end_date = dates[-1]
         if end_date.year:
             if end_date.year == datetime.MINYEAR:
@@ -342,9 +317,9 @@ class DateInterval(Timepoint):
     def _set_dates(cls, groupdict, lang):
         """ Restore all missing groupdict and serialize the start and end date """
         # start date inherits from end month name if necessary
-        if (not groupdict.get('start_month_name')
-            and groupdict.get('end_month_name')):
-            groupdict['start_month_name'] = groupdict['end_month_name']
+        if (not groupdict.get('start_month')
+            and groupdict.get('end_month')):
+            groupdict['start_month'] = groupdict['end_month']
 
         if not groupdict.get('start_year') and groupdict.get('end_year'):
             groupdict['start_year'] = groupdict['end_year']
@@ -353,28 +328,20 @@ class DateInterval(Timepoint):
             groupdict['end_year'] = groupdict['start_year']
 
         # Create normalised start date of Date type
-        if groupdict.get('start_month_name'):
-            start_date = Date(year=groupdict['start_year'],
-                              month_name=groupdict['start_month_name'],
-                              day=groupdict['start_day'],
-                              lang=lang)
-        else:
-            start_date = Date(year=groupdict['start_year'],
-                              month=groupdict['start_month'],
-                              day=groupdict['start_day'],
-                              lang=lang)
+        start_date_groupdict = {
+            'day': groupdict['start_day'],
+            'month': groupdict['start_month'],
+            'year': groupdict['start_year']
+        }
+        start_date = Date._from_groupdict(start_date_groupdict, lang=lang)
 
         # create normalized end date of Date type
-        if groupdict.get('end_month_name'):
-            end_date = Date(year=groupdict['end_year'],
-                            month_name=groupdict['end_month_name'],
-                            day=groupdict['end_day'],
-                            lang=lang)
-        else:
-            end_date = Date(year=groupdict['end_year'],
-                            month=groupdict['end_month'],
-                            day=groupdict['end_day'],
-                            lang=lang)
+        end_date_groupdict = {
+            'day': groupdict['end_day'],
+            'month': groupdict['end_month'],
+            'year': groupdict['end_year']
+        }
+        end_date = Date._from_groupdict(end_date_groupdict, lang=lang)
 
         # warning, if end month occurs before start month, then end month
         # is next year
@@ -543,23 +510,24 @@ class DateTime(Timepoint):
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         groupdict = digit_to_int(groupdict)
-        year = groupdict.get('year') or datetime.date.today().year + 1
-        month_name = groupdict.get('month_name')
-        day = groupdict.get('day')
-        start_time = groupdict.get('start_time')
-        end_time = groupdict.get('end_time')
-        date = cls._set_date(year, month_name, day, lang)
-        time = cls._set_time(start_time, end_time, lang)
+        date = cls._set_date(groupdict, lang)
+        time = cls._set_time(groupdict, lang)
         return DateTime(date, time, **kwargs)
 
     @classmethod
-    def _set_date(cls, year, month_name, day, lang):
+    def _set_date(cls, groupdict, lang):
         """Set the datetime date, as a Date object."""
-        return Date(year=year, month_name=month_name, day=day, lang=lang)
+        year = groupdict.get('year') or datetime.date.today().year + 1
+        month = groupdict.get('month')
+        day = groupdict.get('day')
+        date_groupdict = {'day': day, 'month': month, 'year': year}
+        return Date._from_groupdict(date_groupdict, lang=lang)
 
     @classmethod
-    def _set_time(cls, start_time, end_time, lang):
+    def _set_time(cls, groupdict, lang):
         """Set the datetime time, as a TimeInterval object."""
+        start_time = groupdict.get('start_time')
+        end_time = groupdict.get('end_time')
         st_match = re.search(
             TIMEPOINT_REGEX[lang]['_time'][0], start_time)
         st = Time._from_groupdict(st_match.groupdict())
