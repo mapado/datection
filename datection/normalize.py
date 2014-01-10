@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 
+"""
+Normalization tools converting date-related regex matches into pure
+python objects (date, time, datetime, rrule, etc), supporting a
+conversion into a NoSQL database ready format.
+
+"""
+
 import re
-import datetime
+from datetime import datetime
+from datetime import date
+from datetime import time
+from datetime import timedelta
+from datetime import MINYEAR
 
 from dateutil.rrule import rrule, WEEKLY
 from datection.regex import WEEKDAY
@@ -109,7 +120,7 @@ class Date(Timepoint):
         """
         if not year:
         # if year is not given, set year as next year
-            return datetime.date.today().year + 1
+            return date.today().year + 1
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
@@ -152,10 +163,10 @@ class Date(Timepoint):
 
         """
         if all([self.year, self.month, self.day]):
-            if self.year == datetime.MINYEAR:
+            if self.year == MINYEAR:
                 return False
             try:  # check if date is valid
-                datetime.date(year=self.year, month=self.month, day=self.day)
+                date(year=self.year, month=self.month, day=self.day)
             except ValueError:
                 return False
             else:
@@ -172,8 +183,7 @@ class Date(Timepoint):
     def to_python(self):
         """Convert a Date object to a datetime.object"""
         try:
-            return datetime.date(
-                year=self.year, month=self.month, day=self.day)
+            return date(year=self.year, month=self.month, day=self.day)
         except TypeError:
             # Eg: if one of the attributes is None
             return None
@@ -189,7 +199,7 @@ class Date(Timepoint):
             'texts': self.text_to_db()
         }
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Returns whether the Date is located in the future.
 
         The default time reference is the day of the method execution.
@@ -209,8 +219,8 @@ class DateList(Timepoint):
 
     def __iter__(self):
         """Iterate over the list of dates"""
-        for date in self.dates:
-            yield date
+        for _date in self.dates:
+            yield _date
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
@@ -231,30 +241,29 @@ class DateList(Timepoint):
     def _set_dates(cls, groupdict, lang, text):
         """Normalize the dates and return a list of Date objects."""
         dates = []
-        for date in re.finditer(TIMEPOINT_REGEX[lang]['_date_in_list'][0],
-                                groupdict['date_list']):
-            groupdict = date.groupdict()
+        for match in re.finditer(TIMEPOINT_REGEX[lang]['_date_in_list'][0],
+                                 groupdict['date_list']):
+            groupdict = match.groupdict()
             if not groupdict['year']:
-                groupdict['year'] = datetime.MINYEAR
-            date = Date._from_groupdict(groupdict, lang=lang, text=text)
-            dates.append(date)
-
+                groupdict['year'] = MINYEAR
+            _date = Date._from_groupdict(groupdict, lang=lang, text=text)
+            dates.append(_date)
         return dates
 
     @staticmethod
     def _set_year(dates):
         """ All dates without a year will inherit from the end date year """
-        # Assign datetime.MINYEAR to year, if year is None
+        # Assign MINYEAR to year, if year is None
         # It will be a marker allowing the year to be replaced
         # by the same value as the last year of the list
         # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
         end_date = dates[-1]
         if end_date.year:
-            if end_date.year == datetime.MINYEAR:
-                end_date.year = datetime.date.today().year + 1
-            for date in dates[:-1]:
-                if date.year == datetime.MINYEAR:
-                    date.year = end_date.year
+            if end_date.year == MINYEAR:
+                end_date.year = date.today().year + 1
+            for _date in dates[:-1]:
+                if _date.year == MINYEAR:
+                    _date.year = end_date.year
         return dates
 
     @staticmethod
@@ -262,25 +271,25 @@ class DateList(Timepoint):
         """ All dates without a month will inherit from the end date month """
         end_date = dates[-1]
         if end_date.month:
-            for date in dates[:-1]:
-                if not date.month:
-                    date.month = end_date.month
+            for _date in dates[:-1]:
+                if not _date.month:
+                    _date.month = end_date.month
         return dates
 
     @property
     def valid(self):
         """ Check that all dates in self.dates are valid. """
-        return all([date.valid for date in self.dates])
+        return all([_date.valid for _date in self.dates])
 
     def to_python(self):
         """Convert self.dates to a list of datetime.date objects."""
-        return [date.to_python() for date in self.dates]
+        return [_date.to_python() for _date in self.dates]
 
     def to_db(self):
         """Convert self.dates to a list of duration rrules."""
-        return [date.to_db() for date in self.dates]
+        return [_date.to_db() for _date in self.dates]
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Returns whether the DateList is located in the future.
 
         A DateList is considered future even if a part of its dates
@@ -305,8 +314,8 @@ class DateInterval(Timepoint):
 
     def __iter__(self):
         """ Iteration through the self.dates list. """
-        for date in [self.start_date, self.end_date]:
-            yield date
+        for _date in [self.start_date, self.end_date]:
+            yield _date
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
@@ -324,7 +333,7 @@ class DateInterval(Timepoint):
         if not groupdict.get('start_year') and groupdict.get('end_year'):
             groupdict['start_year'] = groupdict['end_year']
         elif not (groupdict.get('start_year') or groupdict.get('end_year')):
-            groupdict['start_year'] = datetime.date.today().year + 1
+            groupdict['start_year'] = date.today().year + 1
             groupdict['end_year'] = groupdict['start_year']
 
         # Create normalised start date of Date type
@@ -366,7 +375,7 @@ class DateInterval(Timepoint):
         return makerrulestr(start, end, interval=1, byhour=0, byminute=0)
 
     def to_python(self):
-        return [date.to_python() for date in self]
+        return [_date.to_python() for _date in self]
 
     def to_db(self):
         """ Return a dict containing the recurrence rule and the duration
@@ -379,7 +388,7 @@ class DateInterval(Timepoint):
             'texts': self.text_to_db()
         }
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Returns whether the DateInterval is located in the future.
 
         A DateInterval is considered future if its end date is located
@@ -417,7 +426,7 @@ class Time(Timepoint):
         """
         if self.hour is not None and self.minute is not None:
             try:  # check if time is valid
-                datetime.time(self.hour, self.minute)
+                time(self.hour, self.minute)
             except ValueError:
                 return False
             else:
@@ -429,7 +438,7 @@ class Time(Timepoint):
         """Convert a Time object to a datetime.time object."""
         if not self.valid:
             return None
-        return datetime.time(hour=int(self.hour), minute=int(self.minute))
+        return time(hour=int(self.hour), minute=int(self.minute))
 
     def to_db(self):
         return None
@@ -517,7 +526,7 @@ class DateTime(Timepoint):
     @classmethod
     def _set_date(cls, groupdict, lang):
         """Set the datetime date, as a Date object."""
-        year = groupdict.get('year') or datetime.date.today().year + 1
+        year = groupdict.get('year') or date.today().year + 1
         month = groupdict.get('month')
         day = groupdict.get('day')
         date_groupdict = {'day': day, 'month': month, 'year': year}
@@ -553,7 +562,7 @@ class DateTime(Timepoint):
                             byminute=start_time.minute)
 
     def to_python(self):
-        start_datetime = datetime.datetime(
+        start_datetime = datetime(
             year=self.date.year,
             month=self.date.month,
             day=self.date.day,
@@ -561,7 +570,7 @@ class DateTime(Timepoint):
             minute=self.time.start_time.minute)
 
         if self.time.end_time:
-            end_datetime = datetime.datetime(
+            end_datetime = datetime(
                 year=self.date.year,
                 month=self.date.month,
                 day=self.date.day,
@@ -583,7 +592,7 @@ class DateTime(Timepoint):
             'texts': self.text_to_db()
         }
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Return whether the datetime is located in the future.
 
         The default time reference is the day of the method execution.
@@ -630,28 +639,32 @@ class DateTimeList(Timepoint):
         datetimes = []
         # Extract the date list and create a DateList object
         for date_list_pattern in TIMEPOINT_REGEX[lang]['date_list']:
-            dl = re.search(date_list_pattern, dates)
-            if dl:
+            dl_match = re.search(date_list_pattern, dates)
+            if dl_match:
                 date_list = DateList._from_groupdict(
-                    dl.groupdict(), text=dl.group(0), lang=lang)
+                    dl_match.groupdict(), text=dl_match.group(0), lang=lang)
                 break
         # extract the time interval and create a TimeInterval object
-        st = re.search(TIMEPOINT_REGEX[lang]['_time'][0], start_time)
-        st = Time._from_groupdict(st.groupdict())
-        if not end_time:
-            ti = TimeInterval(start_time=st, end_time=None, lang=lang)
-        else:
-            et = re.search(TIMEPOINT_REGEX[lang]['_time'][0], end_time)
-            et = Time._from_groupdict(et.groupdict())
-            ti = TimeInterval(start_time=st, end_time=et, lang=lang)
+        start_time_match = re.search(
+            TIMEPOINT_REGEX[lang]['_time'][0], start_time)
+        start_time = Time._from_groupdict(start_time_match.groupdict())
+        # if not end_time:
+        #     time_interval = TimeInterval(
+        #         start_time=start_time, end_time=None, lang=lang)
+        if end_time:
+            end_time_match = re.search(
+                TIMEPOINT_REGEX[lang]['_time'][0], end_time)
+            end_time = Time._from_groupdict(end_time_match.groupdict())
+        time_interval = TimeInterval(
+            start_time=start_time, end_time=end_time, lang=lang)
 
         # Populate self.datetimes with Datetimes objects
-        for date in date_list:
+        for _date in date_list:
             datetimes.append(
-                DateTime(date=date, time=ti, lang=lang, text=text))
+                DateTime(date=_date, time=time_interval, lang=lang, text=text))
         return datetimes
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Returns whether the DateTimeList is located in the future.
 
         A DateTimeList is considered future even if a part of its
@@ -676,7 +689,9 @@ class DateTimeList(Timepoint):
 
 class DateTimeInterval(Timepoint):
 
-    """ A datetime interval refers to a interval of date, with specified time. """
+    """ A datetime interval refers to a interval of date, with specified time.
+
+    """
 
     def __init__(self, date_interval, time_interval, **kwargs):
 
@@ -686,8 +701,8 @@ class DateTimeInterval(Timepoint):
 
     def __iter__(self):
         """ Iteration over the start and end datetime. """
-        for date in self.date_interval:
-            yield date
+        for _date in self.date_interval:
+            yield _date
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
@@ -712,24 +727,24 @@ class DateTimeInterval(Timepoint):
     @property
     def rrulestr(self):
         """ Return a reccurence rule string tailored for a DateTimeInterval """
-        st = self.time_interval.start_time
-        start = self.date_interval.start_date.to_python()
-        end = datetime.datetime.combine(
-            self.date_interval.end_date.to_python(),
-            datetime.time(23, 59, 59))
-        return makerrulestr(
-            start, end,
-            interval=1, byhour=st.hour, byminute=st.minute)
+        start_time = self.time_interval.start_time
+        start_date = self.date_interval.start_date.to_python()
+        end = datetime.combine(self.date_interval.end_date.to_python(),
+                               time(23, 59, 59))
+        return makerrulestr(start_date, end, interval=1,
+                            byhour=start_time.hour, byminute=start_time.minute)
 
     def to_python(self):
         out = []
 
         # getting date interval
-        sd = self.date_interval.start_date
-        ed = self.date_interval.end_date
+        start_date = self.date_interval.start_date
+        end_date = self.date_interval.end_date
 
-        start_date = datetime.date(year=sd.year, month=sd.month, day=sd.day)
-        end_date = datetime.date(year=ed.year, month=ed.month, day=ed.day)
+        start_date = date(year=start_date.year, month=start_date.month,
+                          day=start_date.day)
+        end_date = date(year=end_date.year, month=end_date.month,
+                        day=end_date.day)
         delta = end_date - start_date
 
         # getting time interval
@@ -738,8 +753,8 @@ class DateTimeInterval(Timepoint):
 
         nb_days = range(0, delta.days + 1)
         for i in nb_days:
-            i_date = start_date + datetime.timedelta(days=i)
-            i_start_datetime = datetime.datetime(
+            i_date = start_date + timedelta(days=i)
+            i_start_datetime = datetime(
                 year=i_date.year,
                 month=i_date.month,
                 day=i_date.day,
@@ -748,7 +763,7 @@ class DateTimeInterval(Timepoint):
                 second=0
             )
             if end_time:
-                i_end_datetime = datetime.datetime(
+                i_end_datetime = datetime(
                     year=i_date.year,
                     month=i_date.month,
                     day=i_date.day,
@@ -771,7 +786,7 @@ class DateTimeInterval(Timepoint):
             'texts': self.text_to_db()
         }
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         """Returns whether the DateTimeInterval is located in the future.
 
         A DateTimeInterval is considered future if its end date is located
@@ -809,7 +824,7 @@ class ContinuousDatetimeInterval(Timepoint):
     def valid(self):
         return all([self.start_datetime.valid, self.end_datetime.valid])
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         return self.end_datetime.future(reference)
 
     @property
@@ -818,9 +833,8 @@ class ContinuousDatetimeInterval(Timepoint):
         start_dt = self.start_datetime.to_python()
         start_time = start_dt.time()
         start_date = start_dt.date()
-        end_dt = datetime.datetime.combine(
-            self.end_datetime.to_python().date(),
-            datetime.time(23, 59, 59))
+        end_dt = datetime.combine(self.end_datetime.to_python().date(),
+                                  time(23, 59, 59))
         return makerrulestr(
             start_date, end_dt,
             interval=1, byhour=start_time.hour, byminute=start_time.minute)
@@ -868,9 +882,8 @@ class WeekdayRecurrence(Timepoint):
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         groupdict = digit_to_int(groupdict)
         weekdays = cls._set_weekdays(groupdict, lang)
-        start_datetime, end_datetime = cls._set_datetime_interval(
-            groupdict, lang)
-        return WeekdayRecurrence(weekdays, start_datetime, end_datetime, **kwargs)
+        start_dt, end_dt = cls._set_datetime_interval(groupdict, lang)
+        return WeekdayRecurrence(weekdays, start_dt, end_dt, **kwargs)
 
     @classmethod
     def _set_weekdays(cls, groupdict, lang):
@@ -880,11 +893,11 @@ class WeekdayRecurrence(Timepoint):
         it returns [0, 1, 2]
 
         """
-        return sorted([
+        return sorted(
             WEEKDAY[lang][day.group(0)] for day in
             re.finditer(
                 r'|'.join(WEEKDAY[lang].keys()),
-                groupdict['weekdays'].lower())])
+                groupdict['weekdays'].lower()))
 
     @classmethod
     def _set_datetime_interval(cls, groupdict, lang):
@@ -896,36 +909,31 @@ class WeekdayRecurrence(Timepoint):
 
         """
         if groupdict.get('date_interval') and groupdict.get('time_interval'):
-            datetime_interval = DateTimeInterval._from_groupdict(
-                groupdict,
-                lang=lang).\
+            datetime_interval = DateTimeInterval._from_groupdict(groupdict,
+                                                                 lang=lang).\
                 to_python()
             start_datetime = datetime_interval[0][0]
             end_datetime = datetime_interval[-1][-1]
 
         elif groupdict.get('date_interval') and not groupdict.get('time_interval'):
             # normalize darte interval from regex matches
-            date_interval = DateInterval._from_groupdict(
-                groupdict,
-                lang=lang,
-                text=groupdict['date_interval'])
+            date_interval = DateInterval._from_groupdict(groupdict, lang=lang)
+
             # extract the start and end dates from date interval
             start_date = date_interval.start_date.to_python()
             end_date = date_interval.end_date.to_python()
 
             # Create datetimes from the start and end dates by associatng
             # each of them with a default time
-            start_time = datetime.time(hour=0, minute=0, second=0)
-            start_datetime = datetime.datetime.combine(start_date, start_time)
-            end_time = datetime.time(hour=23, minute=59, second=59)
-            end_datetime = datetime.datetime.combine(end_date, end_time)
+            start_time = time(hour=0, minute=0, second=0)
+            start_datetime = datetime.combine(start_date, start_time)
+            end_time = time(hour=23, minute=59, second=59)
+            end_datetime = datetime.combine(end_date, end_time)
 
         elif groupdict.get('time_interval') and not groupdict.get('date_interval'):
             # normalize darte interval from regex matches
-            time_interval = TimeInterval._from_groupdict(
-                groupdict,
-                lang=lang,
-                text=groupdict['time_interval'])
+            time_interval = TimeInterval._from_groupdict(groupdict, lang=lang)
+
             # extract the start and end times from date interval
             start_time = time_interval.start_time.to_python()
             if time_interval.end_time:
@@ -935,27 +943,27 @@ class WeekdayRecurrence(Timepoint):
 
             # Create datetimes from the start and end times by associatng
             # each of them with a default date
-            start_date = datetime.date.today()
-            start_datetime = datetime.datetime.combine(start_date, start_time)
-            end_date = start_datetime.date() + datetime.timedelta(days=365)
-            end_datetime = datetime.datetime.combine(
+            start_date = date.today()
+            start_datetime = datetime.combine(start_date, start_time)
+            # if not specified, the end date is one year after the start date
+            end_date = start_datetime.date() + timedelta(days=365)
+            end_datetime = datetime.combine(
                 end_date, end_time)
         else:
-            start_datetime = datetime.datetime.combine(
-                datetime.date.today(),
-                datetime.time(0, 0, 0))
+            start_datetime = datetime.combine(
+                date.today(),
+                time(0, 0, 0))
             # if not specified, the end date is one year after the start date
-            end_datetime = start_datetime + datetime.timedelta(days=365)
+            end_datetime = start_datetime + timedelta(days=365)
         return start_datetime, end_datetime
 
     @property
     def rrulestr(self):
         """ Generate a full description of the recurrence rule"""
+        end = datetime.combine(
+            self.end_datetime.date(), time(23, 59, 59))
         return makerrulestr(
-            self.start_datetime.date(),
-            end=datetime.datetime.combine(
-                self.end_datetime.date(), datetime.time(23, 59, 59)),
-            rule=self.to_python())
+            self.start_datetime.date(), end=end, rule=self.to_python())
 
     @property
     def valid(self):
@@ -966,26 +974,21 @@ class WeekdayRecurrence(Timepoint):
         """
         return len(self.weekdays) >= 0
 
-    def future(self, reference=datetime.date.today()):
+    def future(self, reference=date.today()):
         return self.end_datetime.date() > reference
 
     def to_python(self):
-        st = self.start_datetime.time()
-        start_h, start_min = st.hour, st.minute
-        if start_h or start_min:
+        start_time = self.start_datetime.time()
+        if start_time.hour or start_time.minute:
             return rrule(
-                WEEKLY,
-                byweekday=self.weekdays,
-                byhour=start_h,
-                byminute=start_min)
+                WEEKLY, byweekday=self.weekdays, byhour=start_time.hour,
+                byminute=start_time.minute)
         else:
-            return rrule(
-                WEEKLY,
-                byweekday=self.weekdays)
+            return rrule(WEEKLY, byweekday=self.weekdays)
 
     def to_db(self):
         # measure the duration
-        end_datetime = datetime.datetime.combine(
+        end_datetime = datetime.combine(
             self.start_datetime, self.end_datetime.time())
         return {
             'rrule': self.rrulestr,
