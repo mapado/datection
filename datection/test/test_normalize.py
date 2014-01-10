@@ -89,6 +89,13 @@ class TestNormalizeFrDates(unittest.TestCase):
         date = parse(u'le lundi 5 mar. 2013', 'fr')[0]  # no trailing dot
         self.assertEqual(date.month, 3)
 
+    def test_numeric_backwards_date(self):
+        """Test than numeric backwards dates are properly normalized."""
+        date = parse(u'2014/01/18', 'fr')[0]
+        self.assertEqual(date.year, 2014)
+        self.assertEqual(date.month, 1)
+        self.assertEqual(date.day, 18)
+
 
 class TestNormalizeFrTimeInterval(unittest.TestCase):
 

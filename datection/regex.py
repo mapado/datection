@@ -23,7 +23,7 @@ FR_MONTH = r'(?<!\w)(%s)(?!\w)' % (
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (
-    r'(?<![\d/])'  # not preceeded by a digit
+    r'(?<![\d])'  # not preceeded by a digit
     # OK: (0)1..(0)9...10...29, 30, 31
     r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
     r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
@@ -68,6 +68,7 @@ NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 NUMERIC_DATE_SEPARATOR = r'[/\.-]'
 # Dates of format dd/mm(/(yy)yy)
 _FR_NUMERIC_DATE = r"""
+    (?<!/)  # not preceeded by a slash (to be safe)
     (?P<day>{day})
     {sep}  # separator
     (?P<month_name>{month})
@@ -78,6 +79,22 @@ _FR_NUMERIC_DATE = r"""
     sep=NUMERIC_DATE_SEPARATOR,
     month=NUMERIC_MONTH,
     year=NUMERIC_YEAR)
+
+FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
+
+# Dates of format yy(yy)/mm/dd
+_BACKWARDS_NUMERIC_DATE = r"""
+    (?P<year>{year})  # year
+    {sep}  # separator
+    (?P<month_name>{month})
+    {sep} # separator
+    (?P<day>{day})
+    """.format(
+    year=YEAR,
+    sep=NUMERIC_DATE_SEPARATOR,
+    month=NUMERIC_MONTH,
+    day=DAY_NUMBER)
+BACKWARDS_NUMERIC_DATE = re.compile(_BACKWARDS_NUMERIC_DATE, flags=re.VERBOSE)
 
 FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 
@@ -398,7 +415,7 @@ FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = re.compile(
 TIMEPOINT_REGEX = {
     'fr':
     {
-        'date': [FR_DATE, FR_NUMERIC_DATE],
+        'date': [FR_DATE, FR_NUMERIC_DATE, BACKWARDS_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
         'date_interval': [FR_DATE_INTERVAL, FR_NUMERIC_DATE_INTERVAL],

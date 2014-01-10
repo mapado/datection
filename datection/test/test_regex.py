@@ -9,6 +9,7 @@ import re
 
 from datection.regex import FR_DATE
 from datection.regex import FR_NUMERIC_DATE
+from datection.regex import BACKWARDS_NUMERIC_DATE
 from datection.regex import FR_DATE_INTERVAL
 from datection.regex import FR_NUMERIC_DATE_INTERVAL
 from datection.regex import FR_TIME
@@ -202,6 +203,13 @@ class TestNumericDateRegex(unittest.TestCase):
         assert date.groupdict()['day'] == '19'
         assert date.groupdict()['month_name'] == '03'
         assert date.groupdict()['year'] == '2012'
+
+    def test_backwards_numeric_date(self):
+        """Test the extraction of a date of format yyyy/mm/dd"""
+        match = re.search(BACKWARDS_NUMERIC_DATE, '2014-01-19')
+        self.assertEqual(match.groupdict()['year'], '2014')
+        self.assertEqual(match.groupdict()['month_name'], '01')
+        self.assertEqual(match.groupdict()['day'], '19')
 
 
 class TestDateIntervalRegex(unittest.TestCase):
