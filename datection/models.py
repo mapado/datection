@@ -70,9 +70,13 @@ class DurationRRule(object):
 
         """
         if self.rrule.until:
-            return datetime.combine(
-                self.rrule.until.date(), self.time_interval[0]
-            ) + timedelta(minutes=self.duration)
+            if self.is_continuous:
+                return datetime.combine(
+                    self.rrule.until.date(), self.time_interval[1])
+            else:
+                return datetime.combine(
+                    self.rrule.until.date(), self.time_interval[0]
+                ) + timedelta(minutes=self.duration)
         else:
             return datetime.combine(
                 self.rrule.dtstart.date(), self.time_interval[0]

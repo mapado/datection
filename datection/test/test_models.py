@@ -11,6 +11,36 @@ from datetime import date
 from datetime import time
 
 
+class ContinuousDurationRRuleTest(unittest.TestCase):
+
+    def setUp(self):
+        self.schedule = {
+            'continuous': True,
+            'duration': 4890,
+            'rrule': ('DTSTART:20140305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                      'BYMINUTE=0;INTERVAL=1;UNTIL=20140308T235959'),
+            'texts': [u' 5 mars \xe0 8h au 8 mars 2014 \xe0 17h30']
+        }
+        self.drr = DurationRRule(self.schedule)
+
+    def test_start_datetime(self):
+        self.assertEqual(self.drr.start_datetime, datetime(2014, 3, 5, 8, 0))
+
+    def test_end_datetime(self):
+        self.assertEqual(self.drr.end_datetime, datetime(2014, 3, 8, 17, 30))
+
+    def test_is_continuous(self):
+        self.assertTrue(self.drr.is_continuous)
+
+    def test_date_interval(self):
+        expected = (date(2014, 3, 5), date(2014, 3, 8))
+        self.assertEqual(self.drr.date_interval, expected)
+
+    def test_time_interval(self):
+        expected = (time(8, 0), time(17, 30))
+        self.assertEqual(self.drr.time_interval, expected)
+
+
 class DurationRRuleTest(unittest.TestCase):
 
     def setUp(self):
