@@ -65,28 +65,29 @@ def _remove_subsets(matches):
 
     Example: the second and third matches are subsets of the first one.
     Input: [
-    (match1, set(5, ..., 15), 'datetime'),
-    (match2, set(5, ..., 10), 'date')
-    (match3, set(11, ..., 15), 'time')
-    (match4, set(0, ... 3), 'time')
+        (match1, set(5, ..., 15), 'datetime'),
+        (match2, set(5, ..., 10), 'date')
+        (match3, set(11, ..., 15), 'time')
+        (match4, set(0, ... 3), 'time')
     ]
     Output: [(match4, 'time'), (match1, 'datetime')]
 
     """
     out = matches[:]  # shallow copy
-    for t1, family1 in matches:
-        for t2, family2 in matches:
-            if t1 != t2:  # avoid self comparison
-                s1, s2 = set(range(*t1.span())), set(range(*t2.span()))
-                if s1.intersection(s2):
+    for tpt1, family1 in matches:
+        for tpt2, family2 in matches:
+            if tpt1 != tpt2:  # avoid self comparison
+                span1, span2 = (
+                    set(range(*tpt1.span())), set(range(*tpt2.span())))
+                if span1.intersection(span2):
                     # if A ⊃ B or A = B: remove B
-                    if s1.issuperset(s2) or s1 == s2:
-                        if (t2, family2) in out:
-                            out.remove((t2, family2))
+                    if span1.issuperset(span2) or span1 == span2:
+                        if (tpt2, family2) in out:
+                            out.remove((tpt2, family2))
                     # if A ⊂ B: remove A
-                    elif s1.issubset(s2):
-                        if (t1, family1) in out:
-                            out.remove((t1, family1))
+                    elif span1.issubset(span2):
+                        if (tpt1, family1) in out:
+                            out.remove((tpt1, family1))
     # sort list by match position
     out = sorted(out, key=lambda item: item[0].span()[0])
     return out
