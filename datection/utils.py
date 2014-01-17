@@ -104,28 +104,8 @@ def _sort_facebook_hours(fb_hours):
     return sorted(fb_hours.items(), key=lambda x: fb_hour_index(x[0]))
 
 
-def fb_hours_to_schedule(fb_hours):
-    """Convert a Facebook opening hours dict to a recurrent schedule.
-
-    Example:
-    >> > fb_hours = {
-        "mon_1_open", "10:00",
-        "mon_1_close", "18:00",
-        "wed_1_open", "10:00",
-        "wed_1_close", "18:00",
-        "thu_1_open", "10:00",
-        "thu_1_close", "18:00",
-        "fri_1_open", "10:30",
-        "fri_1_close", "18:00",
-        "sat_1_open", "10:00",
-        "sat_1_close", "18:00",
-        "sun_1_open", "10:00",
-        "sun_1_close", "18:00"
-    }
-    >> > fb_hours_to_schedule(fb_hours)
-    pass
-
-    """
+def normalize_fb_hours(fb_hours):
+    """Convert a Facebook opening hours dict to a recurrent schedule."""
 
     def chunks(l, n):
         for i in xrange(0, len(l), n):
@@ -135,9 +115,9 @@ def fb_hours_to_schedule(fb_hours):
     fb_hours = _sort_facebook_hours(fb_hours)
     # iterate over each weekday, and create the associated recurrent schedule
     schedules = []
-    for weekday, g in it.groupby(fb_hours, key=lambda k: k[0][:3]):
-        for opening, closing in chunks(list(g), 2):
-            wk = WEEKDAY_IDX[weekday]
+    for weekday, group in it.groupby(fb_hours, key=lambda k: k[0][:3]):
+        for opening, closing in chunks(list(group), 2):
+            wk_idx = WEEKDAY_IDX[weekday]
 
             # parse the time strings and convert them to datetime.time objects
             opening_time = datetime.strptime(opening[1], "%H:%M").time()
@@ -151,6 +131,6 @@ def fb_hours_to_schedule(fb_hours):
             # create the WeekdayRecurrence object associated with the
             # opening time
             reccurence = datection.normalize.WeekdayRecurrence(
-                weekdays=(wk, ), start=start, end=end)
+                weekdays=(wk_idx, ), start=start, end=end)
             schedules.append(reccurence.to_db())
     return schedules

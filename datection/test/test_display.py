@@ -249,6 +249,61 @@ class ShortDisplayTest(unittest.TestCase):
             expected)
 
 
+class OpeningHoursDisplayTest(unittest.TestCase):
+
+    """Test the output of the OpeningHoursFormatter formatter"""
+
+    def setUp(self):
+        self.lang = 'fr'
+        self.schedule = [
+            {
+                'duration': 480,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 240,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=14;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 480,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
+                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 480,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
+                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 450,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=FR;'
+                          'BYHOUR=10;BYMINUTE=30;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 480,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SA;'
+                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''},
+            {
+                'duration': 480,
+                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
+                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                'texts': u''}]
+
+    def test_display(self):
+        fmt = datection.display(self.schedule, self.lang, place=True)
+        expected = u"""Lundi de 10 h à 18 h et de 14 h à 18 h
+Mercredi de 10 h à 18 h
+Jeudi de 10 h à 18 h
+Vendredi de 10 h 30 à 18 h
+Samedi de 10 h à 18 h
+Dimanche de 10 h à 18 h"""
+
+        self.assertEqual(fmt, expected)
+
+
 class TestUtilities(unittest.TestCase):
 
     """Tests of all the datection.display utility functions"""
