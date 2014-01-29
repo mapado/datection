@@ -76,6 +76,9 @@ class Context(object):
     def __len__(self):
         return self.end - self.start
 
+    def position_in_text(self, span):
+        return (self.start + span[0], self.start + span[1])
+
 
 def probe(text, lang):
     """ Scans the text for very simple markers, indicating the presence of
@@ -109,7 +112,7 @@ def probe(text, lang):
     out = independants(out)
     if not out:
         return []
-    return [str(context) for context in out]
+    return out
 
 
 def independants(contexts):

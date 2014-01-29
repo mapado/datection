@@ -34,14 +34,14 @@ def parse(text, lang, valid=True):
         for family in timepoint_families:
             for detector in TIMEPOINT_REGEX[lang][family]:
                 matches.extend(
-                    [(m, family) for m in re.finditer(detector, context)])
+                    [(m, family) for m in re.finditer(detector, str(context))])
 
         matches = _remove_subsets(matches)  # rm overlapping matches
         for match, family in matches:
             try:
                 timepoint = timepoint_factory(
                     detector=family, data=match.groupdict(),
-                    lang=lang, span=match.span())
+                    lang=lang, span=context.position_in_text(match.span()))
             except NotImplementedError:
                 pass
             else:
