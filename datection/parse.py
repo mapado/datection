@@ -41,7 +41,7 @@ def parse(text, lang, valid=True):
             try:
                 timepoint = timepoint_factory(
                     detector=family, data=match.groupdict(),
-                    text=match.group(0), lang=lang)
+                    lang=lang, span=match.span())
             except NotImplementedError:
                 pass
             else:

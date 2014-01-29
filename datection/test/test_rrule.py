@@ -32,7 +32,7 @@ class TestDateRecurrence(unittest.TestCase):
         target = {
             'rrule': self.date.rrulestr,
             'duration': 1439,
-            'texts': ["25 janvier 2013"]
+            'span': (3, 18)
         }
         self.assertEqual(self.date.to_db(), target)
 
@@ -58,17 +58,17 @@ class TestDateListRecurrence(unittest.TestCase):
         self.datelist = parse(text, lang)[0]
 
     def test_to_db(self):
-        """ Test the format returned by the 'to_db' DateList method """
+        """Test the format returned by the 'to_db' DateList method."""
         target = [
             {
                 'rrule': self.datelist.dates[0].rrulestr,
                 'duration': 1439,
-                'texts': [u"25, 26 janvier 2013"]
+                'span': (3, 22)
             },
             {
                 'rrule': self.datelist.dates[1].rrulestr,
                 'duration': 1439,
-                'texts': [u"25, 26 janvier 2013"]
+                'span': (3, 22)
             }
         ]
         self.assertEqual(self.datelist.to_db(), target)
@@ -102,7 +102,7 @@ class TestDateIntervalRecurrence(unittest.TestCase):
         target = {
             'rrule': self.interval.rrulestr,
             'duration': 1439,
-            'texts': [self.text]
+            'span': (0, 21)
         }
         self.assertEqual(self.interval.to_db(), target)
 
@@ -147,7 +147,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         target = {
             'rrule': self.datetime.rrulestr,
             'duration': 0,
-            'texts': [u"30 mars 2013 à 15h30"]
+            'span': (3, 24)
         }
         self.assertEqual(self.datetime.to_db(), target)
 
@@ -174,7 +174,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         target = {
             'rrule': dt.rrulestr,
             'duration': 210,
-            'texts': [u"30 mars 2013 de 12h à 15h30"]
+            'span': (3, 31)
         }
         self.assertEqual(dt.to_db(), target)
 
@@ -208,7 +208,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         target = {
             'rrule': self.interval.rrulestr,
             'duration': 60,
-            'texts': [u'du 25 au 30 mars 2013 de 15h à 16h']
+            'span': (0, 35)
         }
         self.assertEqual(self.interval.to_db(), target)
 
@@ -239,7 +239,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         target = {
             'rrule': interval.rrulestr,
             'duration': 0,
-            'texts': [u"du 25 au 30 mars 2013 à 15h"]
+            'span': (0, 28)
         }
         self.assertEqual(interval.to_db(), target)
 
@@ -287,7 +287,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         target = {
             'rrule': self.rec_nodatetime.rrulestr,
             'duration': 0,
-            'texts': [u'le lundi']
+            'span': (0, 8)
         }
         self.assertEqual(self.rec_nodatetime.to_db(), target)
 
@@ -323,7 +323,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         target = {
             'rrule': self.rec_notime.rrulestr,
             'duration': 1439,
-            'texts': [u'le lundi, du 1 au 15 mars 2013']
+            'span': (0, 30)
         }
         self.assertEqual(self.rec_notime.to_db(), target)
 
@@ -357,7 +357,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         target = {
             'rrule': self.rec_full.rrulestr,
             'duration': 120,
-            'texts': [u'le lundi du 1er au 15 mars 2013, de 5h à 7h']
+            'span': (0, 44)
         }
         self.assertEqual(self.rec_full.to_db(), target)
 

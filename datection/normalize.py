@@ -49,16 +49,16 @@ def timepoint_factory(detector, lang, data, **kwargs):
     if detector not in factory:
         raise NotImplementedError(
             detector + " normalisation is not yet handled.")
-    return factory[detector]._from_groupdict(data, lang, **kwargs)
+    return factory[detector]._from_groupdict(data, lang, ** kwargs)
 
 
 class Timepoint(object):
 
     """ The mother class for all timepoint classes. """
 
-    def __init__(self, lang=None, text=None):
+    def __init__(self, lang=None, span=None):
         self.lang = lang
-        self.text = text
+        self.span = span
 
     def __eq__(self, other):
         return self.to_python() == other.to_python()
@@ -76,15 +76,6 @@ class Timepoint(object):
     def future(self, reference=None):
         """Return whether the timepoint is located in the future."""
         return False
-
-    def text_to_db(self):
-        """Make sure self.text is unicode/made of unicode texts."""
-        if not hasattr(self, 'text'):
-            return u''
-        if isinstance(self.text, basestring):
-            return [self.text.decode('utf-8')]
-        elif isinstance(self.text, list):
-            return [text.decode('utf-8') for text in self.text]
 
 
 class Date(Timepoint):
@@ -196,7 +187,7 @@ class Date(Timepoint):
         return {
             'rrule': self.rrulestr,
             'duration': ALL_DAY,  # 23 hours 59 minutes
-            'texts': self.text_to_db()
+            'span': self.span
         }
 
     def future(self, reference=date.today()):
@@ -226,7 +217,8 @@ class DateList(Timepoint):
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         """Instanciate a DateList from a regex match groupdict."""
         groupdict = digit_to_int(groupdict)
-        dates = cls._set_dates(groupdict, lang, text=kwargs['text'])
+        span = kwargs['span']
+        dates = cls._set_dates(groupdict, lang, span)
 
         # make the dates without a year inherit from the one which does
         # if needed
@@ -238,7 +230,7 @@ class DateList(Timepoint):
         return DateList(dates, **kwargs)
 
     @classmethod
-    def _set_dates(cls, groupdict, lang, text):
+    def _set_dates(cls, groupdict, lang, span):
         """Normalize the dates and return a list of Date objects."""
         dates = []
         for match in re.finditer(TIMEPOINT_REGEX[lang]['_date_in_list'][0],
@@ -246,7 +238,7 @@ class DateList(Timepoint):
             groupdict = match.groupdict()
             if not groupdict['year']:
                 groupdict['year'] = MINYEAR
-            _date = Date._from_groupdict(groupdict, lang=lang, text=text)
+            _date = Date._from_groupdict(groupdict, lang=lang, span=span)
             dates.append(_date)
         return dates
 
@@ -385,7 +377,7 @@ class DateInterval(Timepoint):
         return {
             'rrule': self.rrulestr,
             'duration': ALL_DAY,
-            'texts': self.text_to_db()
+            'span': self.span
         }
 
     def future(self, reference=date.today()):
@@ -487,7 +479,10 @@ class TimeInterval(Timepoint):
 
     @property
     def valid(self):
-        """ Check that both self.start_time and self.end_time (if any) are valid. """
+        """ Check that both self.start_time and self.end_time (if any)
+        are valid.
+
+        """
         if self.end_time:
             return all([self.start_time.valid, self.end_time.valid])
         else:
@@ -589,7 +584,7 @@ class DateTime(Timepoint):
             'rrule': self.rrulestr,
             'duration': duration(
                 start=self.time.start_time, end=self.time.end_time),
-            'texts': self.text_to_db()
+            'span': self.span
         }
 
     def future(self, reference=date.today()):
@@ -620,16 +615,16 @@ class DateTimeList(Timepoint):
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         groupdict = digit_to_int(groupdict)
-        text = kwargs['text']
         start_time = groupdict.get('start_time')
         end_time = groupdict.get('end_time')
         date_list = groupdict.get('date_list')
+        span = kwargs['span']
         datetimes = cls._set_datetimes(date_list, start_time, end_time,
-                                       lang, text)
+                                       lang, span)
         return DateTimeList(datetimes, **kwargs)
 
     @classmethod
-    def _set_datetimes(cls, dates, start_time, end_time, lang, text):
+    def _set_datetimes(cls, dates, start_time, end_time, lang, span):
         """ Associate the time interval to each date in the date list.
 
         The normalization process will instanciate DateTime objects,
@@ -642,7 +637,7 @@ class DateTimeList(Timepoint):
             dl_match = re.search(date_list_pattern, dates)
             if dl_match:
                 date_list = DateList._from_groupdict(
-                    dl_match.groupdict(), text=dl_match.group(0), lang=lang)
+                    dl_match.groupdict(), span=span, lang=lang)
                 break
         # extract the time interval and create a TimeInterval object
         start_time_match = re.search(
@@ -661,7 +656,7 @@ class DateTimeList(Timepoint):
         # Populate self.datetimes with Datetimes objects
         for _date in date_list:
             datetimes.append(
-                DateTime(date=_date, time=time_interval, lang=lang, text=text))
+                DateTime(date=_date, time=time_interval, lang=lang, span=span))
         return datetimes
 
     def future(self, reference=date.today()):
@@ -783,7 +778,7 @@ class DateTimeInterval(Timepoint):
             'duration': duration(
                 start=self.time_interval.start_time,
                 end=self.time_interval.end_time),
-            'texts': self.text_to_db()
+            'span': self.span
         }
 
     def future(self, reference=date.today()):
@@ -845,8 +840,8 @@ class ContinuousDatetimeInterval(Timepoint):
             'rrule': self.rrulestr,
             'duration': duration(start=self.start_datetime.to_python(),
                                  end=self.end_datetime.to_python()),
-            'texts': self.text_to_db(),
             'continuous': True,
+            'span': self.span
         }
 
     def to_python(self):
@@ -993,7 +988,7 @@ class WeekdayRecurrence(Timepoint):
         return {
             'rrule': self.rrulestr,
             'duration': duration(start=self.start_datetime, end=end_datetime),
-            'texts': self.text_to_db()
+            'span': self.span
         }
 
 
