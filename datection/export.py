@@ -5,7 +5,6 @@ Datection exporters to python and database compliant formats.
 """
 
 from datection.parse import parse
-from datection.merge import merge
 
 
 def to_db(text, lang, valid=True, only_future=True, **kwargs):
@@ -16,9 +15,9 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
     linking each start date/time to an end date/time
 
     """
-    timepoints = parse(text, lang, valid)
-    timepoints = merge(timepoints)
     out = []
+    timepoints = parse(text, lang, valid)
+
     # filter out all past timepoints, if only_future == True
     if only_future:
         timepoints = [tp for tp in timepoints if tp.future(**kwargs)]
