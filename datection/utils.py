@@ -193,6 +193,8 @@ def normalize_fb_hours(fb_hours):
             # create the WeekdayRecurrence object associated with the
             # opening time
             reccurence = datection.normalize.WeekdayRecurrence(
-                weekdays=(wk_idx, ), start=start, end=end)
-            schedules.append(reccurence.to_db())
+                weekdays=(wk_idx, ), start_datetime=start, end_datetime=end)
+            db_format = reccurence.to_db()
+            del db_format['span']
+            schedules.append(db_format)
     return schedules
