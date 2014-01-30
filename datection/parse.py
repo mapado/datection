@@ -18,8 +18,8 @@ def parse(text, lang, valid=True):
 
     """
     out = []
-    if isinstance(text, unicode):
-        text = text.encode('utf-8')
+    if isinstance(text, str):
+        text = text.decode('utf-8')
 
     # if not event simple date markers could be found, stop here
     contexts = probe(text, lang)

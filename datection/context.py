@@ -110,8 +110,6 @@ def probe(text, lang):
 
     # merge overriding contexts
     out = independants(out)
-    if not out:
-        return []
     return out
 
 
@@ -128,8 +126,8 @@ def independants(contexts):
     """
     if not contexts:
         return []
-    if len(contexts) == 1:  # if only one context, return it as a str
-        return [str(contexts[0])]
+    if len(contexts) == 1:  # if only one context, return it
+        return [contexts[0]]
 
     out = []
     i = 0
