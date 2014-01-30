@@ -8,6 +8,7 @@ human-readable string possible.
 import datetime
 import calendar
 import gettext
+import itertools as it
 
 # Set up message catalog access
 from os.path import abspath, join, dirname
@@ -255,8 +256,14 @@ class BaseScheduleFormatter(object):
         it means that no time must be displayed.
 
         """
-        start = dt_interval['start'].time()
-        end = dt_interval['end'].time()
+        if isinstance(dt_interval['start'], datetime.datetime):
+            start = dt_interval['start'].time()
+        else:
+            start = dt_interval['start']
+        if isinstance(dt_interval['end'], datetime.datetime):
+            end = dt_interval['end'].time()
+        else:
+            end = dt_interval['end']
 
         # case of no specified time (entire day)
         if (start == datetime.time(0, 0, 0) and
@@ -625,7 +632,42 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         return self.format_output(out)
 
 
-def display(schedule, lang, short=False, bounds=(None, None),
+class OpeningHoursFormatter(BaseScheduleFormatter):
+
+    """Formatter specialized if place opening hours."""
+
+    def format_opening(self, openings, day):
+        """Format opening hours for a single day."""
+        weekday = self.dayname(day)
+        if len(openings) > 1:
+            openings.sort(key=lambda op: op.time_interval[0])
+
+        opening_times = []
+        for opening in openings:
+            time_interval = {
+                'start': opening.time_interval[0],
+                'end': opening.time_interval[1],
+            }
+            opening_times.append(self.format_time(time_interval))
+
+        if len(opening_times) == 1:
+            return u'%s %s' % (weekday, opening_times[0])
+        else:
+            opening_times = ' - '.join(opening_times[:-1]) + _(' et ') + \
+                opening_times[-1]
+            return u'%s %s' % (weekday, opening_times)
+
+    def display(self):
+        out = []
+        for day in xrange(7):
+            openings = [rec for rec in self.recurring
+                        if day in rec.weekday_indexes]
+            if openings:
+                out.append(self.format_opening(openings, day))
+        return '\n'.join([line.capitalize() for line in out])
+
+
+def display(schedule, lang, place=False, short=False, bounds=(None, None),
             reference=datetime.date.today()):
     """Format a schedule into the shortest human readable sentence possible
 
@@ -650,7 +692,9 @@ def display(schedule, lang, short=False, bounds=(None, None),
             fallback=True)
         global _
         _ = t.ugettext
-        if short:
+        if place:
+            return OpeningHoursFormatter(schedule, lang).display()
+        elif short:
             start, end = bounds
             return ShortScheduleFormatter(schedule, start, end, lang).\
                 display(reference)
