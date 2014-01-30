@@ -147,7 +147,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         target = {
             'rrule': self.datetime.rrulestr,
             'duration': 0,
-            'span': (3, 24)
+            'span': (3, 23)
         }
         self.assertEqual(self.datetime.to_db(), target)
 
@@ -174,7 +174,7 @@ class TestDateTimeRecurrence(unittest.TestCase):
         target = {
             'rrule': dt.rrulestr,
             'duration': 210,
-            'span': (3, 31)
+            'span': (3, 30)
         }
         self.assertEqual(dt.to_db(), target)
 
@@ -208,7 +208,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         target = {
             'rrule': self.interval.rrulestr,
             'duration': 60,
-            'span': (0, 35)
+            'span': (0, 34)
         }
         self.assertEqual(self.interval.to_db(), target)
 
@@ -239,7 +239,7 @@ class TestDateTimeIntervalRecurrence(unittest.TestCase):
         target = {
             'rrule': interval.rrulestr,
             'duration': 0,
-            'span': (0, 28)
+            'span': (0, 27)
         }
         self.assertEqual(interval.to_db(), target)
 
@@ -272,9 +272,9 @@ class TestWeekdayRecurrence(unittest.TestCase):
 
     def setUp(self):
         lang = 'fr'
-        text_nodatetime = 'le lundi'
-        text_notime = 'le lundi, du 1 au 15 mars 2013'
-        text_full = 'le lundi du 1er au 15 mars 2013, de 5h à 7h'
+        text_nodatetime = u'le lundi'
+        text_notime = u'le lundi, du 1 au 15 mars 2013'
+        text_full = u'le lundi du 1er au 15 mars 2013, de 5h à 7h'
         self.rec_nodatetime = parse(text_nodatetime, lang)[0]
         self.rec_notime = parse(text_notime, lang)[0]
         self.rec_full = parse(text_full, lang)[0]
@@ -357,7 +357,7 @@ class TestWeekdayRecurrence(unittest.TestCase):
         target = {
             'rrule': self.rec_full.rrulestr,
             'duration': 120,
-            'span': (0, 44)
+            'span': (0, 43)
         }
         self.assertEqual(self.rec_full.to_db(), target)
 
@@ -385,20 +385,20 @@ class TestWeekdayRecurrence(unittest.TestCase):
 class TestWeekdayIntervalRecurrence(unittest.TestCase):
 
     def test_weekdays_list(self):
-        rec = parse("du lundi au mercredi", "fr")[0]
+        rec = parse(u"du lundi au mercredi", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 3))
 
-        rec = parse("du lundi au dimanche", "fr")[0]
+        rec = parse(u"du lundi au dimanche", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 7))
 
-        rec = parse("du vendredi au lundi", "fr")[0]
+        rec = parse(u"du vendredi au lundi", "fr")[0]
         self.assertEqual(rec.weekdays, [4, 5, 6, 0])
 
 
 class TestAllDayWeekdayRecurrence(unittest.TestCase):
 
     def test_allweekdays_date(self):
-        rec = parse("tous les jours, du 5 au 15 mars 2013", "fr")[0]
+        rec = parse(u"tous les jours, du 5 au 15 mars 2013", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 7))
         self.assertEqual(
             rec.start_datetime, datetime.datetime(2013, 03, 5, 0, 0, 0))
@@ -406,7 +406,7 @@ class TestAllDayWeekdayRecurrence(unittest.TestCase):
             rec.end_datetime, datetime.datetime(2013, 03, 15, 23, 59, 59))
 
     def test_allweekdays_time(self):
-        rec = parse("tous les jours, de 4h à 8h", "fr")[0]
+        rec = parse(u"tous les jours, de 4h à 8h", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 7))
         self.assertEqual(
             rec.start_datetime,
@@ -421,7 +421,7 @@ class TestAllDayWeekdayRecurrence(unittest.TestCase):
 
     def test_allweekdays_datetime(self):
         rec = parse(
-            "tous les jours, du 5 au 15 mars 2013, de 4h à 8h", "fr")[0]
+            u"tous les jours, du 5 au 15 mars 2013, de 4h à 8h", "fr")[0]
         self.assertEqual(rec.weekdays, range(0, 7))
         self.assertEqual(
             rec.start_datetime, datetime.datetime(2013, 03, 5, 4, 0, 0))

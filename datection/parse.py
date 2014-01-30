@@ -34,7 +34,7 @@ def parse(text, lang, valid=True):
         for family in timepoint_families:
             for detector in TIMEPOINT_REGEX[lang][family]:
                 matches.extend(
-                    [(m, family) for m in re.finditer(detector, str(context))])
+                    [(m, family) for m in re.finditer(detector, unicode(context))])
 
         matches = _remove_subsets(matches)  # rm overlapping matches
         for match, family in matches:

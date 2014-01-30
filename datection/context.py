@@ -40,8 +40,6 @@ class Context(object):
         else:
             self.start = 0
         self.end = match_end + size
-        if isinstance(text, unicode):
-            text = text.encode('utf-8')
         self.text = text  # the input text
         self.size = size  # the number of characters of context
 
@@ -70,8 +68,11 @@ class Context(object):
     def __eq__(self, item):
         return self.__dict__ == item.__dict__
 
+    def __unicode__(self):
+        return unicode(self.text)
+
     def __hash__(self):
-        return hash(str(self))
+        return hash(unicode(self))
 
     def __len__(self):
         return self.end - self.start

@@ -14,7 +14,6 @@ class TestFuture(unittest.TestCase):
                 'duration': 1439,
                 'rrule': ('DTSTART:20130305\nRRULE:FREQ=DAILY;COUNT=1;'
                           'BYMINUTE=0;BYHOUR=0'),
-                'texts': [u'5 mars 2013']
             }
         ]
 
@@ -36,7 +35,6 @@ class TestFuture(unittest.TestCase):
             'duration': 1439,
             'rrule': ('DTSTART:20130308\nRRULE:FREQ=DAILY;COUNT=1;'
                       'BYMINUTE=0;BYHOUR=0'),
-            'texts': [u'5 mars 2013']
         }
         self.schedule.append(future_date)
         self.assertTrue(is_future(self.schedule, reference=today))

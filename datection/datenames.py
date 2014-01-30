@@ -3,13 +3,13 @@
 WEEKDAY = {
     'fr':
     {
-        'lundi': 0,
-        'mardi': 1,
-        'mercredi': 2,
-        'jeudi': 3,
-        'vendredi': 4,
-        'samedi': 5,
-        'dimanche': 6,
+        u'lundi': 0,
+        u'mardi': 1,
+        u'mercredi': 2,
+        u'jeudi': 3,
+        u'vendredi': 4,
+        u'samedi': 5,
+        u'dimanche': 6,
     }
 }
 
@@ -17,34 +17,34 @@ SHORT_WEEKDAY = {
     # Untested for now!
     'fr':
     {
-        'lun': 0,
-        'mar': 1,
-        'mer': 2,
-        'jeu': 3,
-        'ven': 4,
-        'sam': 5,
-        'dim': 6,
+        u'lun': 0,
+        u'mar': 1,
+        u'mer': 2,
+        u'jeu': 3,
+        u'ven': 4,
+        u'sam': 5,
+        u'dim': 6,
     }
 }
 
 MONTH = {
     'fr':
     {
-        'janvier': 1,
-        'février': 2,
-        'fevrier': 2,
-        'mars': 3,
-        'avril': 4,
-        'mai': 5,
-        'juin': 6,
-        'juillet': 7,
-        'août': 8,
-        'aout': 8,
-        'septembre': 9,
-        'octobre': 10,
-        'novembre': 11,
-        'décembre': 12,
-        'decembre': 12,
+        u'janvier': 1,
+        u'février': 2,
+        u'fevrier': 2,
+        u'mars': 3,
+        u'avril': 4,
+        u'mai': 5,
+        u'juin': 6,
+        u'juillet': 7,
+        u'août': 8,
+        u'aout': 8,
+        u'septembre': 9,
+        u'octobre': 10,
+        u'novembre': 11,
+        u'décembre': 12,
+        u'decembre': 12,
     }
 }
 
@@ -52,21 +52,21 @@ SHORT_MONTH = {
     # Untested for now!
     'fr':
     {
-        'jan': 1,
-        'janv': 1,
-        'fév': 2,
-        'févr': 2,
-        'fev': 2,
-        'fevr': 2,
-        'mar': 3,
-        'avr': 4,
-        'juil': 7,
-        'juill': 7,
-        'sep': 9,
-        'sept': 9,
-        'oct': 10,
-        'nov': 11,
-        'dec': 12,
-        'déc': 12,
+        u'jan': 1,
+        u'janv': 1,
+        u'fév': 2,
+        u'févr': 2,
+        u'fev': 2,
+        u'fevr': 2,
+        u'mar': 3,
+        u'avr': 4,
+        u'juil': 7,
+        u'juill': 7,
+        u'sep': 9,
+        u'sept': 9,
+        u'oct': 10,
+        u'nov': 11,
+        u'dec': 12,
+        u'déc': 12,
     }
 }

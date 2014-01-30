@@ -25,7 +25,7 @@ class TestScheduleElection(unittest.TestCase):
                 'duration': 1439,
                 'rrule': ('DTSTART:20140305\nRRULE:FREQ=WEEKLY;'
                           'BYDAY=MO,TU,WE,TH,FR,SA,SU;UNTIL=20140320T235959'),
-                'texts': [u'tous les jours du 5 au 20 mars 2014']}]
+            }]
 
         schedule2 = [
             {
@@ -33,14 +33,13 @@ class TestScheduleElection(unittest.TestCase):
                 'rrule': ('DTSTART:20140305\nRRULE:FREQ=WEEKLY;BYHOUR=8;'
                           'BYMINUTE=0;BYDAY=MO,TU,WE,TH,FR,SA,SU;'
                           'UNTIL=20140320T235959'),
-                'texts': [u'tous les jours du 5 au 20 mars 2014 de 8h à 10h']}]
-
+            }]
         schedule3 = [
             {
                 'duration': 120,
                 'rrule': ('DTSTART:20140305\nRRULE:FREQ=WEEKLY;BYHOUR=8;'
                           'BYMINUTE=0;BYDAY=MO;UNTIL=20140320T235959'),
-                'texts': [u'tous les lundis du 5 au 20 mars 2014 de 8h à 10h']}]
+            }]
         self.schedules = [schedule1, schedule2, schedule3]
 
     def test_common_elements(self):
@@ -79,5 +78,6 @@ class TestScheduleElection(unittest.TestCase):
                 'duration': 1439,
                 'rrule': ('DTSTART:20140408\nRRULE:FREQ=DAILY;COUNT=1;'
                           'BYMINUTE=0;BYHOUR=0'),
-                'texts': [u'8 avril 2014']}])
+            }
+        ])
         self.assertIsNone(best_schedule(schedules))

@@ -19,7 +19,6 @@ class ContinuousDurationRRuleTest(unittest.TestCase):
             'duration': 4890,
             'rrule': ('DTSTART:20140305\nRRULE:FREQ=DAILY;BYHOUR=8;'
                       'BYMINUTE=0;INTERVAL=1;UNTIL=20140308T235959'),
-            'texts': [u' 5 mars \xe0 8h au 8 mars 2014 \xe0 17h30']
         }
         self.drr = DurationRRule(self.schedule)
 
@@ -48,25 +47,21 @@ class DurationRRuleTest(unittest.TestCase):
             'duration': 1439,
             'rrule': ('DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
                       'UNTIL=20140428T235959'),
-            'texts': [u'le lundi du 5 mars 2013 au 28 avril 2014']
         }
         self.bounded_recurrence_weekday_range = {
             'duration': 1439,
             'rrule': ('DTSTART:20130305\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE;'
                       'UNTIL=20140428T235959'),
-            'texts': [u'le lundi et mercredi, du 5 mars 2013 au 28 avril 2014']
         }
         self.one_time = {
             'duration': 0,
             'rrule': ('DTSTART:20130305\nRRULE:FREQ=DAILY;COUNT=1;'
                       'BYMINUTE=30;BYHOUR=15'),
-            'texts': [u'5 mars 2013 à 15h30']
         }
         self.one_time_time_interval = {
             'duration': 90,
             'rrule': ('DTSTART:20130305\nRRULE:FREQ=DAILY;COUNT=1;'
                       'BYMINUTE=0;BYHOUR=14'),
-            'texts': [u'5 mars 2013 de 14h à 15h30']
         }
         self.unbounded_recurrence = {
             'duration': 1439,

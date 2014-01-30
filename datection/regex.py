@@ -10,23 +10,23 @@ from datection.datenames import SHORT_MONTH
 # words located before a date, giving hints about how it relates
 # to other dates
 DAYS_PREFIX = r'le'
-FR_WEEKDAY = r'(%s)' % ('|'.join(
+FR_WEEKDAY = ur'(%s)' % ('|'.join(
     [wkd + r's?' for wkd in (WEEKDAY['fr'].keys())]))
 
 
 # first the whole month number, then the abbreviated
 # otherwhise, 'oct' might be matched in 'october', thus breaking
 # the whole date structure
-FR_SHORT_MONTH = [k + r'\.?' for k in SHORT_MONTH['fr'].keys()]
-FR_MONTH = r'(?<!\w)(%s)(?!\w)' % (
+FR_SHORT_MONTH = [k + ur'\.?' for k in SHORT_MONTH['fr'].keys()]
+FR_MONTH = ur'(?<!\w)(%s)(?!\w)' % (
     '|'.join(MONTH['fr'].keys() + FR_SHORT_MONTH))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = (
-    r'(?<![\d])'  # not preceeded by a digit
+    ur'(?<![\d])'  # not preceeded by a digit
     # OK: (0)1..(0)9...10...29, 30, 31
-    r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
-    r'( )?(?![\d|€)|h])')  # no number, prices or time tags after
+    ur'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
+    ur'( )?(?![\d|€)|h])')  # no number, prices or time tags after
     # to avoid matching (20)13 in a year, (20)€ or (15)h
     # Note that is its possible for a single digit  to be matched
     # that's ok because the DAY_NUMBER regex will be used in combination
@@ -49,7 +49,7 @@ MINUTE = r'[0-5][0-9]'
 # Note2: this pattern is not compiled. This way,
 # it can be re-used in other patters, to avoid
 # redudancy and un-maintainability
-_FR_DATE = r"""
+_FR_DATE = ur"""
     ((?P<day>{day})(er)?)\s* # day number (optional)
     (?P<month>{month})\s*  # month
     (?P<year>{year})?  # year (optional)
@@ -67,7 +67,7 @@ NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
 
 NUMERIC_DATE_SEPARATOR = r'[/\.-]'
 # Dates of format dd/mm(/(yy)yy)
-_FR_NUMERIC_DATE = r"""
+_FR_NUMERIC_DATE = ur"""
     (?<!/)  # not preceeded by a slash (to be safe)
     (?P<day>{day})
     {sep}  # separator
@@ -83,7 +83,7 @@ _FR_NUMERIC_DATE = r"""
 FR_NUMERIC_DATE = re.compile(_FR_NUMERIC_DATE, flags=re.VERBOSE)
 
 # Dates of format yy(yy)/mm/dd
-_BACKWARDS_NUMERIC_DATE = r"""
+_BACKWARDS_NUMERIC_DATE = ur"""
     (?P<year>{year})  # year
     {sep}  # separator
     (?P<month>{month})
@@ -120,9 +120,9 @@ _FR_TIME = r'((?<![^\s-]){hour})(\s)?({sep})({minute})?'.format(
 # * 15h30
 # * de 15h30 à 20h
 # * mercredi 13 mars, 15h30 - 16h
-FR_TIME_INTERVAL_PREFIX = r'(-|à|,|de|entre)'
-FR_TIME_INTERVAL_SUFFIX = r'(à|et|-)'
-_FR_TIME_INTERVAL = r"""
+FR_TIME_INTERVAL_PREFIX = ur'(-|à|,|de|entre)'
+FR_TIME_INTERVAL_SUFFIX = ur'(à|et|-)'
+_FR_TIME_INTERVAL = ur"""
     ({prefix}\s*)?
     (?P<start_time>{time})
     (\s*{suffix})?
@@ -139,9 +139,9 @@ FR_TIME_INTERVAL = re.compile(
 # Examples:
 # * du 15 au 18 Mars. (prefix: 'au', suffix: 'du')
 # * du samedi 19 au mercredi 23 octobre 2013
-INTERVAL_PREFIX = r'du'
-INTERVAL_SUFFIX = r'(au|-|>)'
-_FR_DATE_INTERVAL = r"""
+INTERVAL_PREFIX = ur'du'
+INTERVAL_SUFFIX = ur'(au|-|>)'
+_FR_DATE_INTERVAL = ur"""
     ({prefix}\s)?
     ((?P<start_day>{day})(er)?)\s* # day number
     (?P<start_month>{month})?\s*  # month (optional)
@@ -158,7 +158,7 @@ FR_DATE_INTERVAL = re.compile(
     _FR_DATE_INTERVAL, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 
-_FR_NUMERIC_DATE_INTERVAL = r"""
+_FR_NUMERIC_DATE_INTERVAL = ur"""
     ({prefix}\s)?
     (?P<start_day>{day}) # day number
     {sep}
@@ -185,7 +185,7 @@ FR_NUMERIC_DATE_INTERVAL = re.compile(
 # Examples:
 # le mercredi 18 juin 2013 à 20h30
 # le 15 août 2013 de 15h30 à 16h45
-_FR_DATETIME = r"""
+_FR_DATETIME = ur"""
     {date}\s*
     [^\d/]{{1,6}}
     {time}
@@ -193,7 +193,7 @@ _FR_DATETIME = r"""
 FR_DATETIME = re.compile(_FR_DATETIME,
                          flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-_FR_NUMERIC_DATETIME = r"""
+_FR_NUMERIC_DATETIME = ur"""
     {date}\s*
     [^\d/]{{1,6}}
     {time}
@@ -205,14 +205,14 @@ FR_NUMERIC_DATETIME = re.compile(_FR_NUMERIC_DATETIME,
 # Examples
 # * du samedi 19 au mercredi 23 octobre 2013, à 15h30
 # * du 15 au 18 Mars de 20h30 à 23h
-FR_DATETIME_INTERVAL = re.compile(r"""
+FR_DATETIME_INTERVAL = re.compile(ur"""
     {date_interval}
     [^\d/]{{1,6}}
     {time}
     """.format(date_interval=_FR_DATE_INTERVAL, time=_FR_TIME_INTERVAL),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
+FR_NUMERIC_DATETIME_INTERVAL = re.compile(ur"""
     {date_interval}
     [^\d/]{{1,6}}
     {time}
@@ -224,9 +224,9 @@ FR_NUMERIC_DATETIME_INTERVAL = re.compile(r"""
 # * Mercredi 15, jeudi 16, vendredi 17 et lundi 20 mars
 # * Les 25, 26, 27 et 28 octobre
 # * les 25, 26, 27 mars 2013
-FR_DATE_LIST_PREFIX = r'le(s)?'  # le/les
-FR_DATE_LIST_SUFFIX = r'et'
-_FR_DATE_IN_LIST = r"""
+FR_DATE_LIST_PREFIX = ur'le(s)?'  # le/les
+FR_DATE_LIST_SUFFIX = ur'et'
+_FR_DATE_IN_LIST = ur"""
         (?P<weekday_name>{weekday_name})?\s*  # day (optional)
         (?P<day>{day})\s* # day number
         (?P<month>{month})?\s*
@@ -238,7 +238,7 @@ FR_DATE_IN_LIST = re.compile(
     _FR_DATE_IN_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Example: lundi 25, mardi, 26 et mercredi 27 mars 2013
-_FR_DATE_LIST_WEEKDAY = r"""
+_FR_DATE_LIST_WEEKDAY = ur"""
     (?P<date_list>
         (
             {weekday_name}\s* # weekday (optional)
@@ -260,7 +260,7 @@ FR_DATE_LIST_WEEKDAY = re.compile(
 
 # Example: 25, 26, 27 mars 2013
 # strong hypothesis: no weekday
-_FR_DATE_LIST = r"""
+_FR_DATE_LIST = ur"""
     (?P<date_list>
         (
             {day}\s* # day number
@@ -283,7 +283,7 @@ FR_DATE_LIST = re.compile(
 # Examples:
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 à 20h30
 # * le mercredi 6, jeudi 7 et vendredi 8 juin 2013 de 20h à 20h30
-FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
+FR_DATETIME_LIST_WEEKDAY = re.compile(ur"""
     {datelist}
     [^\d]{{,4}}
     {time}
@@ -291,7 +291,7 @@ FR_DATETIME_LIST_WEEKDAY = re.compile(r"""
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # datetime list with *no* weekday
-FR_DATETIME_LIST = re.compile(r"""
+FR_DATETIME_LIST = re.compile(ur"""
     {datelist}
     [^\d]{{,4}}
     {time}
@@ -303,10 +303,10 @@ FR_DATETIME_LIST = re.compile(r"""
 # Examples:
 # * les lundis, mardis et mercredis
 # * le lundi du 5 au 13 mars 2013
-FR_WEEKDAY_LIST_PREFIX = r'le(s)?'
-FR_WEEKDAY_LIST_SUFFIX = r'\set\s|,\s'
+FR_WEEKDAY_LIST_PREFIX = ur'le(s)?'
+FR_WEEKDAY_LIST_SUFFIX = ur'\set\s|,\s'
 
-_FR_WEEKDAY_RECURRENCE = r"""
+_FR_WEEKDAY_RECURRENCE = ur"""
     {prefix}\s
     (?P<weekdays>
         (
@@ -328,10 +328,10 @@ FR_WEEKDAY_RECURRENCE = re.compile(
 # Examples:
 # * du lundi au mercredi
 # * du  lundi au vendredi du 5 au 13 mars 2013
-FR_WEEKDAY_INTERVAL_PREFIX = r'du'
-FR_WEEKDAY_INTERVAL_SUFFIX = r'\sau\s'
+FR_WEEKDAY_INTERVAL_PREFIX = ur'du'
+FR_WEEKDAY_INTERVAL_SUFFIX = ur'\sau\s'
 
-_FR_WEEKDAY_INTERVAL_RECURRENCE = r"""
+_FR_WEEKDAY_INTERVAL_RECURRENCE = ur"""
     {prefix}\s
     (?P<start_weekday>{weekday}(?!\s\d))  # weekday with no date
     {suffix}
@@ -349,9 +349,9 @@ FR_WEEKDAY_INTERVAL_RECURRENCE = re.compile(
 
 
 # Recurrent 'all days' expression
-FR_ALL_WEEKDAYS = r'tous\sles\sjours'
+FR_ALL_WEEKDAYS = ur'tous\sles\sjours'
 
-_FR_ALL_WEEKDAY_RECURRENCE = r"""
+_FR_ALL_WEEKDAY_RECURRENCE = ur"""
     {prefix}
     ([,\s]+(?P<date_interval>{date_interval}))?
     ([,\s]+(?P<time_interval>{time_interval}))?
@@ -362,8 +362,8 @@ _FR_ALL_WEEKDAY_RECURRENCE = r"""
 FR_ALL_WEEKDAY_RECURRENCE = re.compile(
     _FR_ALL_WEEKDAY_RECURRENCE, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = r'(au|à)'
-_FR_CONTINUOUS_DATETIME_INTERVAL = r"""
+FR_CONTINUOUS_DATETIME_INTERVAL_SUFFIX = ur'(au|à)'
+_FR_CONTINUOUS_DATETIME_INTERVAL = ur"""
     ({weekday_name})?\s*  # day (optional)
     ((?P<start_day>{day})(er)?)\s* # day number
     (?P<start_month>{month})\s*  # month
@@ -385,7 +385,7 @@ FR_CONTINUOUS_DATETIME_INTERVAL = re.compile(
     _FR_CONTINUOUS_DATETIME_INTERVAL,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
-_FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = r"""
+_FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = ur"""
     ({weekday_name})?\s*  # day (optional)
     (?P<start_day>{day})
     {sep}  # separator
