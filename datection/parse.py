@@ -29,19 +29,19 @@ def parse(text, lang, valid=True):
     timepoint_families = [det for det in TIMEPOINT_REGEX[lang].keys()
                           if not det.startswith('_')]
 
-    for context in contexts:
+    for ctx in contexts:
         matches = []
         for family in timepoint_families:
             for detector in TIMEPOINT_REGEX[lang][family]:
                 matches.extend(
-                    [(m, family) for m in re.finditer(detector, unicode(context))])
+                    [(m, family) for m in re.finditer(detector, unicode(ctx))])
 
         matches = _remove_subsets(matches)  # rm overlapping matches
         for match, family in matches:
             try:
                 timepoint = timepoint_factory(
                     detector=family, data=match.groupdict(),
-                    lang=lang, span=context.position_in_text(match.span()))
+                    lang=lang, span=ctx.position_in_text(match.span()))
             except NotImplementedError:
                 pass
             else:

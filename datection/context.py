@@ -23,7 +23,7 @@ class Context(object):
 
         :param match_start: the start index of the match span (int)
         :param match_end: the end index of the match span (int)
-        :param text: the input text (str)
+        :param text: the input text (unicode)
         :param size: the number of characters of context (int)
 
         Example: A sequence is matched at the index span (130, 137).
@@ -39,6 +39,7 @@ class Context(object):
             self.start = match_start - size
         else:
             self.start = 0
+
         self.end = match_end + size
         self.text = text  # the input text
         self.size = size  # the number of characters of context
@@ -63,13 +64,13 @@ class Context(object):
         return item.start in xrange(self.start, self.end)
 
     def __repr__(self):
-        return self.text[self.start: self.end]
+        return repr(self.text[self.start: self.end])
 
     def __eq__(self, item):
         return self.__dict__ == item.__dict__
 
     def __unicode__(self):
-        return unicode(self.text)
+        return unicode(self.text[self.start: self.end])
 
     def __hash__(self):
         return hash(unicode(self))
@@ -98,12 +99,7 @@ def probe(text, lang):
     for tp_probe in TIMEPOINT_PROBE[lang]:
         for match in re.finditer(tp_probe, text):
             start, end = match.span()  # start/end indexes of the match in text
-            matches.extend(
-                [
-                    Context(start, end, text)
-                    for match in re.finditer(tp_probe, text)
-                ]
-            )
+            matches.append(Context(start, end, text))
 
     out = list(set(matches))  # remove redundant matches
     # sort return list by order of apperance in the text
