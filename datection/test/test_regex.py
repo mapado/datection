@@ -629,7 +629,7 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
             'weekdays'] == u'lundi, mardi et mercredi'
 
     def test_recurrent_weedays_in_date_interval(self):
-        text = u""" le loto aura lieu le lundi, mardi et mercredi du 15 au 30 juin 2013 """
+        text = u""" le loto aura lieu lundi, mardi et mercredi du 15 au 30 juin 2013 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert recurrence.groupdict()[
             'weekdays'] == u'lundi, mardi et mercredi'
@@ -650,7 +650,7 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
             'date_interval'] == u'du 15 au 30 juin 2013'
 
     def test_recurrent_weedays_in_datetime_interval(self):
-        text = u""" le loto aura lieu le lundi, mardi, vendredi du 15 au 30 juin 2013 de 15h à 16h30 """
+        text = u""" le loto aura lieu lundi, mardi, vendredi du 15 au 30 juin 2013 de 15h à 16h30 """
         recurrence = re.search(FR_WEEKDAY_RECURRENCE, text)
         assert recurrence.groupdict()['weekdays'] == u'lundi, mardi, vendredi'
         assert recurrence.groupdict()[

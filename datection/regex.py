@@ -307,7 +307,7 @@ FR_WEEKDAY_LIST_PREFIX = ur'le(s)?'
 FR_WEEKDAY_LIST_SUFFIX = ur'\set\s|,\s'
 
 _FR_WEEKDAY_RECURRENCE = ur"""
-    {prefix}\s
+    ({prefix}\s)?
     (?P<weekdays>
         (
             {weekday}(?!\s\d)  # recurrent weekday not followed by a date num
