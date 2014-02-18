@@ -607,9 +607,15 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             '+ %(num)d date', '+ %(num)d dates', num) % {'num': num}
         return msg
 
-    def display(self, reference):
+    def display(self, reference, shortest):
         """Return a human readable string describing self.schedule as shortly
         as possible(ie: using abbreviated names), in the right language.
+
+        Params:
+            * reference: (datetime), the datetime from which to consider
+            the dates.
+            * shortest (bool): if True, the next dates summary will not
+            be added to the formatted date.
 
         """
         out = []
@@ -627,7 +633,9 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
                 'times': ', '.join(fmt_times[:-1]),
                 'last_time': fmt_times[-1]}
         out.append(msg)
-        if len(self) > 1:
+
+        # The summary will only be displayed if shortest = False
+        if len(self) > 1 and not shortest:
             out.append(self.format_date_summary())
         return self.format_output(out)
 
@@ -668,7 +676,7 @@ class OpeningHoursFormatter(BaseScheduleFormatter):
 
 
 def display(schedule, lang, place=False, short=False, bounds=(None, None),
-            reference=datetime.date.today()):
+            shortest=False, reference=datetime.date.today()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
@@ -679,6 +687,9 @@ def display(schedule, lang, place=False, short=False, bounds=(None, None),
             (str) the wanted output language
         short:
             (bool) if True, a shorter sentence will be generated
+        shortest:
+            (bool) if True, the shortest sentence possible will be
+            generated
         bounds:
             limit start / end datetimes beyond which the dates will
         not event be considered
@@ -694,9 +705,9 @@ def display(schedule, lang, place=False, short=False, bounds=(None, None),
         _ = t.ugettext
         if place:
             return OpeningHoursFormatter(schedule, lang).display()
-        elif short:
+        elif short or shortest:
             start, end = bounds
             return ShortScheduleFormatter(schedule, start, end, lang).\
-                display(reference)
+                display(reference, shortest)
         else:
             return LongScheduleFormatter(schedule, lang).display()

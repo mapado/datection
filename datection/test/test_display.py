@@ -183,10 +183,19 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 11, 0, 0),
             datetime.datetime(2013, 8, 11, 23, 59))
+
+        # short formatting
         expected = u"Aujourd'hui de 22 h 30 à 23 h 30"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+        # shortest formatting
+        expected = u"Aujourd'hui de 22 h 30 à 23 h 30"
+        self.assertEqual(
+            datection.display(schedule, self.lang, shortest=True,
+                              bounds=bounds, reference=d),
             expected)
 
     def test_display_tomorrow(self):
@@ -201,10 +210,19 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 11, 0, 0),
             datetime.datetime(2013, 8, 11, 23, 59))
+
+        # short formatting
         expected = u"Demain de 22 h 30 à 23 h 30"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+        # shortest formatting
+        expected = u"Demain de 22 h 30 à 23 h 30"
+        self.assertEqual(
+            datection.display(schedule, self.lang, shortest=True,
+                              bounds=bounds, reference=d),
             expected)
 
     def test_display_weekday(self):
@@ -219,10 +237,19 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 14, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
+
+        # short formatting
         expected = u"Dimanche de 22 h 30 à 23 h 30 + 1 date"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+        # shortest formatting
+        expected = u"Dimanche de 22 h 30 à 23 h 30"
+        self.assertEqual(
+            datection.display(schedule, self.lang, shortest=True,
+                              bounds=bounds, reference=d),
             expected)
 
     def test_display_full_date(self):
@@ -237,10 +264,19 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 8, 10, 0, 0),
             datetime.datetime(2013, 8, 19, 23, 59))
+
+        # short formatted
         expected = u"Le 11 août de 22 h 30 à 23 h 30 + 4 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+        # shortest formatted
+        expected = u"Le 11 août de 22 h 30 à 23 h 30"
+        self.assertEqual(
+            datection.display(schedule, self.lang, shortest=True,
+                              bounds=bounds, reference=d),
             expected)
 
     def test_display_full_date_short_month(self):
@@ -255,10 +291,19 @@ class ShortDisplayTest(unittest.TestCase):
         bounds = (
             datetime.datetime(2013, 11, 19, 0, 0),
             datetime.datetime(2013, 11, 25, 23, 59))
+
+        # short formatting
         expected = u"Le 19 nov. de 22 h 30 à 23 h 30 + 6 dates"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
+            expected)
+
+        # shortest formatting
+        expected = u"Le 19 nov. de 22 h 30 à 23 h 30"
+        self.assertEqual(
+            datection.display(schedule, self.lang, shortest=True,
+                              bounds=bounds, reference=d),
             expected)
 
     def test_display_unbounded_rrule(self):
