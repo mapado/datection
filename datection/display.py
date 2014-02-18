@@ -8,7 +8,6 @@ human-readable string possible.
 import datetime
 import calendar
 import gettext
-import itertools as it
 
 # Set up message catalog access
 from os.path import abspath, join, dirname
@@ -605,7 +604,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         # handle plural/singular case
         msg = gettext.ngettext(
             '+ %(num)d date', '+ %(num)d dates', num) % {'num': num}
-        return msg
+        return msg.strip()
 
     def display(self, reference, shortest):
         """Return a human readable string describing self.schedule as shortly
