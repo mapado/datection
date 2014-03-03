@@ -16,7 +16,7 @@ popath = abspath(join(dirname(__file__), 'po'))
 from collections import defaultdict
 
 from datection.lang import getlocale
-from datection.utils import lazy_property
+from datection.utils import cached_property
 from datection.models import DurationRRule
 
 
@@ -148,19 +148,19 @@ class BaseScheduleFormatter(object):
         self.schedule = [DurationRRule(drr) for drr in schedule]
         self.lang = lang
 
-    @lazy_property
+    @cached_property
     def recurring(self):
         """Select recurring rrules from self.schedule"""
         return [drr for drr in self.schedule if drr.is_recurring]
 
-    @lazy_property
+    @cached_property
     def non_recurring(self):
         """Select non recurring rrules from self.schedule"""
         return [drr for drr in self.schedule
                 if not drr.is_continuous
                 if not drr.is_recurring]
 
-    @lazy_property
+    @cached_property
     def continuous(self):
         """Select continuous rrules from self.schedule."""
         return [drr for drr in self.schedule if drr.is_continuous]
@@ -379,7 +379,7 @@ class LongScheduleFormatter(BaseScheduleFormatter):
     representation of a datection context-free schedule list
 
     """
-    @lazy_property
+    @cached_property
     def time_groups(self):
         """Non recurring rrules grouped by start/end datetimes"""
         _time_groups = to_start_end_datetimes(self.non_recurring)
@@ -389,7 +389,7 @@ class LongScheduleFormatter(BaseScheduleFormatter):
             group.sort(key=lambda date: date['start'])
         return _time_groups
 
-    @lazy_property
+    @cached_property
     def conseq_groups(self):
         """Group each time group by consecutivity"""
         _conseq_groups = []
@@ -552,7 +552,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
         nb_tot = len(self.dates)
         return nb_tot - nb_continuous_days + nb_continuous
 
-    @lazy_property
+    @cached_property
     def dates(self):
         """Convert self.schedule to a start / end datetime list and filter
         out the obtained values outside of the(self.start, self.end)

@@ -10,7 +10,7 @@ from datetime import timedelta
 import itertools as it
 
 
-def lazy_property(f):
+def cached_property(f):
     """Lazy loading decorator for object properties"""
     attr_name = '_' + f.__name__
 

@@ -9,7 +9,7 @@ from datetime import datetime
 from datetime import time
 from dateutil.rrule import rrulestr
 
-from datection.utils import lazy_property
+from datection.utils import cached_property
 
 
 class DurationRRule(object):
@@ -22,7 +22,7 @@ class DurationRRule(object):
     def __init__(self, duration_rrule):
         self.duration_rrule = duration_rrule
 
-    @lazy_property
+    @cached_property
     def rrule(self):
         """Instanciate an rrule from the rrule string
 
