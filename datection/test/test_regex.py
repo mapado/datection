@@ -52,7 +52,6 @@ class TestDateRegex(unittest.TestCase):
                 lundi 28 Février 2001 : de 20h à 21h20."""
         date = re.search(FR_DATE, text)
         assert date.group(0).strip() == u'28 Février 2001'
-        # assert date.groupdict()['weekday_name'] == u'lundi'
         assert date.groupdict()['month'] == u'Février'
 
     def test_missing_day(self):
@@ -61,9 +60,9 @@ class TestDateRegex(unittest.TestCase):
         date = re.search(FR_DATE, text)
 
         assert date.group(0).strip() == u'28 Février 2001'
-        # assert date.groupdict()['weekday_name'] is None
         assert date.groupdict()['day'] == u'28'
         assert date.groupdict()['month'] == u'Février'
+        assert date.groupdict()['year'] == u'2001'
 
     def test_missing_date(self):
         """ Test that the date is mandatory for the match to happen. """

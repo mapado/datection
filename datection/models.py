@@ -10,6 +10,7 @@ from datetime import time
 from dateutil.rrule import rrulestr
 
 from datection.utils import cached_property
+from datection.normalize import MISSING_YEAR
 
 
 class DurationRRule(object):
@@ -145,3 +146,8 @@ class DurationRRule(object):
         if not 'BYDAY' in self.duration_rrule['rrule']:
             return False
         return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
+
+    @property
+    def missing_year(self):
+        """Return True if the recurrence rule year is 1."""
+        return self.rrule.dtstart.year == MISSING_YEAR

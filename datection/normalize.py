@@ -12,7 +12,6 @@ from datetime import datetime
 from datetime import date
 from datetime import time
 from datetime import timedelta
-from datetime import MINYEAR
 
 from dateutil.rrule import rrule, WEEKLY
 from datection.regex import WEEKDAY
@@ -26,6 +25,7 @@ from datection.utils import duration
 
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
+MISSING_YEAR = 1000
 
 
 def timepoint_factory(detector, lang, data, **kwargs):
@@ -89,7 +89,9 @@ class Date(Timepoint):
         self.day = day
 
     def __repr__(self):
-        return '{d}/{m}/{y}'.format(d=self.day, m=self.month, y=self.year)
+        return '<{cls}: {d}/{m}/{y}>'.format(cls=self.__class__.__name__,
+                                             d=self.day, m=self.month,
+                                             y=self.year)
 
     @classmethod
     def _from_groupdict(cls, groupdict, lang, **kwargs):
@@ -103,15 +105,15 @@ class Date(Timepoint):
     def _set_year(cls, year):
         """ Set and normalise the date year
 
-        If year is None (missing year) we replace it by the next year
-        Elif the year is numeric but only 2 digit long, we guess in which
-        century it is (ex: dd/mm/13 -> 1913, 2013, etc ?)
+        If year is None (missing year), return 1.
+        Else, if the year is numeric but only 2 digit long, we guess in
+        which century it is (ex: dd/mm/13 -> 1913, 2013, etc ?)
         Else, make sure the year is an int
 
         """
         if not year:
-        # if year is not given, set year as next year
-            return date.today().year + 1
+        # if year is not given, set year as 1, as a marker of missing year
+            return MISSING_YEAR
 
         # Case of a numeric date with short year format
         if len(str(year)) == 2:
@@ -154,8 +156,6 @@ class Date(Timepoint):
 
         """
         if all([self.year, self.month, self.day]):
-            if self.year == MINYEAR:
-                return False
             try:  # check if date is valid
                 date(year=self.year, month=self.month, day=self.day)
             except ValueError:
@@ -237,7 +237,7 @@ class DateList(Timepoint):
                                  groupdict['date_list']):
             groupdict = match.groupdict()
             if not groupdict['year']:
-                groupdict['year'] = MINYEAR
+                groupdict['year'] = MISSING_YEAR
             _date = Date._from_groupdict(groupdict, lang=lang, span=span)
             dates.append(_date)
         return dates
@@ -245,16 +245,14 @@ class DateList(Timepoint):
     @staticmethod
     def _set_year(dates):
         """ All dates without a year will inherit from the end date year """
-        # Assign MINYEAR to year, if year is None
+        # Assign MISSING_YEAR to year, if year is None
         # It will be a marker allowing the year to be replaced
         # by the same value as the last year of the list
         # Ex: 2, 3 & 5 juin 2013 → 2/06/13, 3/06/13 & 5/06/13
         end_date = dates[-1]
         if end_date.year:
-            if end_date.year == MINYEAR:
-                end_date.year = date.today().year + 1
             for _date in dates[:-1]:
-                if _date.year == MINYEAR:
+                if _date.year == MISSING_YEAR:
                     _date.year = end_date.year
         return dates
 
@@ -325,7 +323,7 @@ class DateInterval(Timepoint):
         if not groupdict.get('start_year') and groupdict.get('end_year'):
             groupdict['start_year'] = groupdict['end_year']
         elif not (groupdict.get('start_year') or groupdict.get('end_year')):
-            groupdict['start_year'] = date.today().year + 1
+            groupdict['start_year'] = MISSING_YEAR
             groupdict['end_year'] = groupdict['start_year']
 
         # Create normalised start date of Date type
@@ -347,10 +345,20 @@ class DateInterval(Timepoint):
         # warning, if end month occurs before start month, then end month
         # is next year
         if end_date.month < start_date.month:
-            if start_date.year == end_date.year:
-                start_date.year -= 1
-            elif not groupdict['end_year']:
-                end_date.year += 1
+
+            # standard case: the end year is well known
+            if end_date.year != MISSING_YEAR:
+                if start_date.year == end_date.year:
+                    start_date.year -= 1
+                elif not groupdict['end_year']:
+                    end_date.year += 1
+
+            # weird case: the end year is unknown and after greater than
+            # the (still unknown start year). In this case, the end year
+            # will be 2 and the start year will be 1.
+            else:
+                start_date.year = MISSING_YEAR
+                end_date.year = MISSING_YEAR + 1
 
         return start_date, end_date
 
@@ -521,7 +529,7 @@ class DateTime(Timepoint):
     @classmethod
     def _set_date(cls, groupdict, lang):
         """Set the datetime date, as a Date object."""
-        year = groupdict.get('year') or date.today().year + 1
+        year = groupdict.get('year') or MISSING_YEAR
         month = groupdict.get('month')
         day = groupdict.get('day')
         date_groupdict = {'day': day, 'month': month, 'year': year}

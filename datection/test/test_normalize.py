@@ -6,6 +6,7 @@ import unittest
 import datetime
 
 from datection.parse import parse
+from datection.normalize import MISSING_YEAR
 
 
 # We pretend to be in the past
@@ -44,7 +45,7 @@ class TestNormalizeFrDates(unittest.TestCase):
         self.assertTrue(parse(u' lundi 5 mars', 'fr')[0].valid)
 
         d_no_year = parse(u'le 15 février de 15h à 20h, plop', 'fr')[0]
-        self.assertEqual(d_no_year.date.year, datetime.date.today().year + 1)
+        self.assertEqual(d_no_year.date.year, MISSING_YEAR)
         self.assertTrue(d_no_year.valid)
         self.assertTrue(d_no_year.date.valid)
 
@@ -182,14 +183,13 @@ class TestNormalizeFrDateList(unittest.TestCase):
 
         """
         datelist = parse(u'le 5, 6 et 7 octobre', 'fr')[0]
-        next_year = datetime.date.today().year + 1
         self.assertTrue(datelist.valid)
         self.assertTrue(datelist.dates[0].valid)
-        self.assertEqual(datelist.dates[0].year, next_year)
+        self.assertEqual(datelist.dates[0].year, MISSING_YEAR)
         self.assertTrue(datelist.dates[1].valid)
-        self.assertEqual(datelist.dates[1].year, next_year)
+        self.assertEqual(datelist.dates[1].year, MISSING_YEAR)
         self.assertTrue(datelist.dates[2].valid)
-        self.assertEqual(datelist.dates[2].year, next_year)
+        self.assertEqual(datelist.dates[2].year, MISSING_YEAR)
 
     def test_to_python(self):
         """ Test the return value of the to_python mehod """
@@ -241,7 +241,7 @@ class TestNormalizeFrDateTime(unittest.TestCase):
     def test_missing_year(self):
         """ test the normalisation of a datetime with a missing year """
         dt = parse(u'le 8 octobre à 20h30', 'fr')[0]
-        self.assertEqual(dt.date.year, datetime.date.today().year + 1)
+        self.assertEqual(dt.date.year, MISSING_YEAR)
         self.assertTrue(dt.valid)
         self.assertTrue(dt.date.valid)
         self.assertTrue(dt.time.valid)
@@ -318,12 +318,9 @@ class TestNormalizeFrDateTimeList(unittest.TestCase):
         """
         dtl = parse(u'le 6, 7, 8 octobre à 20h30', 'fr')[0]
         self.assertTrue(dtl.valid)
-        self.assertEqual(
-            dtl.datetimes[0].date.year, datetime.date.today().year + 1)
-        self.assertEqual(
-            dtl.datetimes[1].date.year, datetime.date.today().year + 1)
-        self.assertEqual(
-            dtl.datetimes[2].date.year, datetime.date.today().year + 1)
+        self.assertEqual(dtl.datetimes[0].date.year, MISSING_YEAR)
+        self.assertEqual(dtl.datetimes[1].date.year, MISSING_YEAR)
+        self.assertEqual(dtl.datetimes[2].date.year, MISSING_YEAR)
 
 
 class TestNormalizeFrDateInterval(unittest.TestCase):
@@ -392,8 +389,8 @@ class TestNormalizeFrDateInterval(unittest.TestCase):
         di = parse(u'du 6 au 9 octobre', 'fr')[0]
         self.assertTrue(di.start_date.valid)
         self.assertTrue(di.end_date.valid)
-        self.assertEqual(di.start_date.year, datetime.date.today().year + 1)
-        self.assertEqual(di.end_date.year, datetime.date.today().year + 1)
+        self.assertEqual(di.start_date.year, MISSING_YEAR)
+        self.assertEqual(di.end_date.year, MISSING_YEAR)
         self.assertTrue(di.valid)
 
     def test_numeric_dates_missing_first_year(self):
@@ -423,8 +420,8 @@ class TestNormalizeFrDateInterval(unittest.TestCase):
 
         """
         di = parse(u'du 01/12 au 05/04 il pleuvra', 'fr')[0]
-        self.assertEqual(di.start_date.year, datetime.date.today().year)
-        self.assertEqual(di.end_date.year, datetime.date.today().year + 1)
+        self.assertEqual(di.start_date.year, MISSING_YEAR)
+        self.assertEqual(di.end_date.year, MISSING_YEAR + 1)
 
 
 class TestNormalizeFrDateTimeInterval(unittest.TestCase):
