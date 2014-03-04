@@ -17,6 +17,7 @@ from datection.regex import FR_TIME_INTERVAL
 from datection.regex import FR_DATETIME
 from datection.regex import FR_NUMERIC_DATETIME
 from datection.regex import FR_DATE_LIST_WEEKDAY
+from datection.regex import FR_DATE_LIST
 from datection.regex import FR_DATETIME_LIST
 from datection.regex import FR_DATETIME_LIST_WEEKDAY
 from datection.regex import FR_DATETIME_INTERVAL
@@ -56,7 +57,7 @@ class TestDateRegex(unittest.TestCase):
 
     def test_missing_day(self):
         """Test the extraction of a date without day name."""
-        text = u'Adulte : 19 € Tarif réduit : 13 € 28 Février 2001 : de 20h à 21h20.'
+        text = u'Tarif réduit : 13 € 28 Février 2001 : de 20h à 21h20.'
         date = re.search(FR_DATE, text)
 
         assert date.group(0).strip() == u'28 Février 2001'
@@ -66,13 +67,13 @@ class TestDateRegex(unittest.TestCase):
 
     def test_missing_date(self):
         """ Test that the date is mandatory for the match to happen. """
-        text = u'Adulte : 19 € Tarif réduit : 13 € Février 2001 : de 20h à 21h20.'
+        text = u' Tarif réduit : 13 € Février 2001 : de 20h à 21h20.'
         date = re.search(FR_DATE, text)
         assert date is None
 
     def test_missing_year(self):
         """Test the extraction of a date with no year."""
-        text = u'Adulte : 19 € Tarif réduit : 13 € Mardi 4 Février : de 20h à 21h20.'
+        text = u'réduit : 13 € Mardi 4 Février : de 20h à 21h20.'
         date = re.search(FR_DATE, text)
         assert date.group(0).strip() == u'4 Février'
         assert date.groupdict()['year'] is None
@@ -83,12 +84,14 @@ class TestDateRegex(unittest.TestCase):
         Accepted formats are:
         * one digit, from 1 to 9
         * two digits:
-          * if the first digit is 0, 1 or 2, the second digit must be between 0 and 9
+          * if the first digit is 0, 1 or 2, the second digit must be between
+            0 and 9
           * if the first digit is 3, the second digit must be either 0 or 1
         That way, we can extract dates bewteen 1 and 31.
 
-        Note that the regex does not check the validity of the date/month couple.
-        For example, 31 Février would be extracted, even though Février stops at 28 or 29.
+        Note that the regex does not check the validity of the date/month
+        couple. For example, '31 Février' would be extracted, even though
+        February stops at 28 or 29.
 
         """
         # One digit dates
@@ -280,6 +283,16 @@ class TestDateIntervalRegex(unittest.TestCase):
         assert interval.groupdict()['end_day'] == u'05'
         assert interval.groupdict()['end_month'] == u'04'
         assert interval.groupdict()['end_year'] == u'2007'
+
+    def test_numeric_date_interval_20th_century(self):
+        text = u'plop du 30/03/1999 au 31/03/1999 plop'
+        interval = re.search(FR_NUMERIC_DATE_INTERVAL, text)
+        assert interval.groupdict()['start_day'] == u'30'
+        assert interval.groupdict()['start_month'] == u'03'
+        assert interval.groupdict()['start_year'] == u'1999'
+        assert interval.groupdict()['end_day'] == u'31'
+        assert interval.groupdict()['end_month'] == u'03'
+        assert interval.groupdict()['end_year'] == u'1999'
 
     def test_numeric_date_interval_fot_separator(self):
         text = u"ohai du 01.12.2005 - 05.04.2007 lala"
@@ -528,18 +541,36 @@ class TestDateListRegex(unittest.TestCase):
 
     """
 
-    def test_extract(self):
-        """Test the extraction of a list of the form Day X, Day Y, et Day X Month."""
-        text = u""" Adulte : 19 € Tarif réduit :
-            13 € le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février."""
+    def test_extract_weekday(self):
+        text = u"""Tarif réduit :
+        13 € le Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février."""
         datelist = re.search(FR_DATE_LIST_WEEKDAY, text)
         expected = u"Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
         assert datelist.groupdict()['date_list'].strip() == expected
 
+    def test_extract_weekday_ampersand_separator(self):
         text = u""" Adulte : 19 € Tarif réduit :
-            13 € le lundi 13 et mardi 14 février."""
+            13 € le lundi 13 & mardi 14 février."""
         datelist = re.search(FR_DATE_LIST_WEEKDAY, text)
-        expected = u"lundi 13 et mardi 14 février"
+        expected = u"lundi 13 & mardi 14 février"
+        assert datelist.groupdict()['date_list'].strip() == expected
+
+    def test_extract_no_weekday(self):
+        text = u"""Plop les 13 et 14 février 2014 NOISE."""
+        datelist = re.search(FR_DATE_LIST, text)
+        expected = u"13 et 14 février 2014"
+        assert datelist.groupdict()['date_list'].strip() == expected
+
+    def test_extract_no_weekday_ampersand_separator(self):
+        text = u"""Plop les 13 & 14 février 2014 NOISE."""
+        datelist = re.search(FR_DATE_LIST, text)
+        expected = u"13 & 14 février 2014"
+        assert datelist.groupdict()['date_list'].strip() == expected
+
+    def test_extract_no_weekday_comma_separator(self):
+        text = u"""Plop les 13, 14 février 2014 NOISE."""
+        datelist = re.search(FR_DATE_LIST, text)
+        expected = u"13, 14 février 2014"
         assert datelist.groupdict()['date_list'].strip() == expected
 
 
@@ -547,8 +578,10 @@ class TestDateTimeListRegex(unittest.TestCase):
 
     """Test class for the extraction of date time lists.
 
-    Examples: les 25, 26 et 27 février 2013, mercredi 14 et jeudi 15 mars,
-        les 25, 26 et 27 février 2013 à 15h, les 25, 26 et 27 février 2013, 15h-16h
+    Examples:
+        * les 25, 26 et 27 février 2013, mercredi 14 et jeudi 15 mars,
+        * les 25, 26 et 27 février 2013 à 15h,
+        * les 25, 26 et 27 février 2013, 15h-16h
 
     """
 

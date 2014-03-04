@@ -224,15 +224,15 @@ FR_NUMERIC_DATETIME_INTERVAL = re.compile(ur"""
 # * Mercredi 15, jeudi 16, vendredi 17 et lundi 20 mars
 # * Les 25, 26, 27 et 28 octobre
 # * les 25, 26, 27 mars 2013
-FR_DATE_LIST_PREFIX = ur'le(s)?'  # le/les
-FR_DATE_LIST_SUFFIX = ur'et'
+# * les 25 & 27 mars 2013
+FR_DATE_LIST_SUFFIX = ur'(et|&)'
 _FR_DATE_IN_LIST = ur"""
         (?P<weekday_name>{weekday_name})?\s*  # day (optional)
         (?P<day>{day})\s* # day number
         (?P<month>{month})?\s*
         (?P<year>{year})?\s*
     """.format(
-    prefix=FR_DATE_LIST_PREFIX, weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
+    weekday_name=FR_WEEKDAY, day=DAY_NUMBER,
     month=FR_MONTH, year=YEAR)
 FR_DATE_IN_LIST = re.compile(
     _FR_DATE_IN_LIST, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
@@ -259,6 +259,8 @@ FR_DATE_LIST_WEEKDAY = re.compile(
     _FR_DATE_LIST_WEEKDAY, flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Example: 25, 26, 27 mars 2013
+# Example: 25, 26 & 27 mars 2013
+# Example: 25, 26 et 27 mars 2013
 # strong hypothesis: no weekday
 _FR_DATE_LIST = ur"""
     (?P<date_list>
