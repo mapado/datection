@@ -32,9 +32,8 @@ DAY_NUMBER = (
     # that's ok because the DAY_NUMBER regex will be used in combination
     # with others like DAYS, MONTHS, etc
 
-# The year number. A  valid year must begin with 2, to avoid detection
-# of past dates
-YEAR = r'2\d{3}'
+# The year number. A valid year must either start with 1 or 2.
+YEAR = r'[12]\d{3}'
 
 # hour: between 00 and 24. Can be 2 digit or 1-digit long.
 # The hour it must not be preceded by another digit
@@ -63,7 +62,7 @@ NUMERIC_MONTH = r'0[1-9]|1[0-2]'
 
 # The numeric version of the year number, either 2 digits or 4 digits
 # (ex: dd/mm/2012 or dd/mm/12)
-NUMERIC_YEAR = r'%s|\d{2}' % (YEAR)
+NUMERIC_YEAR = r'%s|\d{2}(?!\d{2})' % (YEAR)
 
 NUMERIC_DATE_SEPARATOR = r'[/\.-]'
 # Dates of format dd/mm(/(yy)yy)
