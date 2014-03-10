@@ -575,7 +575,7 @@ class ShortScheduleFormatter(BaseScheduleFormatter):
             return _(u"demain")
         elif reference < d < reference + datetime.timedelta(days=6):
             # if d is next week, use its weekday name
-            return self.dayname(d.isocalendar()[2] - 1)
+            return u'%s prochain' % (self.dayname(d.isocalendar()[2] - 1))
         else:
             return _(u'le %(shortdate)s') % {
                 'shortdate': self.format_short_date(dtime)}

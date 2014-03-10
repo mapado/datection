@@ -202,7 +202,7 @@ class ShortDisplayTest(unittest.TestCase):
             {
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
             }
         ]
         d = datetime.date(2013, 8, 10)  # the 'today' of the test
@@ -238,14 +238,14 @@ class ShortDisplayTest(unittest.TestCase):
             datetime.datetime(2013, 8, 19, 23, 59))
 
         # short formatting
-        expected = u"Dimanche de 22 h 30 à 23 h 30 + 1 date"
+        expected = u"Dimanche prochain de 22 h 30 à 23 h 30 + 1 date"
         self.assertEqual(
             datection.display(
                 schedule, self.lang, short=True, bounds=bounds, reference=d),
             expected)
 
         # shortest formatting
-        expected = u"Dimanche de 22 h 30 à 23 h 30"
+        expected = u"Dimanche prochain de 22 h 30 à 23 h 30"
         self.assertEqual(
             datection.display(schedule, self.lang, shortest=True,
                               bounds=bounds, reference=d),
