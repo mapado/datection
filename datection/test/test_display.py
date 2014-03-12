@@ -643,6 +643,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             schedule,
             self.locale,
             short=True,
+            shortest=False,
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(short), len(default))
@@ -665,6 +666,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             schedule,
             self.locale,
             short=True,
+            shortest=False,
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(default), len(short))
@@ -673,6 +675,32 @@ class TestDisplay_fr_FR(unittest.TestCase):
             default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
         self.assertEqual(
             shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h + autres dates')
+
+    def test_display_recurrence_no_summarize(self):
+        schedule = [
+            {'duration': 60,
+             'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                       'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959'),
+             'span': (0, 48)}]
+        start = datetime.datetime(2015, 3, 1)
+        end = datetime.datetime(2015, 3, 17)
+        reference = datetime.datetime(2015, 3, 1)
+        short = NextOccurenceFormatter(schedule, start, end).display(
+            reference, summarize=False)
+        default = LongFormatter(schedule).display(abbrev_monthname=True)
+        shortest_fmt = display(
+            schedule,
+            self.locale,
+            short=False,
+            shortest=True,
+            bounds=(start, end),
+            reference=reference)
+        self.assertGreater(len(default), len(short))
+        self.assertEqual(shortest_fmt, short)
+        self.assertEqual(
+            default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
+        self.assertEqual(
+            shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h')
 
 
 class TestUtilities(unittest.TestCase):

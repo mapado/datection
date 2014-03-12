@@ -138,7 +138,7 @@ def consecutives(date1, date2):
             or date1 + datetime.timedelta(days=-1) == date2)
 
 
-def shortest(item1, item2):
+def get_shortest(item1, item2):
     """Return item with shortest lenght"""
     return item1 if len(item1) < len(item2) else item2
 
@@ -956,7 +956,7 @@ class LongFormatter(BaseFormatter):
                 conseq_groups, *args, **kwargs))
 
             # pick shortest render
-            date_fmt = shortest(list_fmt, conseq_fmt)
+            date_fmt = get_shortest(list_fmt, conseq_fmt)
 
             # concatenate dates and time
             start_time, end_time = time_group[0].values()
@@ -989,8 +989,8 @@ class TemporaryLocale(object):  # pragma: no cover
         locale.resetlocale(self.category)
 
 
-def display(schedule, loc, short=False, bounds=(None, None), place=False,
-            reference=datetime.date.today()):
+def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
+            place=False, reference=datetime.date.today()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
@@ -1006,16 +1006,16 @@ def display(schedule, loc, short=False, bounds=(None, None), place=False,
     with TemporaryLocale(locale.LC_TIME, loc):
         if place:
             return OpeningHoursFormatter(schedule).display()
-        elif not short:
+        elif not (short or shortest):
             return LongFormatter(schedule).display()
         else:
             try:
                 start, end = bounds
                 short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                    display(reference, summarize=True)
+                    display(reference, summarize=not shortest)
             except NoFutureOccurence:
                 return u''
             else:
                 default_fmt = LongFormatter(schedule).display(
                     abbrev_monthname=True)
-                return shortest(default_fmt, short_fmt)
+                return get_shortest(default_fmt, short_fmt)
