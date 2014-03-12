@@ -980,7 +980,7 @@ class TemporaryLocale(object):  # pragma: no cover
 
     def __init__(self, category, locale):
         self.category = category
-        self.locale = locale
+        self.locale = locale.encode('utf-8')
 
     def __enter__(self):
         locale.setlocale(self.category, self.locale)
