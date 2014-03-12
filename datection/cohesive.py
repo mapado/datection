@@ -32,8 +32,9 @@ class DurationRRuleManipulator(object):
     def same_time_or_first_drr_time_undefined(self):
         return ((self.dr1.rrule.byhour == self.dr2.rrule.byhour
                 and self.dr1.rrule.byminute == self.dr2.rrule.byminute)
-                or (self.dr1.rrule.byhour[0] == 0
-                    and self.dr1.rrule.byhour[0] == 0))
+                or (self.dr1.rrule.byhour and self.dr2.rrule.byhour
+                    and self.dr1.rrule.byhour[0] == 0
+                    and self.dr2.rrule.byhour[0] == 0))
 
     def end_inside_drrule_lapse(self):
         return (self.dr1.start_datetime < self.dr2.end_datetime
@@ -86,17 +87,9 @@ class DurationRRuleManipulator(object):
     def more_cohesion_between_rrules(self):
 
         more_cohesion = False
-
         might_need_time_detail = (self.dr1.duration == 1439)
-        end_inside = self.end_inside_drrule_lapse()
-        begin_inside = self.begin_inside_drrule_lapse()
-        drr_sublapse_of_dcrr = self.drrule_sublapse_of_drrule()
 
-        drr_end_stick_dcrr = self.drr_end_stick_dcrr()
-        drr_begin_stick_dcrr = self.drr_begin_stick_dcrr()
-        is_unspecified_time = lack_of_precise_time_lapse(self.dr2)
-
-        if is_unspecified_time and might_need_time_detail:
+        if lack_of_precise_time_lapse(self.dr2) and might_need_time_detail:
             self.dr1.rrule._byhour = self.dr2.rrule.byhour
             self.dr1.rrule._byminute = self.dr2.rrule.byminute
             self.dr1.duration_rrule = self.dr2.duration_rrule
@@ -107,23 +100,26 @@ class DurationRRuleManipulator(object):
 
             if self.is_precisely_same_lapse():
                 return True
-            if end_inside and not begin_inside:
+
+            if (self.end_inside_drrule_lapse()
+                    and not self.begin_inside_drrule_lapse()):
                 # case 1 time_repr: <rr2 - <rr1 - -rr2 > -rr1 >
                 self.dr1.rrule._dtstart = self.dr2.start_datetime
                 return True
 
-            if begin_inside and not end_inside:
+            if (self.begin_inside_drrule_lapse()
+                    and not self.end_inside_drrule_lapse()):
                 # case 2 time_repr: <rr1- <rr2- -rr1> -rr2>
                 self.dr1.rrule._until = self.dr2.end_datetime
                 return True
 
-            if drr_sublapse_of_dcrr:
+            if self.drrule_sublapse_of_drrule():
                 # case 3 time_repr: <rr1- <rr2- -rr2> -rr1>
                 self.dr1.rrule._dtstart = self.dr2.rrule.dtstart
                 self.dr1.rrule._until = self.dr2.end_datetime
                 return True
 
-            if drr_end_stick_dcrr:
+            if self.drr_end_stick_dcrr():
                 # case 4 time_repr: <rr1- -rr1><rr2- -rr2> with same time
                 # precision
                 if not self.dr2.rrule.until:
@@ -133,7 +129,7 @@ class DurationRRuleManipulator(object):
                 self.dr1.rrule._count = None
                 return True
 
-            if drr_begin_stick_dcrr:
+            if self.drr_begin_stick_dcrr():
                 # case 5 time_repr: <rr2- -rr2><rr1- -rr1> with same time
                 # if time is same precision
                 self.dr1.rrule._dtstart = self.dr2.rrule.dtstart
