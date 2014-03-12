@@ -1006,7 +1006,7 @@ def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
     with TemporaryLocale(locale.LC_TIME, loc):
         if place:
             return OpeningHoursFormatter(schedule).display()
-        elif not (short or shortest):
+        elif not short and not shortest:
             return LongFormatter(schedule).display()
         else:
             try:
