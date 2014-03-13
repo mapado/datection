@@ -957,7 +957,8 @@ class WeekdayRecurrence(Timepoint):
                 date.today(),
                 time(0, 0, 0))
             # if not specified, the end date is one year after the start date
-            end_datetime = start_datetime + timedelta(days=365)
+            end_date = (start_datetime + timedelta(days=365)).date()
+            end_datetime = datetime.combine(end_date, time(23, 59))
         return start_datetime, end_datetime
 
     @property

@@ -28,6 +28,7 @@ translations = {
         'every day': u'tous les jours',
         'the': u'le',
         'and': u'et',
+        'at': u'à',
     }
 }
 
@@ -51,7 +52,7 @@ def all_day(start, end):
 
 
 def postprocess(strip=True, trim_whitespaces=True, lstrip_pattern=None,
-                capitalize=False):
+                capitalize=False, rstrip_pattern=None):
     """Post processing text formatter decorator."""
     def wrapped_f(f):
         @wraps(f)
@@ -62,6 +63,8 @@ def postprocess(strip=True, trim_whitespaces=True, lstrip_pattern=None,
                 s = re.sub(r'\s+', ' ', s)
             if lstrip_pattern:
                 s = s.lstrip(lstrip_pattern)
+            if rstrip_pattern:
+                s = s.rstrip(rstrip_pattern)
             if strip:
                 s = s.strip()
             if capitalize:
@@ -456,7 +459,7 @@ class TimeFormatter(BaseFormatter):
     @property
     def templates(self):  # pragma: no cover
         return {
-            'fr_FR': u'{hour} h {minute}'
+            'fr_FR': u'{prefix} {hour} h {minute}'
         }
 
     def format_hour(self):
@@ -469,7 +472,7 @@ class TimeFormatter(BaseFormatter):
             return u''
         return self.time.strftime('%M')
 
-    def display(self):
+    def display(self, prefix=False):
         """Format the time using the template associated with the locale
 
         """
@@ -478,7 +481,8 @@ class TimeFormatter(BaseFormatter):
         template = self.get_template()
         hour = self.format_hour()
         minute = self.format_minute()
-        fmt = template.format(hour=hour, minute=minute)
+        prefix = self._('at') if prefix else ''
+        fmt = template.format(prefix=prefix, hour=hour, minute=minute)
         fmt = fmt.strip()
         return fmt
 
@@ -490,23 +494,26 @@ class TimeIntervalFormatter(BaseFormatter):
     def __init__(self, start_time, end_time):
         super(TimeIntervalFormatter, self).__init__()
         self.start_time = get_time(start_time)
-        self.end_time = get_time(end_time)
+        self.end_time = get_time(end_time) if end_time else None
 
     @property
     def templates(self):  # pragma: no cover
         return {
-            'fr_FR': u'de {start_time} à {end_time}'
+            'fr_FR': {
+                'interval': u'de {start_time} à {end_time}',
+                'single_time': u'à {time}'
+            }
         }
 
-    def display(self):
+    def display(self, prefix=False):
         """Format the time using the template associated with the locale
 
         """
-        if self.start_time == self.end_time:
-            return TimeFormatter(self.start_time).display()
+        if self.start_time == self.end_time or self.end_time is None:
+            return TimeFormatter(self.start_time).display(prefix)
         elif all_day(self.start_time, self.end_time):
             return u''
-        template = self.get_template()
+        template = self.get_template('interval')
         start_time_fmt = TimeFormatter(self.start_time).display()
         end_time_fmt = TimeFormatter(self.end_time).display()
         fmt = template.format(
@@ -667,7 +674,10 @@ class WeekdayReccurenceFormatter(BaseFormatter):
             end_idx = self.drr.weekday_indexes[-1]
 
             # continuous interval
-            if self.drr.weekday_indexes == range(start_idx, end_idx + 1):
+            # note: to be continuous, the indexes must form a range of
+            # more than 2 items, otherwise, we see it as a list
+            if (self.drr.weekday_indexes == range(start_idx, end_idx + 1)
+                    and start_idx != end_idx - 1):
                 template = self.get_template('interval')
                 start_weekday = self.day_name(start_idx)
                 end_weekday = self.day_name(end_idx)
@@ -695,7 +705,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         """Format the rrule time interval using the current locale."""
         formatter = TimeIntervalFormatter(
             self.drr.start_datetime, self.drr.end_datetime)
-        return formatter.display()
+        return formatter.display(prefix=True)
 
     @postprocess(lstrip_pattern=',')
     def display(self, *args, **kwargs):
@@ -840,10 +850,7 @@ class LongFormatter(BaseFormatter):
     @property
     def templates(self):  # pragma: no cover
         return {
-            'fr_FR': {
-                'single_date': u'{dates}, à {time}',
-                'date_interval': u'{dates}, {time}',
-            }
+            'fr_FR': u'{dates} {time}',
         }
 
     @cached_property
@@ -935,6 +942,7 @@ class LongFormatter(BaseFormatter):
                 out.append(fmt)
         return out
 
+    @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
     def display(self, *args, **kwargs):
         """Return a human readable string describing self.schedule as shortly
         as possible (without using abbreviated forms), in the right language.
@@ -953,22 +961,25 @@ class LongFormatter(BaseFormatter):
 
         # format non recurring rrules
         for time_group, conseq_groups in zip(self.time_groups, self.conseq_groups):
-            list_fmt = ', '.join(
-                self.format_date_list(time_group, *args, **kwargs))
-            conseq_fmt = ', '.join(self.format_single_dates_and_interval(
-                conseq_groups, *args, **kwargs))
+            date_list = self.format_date_list(time_group, *args, **kwargs)
+            list_fmt = ', '.join(date_list)
+            if len(date_list) > 1:
+                list_fmt += ','
+
+            date_conseq = self.format_single_dates_and_interval(
+                conseq_groups, *args, **kwargs)
+            conseq_fmt = ', '.join(date_conseq)
+            if len(date_conseq) > 1:
+                conseq_fmt += ','
 
             # pick shortest render
             date_fmt = get_shortest(list_fmt, conseq_fmt)
 
             # concatenate dates and time
             start_time, end_time = time_group[0].values()
-            if start_time == end_time:
-                template = self.get_template('single_date')
-            else:
-                template = self.get_template('date_interval')
-
-            time_fmt = TimeIntervalFormatter(start_time, end_time).display()
+            template = self.get_template()
+            time_fmt = TimeIntervalFormatter(start_time, end_time).\
+                display(prefix=True)
             if time_fmt:
                 fmt = template.format(dates=date_fmt, time=time_fmt)
                 out.append(fmt)

@@ -5,6 +5,7 @@
 import unittest
 import locale
 import datetime
+import datection
 
 from datection.display import DateFormatter
 from datection.display import DateIntervalFormatter
@@ -702,6 +703,82 @@ class TestDisplay_fr_FR(unittest.TestCase):
             default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
         self.assertEqual(
             shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h')
+
+    def test_display_weekday_recurrence(self):
+        sch = datection.to_db(u"Le samedi", "fr")
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi')
+
+    def test_display_weekday_recurrence_time(self):
+        sch = datection.to_db(u"Le samedi à 15h30", "fr")
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi, à 15 h 30')
+
+    def test_display_weekday_recurrence_time_interval(self):
+        sch = datection.to_db(u"Le samedi de 12 h 00 à 15h30", "fr")
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Le samedi, de 12 h à 15 h 30')
+
+    def test_display_weekday_recurrence_list(self):
+        sch = datection.to_db(u"Le lundi et samedi", "fr")
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le lundi et samedi')
+
+    def test_display_weekday_recurrence_list_time(self):
+        sch = datection.to_db(u"Le lundi et samedi à 15h30", "fr")
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Le lundi et samedi, à 15 h 30')
+
+    def test_display_weekday_recurrence_list_time_interval(self):
+        sch = datection.to_db(u"Le lundi et mardi de 14 h à 16 h 30", "fr")
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Le lundi et mardi, de 14 h à 16 h 30')
+
+    def test_display_weekday_recurrence_interval(self):
+        sch = datection.to_db(u"Du samedi au dimanche", "fr")
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi et dimanche')
+
+    def test_display_date(self):
+        sch = datection.to_db(u"Le 15 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013')
+
+    def test_display_date_interval(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Du 15 au 16 mars 2013')
+
+    def test_display_date_list(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 PLOP PLOP 18 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Les 15 et 18 mars 2013')
+
+        sch = datection.to_db(
+            u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
+            "fr", only_future=False)
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Les 15, 16 et 18 mars 2015')
+
+    def test_display_datetime(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013 à 18 h 30')
+
+    def test_display_datetime_interval(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 de 16 h à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013 de 16 h à 18 h 30')
+
+    def test_display_datetime_list(self):
+        sch = datection.to_db(
+            u"Le 15 et 18 mars 2013 à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'), u'Les 15 et 18 mars 2013 à 18 h 30')
+
+    def test_display_datetime_list_time_interval(self):
+        sch = datection.to_db(
+            u"Le 15 & 18 mars 2013 de 16 h à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, 'fr_FR.UTF8'),
+            u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
 
 
 class TestUtilities(unittest.TestCase):
