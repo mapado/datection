@@ -144,3 +144,5 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
         res = cohesive_rrules(rrs)
+        #import ipdb
+        # ipdb.set_trace()
