@@ -648,6 +648,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             reference=reference)
         self.assertGreater(len(short), len(default))
         self.assertEqual(shortest_fmt, default)
+        self.assertEqual(short,   u'Dimanche prochain + autres dates')
         self.assertEqual(default, u'Du 15 au 16 déc. 2013')
 
     def test_display_recurrence(self):
