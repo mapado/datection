@@ -1010,11 +1010,10 @@ def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
         place (bool): if True, an OpeningHoursFormatter will be used.
 
     """
+    # make fr_FR.UTF8 the default locale
     if loc not in DEFAULT_LOCALES.values():
-        try:
-            loc = getlocale(loc)
-        except KeyError:
-            loc = 'fr_FR.UTF8'
+        loc = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
+
     with TemporaryLocale(locale.LC_TIME, loc):
         if place:
             return OpeningHoursFormatter(schedule).display()
