@@ -196,7 +196,7 @@ class Date(Timepoint):
         The default time reference is the day of the method execution.
 
         """
-        return self.to_python() > reference
+        return self.to_python() >= reference
 
 
 class DateList(Timepoint):

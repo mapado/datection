@@ -97,6 +97,10 @@ class TestNormalizeFrDates(unittest.TestCase):
         self.assertEqual(date.month, 1)
         self.assertEqual(date.day, 18)
 
+    def test_date_future(self):
+        date = parse(u'18/01/2014', 'fr')[0]
+        self.assertTrue(date.future(reference=datetime.date(2014, 1, 18)))
+
 
 class TestNormalizeFrTimeInterval(unittest.TestCase):
 
