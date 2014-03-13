@@ -620,8 +620,8 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
             sd_kwargs['include_year'] = False
         start_date_fmt = DateFormatter(self.start).display(*args, **sd_kwargs)
         end_date_fmt = DateFormatter(self.end).display(*args, **kwargs)
-        start_time_fmt = TimeFormatter(self.start).display(*args, **kwargs)
-        end_time_fmt = TimeFormatter(self.end).display(*args, **kwargs)
+        start_time_fmt = TimeFormatter(self.start).display()
+        end_time_fmt = TimeFormatter(self.end).display()
         fmt = template.format(
             start_date=start_date_fmt,
             start_time=start_time_fmt,
@@ -939,14 +939,14 @@ class LongFormatter(BaseFormatter):
 
         """
         out = []
-
         # format recurring rrules
         for rec in self.recurring:
             out.append(WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
 
         # format continuous rrules
         for con in self.continuous:
-            out.append(ContinuousDatetimeIntervalFormatter(con).
+            start, end = con.start_datetime, con.end_datetime
+            out.append(ContinuousDatetimeIntervalFormatter(start, end).
                        display(*args, **kwargs))
 
         # format non recurring rrules
