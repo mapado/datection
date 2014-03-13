@@ -1024,7 +1024,7 @@ def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
             try:
                 start, end = bounds
                 short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                    display(reference, summarize=not shortest)
+                    display(reference, summarize=not shortest, prefix=True)
             except NoFutureOccurence:
                 return u''
             else:
