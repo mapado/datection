@@ -142,8 +142,7 @@ class CohesiveDurationRRuleLinter(object):
                 and self.dr1.end_datetime == self.dr2.end_datetime)
 
     def __call__(self):
-        """ Check if two drrules can be merged with
-            case by case heuristics.
+        """ Check if two drrules can be merged with case by case heuristics.
 
         :returns: Boolean if dr1 has been modified and contain dr2 in it.
 
@@ -192,7 +191,6 @@ class CohesiveDurationRRuleLinter(object):
                 return True
 
             if self.dr_end_stick_dr_begin(self.dr2, self.dr1):
-                # case 4 time_repr: <rr1- -rr1><rr2- -rr2> with same time
                 # case 5 time_repr: <rr2- -rr2><rr1- -rr1> with same time
                 # if time is same precision
                 self.dr1.rrule._dtstart = self.dr2.rrule.dtstart
@@ -207,6 +205,7 @@ def cohesive_rrules(rrules):
                           foreach dict.
     :returns: list(dict()) containing duration rrule in string format
                           foreach dict.
+
     """
     dur_rrules = [DurationRRule(rr) for rr in rrules]
     dur_rrules_to_del = set()
@@ -219,9 +218,16 @@ def cohesive_rrules(rrules):
                             examined_dur_rrule, cur_dur_rrule)()):
                         dur_rrules_to_del.add(cur_dur_rrule)
 
-    dur_rrules = [{
-        'duration': r.duration,
-        'rrule': makerrulestr(r.rrule.dtstart, end=r.rrule.until, rule=r.rrule)
-    } for r in dur_rrules if r not in dur_rrules_to_del]
+    # Ensure rrule unicity in the list
+    dur_rrules_dict = {}
+    for r in dur_rrules:
+        if r not in dur_rrules_to_del:
+            rrule = makerrulestr(
+                r.rrule.dtstart, end=r.rrule.until, rule=r.rrule)
+            dur_rrules_dict[str(r.duration) + rrule] = {
+                'duration': r.duration,
+                'rrule': rrule
+            }
+    dur_rrules = dur_rrules_dict.values()
 
     return dur_rrules

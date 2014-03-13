@@ -94,10 +94,10 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('3 et 4 janvier 2016 à 18h',
                                    self.lang, only_future=False))
 
-        rr_res_1 = 'DTSTART:20160101T000000\nRRULE:FREQ=DAILY;' \
-            'BYHOUR=17;BYMINUTE=30;UNTIL=20160103T173000'
-        rr_res_2 = 'DTSTART:20160103T000000\nRRULE:FREQ=DAILY;' \
+        rr_res_1 = 'DTSTART:20160103T000000\nRRULE:FREQ=DAILY;' \
             'BYHOUR=18;BYMINUTE=0;UNTIL=20160104T180000'
+        rr_res_2 = 'DTSTART:20160101T000000\nRRULE:FREQ=DAILY;' \
+            'BYHOUR=17;BYMINUTE=30;UNTIL=20160103T173000'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 2)
@@ -124,9 +124,9 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 16h',
                                    self.lang, only_future=False))
 
-        rr_res_1 = 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;'
-        rr_res_2 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;'
-        rr_res_3 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=16;BYMINUTE=0;'
+        rr_res_1 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=16;BYMINUTE=0;'
+        rr_res_2 = 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;'
+        rr_res_3 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 3)
@@ -144,5 +144,3 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
         res = cohesive_rrules(rrs)
-        #import ipdb
-        # ipdb.set_trace()
