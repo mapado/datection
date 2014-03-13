@@ -341,6 +341,13 @@ class TestTimeRegex(unittest.TestCase):
         assert times.groupdict()['hour'] == u'21'
         assert times.groupdict()['minute'] == u'20'
 
+    def test_minute_and_hour_space_sep(self):
+        """ Extract an time composed of both minute and hour stamps."""
+        text = u"21 h 20"""
+        times = re.search(FR_TIME, text)
+        assert times.groupdict()['hour'] == u'21'
+        assert times.groupdict()['minute'] == u'20'
+
     def test_only_hour(self):
         """ Extract a time without the minute stamp. """
         text = u""" Adulte : 19 € Tarif réduit :
@@ -395,13 +402,13 @@ class TestTimeIntervalRegex(unittest.TestCase):
         text = u""" Adulte : 19 € Tarif réduit :
             13 € les 25, 26 et 27 février 2013 de 20h à 21h20."""
         interval = re.search(FR_TIME_INTERVAL, text)
-        assert interval.groupdict()['start_time'] == u'20h'
+        assert interval.groupdict()['start_time'] == u'20h '
         assert interval.groupdict()['end_time'] == u'21h20'
 
         text = u""" Adulte : 19 € Tarif réduit :
             13 € les 25, 26 et 27 février 2013 entre 20h et 21h20."""
         interval = re.search(FR_TIME_INTERVAL, text)
-        assert interval.groupdict()['start_time'] == u'20h'
+        assert interval.groupdict()['start_time'] == u'20h '
         assert interval.groupdict()['end_time'] == u'21h20'
 
     def test_dash_separator(self):
@@ -409,7 +416,7 @@ class TestTimeIntervalRegex(unittest.TestCase):
         text = u""" Adulte : 19 € Tarif réduit :
             13 € les 25, 26 et 27 février 2013, 20h - 21h20."""
         interval = re.search(FR_TIME_INTERVAL, text)
-        assert interval.groupdict()['start_time'] == u'20h'
+        assert interval.groupdict()['start_time'] == u'20h '
         assert interval.groupdict()['end_time'] == u'21h20'
 
         text = u""" Adulte : 19 € Tarif réduit :
@@ -490,7 +497,7 @@ class TestDateTimeRegex(unittest.TestCase):
         assert tstamp_time_int.groupdict()['day'] == u'13'
         assert tstamp_time_int.groupdict()['month'] == u'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
-        assert tstamp_time_int.groupdict()['start_time'] == u'20h'
+        assert tstamp_time_int.groupdict()['start_time'] == u'20h '
         assert tstamp_time_int.groupdict()['end_time'] == u'21h20'
 
     def test_interval_with_comma(self):
@@ -499,7 +506,7 @@ class TestDateTimeRegex(unittest.TestCase):
         assert tstamp_time_int.groupdict()['day'] == u'13'
         assert tstamp_time_int.groupdict()['month'] == u'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
-        assert tstamp_time_int.groupdict()['start_time'] == u'20h'
+        assert tstamp_time_int.groupdict()['start_time'] == u'20h '
         assert tstamp_time_int.groupdict()['end_time'] == u'21h20'
 
     def test_interval_all_prefixes_suffixes(self):
@@ -510,13 +517,13 @@ class TestDateTimeRegex(unittest.TestCase):
         assert tstamp_time_int.groupdict()['day'] == u'13'
         assert tstamp_time_int.groupdict()['month'] == u'septembre'
         assert tstamp_time_int.groupdict()['year'] is None
-        assert tstamp_time_int.groupdict()['start_time'] == u'20h'
+        assert tstamp_time_int.groupdict()['start_time'] == u'20h '
         assert tstamp_time_int.groupdict()['end_time'] == u'21h20'
 
         # , / -
         tstamp_time_int = re.search(FR_DATETIME,
                                     'le mardi 13 septembre, 20h - 21h20.')
-        assert tstamp_time_int.groupdict()['start_time'] == u'20h'
+        assert tstamp_time_int.groupdict()['start_time'] == u'20h '
         assert tstamp_time_int.groupdict()['end_time'] == u'21h20'
         tstamp_time_int = re.search(FR_DATETIME,
                                     'le mardi 13 septembre, 20h-21h20.')
@@ -605,7 +612,7 @@ class TestDateTimeListRegex(unittest.TestCase):
         datelist = re.search(FR_DATETIME_LIST_WEEKDAY, text)
         expected = u"Mercredi 13, jeudi 14, Vendredi 15 et mercredi 20 février"
         assert datelist.groupdict()['date_list'].strip() == expected
-        assert datelist.groupdict()['start_time'] == u'20h'
+        assert datelist.groupdict()['start_time'] == u'20h '
         assert datelist.groupdict()['end_time'] == u'21h20'
 
 
@@ -621,7 +628,7 @@ class TestDateTimeIntervalRegex(unittest.TestCase):
         assert dti.groupdict()['end_day'] == u'23'
         assert dti.groupdict()['end_month'] == u'mai'
         assert dti.groupdict()['end_year'] == u'2013'
-        assert dti.groupdict()['start_time'] == u'20h'
+        assert dti.groupdict()['start_time'] == u'20h '
         assert dti.groupdict()['end_time'] == u'21h20'
 
 
@@ -694,7 +701,7 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
         assert recurrence.groupdict()['end_month'] == u'juin'
         assert recurrence.groupdict()['end_year'] == u'2013'
         assert recurrence.groupdict()['time_interval'] == u'de 15h à 16h30'
-        assert recurrence.groupdict()['start_time'] == u'15h'
+        assert recurrence.groupdict()['start_time'] == u'15h '
         assert recurrence.groupdict()['end_time'] == u'16h30'
 
         text = u""" le loto aura lieu le lundi, mardi et dimanche, du 15 au 30 juin 2013, de 15h à 16h30 """
@@ -711,7 +718,7 @@ class TestWeekdayListRecurrenceRegex(unittest.TestCase):
         assert recurrence.groupdict()['weekdays'] == u'lundi, mardi, vendredi'
         assert recurrence.groupdict()['date_interval'] is None
         assert recurrence.groupdict()['time_interval'] == u'de 15h à 16h30'
-        assert recurrence.groupdict()['start_time'] == u'15h'
+        assert recurrence.groupdict()['start_time'] == u'15h '
         assert recurrence.groupdict()['end_time'] == u'16h30'
 
     def test_bad_formats(self):

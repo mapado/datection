@@ -103,15 +103,15 @@ TIME_SEPARATOR = r'(h|:)'
 
 # Time, of form hhhmm, or hh:mm
 FR_TIME = re.compile(r"""
-    (?P<hour>{hour})(\s)?
-    {sep}
+    (?P<hour>{hour})\s?
+    {sep}\s?
     (?P<minute>{minute})?""".format(
     hour=HOUR, sep=TIME_SEPARATOR, minute=MINUTE),
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
 # Same that FR_TIME, but with no group. Use it when several
 # times are matched (ex: time intervals)
-_FR_TIME = r'((?<![^\s-]){hour})(\s)?({sep})({minute})?'.format(
+_FR_TIME = r'((?<![^\s-]){hour})\s?({sep})\s?({minute})?'.format(
     hour=HOUR, sep=TIME_SEPARATOR, minute=MINUTE)
 
 # Time interval: one time or two times linked by a prefix and a suffix
