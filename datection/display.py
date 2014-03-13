@@ -23,7 +23,7 @@ translations = {
     'fr_FR': {
         'today': u"aujourd'hui",
         'tomorrow': u'demain',
-        'next': u'prochain',
+        'this': u'ce',
         'midnight': u'minuit',
         'every day': u'tous les jours',
         'the': u'le',
@@ -320,8 +320,8 @@ class DateFormatter(BaseFormatter):
             elif reference < self.date < reference + datetime.timedelta(days=6):
                 # if d is next week, use its weekday name
                 return u'%s %s' % (
-                    self.format_dayname(abbrev_dayname),
-                    self._('next'))
+                    self._('this'),
+                    self.format_dayname(abbrev_dayname))
 
         prefix = self._('the') if prefix else u''
         if include_month and include_year:

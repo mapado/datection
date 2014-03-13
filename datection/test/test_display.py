@@ -145,7 +145,7 @@ class TestDateFormatterfr_FR(unittest.TestCase):
         self.assertEqual(self.dfmt.display(reference=ref), u"demain")
 
         ref = datetime.date(2012, 12, 28)
-        self.assertEqual(self.dfmt.display(reference=ref), u"mardi prochain")
+        self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
 
     def test_display_full(self):
         self.assertEqual(self.dfmt.display(), u'1er janvier 2013')
@@ -481,7 +481,7 @@ class TestNextOccurrencefr_FRFormatter(unittest.TestCase):
 
     def test_format_next_occurence_soon(self):
         ref = datetime.datetime(2014, 11, 10)
-        self.assertEqual(self.nofmt.display(ref), u'Mercredi prochain à 9 h')
+        self.assertEqual(self.nofmt.display(ref), u'Ce mercredi à 9 h')
 
     def test_format_next_occurence_today(self):
         ref = datetime.datetime(2014, 11, 14)
@@ -649,7 +649,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             reference=reference)
         self.assertGreater(len(short), len(default))
         self.assertEqual(shortest_fmt, default)
-        self.assertEqual(short,   u'Dimanche prochain + autres dates')
+        self.assertEqual(short,   u'Ce dimanche + autres dates')
         self.assertEqual(default, u'Du 15 au 16 déc. 2013')
 
     def test_display_recurrence(self):
