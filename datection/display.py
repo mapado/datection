@@ -838,7 +838,10 @@ class LongFormatter(BaseFormatter):
     @property
     def templates(self):  # pragma: no cover
         return {
-            'fr_FR': u'{dates}, à {time}'
+            'fr_FR': {
+                'single_date': u'{dates}, à {time}',
+                'date_interval': u'{dates}, {time}',
+            }
         }
 
     @cached_property
@@ -937,8 +940,6 @@ class LongFormatter(BaseFormatter):
         """
         out = []
 
-        template = self.get_template()
-
         # format recurring rrules
         for rec in self.recurring:
             out.append(WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
@@ -960,6 +961,10 @@ class LongFormatter(BaseFormatter):
 
             # concatenate dates and time
             start_time, end_time = time_group[0].values()
+            if start_time == end_time:
+                template = self.get_template('single_date')
+            else:
+                template = self.get_template('date_interval')
 
             time_fmt = TimeIntervalFormatter(start_time, end_time).display()
             if time_fmt:
