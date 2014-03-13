@@ -15,6 +15,8 @@ from collections import defaultdict
 
 from datection.models import DurationRRule
 from datection.utils import cached_property
+from datection.lang import DEFAULT_LOCALES
+from datection.lang import getlocale
 
 
 translations = {
@@ -1008,6 +1010,11 @@ def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
         place (bool): if True, an OpeningHoursFormatter will be used.
 
     """
+    if loc not in DEFAULT_LOCALES.values():
+        try:
+            loc = getlocale(loc)
+        except KeyError:
+            loc = 'fr_FR.UTF8'
     with TemporaryLocale(locale.LC_TIME, loc):
         if place:
             return OpeningHoursFormatter(schedule).display()
