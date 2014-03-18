@@ -124,8 +124,8 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 16h',
                                    self.lang, only_future=False))
 
-        rr_res_1 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=16;BYMINUTE=0;'
-        rr_res_2 = 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;'
+        rr_res_1 = 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;'
+        rr_res_2 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=16;BYMINUTE=0;'
         rr_res_3 = 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;'
 
         res = cohesive_rrules(rrs)
@@ -144,3 +144,4 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
         res = cohesive_rrules(rrs)
+        rrr = datection.display(res, "fr")
