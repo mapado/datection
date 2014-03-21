@@ -8,6 +8,10 @@ more cohesive rrule set.
 from datetime import timedelta
 from copy import deepcopy
 
+from dateutil.rrule import WEEKLY
+from dateutil.rrule import DAILY
+from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
+
 from datection.models import DurationRRule
 from datection.utils import makerrulestr
 
@@ -16,12 +20,21 @@ class DurationRRuleAnalyser(DurationRRule):
 
     """DurationRRuleAnalyser. TODO"""
 
+    def __unicode__(self):
+        """ Return string that uniquely identify the type of rrule.
+
+        Type are based on main fields existance in duration rrule.
+
+        """
+        return u" ".join(map(lambda x: str(int(x)),
+                             [self.has_timelapse, self.has_date,
+                             self.has_day, self.has_time]))
+
     @property
     def has_day(self):
         """ Check if given duration rrule has weekdays occurences. """
-        return (self.rrule.freq == 2
-                and not "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;"
-                in self.duration_rrule['rrule'])
+        return (self.rrule.freq == WEEKLY
+                and self.rrule.byweekday != (MO, TU, WE, TH, FR, SA, SU))
 
     @property
     def has_time(self):
@@ -67,11 +80,11 @@ class DurationRRuleAnalyser(DurationRRule):
 
     def is_same_weekdays(self, drrule):
         """ Check drrule has same weekday as another DurationRRuleAnalyser. """
-        return ((not (self.rrule.freq == 2 and drrule.rrule.freq == 3
+        return ((not (self.rrule.freq == WEEKLY and drrule.rrule.freq == DAILY
                       and drrule.rrule.count == 1)
                  or (drrule.end_datetime.weekday() in self.rrule._byweekday))
                 and
-                (not (self.rrule.freq == 2 and drrule.rrule.freq == 2)
+                (not (self.rrule.freq == WEEKLY and drrule.rrule.freq == WEEKLY)
                  or (self.rrule._byweekday == drrule.rrule._byweekday)))
 
     def is_same_time(self, drrule):
@@ -136,7 +149,7 @@ class DurationRRuleAnalyser(DurationRRule):
                 and not drrule.is_sublapse_of(self)
                 and (self.end_datetime == drrule.start_datetime
                      or (drrule.rrule.count == 1
-                         and ((self.rrule.freq == 3 and drrule.rrule.freq == 3
+                         and ((self.rrule.freq == DAILY and drrule.rrule.freq == DAILY
                                and self.end_datetime >= drrule.start_datetime - timedelta(days=1)
                                and self.end_datetime <= drrule.start_datetime
                                )
@@ -182,8 +195,8 @@ class DurationRRuleAnalyser(DurationRRule):
         """
         if (drrule.has_day
             and (not self.has_time or self.is_same_time(drrule))
-            and self.rrule.freq in [3, 2]  # daily, weekly
-            and drrule.rrule.freq == 2
+            and self.rrule.freq in [WEEKLY, DAILY]  # daily, weekly
+            and drrule.rrule.freq == WEEKLY
                 and drrule.rrule.byweekday):
             if self.rrule._byweekday:
                 self.rrule._byweekday = set(
@@ -262,16 +275,6 @@ class DurationRRuleAnalyser(DurationRRule):
 
         return more_cohesion
 
-    def type_signature(self):
-        """ Return string that uniquely identify the type of rrule.
-
-        Type are based on main fields existance in duration rrule.
-
-        """
-        return " ".join(map(lambda x: str(int(x)),
-                            [self.has_timelapse, self.has_date,
-                             self.has_day, self.has_time]))
-
 
 class CohesiveDurationRRuleLinter(object):
 
@@ -308,15 +311,15 @@ class CohesiveDurationRRuleLinter(object):
                 drrules['has_date'].append(rr)
             if not rr.has_date and not rr.has_timelapse:
                 drrules['has_not_timelapse_or_date'].append(rr)
-            ex = rr.type_signature()
-            if not ex in drrules['signature']:
-                drrules['signature'][ex] = []
-            drrules['signature'][ex].append(rr)
+            sign = unicode(rr)
+            if not sign in drrules['signature']:
+                drrules['signature'][sign] = []
+            drrules['signature'][sign].append(rr)
         return drrules
 
     def avoid_doubles(self):
         """ Aim to generate a Set of duration rrule. """
-        keeped_rrules = []
+        kept_rrules = []
         for drrules in self.drrules_by['signature'].values():
             for examinated_drrule in drrules:
                 keep_drrule = True
@@ -325,8 +328,8 @@ class CohesiveDurationRRuleLinter(object):
                         if cur_drrule.is_same(examinated_drrule):
                             keep_drrule = False
                             if keep_drrule:
-                                keeped_rrules.append(examinated_drrule)
-                                self.drrules = keeped_rrules
+                                kept_rrules.append(examinated_drrule)
+                                self.drrules = kept_rrules
 
     def merge(self):
         """ Reduce Set of Duration rrule by cohesive unification of drrule. """
@@ -386,7 +389,7 @@ class CohesiveDurationRRuleLinter(object):
 
         # Check nbr of occurences of root
         roots = self.drrules_by['has_timelapse'] + self.drrules_by['has_date']
-        if 1 == len(roots):
+        if len(roots) == 1:
             # if one generate all
             self.make_drrule_compositions(roots[0])
 
