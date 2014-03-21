@@ -5,21 +5,16 @@ Module in charge of transforming set of rrule + duration object into a
 more cohesive rrule set.
 
 """
-from datetime import timedelta, datetime
+from datetime import timedelta
 from copy import deepcopy
 
-import datection
 from datection.models import DurationRRule
 from datection.utils import makerrulestr
 
 
 class DurationRRuleAnalyser(DurationRRule):
 
-    """DurationRRuleAnalyser. """
-
-    def __init__(self, dict_rrule):
-        """."""
-        super(DurationRRuleAnalyser, self).__init__(dict_rrule)
+    """DurationRRuleAnalyser. TODO"""
 
     @property
     def has_day(self):

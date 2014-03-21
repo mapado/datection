@@ -4,9 +4,8 @@ Test suite of the datection.cohesive
 """
 
 import unittest
-
 import datection
-from datection.models import DurationRRule
+
 from datection.cohesive import cohesive_rrules
 
 
@@ -204,7 +203,6 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
         res = cohesive_rrules(rrs)
-        rrr = datection.display(res, "fr")
         rr_res_1 = False
         rr_res_2 = False
         rr_res_3 = False
@@ -266,9 +264,6 @@ class TestMoreCohesive(unittest.TestCase):
             Le 28 juillet 2013 à 13 h
         """, self.lang, only_future=False)
         res = cohesive_rrules(rrs)
-        rrr = datection.display(res, self.lang)
-        #import ipdb
-        # ipdb.set_trace()
 
         rr_res_1 = False
         rr_res_2 = False
@@ -302,6 +297,7 @@ class TestMoreCohesive(unittest.TestCase):
         self.assertTrue(rr_res_3)
         self.assertTrue(rr_res_4)
         self.assertTrue(rr_res_5)
+        self.assertTrue(rr_res_6)
 
     def test_real_case_4(self):
         rrs = datection.to_db("""
