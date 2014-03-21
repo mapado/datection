@@ -276,14 +276,13 @@ class TestMoreCohesive(unittest.TestCase):
             r = dr['rrule']
             if '20151205T000000\nRRULE:FREQ=DAILY;COUNT=1;' in r:
                 rr_res_1 = True
-            elif '20140320T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH;' \
-                    'BYHOUR=20;BYMINUTE=0;UNTIL=20150320' in r:
-                rr_res_2 = True
             elif '20130703T000000\nRRULE:FREQ=DAILY;' \
                     'BYHOUR=13;BYMINUTE=0;UNTIL=20130728' in r:
-                rr_res_3 = True
+                rr_res_2 = True
             elif '20140113T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH;' \
                     'BYHOUR=20;BYMINUTE=0;UNTIL=20140327' in r:
+                rr_res_3 = True
+            elif 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=20;BYMINUTE=30;' in r:
                 rr_res_4 = True
             elif '20130912T000000\nRRULE:FREQ=DAILY;' \
                     'BYHOUR=0;BYMINUTE=0;UNTIL=20131219' in r:
