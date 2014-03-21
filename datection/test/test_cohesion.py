@@ -6,7 +6,7 @@ Test suite of the datection.cohesive
 import unittest
 import datection
 
-from datection.cohesive import cohesive_rrules
+from datection.cohesion import cohesive_rrules
 
 
 class TestMoreCohesive(unittest.TestCase):
