@@ -18,7 +18,10 @@ from datection.utils import makerrulestr
 
 class DurationRRuleAnalyser(DurationRRule):
 
-    """DurationRRuleAnalyser. TODO"""
+    """ DurationRRuleAnalyser extend duration rrule by adding more
+    metadata info and ability to compare with other duration rrule.
+    It also manipulate merge from one to another drrule.
+    """
 
     def __unicode__(self):
         """ Return string that uniquely identify the type of rrule.
@@ -28,7 +31,7 @@ class DurationRRuleAnalyser(DurationRRule):
         """
         return u" ".join(map(lambda x: str(int(x)),
                              [self.has_timelapse, self.has_date,
-                             self.has_day, self.has_time]))
+                              self.has_day, self.has_time]))
 
     @property
     def has_day(self):
