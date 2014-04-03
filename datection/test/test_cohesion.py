@@ -147,6 +147,28 @@ class TestMoreCohesive(unittest.TestCase):
         self.assertTrue(rr_res_2)
         self.assertTrue(rr_res_3)
 
+    def test_weekdays_not_concat_if_day_different_with_composition(self):
+        rrs = datection.to_db('du 2 avril au 15 août',
+                              self.lang, only_future=False)
+        rrs.extend(datection.to_db('le lundi et mardi à 15h',
+                                   self.lang, only_future=False))
+        rrs.extend(datection.to_db('le mercredi à 16h',
+                                   self.lang, only_future=False))
+
+        res = cohesive_rrules(rrs)
+
+        rr_res_1 = False
+        rr_res_2 = False
+        for dr in res:
+            r = dr['rrule']
+            if 'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;' in r:
+                rr_res_1 = True
+            if 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=16;BYMINUTE=0;' in r:
+                rr_res_2 = True
+        self.assertEqual(len(res), 2)
+        self.assertTrue(rr_res_1)
+        self.assertTrue(rr_res_2)
+
     def test_multiple_unification_possible(self):
         rrs = datection.to_db('du 14 avril au 16 juin 2020 ',
                               self.lang, only_future=False)
@@ -159,11 +181,12 @@ class TestMoreCohesive(unittest.TestCase):
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if 'FREQ=WEEKLY;BYDAY=MO,TU,WE;BYHOUR=14;BYMINUTE=0;' in r:
+            if ('DTSTART:20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
+                    'BYHOUR=15;BYMINUTE=0;UNTIL=20200616T000000' in r):
                 rr_res_1 = True
-            if 'FREQ=WEEKLY;BYDAY=MO,TU,WE;BYHOUR=15;BYMINUTE=0;' in r:
+            if ('DTSTART:20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
+                    'BYHOUR=14;BYMINUTE=0;UNTIL=20200616T000000' in r):
                 rr_res_2 = True
-
         self.assertEqual(len(res), 2)
         self.assertTrue(rr_res_1)
         self.assertTrue(rr_res_2)
@@ -182,11 +205,11 @@ class TestMoreCohesive(unittest.TestCase):
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE;' \
-                    'BYHOUR=14;BYMINUTE=0;UNTIL=20200616T000000' in r:
+            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=WE;' \
+                    'BYHOUR=14;BYMINUTE=0;UNTIL=20200616' in r:
                 rr_res_1 = True
-            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE;' \
-                    'BYHOUR=15;BYMINUTE=0;UNTIL=20200616T' in r:
+            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;' \
+                    'BYHOUR=15;BYMINUTE=0;UNTIL=20200616' in r:
                 rr_res_2 = True
 
         self.assertEqual(len(res), 2)
@@ -233,6 +256,8 @@ class TestMoreCohesive(unittest.TestCase):
             Du 16 au 26 avril 2014
         """, self.lang, only_future=False)
         res = cohesive_rrules(rrs)
+        import ipdb
+        ipdb.set_trace()
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]['rrule'], 'DTSTART:20140416T000000\n'
                          'RRULE:FREQ=WEEKLY;BYDAY=MO,SU;BYHOUR=20;'
@@ -246,9 +271,22 @@ class TestMoreCohesive(unittest.TestCase):
             Du 2 janvier au 1er mars 2014
         """, self.lang, only_future=False)
         res = cohesive_rrules(rrs)
-        self.assertEqual(len(res), 1)
-        self.assertIn('20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
-                      'UNTIL=20140301', res[0]['rrule'])
+
+        rr_res_1 = False
+        rr_res_2 = False
+
+        for dr in res:
+            r = dr['rrule']
+            if ('DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+                    'BYHOUR=21;BYMINUTE=30;UNTIL=20140301T235959' in r):
+                rr_res_1 = True
+            elif ('DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+                    'BYHOUR=19;BYMINUTE=30;UNTIL=20140301T235959' in r):
+                rr_res_2 = True
+
+        self.assertEqual(len(res), 2)
+        self.assertTrue(rr_res_1)
+        self.assertTrue(rr_res_2)
 
     def test_real_case_3(self):
 
