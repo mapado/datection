@@ -801,19 +801,19 @@ class OpeningHoursFormatter(BaseFormatter):
             }
         }
 
-    def format_opening(self, opening):
+    def format_opening(self, opening, day):
         template = self.get_template('one_opening')
-        weekday = self.day_name(opening.weekday_indexes[0])
+        weekday = self.day_name(day)
         start_time, end_time = opening.time_interval
         time_interval = TimeIntervalFormatter(start_time, end_time).display()
         fmt = template.format(weekday=weekday, time_interval=time_interval)
         return fmt
 
     @postprocess(capitalize=True)
-    def format_openings(self, openings):
+    def format_openings(self, openings, day):
         """Format opening hours for a single day."""
         parts = []
-        fmt = self.format_opening(openings[0])
+        fmt = self.format_opening(openings[0], day)
         if len(openings) == 1:
             return fmt
         else:
@@ -836,7 +836,7 @@ class OpeningHoursFormatter(BaseFormatter):
             openings = [rec for rec in self.opening_hours
                         if day in rec.weekday_indexes]
             if openings:
-                out.append(self.format_openings(openings))
+                out.append(self.format_openings(openings, day))
         return '\n'.join([line for line in out])
 
 

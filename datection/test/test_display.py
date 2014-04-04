@@ -565,7 +565,7 @@ class TestOpeningHoursFormatterfr_FR(unittest.TestCase):
         self.ohfmt = OpeningHoursFormatter(schedule)
 
     def test_display_openings(self):
-        fmt = self.ohfmt.format_openings(self.ohfmt.opening_hours[:2])
+        fmt = self.ohfmt.format_openings(self.ohfmt.opening_hours[:2], day=0)
         expected = u"""Lundi de 10 h à 18 h et de 14 h à 18 h"""
         self.assertEqual(fmt, expected)
 
@@ -577,6 +577,26 @@ Jeudi de 10 h à 18 h
 Vendredi de 10 h 30 à 18 h
 Samedi de 10 h à 18 h
 Dimanche de 10 h à 18 h"""
+        self.assertEqual(fmt, expected)
+
+    def test_display_with_a_single_rrule(self):
+        schedule = [
+            {
+                u'duration': 600,
+                u'rrule': (u'DTSTART:20140218\nRRULE:FREQ=WEEKLY;BYDAY='
+                           'MO,TU,WE,TH,FR,SA,SU;BYHOUR=9;BYMINUTE=0;'
+                           'UNTIL=20150218T235959')
+            }
+        ]
+        ohfmt = OpeningHoursFormatter(schedule)
+        fmt = ohfmt.display()
+        expected = u"""Lundi de 9 h à 19 h
+Mardi de 9 h à 19 h
+Mercredi de 9 h à 19 h
+Jeudi de 9 h à 19 h
+Vendredi de 9 h à 19 h
+Samedi de 9 h à 19 h
+Dimanche de 9 h à 19 h"""
         self.assertEqual(fmt, expected)
 
 
