@@ -49,15 +49,15 @@ class DurationRRuleAnalyser(DurationRRule):
 
     @property
     def has_timelapse(self):
-        """ Check if given duration rrule appear in a lapse time. """
+        """ Check if given duration rrule appear in a lapse time.
+
+            !! it supose that duration higher that 365 day are not timelapse
+             (we guess this info is false)
+        """
         year = timedelta(days=365)
-        yearp1 = year + timedelta(hours=23, minutes=59, seconds=59)
         return ("DTSTART:" in self.duration_rrule['rrule']
                 and "UNTIL=" in self.duration_rrule['rrule']
-                and self.rrule._until not in [
-                    self.rrule._dtstart + year,
-                    self.rrule._dtstart + yearp1
-                ]
+                and self.rrule._until < self.rrule._dtstart + year
                 and self.end_datetime >= self.start_datetime - timedelta(days=1))
 
     @property
@@ -381,18 +381,20 @@ class CohesiveDurationRRuleLinter(object):
                 self.drrules_by['has_not_timelapse_or_date'])
         else:
             self.drrules = dated_drrule + \
-                merge_in_group(self.drrules_by['has_not_timelapse_or_date'])
+                self.drrules_by['has_not_timelapse_or_date']
 
     def make_drrule_compositions(self, root):
         """ Compose all possible drrule based on a set of enrichment drrule and
         the unique drrule to have a 'timelapse'. """
 
         gen_rrules = []
-
         # make composition between lonely time and lonely days
         composed_days_time = []
         drr_days = self.drrules_by['has_only_days']
         drr_time = self.drrules_by['has_only_time']
+
+        composed_days_time.extend(self.drrules_by['has_days_and_time'])
+
         if drr_days and drr_time:
             for drr_day in drr_days:
                 for drr_t in drr_time:
@@ -406,17 +408,30 @@ class CohesiveDurationRRuleLinter(object):
             for drr in drr_days:
                 composed_days_time.append(drr)
 
-        composed_days_time.extend(self.drrules_by['has_days_and_time'])
-
         if composed_days_time:
+            # if same time and timelapse/date try merge days
+            consumed = []
+            for cdt in composed_days_time:
+                if cdt not in consumed:
+                    for ndt in composed_days_time:
+                        if (ndt not in consumed and ndt is not cdt
+                            and ndt.is_same_time(cdt)
+                            and (ndt.is_same_timelapse(cdt)
+                                 or (not ndt.has_timelapse and not cdt.has_timelapse))
+                            ):
+                            cdt.take_weekdays_of(ndt)
+                            consumed.append(ndt)
+
+            composed_days_time = [c for c in composed_days_time
+                                  if c not in consumed]
+
             if root.has_time and root.has_day:
                 gen_rrules.append(root)
             for drr in composed_days_time:
-                if drr is not root:
-                    root_copy = deepcopy(root)
-                    root_copy.take_time_of(drr)
-                    root_copy.take_weekdays_of(drr)
-                    gen_rrules.append(root_copy)
+                root_copy = deepcopy(root)
+                root_copy.take_time_of(drr)
+                root_copy.take_weekdays_of(drr)
+                gen_rrules.append(root_copy)
             self.drrules = gen_rrules
 
     def cleanup_drrule(self):
@@ -455,19 +470,9 @@ class CohesiveDurationRRuleLinter(object):
             for dr in self.drrules
         ]
 
-    def normalise(self):
-        """ . """
-        for drr in self.drrules:
-            if not drr.has_timelapse:
-                drr._until = None
-            if not drr.has_date:
-                drr._dtstart = None
-                drr._count = 1
-
     def __call__(self):
         """Lint a list of DurationRRule and transform it to a set of
         more cohesive one."""
-        self.normalise()
         self.avoid_doubles()
         self.merge()
 

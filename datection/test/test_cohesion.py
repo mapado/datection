@@ -256,8 +256,6 @@ class TestMoreCohesive(unittest.TestCase):
             Du 16 au 26 avril 2014
         """, self.lang, only_future=False)
         res = cohesive_rrules(rrs)
-        import ipdb
-        ipdb.set_trace()
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]['rrule'], 'DTSTART:20140416T000000\n'
                          'RRULE:FREQ=WEEKLY;BYDAY=MO,SU;BYHOUR=20;'
