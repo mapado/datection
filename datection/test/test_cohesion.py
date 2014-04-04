@@ -24,8 +24,11 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 14h',
                                    self.lang, only_future=False))
 
-        expected_rr_res = 'DTSTART:20140321T000000\nRRULE:FREQ=WEEKLY;' \
-            'BYDAY=MO,TU;BYHOUR=14;BYMINUTE=0;UNTIL=20140330T000000'
+        # wanted result
+        # Le lundi et mardi, du 21 au 30 mars 2014, à 14 h
+
+        expected_rr_res = 'DTSTART:20140321T140000\nRRULE:FREQ=WEEKLY;' \
+            'BYDAY=MO,TU;BYHOUR=14;BYMINUTE=0;UNTIL=20140330T140000'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 1)
@@ -38,12 +41,15 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le 21 mars 2014 à 14h',
                                    self.lang, only_future=False))
 
-        rr_res = 'DTSTART:20140321T000000\nRRULE:FREQ=DAILY;' \
+        # wanted result
+        # Le 21 mars 2014 à 14 h
+
+        rr_res = 'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;' \
             'COUNT=1;BYHOUR=14;BYMINUTE=0'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 1)
-        self.assertEqual(rr_res, res[0]['rrule'])
+        self.assertIn(rr_res, res[0]['rrule'])
 
     def test_precise_time_in_a_lapse_time(self):
         rrs = datection.to_db('du 18 au 25 mars 2014',
@@ -51,8 +57,10 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le 21 mars 2014 à 14h',
                                    self.lang, only_future=False))
 
-        rr_res = 'DTSTART:20140318T000000\nRRULE:FREQ=DAILY;' \
-            'BYHOUR=14;BYMINUTE=0;UNTIL=20140325T000000'
+        # wanted result
+        # Du 18 au 25 mars 2014 à 14 h
+        rr_res = 'DTSTART:20140318T140000\nRRULE:FREQ=DAILY;' \
+            'BYHOUR=14;BYMINUTE=0;UNTIL=20140325T140000'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 1)
@@ -63,6 +71,9 @@ class TestMoreCohesive(unittest.TestCase):
                               self.lang, only_future=False)
         rrs.extend(datection.to_db('4 et 5 janvier 2016',
                                    self.lang, only_future=False))
+
+        # wanted result
+        # Du 1er au 5 janvier 2016
 
         rr_res = 'DTSTART:20160101T000000\nRRULE:FREQ=DAILY;' \
             'BYHOUR=0;BYMINUTE=0;UNTIL=20160105T235900'
@@ -79,8 +90,11 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('1 au 5 janvier 2016',
                                    self.lang, only_future=False))
 
+        # wanted result
+        # Du 1er au 5 janvier 2016
+
         rr_res = 'DTSTART:20160101T000000\nRRULE:FREQ=DAILY;' \
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20160105T000000'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20160105T235900'
 
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 1)
@@ -92,15 +106,19 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('3 et 4 janvier 2016 à 18h',
                                    self.lang, only_future=False))
 
+        # wanted result
+        # Du 1er au 3 janvier 2016 à 17 h 30
+        # Du 3 au 4 janvier 2016 à 18 h 
+
         res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if 'DTSTART:20160103T000000\nRRULE:FREQ=DAILY;' \
+            if 'DTSTART:20160103T180000\nRRULE:FREQ=DAILY;' \
                     'BYHOUR=18;BYMINUTE=0;UNTIL=20160104T180000' == r:
                 rr_res_1 = True
-            if 'DTSTART:20160101T000000\nRRULE:FREQ=DAILY;' \
+            if 'DTSTART:20160101T173000\nRRULE:FREQ=DAILY;' \
                     'BYHOUR=17;BYMINUTE=30;UNTIL=20160103T173000' == r:
                 rr_res_2 = True
 
@@ -113,6 +131,9 @@ class TestMoreCohesive(unittest.TestCase):
                               self.lang, only_future=False)
         rrs.extend(datection.to_db('le lundi et mardi à 14h',
                                    self.lang, only_future=False))
+
+        # wanted result
+        # Du lundi au mercredi, à 14 h
 
         rr_res = 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE;BYHOUR=14;BYMINUTE=0;'
 
@@ -128,8 +149,12 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le lundi et mardi à 16h',
                                    self.lang, only_future=False))
 
-        res = cohesive_rrules(rrs)
+        # wanted result
+        # Le mercredi, à 14 h
+        # Le lundi et mardi, à 16 h
+        # Le lundi et mardi, à 15 h
 
+        res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         rr_res_3 = False
@@ -155,8 +180,11 @@ class TestMoreCohesive(unittest.TestCase):
         rrs.extend(datection.to_db('le mercredi à 16h',
                                    self.lang, only_future=False))
 
-        res = cohesive_rrules(rrs)
+        # wanted result
+        # Le mercredi, à 16 h
+        # Le lundi et mardi, à 15 h
 
+        res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         for dr in res:
@@ -165,6 +193,7 @@ class TestMoreCohesive(unittest.TestCase):
                 rr_res_1 = True
             if 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=16;BYMINUTE=0;' in r:
                 rr_res_2 = True
+
         self.assertEqual(len(res), 2)
         self.assertTrue(rr_res_1)
         self.assertTrue(rr_res_2)
@@ -176,16 +205,21 @@ class TestMoreCohesive(unittest.TestCase):
                                    self.lang, only_future=False))
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
+
+        # wanted result
+        # Le lundi et mardi, du 14 avril au 16 juin 2020, à 15 h
+        # Le mercredi, du 14 avril au 16 juin 2020, à 14 h
+
         res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if ('DTSTART:20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
-                    'BYHOUR=15;BYMINUTE=0;UNTIL=20200616T000000' in r):
+            if ('DTSTART:20200414T150000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
+                    'BYHOUR=15;BYMINUTE=0;UNTIL=20200616T150000' in r):
                 rr_res_1 = True
-            if ('DTSTART:20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
-                    'BYHOUR=14;BYMINUTE=0;UNTIL=20200616T000000' in r):
+            if ('DTSTART:20200414T140000\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
+                    'BYHOUR=14;BYMINUTE=0;UNTIL=20200616T140000' in r):
                 rr_res_2 = True
         self.assertEqual(len(res), 2)
         self.assertTrue(rr_res_1)
@@ -200,15 +234,20 @@ class TestMoreCohesive(unittest.TestCase):
                                    self.lang, only_future=False))
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
+
+        # wanted result
+        # Le lundi et mardi, du 14 avril au 16 juin 2020, à 15 h
+        # Le mercredi, du 14 avril au 16 juin 2020, à 14 h
+
         res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=WE;' \
+            if '20200414T140000\nRRULE:FREQ=WEEKLY;BYDAY=WE;' \
                     'BYHOUR=14;BYMINUTE=0;UNTIL=20200616' in r:
                 rr_res_1 = True
-            if '20200414T000000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;' \
+            if '20200414T150000\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;' \
                     'BYHOUR=15;BYMINUTE=0;UNTIL=20200616' in r:
                 rr_res_2 = True
 
@@ -225,6 +264,12 @@ class TestMoreCohesive(unittest.TestCase):
                                    self.lang, only_future=False))
         rrs.extend(datection.to_db('le lundi et mardi à 15h',
                                    self.lang, only_future=False))
+
+        # wanted result
+        # Le mercredi, à 14 h
+        # Le lundi et mardi, à 15 h
+        # Du 14 avril au 16 juin 2020, du 14 juillet au 9 août 2020
+
         res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
@@ -237,10 +282,10 @@ class TestMoreCohesive(unittest.TestCase):
             elif 'RRULE:FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;' in r:
                 rr_res_2 = True
             elif 'DTSTART:20200714T000000\nRRULE:FREQ=DAILY;' \
-                    'BYHOUR=0;BYMINUTE=0;UNTIL=20200809T000000' in r:
+                    'BYHOUR=0;BYMINUTE=0;UNTIL=20200809T235900' in r:
                 rr_res_3 = True
-            elif 'DTSTART:20200414T000000\nRRULE:FREQ=DAILY;' \
-                    'BYHOUR=0;BYMINUTE=0;UNTIL=20200616T000000' in r:
+            elif '' 'DTSTART:20200414T000000\nRRULE:FREQ=DAILY;' \
+                    'BYHOUR=0;BYMINUTE=0;UNTIL=20200616T235900' in r:
                 rr_res_4 = True
         self.assertEqual(len(res), 4)
         self.assertTrue(rr_res_1)
@@ -255,11 +300,15 @@ class TestMoreCohesive(unittest.TestCase):
             Du 5 février 2014 au 5 février 2015 à 20 h
             Du 16 au 26 avril 2014
         """, self.lang, only_future=False)
+
+        # wanted result
+        # Le lundi et dimanche, du 16 au 26 avril 2014, à 20 h
+
         res = cohesive_rrules(rrs)
         self.assertEqual(len(res), 1)
-        self.assertEqual(res[0]['rrule'], 'DTSTART:20140416T000000\n'
+        self.assertEqual(res[0]['rrule'], 'DTSTART:20140416T200000\n'
                          'RRULE:FREQ=WEEKLY;BYDAY=MO,SU;BYHOUR=20;'
-                         'BYMINUTE=0;UNTIL=20140426T000000')
+                         'BYMINUTE=0;UNTIL=20140426T200000')
 
     def test_real_case_2(self):
         rrs = datection.to_db("""
@@ -268,18 +317,21 @@ class TestMoreCohesive(unittest.TestCase):
             Du jeudi au samedi
             Du 2 janvier au 1er mars 2014
         """, self.lang, only_future=False)
-        res = cohesive_rrules(rrs)
 
+        # wanted result
+        # Du jeudi au samedi, du 2 janvier au 1er mars 2014, à 21 h 30
+        # Du jeudi au samedi, du 2 janvier au 1er mars 2014, à 19 h 30
+
+        res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
-
         for dr in res:
             r = dr['rrule']
-            if ('DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
-                    'BYHOUR=21;BYMINUTE=30;UNTIL=20140301T235959' in r):
+            if ('DTSTART:20140102T213000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+                    'BYHOUR=21;BYMINUTE=30;UNTIL=20140301T213000' in r):
                 rr_res_1 = True
-            elif ('DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
-                    'BYHOUR=19;BYMINUTE=30;UNTIL=20140301T235959' in r):
+            elif ('DTSTART:20140102T193000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+                    'BYHOUR=19;BYMINUTE=30;UNTIL=20140301T193000' in r):
                 rr_res_2 = True
 
         self.assertEqual(len(res), 2)
@@ -299,6 +351,13 @@ class TestMoreCohesive(unittest.TestCase):
             7 novembre 2015, 5 décembre 2015
             Le 28 juillet 2013 à 13 h
         """, self.lang, only_future=False)
+
+        # wanted result
+        # Le jeudi, du 13 janvier au 27 mars 2014, de 20 h à 21 h 15
+        # Le jeudi, à 20 h 30
+        # Du 12 septembre au 19 décembre 2013, le 7 novembre 2015, le 5 décembre 2015,
+        # Du 3 au 28 juillet 2013 à 13 h
+
         res = cohesive_rrules(rrs)
 
         rr_res_1 = False
@@ -312,10 +371,10 @@ class TestMoreCohesive(unittest.TestCase):
             r = dr['rrule']
             if '20151205T000000\nRRULE:FREQ=DAILY;COUNT=1;' in r:
                 rr_res_1 = True
-            elif '20130703T000000\nRRULE:FREQ=DAILY;' \
+            elif '20130703T130000\nRRULE:FREQ=DAILY;' \
                     'BYHOUR=13;BYMINUTE=0;UNTIL=20130728' in r:
                 rr_res_2 = True
-            elif '20140113T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH;' \
+            elif '20140113T200000\nRRULE:FREQ=WEEKLY;BYDAY=TH;' \
                     'BYHOUR=20;BYMINUTE=0;UNTIL=20140327' in r:
                 rr_res_3 = True
             elif 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=20;BYMINUTE=30;' in r:
@@ -355,15 +414,20 @@ class TestMoreCohesive(unittest.TestCase):
             du 10 au 17 mai 2014,
             17 mai 2014 à 18 h
         """, self.lang, only_future=False)
+
+        # result wanted
+        # Du 8 septembre au 29 décembre 2013 à 17 h
+        # Du 1er mars au 17 mai 2014 à 18 h
+
         res = cohesive_rrules(rrs)
         rr_res_1 = False
         rr_res_2 = False
         for dr in res:
             r = dr['rrule']
-            if '20140301T000000\nRRULE:FREQ=DAILY;BYHOUR=18;' \
+            if '20140301T180000\nRRULE:FREQ=DAILY;BYHOUR=18;' \
                'BYMINUTE=0;UNTIL=20140517' in r:
                 rr_res_1 = True
-            elif '20130908T000000\nRRULE:FREQ=DAILY;BYHOUR=17;' \
+            elif '20130908T170000\nRRULE:FREQ=DAILY;BYHOUR=17;' \
                     'BYMINUTE=0;UNTIL=20131229' in r:
                 rr_res_2 = True
         self.assertEqual(len(res), 2)

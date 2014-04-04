@@ -5,7 +5,7 @@ Module in charge of transforming set of rrule + duration object into a
 more cohesive rrule set.
 
 """
-from datetime import timedelta
+from datetime import timedelta, datetime
 from copy import deepcopy
 
 from dateutil.rrule import WEEKLY
@@ -189,6 +189,10 @@ class DurationRRuleAnalyser(DurationRRule):
             self.duration_rrule['duration'] = drrule.duration
             self.rrule._byhour = drrule.rrule._byhour
             self.rrule._byminute = drrule.rrule._byminute
+            self_endlapsetime = timedelta(hours=self.end_datetime.hour,
+                                          minutes=self.end_datetime.minute)
+            drrule_endlapsetime = timedelta(hours=drrule.end_datetime.hour,
+                                            minutes=drrule.end_datetime.minute)
             return True
 
     def take_weekdays_of(self, drrule):
@@ -200,7 +204,7 @@ class DurationRRuleAnalyser(DurationRRule):
         """
         if (drrule.has_day
             and (not self.has_time or self.is_same_time(drrule))
-            and self.rrule._freq in [WEEKLY, DAILY]  # daily, weekly
+            and self.rrule._freq in [WEEKLY, DAILY]
             and drrule.rrule._freq == WEEKLY
                 and drrule.rrule._byweekday):
             if self.rrule._byweekday:
@@ -456,10 +460,11 @@ class CohesiveDurationRRuleLinter(object):
                 byhour=dr.rrule._byhour,
                 byminute=dr.rrule._byminute,
                 cache=False)
+
             return {
                 'rrule': makerrulestr(
-                    rr.dtstart,
-                    end=rr.until,
+                    dr.start_datetime,
+                    end=dr.end_datetime,
                     freq=rr.freq,
                     rule=rr),
                 'duration': dr.duration,
@@ -478,7 +483,7 @@ class CohesiveDurationRRuleLinter(object):
 
         # Check nbr of occurences of root
         roots = self.drrules_by['has_timelapse'] + self.drrules_by['has_date']
-        if len(roots) == 1:
+        if len(roots) == 1 and self.drrules > 1:
             # if one generate all
             self.make_drrule_compositions(roots[0])
 
@@ -487,9 +492,19 @@ class CohesiveDurationRRuleLinter(object):
         # ensure uniqueness
         gen_drrules = {}
         for drr in self.drrules:
+
+            dstart = drr.start_datetime
+            dend = drr.end_datetime
+            if dstart and dstart.year == 1000:
+                dstart = datetime.now()
+                dend = datetime.now() + timedelta(days=365)
+                dstart = dstart.replace(
+                    hour=0, minute=0, second=0, microsecond=0)
+                dend = dend.replace(
+                    hour=0, minute=0, second=0, microsecond=0)
             str_rrule = makerrulestr(
-                drr.rrule.dtstart,
-                end=drr.rrule.until,
+                dstart,
+                end=dend,
                 freq=drr.rrule.freq,
                 rule=drr.rrule)
             gen_drrules[str(drr.duration) + str_rrule] = {
