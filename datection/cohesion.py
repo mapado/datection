@@ -55,9 +55,7 @@ class DurationRRuleAnalyser(DurationRRule):
              (we guess this info is false)
         """
         year = timedelta(days=365)
-        return ("DTSTART:" in self.duration_rrule['rrule']
-                and "UNTIL=" in self.duration_rrule['rrule']
-                and self.rrule._until < self.rrule._dtstart + year
+        return (self.end_datetime < self.start_datetime + year
                 and self.end_datetime >= self.start_datetime - timedelta(days=1))
 
     @property
@@ -153,16 +151,14 @@ class DurationRRuleAnalyser(DurationRRule):
         return (not self.is_sublapse_of(drrule)
                 and not drrule.is_sublapse_of(self)
                 and (self.end_datetime == drrule.start_datetime
-                     or (drrule.rrule.count == 1
-                         and ((self.rrule._freq == DAILY and drrule.rrule._freq == DAILY
-                               and self.end_datetime >= drrule.start_datetime - timedelta(days=1)
-                               and self.end_datetime <= drrule.start_datetime
-                               )
-                              or (self.is_same_weekdays(drrule)
-                                  and self.end_datetime >= drrule.start_datetime - timedelta(days=8)
-                                  and self.end_datetime <= drrule.start_datetime
-                                  )
-                              )
+                     or ((self.rrule._freq == DAILY and drrule.rrule._freq == DAILY
+                          and self.end_datetime >= drrule.start_datetime - timedelta(days=1)
+                          and self.end_datetime <= drrule.start_datetime
+                          )
+                         or (self.is_same_weekdays(drrule)
+                             and self.end_datetime >= drrule.start_datetime - timedelta(days=8)
+                             and self.end_datetime <= drrule.start_datetime
+                             )
                          )
                      )
                 )
@@ -348,12 +344,12 @@ class CohesiveDurationRRuleLinter(object):
             for examinated_drrule in drrules:
                 keep_drrule = True
                 for cur_drrule in drrules:
-                    if not examinated_drrule is cur_drrule:
-                        if cur_drrule.is_same(examinated_drrule):
-                            keep_drrule = False
-                            if keep_drrule:
-                                kept_rrules.append(examinated_drrule)
-                                self.drrules = kept_rrules
+                    if (not examinated_drrule is cur_drrule and
+                            cur_drrule.is_same(examinated_drrule)):
+                        keep_drrule = False
+                        if keep_drrule:
+                            kept_rrules.append(examinated_drrule)
+                            self.drrules = kept_rrules
 
     def merge(self):
         """ Reduce Set of Duration rrule by cohesive unification of drrule. """
@@ -422,7 +418,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                            ):
+                                ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 
@@ -438,43 +434,6 @@ class CohesiveDurationRRuleLinter(object):
                 gen_rrules.append(root_copy)
             self.drrules = gen_rrules
 
-    def cleanup_drrule(self):
-        """ Use properity beginning _ that have been modified during cohesion
-        process to regenerate rrule.
-        """
-        def gen_drrule_dict(dr):
-            rr = rrule(
-                freq=dr.rrule._freq,
-                dtstart=dr.rrule._dtstart,
-                interval=dr.rrule._interval,
-                wkst=dr.rrule._wkst,
-                count=dr.rrule._count,
-                until=dr.rrule._until,
-                bysetpos=dr.rrule._bysetpos,
-                bymonth=dr.rrule._bymonth,
-                bymonthday=dr.rrule._bymonthday,
-                byyearday=dr.rrule._byyearday,
-                byeaster=dr.rrule._byeaster,
-                byweekno=dr.rrule._byweekno,
-                byweekday=dr.rrule._byweekday,
-                byhour=dr.rrule._byhour,
-                byminute=dr.rrule._byminute,
-                cache=False)
-
-            return {
-                'rrule': makerrulestr(
-                    dr.start_datetime,
-                    end=dr.end_datetime,
-                    freq=rr.freq,
-                    rule=rr),
-                'duration': dr.duration,
-                'span': (0, 0),
-            }
-        self.drrules = [
-            DurationRRuleAnalyser(gen_drrule_dict(dr))
-            for dr in self.drrules
-        ]
-
     def __call__(self):
         """Lint a list of DurationRRule and transform it to a set of
         more cohesive one."""
@@ -487,31 +446,7 @@ class CohesiveDurationRRuleLinter(object):
             # if one generate all
             self.make_drrule_compositions(roots[0])
 
-        self.cleanup_drrule()
-
-        # ensure uniqueness
-        gen_drrules = {}
-        for drr in self.drrules:
-
-            dstart = drr.start_datetime
-            dend = drr.end_datetime
-            if dstart and dstart.year == 1000:
-                dstart = datetime.now()
-                dend = datetime.now() + timedelta(days=365)
-                dstart = dstart.replace(
-                    hour=0, minute=0, second=0, microsecond=0)
-                dend = dend.replace(
-                    hour=0, minute=0, second=0, microsecond=0)
-            str_rrule = makerrulestr(
-                dstart,
-                end=dend,
-                freq=drr.rrule.freq,
-                rule=drr.rrule)
-            gen_drrules[str(drr.duration) + str_rrule] = {
-                'duration': drr.duration,
-                'rrule': str_rrule
-            }
-        return gen_drrules.values()
+        return drrule_analysers_to_dict_drrules(self.drrules)
 
 
 def cohesive_rrules(drrules):
@@ -524,3 +459,70 @@ def cohesive_rrules(drrules):
 
     """
     return CohesiveDurationRRuleLinter(drrules)()
+
+
+def cleanup_drrule(drrules):
+    """ Use properity beginning _ that have been modified during cohesion
+    process to regenerate rrule.
+    """
+    def gen_drrule_dict(dr):
+        rr = rrule(
+            freq=dr.rrule._freq,
+            dtstart=dr.rrule._dtstart,
+            interval=dr.rrule._interval,
+            wkst=dr.rrule._wkst,
+            count=dr.rrule._count,
+            until=dr.rrule._until,
+            bysetpos=dr.rrule._bysetpos,
+            bymonth=dr.rrule._bymonth,
+            bymonthday=dr.rrule._bymonthday,
+            byyearday=dr.rrule._byyearday,
+            byeaster=dr.rrule._byeaster,
+            byweekno=dr.rrule._byweekno,
+            byweekday=dr.rrule._byweekday,
+            byhour=dr.rrule._byhour,
+            byminute=dr.rrule._byminute,
+            cache=False)
+
+        return {
+            'rrule': makerrulestr(
+                dr.start_datetime,
+                end=dr.end_datetime,
+                freq=rr.freq,
+                rule=rr),
+            'duration': dr.duration,
+            'span': (0, 0),
+        }
+    return [
+        DurationRRuleAnalyser(gen_drrule_dict(dr))
+        for dr in drrules
+    ]
+
+
+def drrule_analysers_to_dict_drrules(drrules):
+
+    drrules = cleanup_drrule(drrules)
+    # ensure uniqueness
+    gen_drrules = {}
+    for drr in drrules:
+
+        dstart = drr.start_datetime
+        dend = drr.end_datetime
+        # following avoid error at datection.display
+        if dstart and dstart.year == 1000:
+            dstart = datetime.now()
+            dend = datetime.now() + timedelta(days=365)
+            dstart = dstart.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+            dend = dend.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+        str_rrule = makerrulestr(
+            dstart,
+            end=dend,
+            freq=drr.rrule.freq,
+            rule=drr.rrule)
+        gen_drrules[str(drr.duration) + str_rrule] = {
+            'duration': drr.duration,
+            'rrule': str_rrule
+        }
+    return gen_drrules.values()
