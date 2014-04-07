@@ -90,11 +90,15 @@ class DurationRRuleAnalyser(DurationRRule):
                 (not (self.rrule._freq == WEEKLY and drrule.rrule._freq == WEEKLY)
                  or (self.rrule._byweekday == drrule.rrule._byweekday)))
 
-    def is_same_time(self, drrule):
+    def is_same_time(self, drrule, variation=0):
         """ Check drrule has same time as another DurationRRuleAnalyser."""
         if self.has_time and drrule.has_time:
-            return (self.rrule._byhour == drrule.rrule._byhour
-                    and self.rrule._byminute == drrule.rrule._byminute)
+            var = timedelta(hours=variation)
+            s_time = timedelta(hours=self.rrule._byhour[0],
+                               minutes=self.rrule._byminute[0])
+            dr_time = timedelta(hours=drrule.rrule._byhour[0],
+                                minutes=drrule.rrule._byminute[0])
+            return s_time <= dr_time and dr_time <= s_time + var
 
     def is_same(self, drrule_analyser):
         """ Check drrule has same timelapse, date, day, and time if isset."""
@@ -106,8 +110,20 @@ class DurationRRuleAnalyser(DurationRRule):
         if self.has_day:
             is_same = self.is_same_weekdays(drrule_analyser)
         if self.has_time:
-            is_same = self.is_same_time(drrule_analyser)
+            is_same = self.is_same_time(drrule_analyser, variation=1)
         return is_same
+
+    def is_subweekdays_of(self, drrule):
+        """ Check drrule has all weekdays contained in self(might be more). """
+        return (self.rrule._freq == WEEKLY and drrule.rrule._freq == WEEKLY
+                and contains(self.rrule._byweekday, drrule.rrule._byweekday))
+
+    def is_fragment_of(self, drrule_analyser):
+        """ Check is drrule is has same time and day facet as self. """
+        return (not self.has_date and not self.has_timelapse
+                and
+                ((not self.has_day or self.is_subweekdays_of(drrule_analyser))
+                 and (not self.has_time or self.is_same_time(drrule_analyser))))
 
     def is_containing_start_lapse_of(self, drrule):
         """ Check drrule lapse begin in current 'self' object timelapse.
@@ -179,7 +195,7 @@ class DurationRRuleAnalyser(DurationRRule):
                 # if weekday
                 and self.is_same_weekdays(drrule))
 
-    def take_time_of(self, drrule):
+    def take_time_of(self, drrule, earliest=True):
         """ Get time of another drrule if the current has no time specified."""
         if not self.has_time and drrule.has_time:
             self.duration_rrule['duration'] = drrule.duration
@@ -220,7 +236,7 @@ class DurationRRuleAnalyser(DurationRRule):
 
         if ((not self.has_time
              or not drrule.has_time
-             or self.is_same_time(drrule))
+             or self.is_same_time(drrule, variation=1))
                 and (not self.has_day or self.is_same_weekdays(drrule))):
 
             if (self.is_same_timelapse(drrule)
@@ -290,8 +306,9 @@ class CohesiveDurationRRuleLinter(object):
 
     """
 
-    def __init__(self, drrules):
+    def __init__(self, drrules, accept_composition=True):
         self.drrules = [DurationRRuleAnalyser(rr) for rr in drrules]
+        self.accept_composition = accept_composition
 
     @property
     def drrules_by(self):
@@ -350,6 +367,22 @@ class CohesiveDurationRRuleLinter(object):
                         if keep_drrule:
                             kept_rrules.append(examinated_drrule)
                             self.drrules = kept_rrules
+
+    def del_partial_drrule_contained_in_more_complete_one(self):
+        """
+        Example:
+            à 20h,
+            le jeudi à 20h
+            du 15 avril au 20 mars le jeudi à 20h
+        Become:
+            du 15 avril au 20 mars le jeudi à 20h
+        """
+        consumed_drr = set()
+        for drr in self.drrules:
+            for cdrr in self.drrules:
+                if drr is not cdrr and drr.is_fragment_of(cdrr):
+                    consumed_drr.add(drr)
+        self.drrules = [drr for drr in self.drrules if drr not in consumed_drr]
 
     def merge(self):
         """ Reduce Set of Duration rrule by cohesive unification of drrule. """
@@ -418,7 +451,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                                ):
+                            ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 
@@ -437,12 +470,13 @@ class CohesiveDurationRRuleLinter(object):
     def __call__(self):
         """Lint a list of DurationRRule and transform it to a set of
         more cohesive one."""
+        self.del_partial_drrule_contained_in_more_complete_one()
         self.avoid_doubles()
         self.merge()
 
         # Check nbr of occurences of root
         roots = self.drrules_by['has_timelapse'] + self.drrules_by['has_date']
-        if len(roots) == 1 and self.drrules > 1:
+        if len(roots) == 1 and self.drrules > 1 and self.accept_composition:
             # if one generate all
             self.make_drrule_compositions(roots[0])
 
@@ -462,9 +496,7 @@ def cohesive_rrules(drrules):
 
 
 def cleanup_drrule(drrules):
-    """ Use properity beginning _ that have been modified during cohesion
-    process to regenerate rrule.
-    """
+    """ Use property beginning with underscore to regenerate rrule. """
     def gen_drrule_dict(dr):
         rr = rrule(
             freq=dr.rrule._freq,
@@ -500,7 +532,7 @@ def cleanup_drrule(drrules):
 
 
 def drrule_analysers_to_dict_drrules(drrules):
-
+    """ Build clean list of dict rrules from DurationRRuleAnalyser objects."""
     drrules = cleanup_drrule(drrules)
     # ensure uniqueness
     gen_drrules = {}
@@ -526,3 +558,14 @@ def drrule_analysers_to_dict_drrules(drrules):
             'rrule': str_rrule
         }
     return gen_drrules.values()
+
+
+def contains(small, big):
+    """ Check a list of items is contained in a larger list. """
+    for i in xrange(len(big) - len(small) + 1):
+        for j in xrange(len(small)):
+            if big[i + j] != small[j]:
+                break
+        else:
+            return i, i + len(small)
+    return False

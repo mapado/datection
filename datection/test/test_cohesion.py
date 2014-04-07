@@ -2,7 +2,6 @@
 """
 Test suite of the datection.cohesive
 """
-
 import unittest
 import datection
 
@@ -22,6 +21,7 @@ class TestMoreCohesive(unittest.TestCase):
     """
 
     def list_has_item_containing(self, items, contains):
+        """ Check each rrule fragments string in :contains: is in :items: """
         self.assertEqual(len(items), len(contains))
         is_validated_contains = [False for it in contains]
         for drr in items:
@@ -100,7 +100,7 @@ class TestMoreCohesive(unittest.TestCase):
 
     def test_avoid_group_when_time_exist_and_differ(self):
         res = gen_cohesive("""
-            1, 2 et 3 janvier 2016 à 17h30,
+            1, 2 et 3 janvier 2016 à 21h30,
             3 et 4 janvier 2016 à 18h
         """)
         # wanted result
@@ -111,8 +111,8 @@ class TestMoreCohesive(unittest.TestCase):
             'DTSTART:20160103T180000\nRRULE:FREQ=DAILY;'
             'BYHOUR=18;BYMINUTE=0;UNTIL=20160104T180000',
 
-            'DTSTART:20160101T173000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=17;BYMINUTE=30;UNTIL=20160103T173000',
+            'DTSTART:20160101T213000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=21;BYMINUTE=30;UNTIL=20160103T213000',
         ])
 
     def test_weekdays_concat(self):
@@ -131,7 +131,7 @@ class TestMoreCohesive(unittest.TestCase):
         res = gen_cohesive("""
             le mercredi à 14h,
             le lundi et mardi à 15h,
-            le lundi et mardi à 16h
+            le lundi et mardi à 17h
         """)
         # wanted result
         # Le mercredi, à 14 h
@@ -141,7 +141,7 @@ class TestMoreCohesive(unittest.TestCase):
         self.list_has_item_containing(res, [
             'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;',
 
-            'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=16;BYMINUTE=0;',
+            'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=17;BYMINUTE=0;',
 
             'FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;',
         ])
@@ -222,6 +222,20 @@ class TestMoreCohesive(unittest.TestCase):
             'RRULE:FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;',
 
             'RRULE:FREQ=WEEKLY;BYDAY=MO,TU;BYHOUR=15;BYMINUTE=0;',
+        ])
+
+    def test_fuzzy_time(self):
+        res = gen_cohesive("""
+            du 14 avril au 16 juin 2020 à 16h,
+            du 14 avril au 16 juin 2020 à 15h,
+        """)
+
+        # wanted result
+        # du 14 avril au 16 juin 2020 à 15h,
+
+        self.list_has_item_containing(res, [
+            '20200414T150000\nRRULE:FREQ=DAILY;BYHOUR=15;'
+            'BYMINUTE=0;UNTIL=20200616'
         ])
 
     def test_real_case_1(self):
@@ -340,36 +354,13 @@ class TestMoreCohesive(unittest.TestCase):
         """)
 
         # result wanted
-        # du 3 au 5 octobre 2014, à 20 h
+        # Le vendredi, dimanche, du 3 au 5 octobre 2014, à 20 h
         # Du 4 au 6 octobre 2013 à 13h
-        # TODO
 
-    def test_real_case_6(self):
-        res = gen_cohesive("""
-            Le samedi, à 14 h
-            Le dimanche, à 10 h 30
-            Les 8, 9, 10, 10, 11, 11, 12 et 12 janvier 2014
-            Le 8 janvier 2014 à 14 h
-        """)
+        self.list_has_item_containing(res, [
+            'DTSTART:20131004T130000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=13;BYMINUTE=0;UNTIL=20131006T130000',
 
-        # result wanted
-        # TODO
-        # Du 8 au 11 janvier 2014 à 14 h
-        # Le dimanche 12 janvier à 10h30
-
-    def test_real_case_7(self):
-        res = gen_cohesive("""
-            Le dimanche, de 10 h à 18 h
-            Du 17 au 19 janvier 2014 de 9 h à 18 h
-        """)
-
-        # result wanted
-        # Du 17 au 19 janvier 2014 de 9 h à 18 h
-
-        # TODO because there is only 1 day that match perfectly patern so extend to
-        # what seem to be a resonable timelapse.
-
-
-    # TODO set close time has mergeable (get avg by half hours)
-    # TODO set lonely hour del if a more complete rrule has same
-    # TODO set composition has an option
+            'DTSTART:20141003T200000\nRRULE:FREQ=WEEKLY;'
+            'BYDAY=FR,SU;BYHOUR=20;BYMINUTE=0;UNTIL=20141005T200000',
+        ])
