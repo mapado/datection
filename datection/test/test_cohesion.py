@@ -52,10 +52,8 @@ class TestMoreCohesive(unittest.TestCase):
         """)
         # wanted result
         # Le 21 mars 2014 à 14 h
-
         self.list_has_item_containing(res, [
-            'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;'
-            'COUNT=1;BYHOUR=14;BYMINUTE=0',
+            'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;BYHOUR=14;BYMINUTE=0;'
         ])
 
     def test_precise_time_in_a_lapse_time(self):
@@ -356,11 +354,93 @@ class TestMoreCohesive(unittest.TestCase):
         # result wanted
         # Le vendredi, dimanche, du 3 au 5 octobre 2014, à 20 h
         # Du 4 au 6 octobre 2013 à 13h
-
         self.list_has_item_containing(res, [
             'DTSTART:20131004T130000\nRRULE:FREQ=DAILY;'
             'BYHOUR=13;BYMINUTE=0;UNTIL=20131006T130000',
 
             'DTSTART:20141003T200000\nRRULE:FREQ=WEEKLY;'
             'BYDAY=FR,SU;BYHOUR=20;BYMINUTE=0;UNTIL=20141005T200000',
+        ])
+
+    def test_real_case_6(self):
+        res = cohesive_rrules([{
+            'duration': 1439, 'texts': ['05/07.'],
+            'rrule': 'DTSTART:20150705\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
+        }, {
+            'duration': 1439, 'texts': ['Du 04/07 au 05/07'],
+            'rrule': 'DTSTART:20150704\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;INTERVAL=1;UNTIL=20150705'
+        }])
+
+        self.list_has_item_containing(res, [
+            'DTSTART:20150704T000000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20150705T235900'
+        ])
+
+    def test_real_case_7(self):
+        res = cohesive_rrules([{
+            'duration': 1439,
+            'rrule': 'DTSTART:20130322\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=23'
+        }, {
+            'duration': 1439,
+            'rrule': 'DTSTART:20130323\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=23'
+        }])
+
+        self.list_has_item_containing(res, [
+            'DTSTART:20130322T230000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=23;BYMINUTE=0;UNTIL=20130323T230000'
+        ])
+
+    def test_real_case_8(self):
+        res = cohesive_rrules([{
+            'duration': 1439, 'rrule':
+            'DTSTART:20131210\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'},
+            {'duration': 1439, 'rrule':
+             'DTSTART:20130603\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'},
+            {'duration': 1439, 'rrule':
+             'DTSTART:20130603\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'},
+            {'duration': 1439, 'rrule':
+             'DTSTART:20130606\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'},
+            {'duration': 1439, 'rrule':
+             'DTSTART:20130627\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
+             }])
+
+        self.list_has_item_containing(res, [
+            '20130603T000000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20130603T235900',
+
+            '20130606T000000\nRRULE:FREQ=DAILY;COUNT=1;'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20130606T235900',
+
+            '20130627T000000\nRRULE:FREQ=DAILY;COUNT=1;'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20130627T235900',
+
+            '20131210T000000\nRRULE:FREQ=DAILY;COUNT=1;'
+            'BYHOUR=0;BYMINUTE=0;UNTIL=20131210T235900',
+        ])
+
+    def test_real_case_9(self):
+
+        res = cohesive_rrules([{
+            'duration': 450,
+            'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=WE;WKST=MO'
+        }, {
+            'duration': 450,
+            'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=TH;WKST=MO'
+        }, {
+            'duration': 450,
+            'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=FR;WKST=MO'
+        }, {
+            'duration': 450,
+            'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=SA;WKST=MO'
+        }, {
+            'duration': 450,
+            'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=SU;WKST=MO'
+        }])
+
+        self.list_has_item_containing(res, [
+            'FREQ=DAILY;BYDAY=WE;BYHOUR=11;BYMINUTE=0;',
+            'FREQ=DAILY;BYDAY=TH;BYHOUR=11;BYMINUTE=0;',
+            'FREQ=DAILY;BYDAY=FR;BYHOUR=11;BYMINUTE=0;',
+            'FREQ=DAILY;BYDAY=SA;BYHOUR=11;BYMINUTE=0;',
+            'FREQ=DAILY;BYDAY=SU;BYHOUR=11;BYMINUTE=0;',
         ])
