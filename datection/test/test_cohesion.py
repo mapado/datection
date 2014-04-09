@@ -133,8 +133,8 @@ class TestMoreCohesive(unittest.TestCase):
         """)
         # wanted result
         # Le mercredi, à 14 h
-        # Le lundi et mardi, à 16 h
         # Le lundi et mardi, à 15 h
+        # Le lundi et mardi, à 17 h
 
         self.list_has_item_containing(res, [
             'FREQ=WEEKLY;BYDAY=WE;BYHOUR=14;BYMINUTE=0;',
@@ -354,6 +354,7 @@ class TestMoreCohesive(unittest.TestCase):
         # result wanted
         # Le vendredi, dimanche, du 3 au 5 octobre 2014, à 20 h
         # Du 4 au 6 octobre 2013 à 13h
+
         self.list_has_item_containing(res, [
             'DTSTART:20131004T130000\nRRULE:FREQ=DAILY;'
             'BYHOUR=13;BYMINUTE=0;UNTIL=20131006T130000',
@@ -371,6 +372,9 @@ class TestMoreCohesive(unittest.TestCase):
             'rrule': 'DTSTART:20150704\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;INTERVAL=1;UNTIL=20150705'
         }])
 
+        # wanted result
+        # Du 4 au 5 juillet 2015
+
         self.list_has_item_containing(res, [
             'DTSTART:20150704T000000\nRRULE:FREQ=DAILY;'
             'BYHOUR=0;BYMINUTE=0;UNTIL=20150705T235900'
@@ -384,6 +388,9 @@ class TestMoreCohesive(unittest.TestCase):
             'duration': 1439,
             'rrule': 'DTSTART:20130323\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=23'
         }])
+
+        # wanted result
+        # Du 22 au 23 mars 2013 à 23 h
 
         self.list_has_item_containing(res, [
             'DTSTART:20130322T230000\nRRULE:FREQ=DAILY;'
@@ -404,6 +411,9 @@ class TestMoreCohesive(unittest.TestCase):
              'DTSTART:20130627\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
              }])
 
+        # wanted result
+        # Les 3, 6 et 27 juin 2013, le 10 décembre 2013
+
         self.list_has_item_containing(res, [
             '20130603T000000\nRRULE:FREQ=DAILY;'
             'BYHOUR=0;BYMINUTE=0;UNTIL=20130603T235900',
@@ -419,7 +429,6 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_9(self):
-
         res = cohesive_rrules([{
             'duration': 450,
             'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=WE;WKST=MO'
@@ -437,10 +446,98 @@ class TestMoreCohesive(unittest.TestCase):
             'rrule': 'DTSTART:\nRRULE:FREQ=DAILY;INTERVAL=1;BYMINUTE=00;BYHOUR=11;BYDAY=SU;WKST=MO'
         }])
 
+        # wanted result
+        # Du mercredi au dimanche, de 11 h à 18 h 30
+
         self.list_has_item_containing(res, [
-            'FREQ=DAILY;BYDAY=WE;BYHOUR=11;BYMINUTE=0;',
-            'FREQ=DAILY;BYDAY=TH;BYHOUR=11;BYMINUTE=0;',
-            'FREQ=DAILY;BYDAY=FR;BYHOUR=11;BYMINUTE=0;',
-            'FREQ=DAILY;BYDAY=SA;BYHOUR=11;BYMINUTE=0;',
-            'FREQ=DAILY;BYDAY=SU;BYHOUR=11;BYMINUTE=0;',
+            'FREQ=WEEKLY;BYDAY=WE,TH,FR,SA,SU;BYHOUR=11;BYMINUTE=0;'
+        ])
+
+    def test_real_case_10(self):
+        res = cohesive_rrules([{
+            u'duration': 90,
+            u'rrule': u'DTSTART:20130726\nRRULE:FREQ=WEEKLY;BYDAY=TU,TH;BYHOUR=16;BYMINUTE=0;UNTIL=20140726'
+        }, {
+            u'duration': 90,
+            u'rrule': u'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=TU,TH;BYHOUR=16;BYMINUTE=0;UNTIL=20140717'
+        }])
+
+        # wanted result
+        # Le mardi et jeudi, de 16 h à 17 h 30
+
+        self.list_has_item_containing(res, [
+            'RRULE:FREQ=WEEKLY;BYDAY=TU,TH;BYHOUR=16;BYMINUTE=0;'
+        ])
+
+    def test_real_case_11(self):
+        res = cohesive_rrules([{
+            'duration': 0,
+            'rrule': u'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=SA;UNTIL=20140717'
+        }, {
+            'duration': 240,
+            'rrule': u'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYHOUR=9;BYMINUTE=0;UNTIL=20140717'
+        }])
+
+        # wanted result
+        # le samedi de 9 h à 13 h
+
+        self.list_has_item_containing(res, [
+            'FREQ=WEEKLY;BYDAY=SA;BYHOUR=9;BYMINUTE=0;'
+        ])
+
+    def test_real_case_12(self):
+        res = cohesive_rrules([{
+            'duration': 1439,
+            'rrule': 'DTSTART:20130726\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;UNTIL=20140726'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=SU;UNTIL=20140717'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;UNTIL=20140717'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=20140717'
+        }])
+
+        # wanted result
+        # le lundi et le dimanche
+
+        self.list_has_item_containing(res, [
+            'FREQ=WEEKLY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;',
+            'FREQ=WEEKLY;BYDAY=SU;BYHOUR=0;BYMINUTE=0;'
+        ])
+
+    def test_real_case_13(self):
+        res = cohesive_rrules([{
+            'duration': 180,
+            'rrule': 'DTSTART:20130401\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYHOUR=15;BYMINUTE=0;UNTIL=20131031'
+        }, {
+            'duration': 1439,
+            'rrule': 'DTSTART:20130401\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;INTERVAL=1;UNTIL=20131031'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;UNTIL=20140717'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20131031\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=13'
+        }, {
+            'duration': 180,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;UNTIL=20140717'
+        }, {
+            'duration': 0,
+            'rrule': 'DTSTART:20130717\nRRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=20140717'
+        }])
+
+        # wanted result
+        # Le samedi et dimanche, de 15 h à 18 h
+        # Le lundi,
+        # Le 31 octobre 2013 à 13 h
+        # Du 1er avril au 31 octobre 2013 de 15 h à 18 h
+
+        self.list_has_item_containing(res, [
+            'DTSTART:20130401T150000\nRRULE:FREQ=DAILY;BYHOUR=15;BYMINUTE=0;UNTIL=20131031T180000',
+            'RRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;',
+            'DTSTART:20131031T130000\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=13;BYMINUTE=0;UNTIL=20131031T130000',
+            'RRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;',
         ])
