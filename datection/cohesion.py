@@ -620,7 +620,7 @@ def drrule_analysers_to_dict_drrules(drrules):
                 hour=0, minute=0, second=0, microsecond=0)
             dend = dend.replace(
                 hour=0, minute=0, second=0, microsecond=0)
-            if drr._freq == DAILY:
+            if drr.rrule._freq == DAILY:
                 drr.rrule._freq = WEEKLY
                 drr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
         str_rrule = makerrulestr(
