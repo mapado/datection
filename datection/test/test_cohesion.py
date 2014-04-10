@@ -239,10 +239,13 @@ class TestMoreCohesive(unittest.TestCase):
     def test_temporal_distance(self):
         res = cohesive_rrules(datection.to_db("""
             du 16 avril au 16 juin 2020 à 16h,
+            du 16 avril au 16 juin 2015 à 16h,
         """, 'fr', only_future=False),
                               created_at=datetime(year=2014, month=1, day=1))
 
-        self.list_has_item_containing(res, [])
+        self.list_has_item_containing(res, [
+            '20150416T160000\nRRULE:FREQ=DAILY;BYHOUR=16;BYMINUTE=0;UNTIL=20150616T160000'
+        ])
 
     def test_real_case_1(self):
         res = gen_cohesive("""

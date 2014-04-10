@@ -17,6 +17,100 @@ from datection.models import DurationRRule
 from datection.utils import makerrulestr
 
 
+def cohesive_rrules(drrules, created_at=None):
+    """ Take a rrule set and try to merge them into more cohesive rrule set.
+
+    :rrules: list(dict()) containing duration rrule in string format
+                          foreach dict.
+    :returns: list(dict()) containing duration rrule in string format
+                          foreach dict.
+
+    """
+    return CohesiveDurationRRuleLinter(drrules, created_at=created_at)()
+
+
+def cleanup_drrule(drrules):
+    """ Use property beginning with underscore to regenerate rrule. """
+    def gen_drrule_dict(dr):
+        if dr.rrule._until:
+            count = None
+        else:
+            count = dr.rrule._count
+        rr = rrule(
+            freq=dr.rrule._freq,
+            dtstart=dr.rrule._dtstart,
+            interval=dr.rrule._interval,
+            wkst=dr.rrule._wkst,
+            count=count,
+            until=dr.rrule._until,
+            bysetpos=dr.rrule._bysetpos,
+            bymonth=dr.rrule._bymonth,
+            bymonthday=dr.rrule._bymonthday,
+            byyearday=dr.rrule._byyearday,
+            byeaster=dr.rrule._byeaster,
+            byweekno=dr.rrule._byweekno,
+            byweekday=dr.rrule._byweekday,
+            byhour=dr.rrule._byhour,
+            byminute=dr.rrule._byminute,
+            cache=False)
+        return {
+            'rrule': makerrulestr(
+                dr.start_datetime,
+                end=dr.end_datetime,
+                freq=rr.freq,
+                rule=rr),
+            'duration': dr.duration,
+            'span': (0, 0),
+        }
+    return [
+        DurationRRuleAnalyser(gen_drrule_dict(dr))
+        for dr in drrules
+    ]
+
+
+def drrule_analysers_to_dict_drrules(drrules):
+    """ Build clean list of dict rrules from DurationRRuleAnalyser objects."""
+    drrules = cleanup_drrule(drrules)
+    # ensure uniqueness
+    gen_drrules = {}
+    for drr in drrules:
+
+        dstart = drr.start_datetime
+        dend = drr.end_datetime
+        # following avoid error at datection.display
+        if (dstart and dstart.year == 1000) or (dstart + timedelta(365) < dend):
+            dstart = datetime.now()
+            dend = datetime.now() + timedelta(days=365)
+            dstart = dstart.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+            dend = dend.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+            if drr.rrule._freq == DAILY:
+                drr.rrule._freq = WEEKLY
+                drr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
+        str_rrule = makerrulestr(
+            dstart,
+            end=dend,
+            freq=drr.rrule._freq,
+            rule=drr.rrule)
+        gen_drrules[str(drr.duration) + str_rrule] = {
+            'duration': drr.duration,
+            'rrule': str_rrule
+        }
+    return gen_drrules.values()
+
+
+def contains(small, big):
+    """ Check a list of items is contained in a larger list. """
+    for i in xrange(len(big) - len(small) + 1):
+        for j in xrange(len(small)):
+            if big[i + j] != small[j]:
+                break
+        else:
+            return i, i + len(small)
+    return False
+
+
 class DurationRRuleAnalyser(DurationRRule):
 
     """ DurationRRuleAnalyser extend duration rrule by adding more
@@ -429,8 +523,10 @@ class CohesiveDurationRRuleLinter(object):
         # let estimate 6 month is too far
         consumed_drr.clear()
         if self.created_at:
-            for drr in self.drrules:
-                if (self.created_at + timedelta(days=30 * 6) < drr.start_datetime):
+            for drr in sorted(self.drrules, key=lambda x: x.start_datetime,
+                              reverse=True):
+                if (self.created_at + timedelta(days=30 * 6) < drr.start_datetime
+                        and len(consumed_drr) + 1 != len(self.drrules)):
                     consumed_drr.add(drr)
             self.drrules = [
                 drr for drr in self.drrules if drr not in consumed_drr]
@@ -502,7 +598,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                                ):
+                            ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 
@@ -519,7 +615,7 @@ class CohesiveDurationRRuleLinter(object):
             self.drrules = gen_rrules
 
     def normalise(self):
-        """ . """
+        """ Normalise each drrule to be more consistant by itself. """
         for drr in self.drrules:
             if (drr.duration == 1439 and drr.has_time):
                 drr.duration_rrule['duration'] = 0
@@ -561,97 +657,3 @@ class CohesiveDurationRRuleLinter(object):
                         if drr not in consumed_drrule]
 
         return drrule_analysers_to_dict_drrules(self.drrules)
-
-
-def cohesive_rrules(drrules, created_at=None):
-    """ Take a rrule set and try to merge them into more cohesive rrule set.
-
-    :rrules: list(dict()) containing duration rrule in string format
-                          foreach dict.
-    :returns: list(dict()) containing duration rrule in string format
-                          foreach dict.
-
-    """
-    return CohesiveDurationRRuleLinter(drrules, created_at=created_at)()
-
-
-def cleanup_drrule(drrules):
-    """ Use property beginning with underscore to regenerate rrule. """
-    def gen_drrule_dict(dr):
-        if dr.rrule._until:
-            count = None
-        else:
-            count = dr.rrule._count
-        rr = rrule(
-            freq=dr.rrule._freq,
-            dtstart=dr.rrule._dtstart,
-            interval=dr.rrule._interval,
-            wkst=dr.rrule._wkst,
-            count=count,
-            until=dr.rrule._until,
-            bysetpos=dr.rrule._bysetpos,
-            bymonth=dr.rrule._bymonth,
-            bymonthday=dr.rrule._bymonthday,
-            byyearday=dr.rrule._byyearday,
-            byeaster=dr.rrule._byeaster,
-            byweekno=dr.rrule._byweekno,
-            byweekday=dr.rrule._byweekday,
-            byhour=dr.rrule._byhour,
-            byminute=dr.rrule._byminute,
-            cache=False)
-        return {
-            'rrule': makerrulestr(
-                dr.start_datetime,
-                end=dr.end_datetime,
-                freq=rr.freq,
-                rule=rr),
-            'duration': dr.duration,
-            'span': (0, 0),
-        }
-    return [
-        DurationRRuleAnalyser(gen_drrule_dict(dr))
-        for dr in drrules
-    ]
-
-
-def drrule_analysers_to_dict_drrules(drrules):
-    """ Build clean list of dict rrules from DurationRRuleAnalyser objects."""
-    drrules = cleanup_drrule(drrules)
-    # ensure uniqueness
-    gen_drrules = {}
-    for drr in drrules:
-
-        dstart = drr.start_datetime
-        dend = drr.end_datetime
-        # following avoid error at datection.display
-        if (dstart and dstart.year == 1000) or (dstart + timedelta(365) < dend):
-            dstart = datetime.now()
-            dend = datetime.now() + timedelta(days=365)
-            dstart = dstart.replace(
-                hour=0, minute=0, second=0, microsecond=0)
-            dend = dend.replace(
-                hour=0, minute=0, second=0, microsecond=0)
-            if drr.rrule._freq == DAILY:
-                drr.rrule._freq = WEEKLY
-                drr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
-        str_rrule = makerrulestr(
-            dstart,
-            end=dend,
-            freq=drr.rrule._freq,
-            rule=drr.rrule)
-        gen_drrules[str(drr.duration) + str_rrule] = {
-            'duration': drr.duration,
-            'rrule': str_rrule
-        }
-    return gen_drrules.values()
-
-
-def contains(small, big):
-    """ Check a list of items is contained in a larger list. """
-    for i in xrange(len(big) - len(small) + 1):
-        for j in xrange(len(small)):
-            if big[i + j] != small[j]:
-                break
-        else:
-            return i, i + len(small)
-    return False
