@@ -19,6 +19,7 @@ from datection.display import WeekdayReccurenceFormatter
 from datection.display import NextOccurenceFormatter
 from datection.display import OpeningHoursFormatter
 from datection.display import LongFormatter
+from datection.display import SeoFormatter
 from datection.display import NoFutureOccurence
 from datection.display import groupby_consecutive_dates
 from datection.display import groupby_date
@@ -664,7 +665,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             schedule,
             self.locale,
             short=True,
-            shortest=False,
+            seo=False,
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(short), len(default))
@@ -688,7 +689,7 @@ class TestDisplay_fr_FR(unittest.TestCase):
             schedule,
             self.locale,
             short=True,
-            shortest=False,
+            seo=False,
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(default), len(short))
@@ -698,107 +699,155 @@ class TestDisplay_fr_FR(unittest.TestCase):
         self.assertEqual(
             shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h + autres dates')
 
-    def test_display_recurrence_no_summarize(self):
-        schedule = [
-            {'duration': 60,
-             'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
-                       'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959'),
-             'span': (0, 48)}]
-        start = datetime.datetime(2015, 3, 1)
-        end = datetime.datetime(2015, 3, 17)
-        reference = datetime.datetime(2015, 3, 1)
-        short = NextOccurenceFormatter(schedule, start, end).display(
-            reference, summarize=False)
-        default = LongFormatter(schedule).display(abbrev_monthname=True)
-        shortest_fmt = display(
-            schedule,
-            self.locale,
-            short=False,
-            shortest=True,
-            bounds=(start, end),
-            reference=reference)
-        self.assertGreater(len(default), len(short))
-        self.assertEqual(shortest_fmt, short)
-        self.assertEqual(
-            default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
-        self.assertEqual(
-            shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h')
-
     def test_display_weekday_recurrence(self):
         sch = datection.to_db(u"Le samedi", "fr")
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi')
+        self.assertEqual(display(sch, self.locale), u'Le samedi')
 
     def test_display_weekday_recurrence_time(self):
         sch = datection.to_db(u"Le samedi à 15h30", "fr")
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi, à 15 h 30')
+        self.assertEqual(display(sch, self.locale), u'Le samedi, à 15 h 30')
 
     def test_display_weekday_recurrence_time_interval(self):
         sch = datection.to_db(u"Le samedi de 12 h 00 à 15h30", "fr")
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Le samedi, de 12 h à 15 h 30')
+            display(sch, self.locale), u'Le samedi, de 12 h à 15 h 30')
 
     def test_display_weekday_recurrence_list(self):
         sch = datection.to_db(u"Le lundi et samedi", "fr")
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le lundi et samedi')
+        self.assertEqual(display(sch, self.locale), u'Le lundi et samedi')
 
     def test_display_weekday_recurrence_list_time(self):
         sch = datection.to_db(u"Le lundi et samedi à 15h30", "fr")
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Le lundi et samedi, à 15 h 30')
+            display(sch, self.locale), u'Le lundi et samedi, à 15 h 30')
 
     def test_display_weekday_recurrence_list_time_interval(self):
         sch = datection.to_db(u"Le lundi et mardi de 14 h à 16 h 30", "fr")
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Le lundi et mardi, de 14 h à 16 h 30')
+            display(sch, self.locale), u'Le lundi et mardi, de 14 h à 16 h 30')
 
     def test_display_weekday_recurrence_interval(self):
         sch = datection.to_db(u"Du samedi au dimanche", "fr")
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le samedi et dimanche')
+        self.assertEqual(display(sch, self.locale), u'Le samedi et dimanche')
 
     def test_display_date(self):
         sch = datection.to_db(u"Le 15 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Le 15 mars 2013')
 
     def test_display_date_interval(self):
         sch = datection.to_db(
             u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Du 15 au 16 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Du 15 au 16 mars 2013')
 
     def test_display_date_list(self):
         sch = datection.to_db(
             u"Le 15 mars 2013 PLOP PLOP 18 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, 'fr_FR.UTF8'), u'Les 15 et 18 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les 15 et 18 mars 2013')
 
         sch = datection.to_db(
             u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
             "fr", only_future=False)
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Les 15, 16 et 18 mars 2015')
+            display(sch, self.locale), u'Les 15, 16 et 18 mars 2015')
 
     def test_display_datetime(self):
         sch = datection.to_db(
             u"Le 15 mars 2013 à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013 à 18 h 30')
+            display(sch, self.locale), u'Le 15 mars 2013 à 18 h 30')
 
     def test_display_datetime_interval(self):
         sch = datection.to_db(
             u"Le 15 mars 2013 de 16 h à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Le 15 mars 2013 de 16 h à 18 h 30')
+            display(sch, self.locale), u'Le 15 mars 2013 de 16 h à 18 h 30')
 
     def test_display_datetime_list(self):
         sch = datection.to_db(
             u"Le 15 et 18 mars 2013 à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'), u'Les 15 et 18 mars 2013 à 18 h 30')
+            display(sch, self.locale), u'Les 15 et 18 mars 2013 à 18 h 30')
 
     def test_display_datetime_list_time_interval(self):
         sch = datection.to_db(
             u"Le 15 & 18 mars 2013 de 16 h à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, 'fr_FR.UTF8'),
+            display(sch, self.locale),
             u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
+
+
+class TestSeoFormatter_fr_FR(unittest.TestCase):
+
+    def setUp(self):
+        self.locale = 'fr_FR.UTF8'
+        locale.setlocale(locale.LC_TIME, self.locale)
+
+    def test_format_single_day(self):
+        sch = datection.to_db(
+            u"Le 18 mars 2013 à 18h30", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars 2013')
+
+    def test_format_date_list_same_month(self):
+        sch = datection.to_db(
+            u"Le 18 et 19 mars 2013 à 18h30", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars 2013')
+
+    def test_format_date_interval_same_month(self):
+        sch = datection.to_db(
+            u"Du 1er au 19 mars 2013 à 18h30", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars 2013')
+
+    def test_format_date_two_months(self):
+        sch = datection.to_db(
+            u"Le 5 mars 2013, le 7 avril 2013", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars et avril 2013')
+
+    def test_format_date_interval_two_months(self):
+        sch = datection.to_db(
+            u"Du 5 au 27 mars 2013, du 7 au 8 avril 2013", "fr",
+            only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars et avril 2013')
+
+    def test_format_date_interval_two_months2(self):
+        sch = datection.to_db(
+            u"Du 5 mars au 8 avril 2013", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars et avril 2013')
+
+    def test_format_date_interval_three_months(self):
+        sch = datection.to_db(
+            u"Du 5 mars au 8 mai 2013", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'')
+
+    def test_format_weekday_recurrence(self):
+        sch = datection.to_db(
+            u"Le lundi du 5 au 25 mars 2015", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars 2015')
+
+    def test_format_weekday_recurrence_two_months(self):
+        sch = datection.to_db(
+            u"Le lundi du 5 mars au 25 avril 2015", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'mars et avril 2015')
+
+    def test_format_weekday_recurrence_three_months(self):
+        sch = datection.to_db(
+            u"Le lundi du 5 mars au 25 mai 2015", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'')
+
+    def test_format_unbounded_weekday_recurrence(self):
+        sch = datection.to_db(
+            u"Le lundi", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'')
 
 
 class TestUtilities(unittest.TestCase):
