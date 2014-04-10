@@ -4,7 +4,7 @@ Test suite of the datection.cohesive
 """
 import unittest
 import datection
-
+from datetime import datetime
 from datection.cohesion import cohesive_rrules
 
 
@@ -235,6 +235,14 @@ class TestMoreCohesive(unittest.TestCase):
             '20200414T150000\nRRULE:FREQ=DAILY;BYHOUR=15;'
             'BYMINUTE=0;UNTIL=20200616'
         ])
+
+    def test_temporal_distance(self):
+        res = cohesive_rrules(datection.to_db("""
+            du 16 avril au 16 juin 2020 à 16h,
+        """, 'fr', only_future=False),
+                              created_at=datetime(year=2014, month=1, day=1))
+
+        self.list_has_item_containing(res, [])
 
     def test_real_case_1(self):
         res = gen_cohesive("""

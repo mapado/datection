@@ -330,8 +330,9 @@ class CohesiveDurationRRuleLinter(object):
 
     """
 
-    def __init__(self, drrules, accept_composition=True):
+    def __init__(self, drrules, created_at=None, accept_composition=True):
         self.drrules = [DurationRRuleAnalyser(rr) for rr in drrules]
+        self.created_at = created_at
         self.accept_composition = accept_composition
 
     @property
@@ -424,6 +425,16 @@ class CohesiveDurationRRuleLinter(object):
                     consumed_drr.add(drr)
         self.drrules = [drr for drr in self.drrules if drr not in consumed_drr]
 
+        # Delete drrule that happen too far in time
+        # let estimate 6 month is too far
+        consumed_drr.clear()
+        if self.created_at:
+            for drr in self.drrules:
+                if (self.created_at + timedelta(days=30 * 6) < drr.start_datetime):
+                    consumed_drr.add(drr)
+            self.drrules = [
+                drr for drr in self.drrules if drr not in consumed_drr]
+
     def merge(self):
         """ Reduce Set of Duration rrule by cohesive unification of drrule. """
 
@@ -491,7 +502,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                            ):
+                                ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 
@@ -552,7 +563,7 @@ class CohesiveDurationRRuleLinter(object):
         return drrule_analysers_to_dict_drrules(self.drrules)
 
 
-def cohesive_rrules(drrules):
+def cohesive_rrules(drrules, created_at=None):
     """ Take a rrule set and try to merge them into more cohesive rrule set.
 
     :rrules: list(dict()) containing duration rrule in string format
@@ -561,7 +572,7 @@ def cohesive_rrules(drrules):
                           foreach dict.
 
     """
-    return CohesiveDurationRRuleLinter(drrules)()
+    return CohesiveDurationRRuleLinter(drrules, created_at=created_at)()
 
 
 def cleanup_drrule(drrules):
