@@ -32,16 +32,17 @@ def cohesive_rrules(drrules, created_at=None):
 def cleanup_drrule(drrules):
     """ Use property beginning with underscore to regenerate rrule. """
     def gen_drrule_dict(dr):
-        if dr.rrule._until:
-            count = None
+        if dr.rrule._count:
+            dr.rrule._until = None
+            end = None
         else:
-            count = dr.rrule._count
+            end = dr.end_datetime
         rr = rrule(
             freq=dr.rrule._freq,
             dtstart=dr.rrule._dtstart,
             interval=dr.rrule._interval,
             wkst=dr.rrule._wkst,
-            count=count,
+            count=dr.rrule._count,
             until=dr.rrule._until,
             bysetpos=dr.rrule._bysetpos,
             bymonth=dr.rrule._bymonth,
@@ -56,7 +57,7 @@ def cleanup_drrule(drrules):
         return {
             'rrule': makerrulestr(
                 dr.start_datetime,
-                end=dr.end_datetime,
+                end=end,
                 freq=rr.freq,
                 rule=rr),
             'duration': dr.duration,
@@ -598,7 +599,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                            ):
+                                ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 

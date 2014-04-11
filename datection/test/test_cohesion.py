@@ -552,3 +552,12 @@ class TestMoreCohesive(unittest.TestCase):
             'DTSTART:20131031T130000\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=13;BYMINUTE=0;UNTIL=20131031T130000',
             'RRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;',
         ])
+
+    def test_real_case_14(self):
+        res = cohesive_rrules([{
+            'duration': 1439,
+            'rrule': 'DTSTART:20101220\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
+        }])
+        self.list_has_item_containing(res, [
+            'DTSTART:20101220T000000\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0;'
+        ])
