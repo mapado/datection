@@ -1052,12 +1052,12 @@ class SeoFormatter(BaseFormatter):
             return u''
         if len(dates) == 1:
             date_fmt = DateFormatter(dates[0])
-            month_fmt = date_fmt.format_month()
+            month_fmt = date_fmt.format_month().decode('utf-8')
         else:
             month_tpl = self.get_template('two_months')
             month_fmt = month_tpl.format(
-                month1=DateFormatter(dates[0]).format_month(),
-                month2=DateFormatter(dates[1]).format_month())
+                month1=DateFormatter(dates[0]).format_month().decode('utf-8'),
+                month2=DateFormatter(dates[1]).format_month().decode('utf-8'))
         year_fmt = DateFormatter(dates[0]).format_year()
         tpl = self.get_template('full')
         fmt = tpl.format(months=month_fmt, year=year_fmt)
