@@ -1054,7 +1054,9 @@ class SeoFormatter(BaseFormatter):
             dates = self.get_monthyears()
         except TooManyMonths:
             return u''
-        if len(dates) == 1:
+        if len(dates) == 0:
+            return u''
+        elif len(dates) == 1:
             date_fmt = DateFormatter(dates[0])
             month_fmt = date_fmt.format_month().decode('utf-8')
         else:
