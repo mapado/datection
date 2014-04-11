@@ -32,12 +32,31 @@ def cohesive_rrules(drrules, created_at=None):
 def cleanup_drrule(drrules):
     """ Use property beginning with underscore to regenerate rrule. """
     def gen_drrule_dict(dr):
+        dstart = dr.rrule._dtstart
+        dend = dr.rrule._until
+        # following avoid error at datection.display
+        if ((dstart and dstart.year == 1000)
+                or (dstart and dend and dstart + timedelta(days=365) < dend)):
+            dstart = datetime.now()
+            dend = datetime.now() + timedelta(days=365)
+            dstart = dstart.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+            dend = dend.replace(
+                hour=0, minute=0, second=0, microsecond=0)
+            if dr.rrule._freq == DAILY:
+                dr.rrule._freq = WEEKLY
+                dr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
+
+        if dstart and dend and dstart + timedelta(days=1) >= dend:
+            dr.rrule._count = 1
+
         rr = rrule(
+            dtstart=dstart,
+            until=dr.end_datetime,
             freq=dr.rrule._freq,
-            dtstart=dr.rrule._dtstart,
             interval=dr.rrule._interval,
             wkst=dr.rrule._wkst,
-            until=dr.rrule._until,
+            count=dr.rrule._count,
             bysetpos=dr.rrule._bysetpos,
             bymonth=dr.rrule._bymonth,
             bymonthday=dr.rrule._bymonthday,
@@ -48,7 +67,8 @@ def cleanup_drrule(drrules):
             byhour=dr.rrule._byhour,
             byminute=dr.rrule._byminute,
             cache=False)
-        if dr.rrule._count:
+
+        if rr.count:
             end = None
         else:
             end = dr.end_datetime
@@ -61,42 +81,16 @@ def cleanup_drrule(drrules):
             'duration': dr.duration,
             'span': (0, 0),
         }
-    return [
-        DurationRRuleAnalyser(gen_drrule_dict(dr))
-        for dr in drrules
-    ]
+    return [gen_drrule_dict(dr)
+            for dr in drrules
+            ]
 
 
 def drrule_analysers_to_dict_drrules(drrules):
     """ Build clean list of dict rrules from DurationRRuleAnalyser objects."""
     drrules = cleanup_drrule(drrules)
     # ensure uniqueness
-    gen_drrules = {}
-    for drr in drrules:
-
-        dstart = drr.start_datetime
-        dend = drr.end_datetime
-        # following avoid error at datection.display
-        if (dstart and dstart.year == 1000) or (dstart + timedelta(365) < dend):
-            dstart = datetime.now()
-            dend = datetime.now() + timedelta(days=365)
-            dstart = dstart.replace(
-                hour=0, minute=0, second=0, microsecond=0)
-            dend = dend.replace(
-                hour=0, minute=0, second=0, microsecond=0)
-            if drr.rrule._freq == DAILY:
-                drr.rrule._freq = WEEKLY
-                drr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
-        str_rrule = makerrulestr(
-            dstart,
-            end=dend,
-            freq=drr.rrule._freq,
-            rule=drr.rrule)
-        gen_drrules[str(drr.duration) + str_rrule] = {
-            'duration': drr.duration,
-            'rrule': str_rrule
-        }
-    return gen_drrules.values()
+    return {str(drr['duration']) + drr['rrule']: drr for drr in drrules}.values()
 
 
 def contains(small, big):

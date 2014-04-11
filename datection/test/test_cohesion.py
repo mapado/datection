@@ -53,7 +53,7 @@ class TestMoreCohesive(unittest.TestCase):
         # wanted result
         # Le 21 mars 2014 à 14 h
         self.list_has_item_containing(res, [
-            'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;BYHOUR=14;BYMINUTE=0;'
+            'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=14;BYMINUTE=0'
         ])
 
     def test_precise_time_in_a_lapse_time(self):
@@ -276,11 +276,11 @@ class TestMoreCohesive(unittest.TestCase):
         # Du jeudi au samedi, du 2 janvier au 1er mars 2014, à 19 h 30
 
         self.list_has_item_containing(res, [
-            'DTSTART:20140102T213000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
-            'BYHOUR=21;BYMINUTE=30;UNTIL=20140301T213000',
+            'DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+            'BYHOUR=19;BYMINUTE=30;UNTIL=20140301T000000',
 
-            'DTSTART:20140102T193000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
-            'BYHOUR=19;BYMINUTE=30;UNTIL=20140301T193000',
+            'DTSTART:20140102T000000\nRRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;'
+            'BYHOUR=21;BYMINUTE=30;UNTIL=20140301T000000'
         ])
 
     def test_real_case_3(self):
@@ -306,21 +306,20 @@ class TestMoreCohesive(unittest.TestCase):
             'DTSTART:20140411T203000\nRRULE:FREQ=WEEKLY;'
             'BYDAY=TH;BYHOUR=20;BYMINUTE=30;UNTIL=20150411T203000',
 
-            'DTSTART:20140113T200000\nRRULE:FREQ=WEEKLY;'
-            'BYDAY=TH;BYHOUR=20;BYMINUTE=0;UNTIL=20140327T211500',
+            'DTSTART:20151205T000000\nRRULE:FREQ=DAILY;'
+            'COUNT=1;BYHOUR=0;BYMINUTE=0',
+
+            'DTSTART:20140113T200000\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
+            'BYHOUR=20;BYMINUTE=0;UNTIL=20140327T211500',
 
             'DTSTART:20130703T130000\nRRULE:FREQ=DAILY;'
             'BYHOUR=13;BYMINUTE=0;UNTIL=20130728T130000',
-
-            'DTSTART:20151205T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20151205T235900',
 
             'DTSTART:20130912T000000\nRRULE:FREQ=DAILY;'
             'BYHOUR=0;BYMINUTE=0;UNTIL=20131219T235900',
 
             'DTSTART:20151107T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20151107T235900'
-
+            'COUNT=1;BYHOUR=0;BYMINUTE=0'
         ])
 
     def test_real_case_4(self):
@@ -428,19 +427,19 @@ class TestMoreCohesive(unittest.TestCase):
 
         # wanted result
         # Les 3, 6 et 27 juin 2013, le 10 décembre 2013
-
         self.list_has_item_containing(res, [
-            '20130603T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20130603T235900',
+            'DTSTART:20130627T000000\nRRULE:'
+            'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0',
 
-            '20130606T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20130606T235900',
+            'DTSTART:20131210T000000\nRRULE:'
+            'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0',
 
-            '20130627T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20130627T235900',
+            'DTSTART:20130603T000000\nRRULE:'
+            'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0',
 
-            '20131210T000000\nRRULE:FREQ=DAILY;'
-            'BYHOUR=0;BYMINUTE=0;UNTIL=20131210T235900',
+            'DTSTART:20130606T000000\nRRULE:'
+            'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0'
+
         ])
 
     def test_real_case_9(self):
@@ -551,10 +550,17 @@ class TestMoreCohesive(unittest.TestCase):
         # Du 1er avril au 31 octobre 2013 de 15 h à 18 h
 
         self.list_has_item_containing(res, [
-            'DTSTART:20130401T150000\nRRULE:FREQ=DAILY;BYHOUR=15;BYMINUTE=0;UNTIL=20131031T180000',
-            'RRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;',
-            'DTSTART:20131031T130000\nRRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=0;UNTIL=20131031T130000',
-            'RRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;',
+            'DTSTART:20130401T150000\nRRULE:FREQ=DAILY;'
+            'BYHOUR=15;BYMINUTE=0;UNTIL=20131031T180000',
+
+            'DTSTART:20130717T150000\nRRULE:FREQ=WEEKLY;'
+            'BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;UNTIL=20140717T180000',
+
+            'DTSTART:20130717T000000\nRRULE:FREQ=WEEKLY;'
+            'BYDAY=MO;BYHOUR=0;BYMINUTE=0;UNTIL=20140717T235900',
+
+            'DTSTART:20131031T130000\nRRULE:FREQ=DAILY;'
+            'COUNT=1;BYHOUR=13;BYMINUTE=0'
         ])
 
     def test_real_case_14(self):
@@ -564,7 +570,9 @@ class TestMoreCohesive(unittest.TestCase):
         }])
         self.assertEqual(
             res[0],
-            {'duration': 1439,
-             'rrule':
-             'DTSTART:20101220T000000\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;UNTIL=20101220T235900'
-             })
+            {
+                'duration': 1439,
+                'span': (0, 0),
+                'rrule': 'DTSTART:20101220T000000\nRRULE:'
+                'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0',
+            })
