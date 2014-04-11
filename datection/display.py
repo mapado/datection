@@ -9,6 +9,7 @@ import datetime
 import locale
 import calendar
 import re
+import itertools
 
 from functools import wraps
 from collections import defaultdict
@@ -994,6 +995,81 @@ class LongFormatter(BaseFormatter):
         return '\n'.join([line.capitalize() for line in l])
 
 
+class TooManyMonths(Exception):
+
+    """Exception raised in SEO formatting when a schedule related to
+    more than two months or when the two months are of a different year.
+
+    """
+    pass
+
+
+class SeoFormatter(BaseFormatter):
+
+    """Generates SEO friendly human readable dates."""
+
+    def __init__(self, schedule):
+        super(SeoFormatter, self).__init__()
+        self._schedule = schedule
+        self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.MAX_MONTHS = 2
+
+    @property
+    def templates(self):  # pragma: no cover
+        return {
+            'fr_FR': {
+                'two_months': u'{month1} et {month2}',
+                'full': u'{months} {year}'
+            }
+        }
+
+    def get_monthyears(self):
+        """Return a list of datetimes which month and year describe the whole
+        schedule.
+
+        If the length of the output list exceeds self.MAX_MONTHS, or if several
+        months with different associated years are returned, a TooManyMonths
+        exception is raised.
+
+        """
+        monthyears = set()
+        datetimes, out = [], []
+        for drr in self.schedule:
+            datetimes.extend([dt for dt in drr.rrule])
+        monthyear = lambda dt: (dt.month, dt.year)
+        for key, group in itertools.groupby(sorted(datetimes), key=monthyear):
+            monthyears.add(key)
+            out.append(next(group))
+            if len(monthyears) > self.MAX_MONTHS:
+                raise TooManyMonths
+
+        # Make sure both months have the same year
+        if len(out) > 1 and out[0].year != out[1].year:
+            raise TooManyMonths
+        return out
+
+    def display(self):
+        """Generates SEO friendly human readable dates in the current locale."""
+        try:
+            dates = self.get_monthyears()
+        except TooManyMonths:
+            return u''
+        if len(dates) == 0:
+            return u''
+        elif len(dates) == 1:
+            date_fmt = DateFormatter(dates[0])
+            month_fmt = date_fmt.format_month().decode('utf-8')
+        else:
+            month_tpl = self.get_template('two_months')
+            month_fmt = month_tpl.format(
+                month1=DateFormatter(dates[0]).format_month().decode('utf-8'),
+                month2=DateFormatter(dates[1]).format_month().decode('utf-8'))
+        year_fmt = DateFormatter(dates[0]).format_year()
+        tpl = self.get_template('full')
+        fmt = tpl.format(months=month_fmt, year=year_fmt)
+        return fmt
+
+
 class TemporaryLocale(object):  # pragma: no cover
 
     def __init__(self, category, locale):
@@ -1007,18 +1083,25 @@ class TemporaryLocale(object):  # pragma: no cover
         locale.resetlocale(self.category)
 
 
-def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
+def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             place=False, reference=datetime.date.today()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
-        schedule: (list) a list of rrule dicts, containing a duration
+        schedule:
+            (list) a list of rrule dicts, containing a duration
             and a RFC rrule
-        loc: (str) the target locale
-        short: (bool) if True, a shorter sentence will be generated
-        bounds: limit start / end datetimes beyond which the dates will
+        loc:
+            (str) the target locale
+        short:
+            (bool) if True, a shorter sentence will be generated
+        bounds:
+            limit start / end datetimes beyond which the dates will
             not even be considered
-        place (bool): if True, an OpeningHoursFormatter will be used.
+        place(bool):
+            if True, an OpeningHoursFormatter will be used.
+        seo (bool):
+            if True, an SeoFormatter will be used
 
     """
     # make fr_FR.UTF8 the default locale
@@ -1028,13 +1111,15 @@ def display(schedule, loc, short=False, shortest=False, bounds=(None, None),
     with TemporaryLocale(locale.LC_TIME, loc):
         if place:
             return OpeningHoursFormatter(schedule).display()
-        elif not short and not shortest:
+        elif seo:
+            return SeoFormatter(schedule).display()
+        elif not short:
             return LongFormatter(schedule).display()
         else:
             try:
                 start, end = bounds
                 short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                    display(reference, summarize=not shortest, prefix=True)
+                    display(reference, summarize=True, prefix=True)
             except NoFutureOccurence:
                 return u''
             else:

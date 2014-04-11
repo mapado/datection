@@ -7,6 +7,8 @@ from datection.models import DurationRRule
 from datection.utils import isoformat_concat
 from datection.utils import normalize_2digit_year
 from datection.utils import duration
+from datection.utils import group_facebook_hours
+from datection.utils import sort_facebook_hours
 from datection.normalize import Time
 
 
@@ -83,3 +85,102 @@ class UtilsTest(unittest.TestCase):
         start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
         end_datetime = datetime.datetime(2013, 8, 6, 18, 0)
         self.assertEqual(duration(start_datetime, end_datetime), 2760)
+
+
+class TestFacebookScheduleNormalization(unittest.TestCase):
+
+    def setUp(self):
+        self.fb_hours = {
+            "mon_2_open": "14:00",
+            "mon_2_close": "18:00",
+            "mon_1_open": "10:00",
+            "mon_1_close": "12:00",
+            "wed_1_open": "10:00",
+            "wed_1_close": "18:00",
+            "thu_1_open": "10:00",
+            "thu_1_close": "18:00",
+            "fri_1_open": "10:30",
+            "fri_1_close": "18:00",
+            "sat_1_open": "10:00",
+            "sat_1_close": "18:00",
+            "sun_1_open": "10:00",
+            "sun_1_close": "18:00"
+        }
+
+    def test_sort_facebook_hours(self):
+        expected = [
+            ("mon_1_open", "10:00"), ("mon_1_close", "12:00"),
+            ("mon_2_open", "14:00"), ("mon_2_close", "18:00"),
+            ("wed_1_open", "10:00"), ("wed_1_close", "18:00"),
+            ("thu_1_open", "10:00"), ("thu_1_close", "18:00"),
+            ("fri_1_open", "10:30"), ("fri_1_close", "18:00"),
+            ("sat_1_open", "10:00"), ("sat_1_close", "18:00"),
+            ("sun_1_open", "10:00"), ("sun_1_close", "18:00")
+        ]
+        self.assertEqual(sort_facebook_hours(self.fb_hours), expected)
+
+    def test_sort_facebook_hours_no_closing(self):
+        fb_hours = {
+            "mon_2_open": "14:00",
+            "mon_2_close": "18:00",
+            "mon_1_open": "10:00",
+            "mon_1_close": "12:00",
+            "wed_1_open": "10:00",
+            "wed_1_close": "18:00",
+            "thu_1_open": "10:00",
+            "fri_1_open": "10:30",
+            "fri_1_close": "18:00",
+            "sat_1_open": "10:00",
+            "sun_1_open": "10:00",
+            "sun_1_close": "18:00"
+        }
+        expected = [
+            ("mon_1_open", "10:00"), ("mon_1_close", "12:00"),
+            ("mon_2_open", "14:00"), ("mon_2_close", "18:00"),
+            ("wed_1_open", "10:00"), ("wed_1_close", "18:00"),
+            ("thu_1_open", "10:00"),
+            ("fri_1_open", "10:30"), ("fri_1_close", "18:00"),
+            ("sat_1_open", "10:00"),
+            ("sun_1_open", "10:00"), ("sun_1_close", "18:00")
+        ]
+        self.assertEqual(sort_facebook_hours(fb_hours), expected)
+
+    def test_group_facebook_hour(self):
+        expected = [
+            [("mon_1_open", "10:00"), ("mon_1_close", "12:00")],
+            [("mon_2_open", "14:00"), ("mon_2_close", "18:00")],
+            [("wed_1_open", "10:00"), ("wed_1_close", "18:00")],
+            [("thu_1_open", "10:00"), ("thu_1_close", "18:00")],
+            [("fri_1_open", "10:30"), ("fri_1_close", "18:00")],
+            [("sat_1_open", "10:00"), ("sat_1_close", "18:00")],
+            [("sun_1_open", "10:00"), ("sun_1_close", "18:00")]
+        ]
+        fb_hours = sort_facebook_hours(self.fb_hours)
+        self.assertEqual(group_facebook_hours(fb_hours), expected)
+
+    def test_group_facebook_hour_no_closing(self):
+        fb_hours = {
+            "mon_2_open": "14:00",
+            "mon_2_close": "18:00",
+            "mon_1_open": "10:00",
+            "mon_1_close": "12:00",
+            "wed_1_open": "10:00",
+            "wed_1_close": "18:00",
+            "thu_1_open": "10:00",
+            "fri_1_open": "10:30",
+            "fri_1_close": "18:00",
+            "sat_1_open": "10:00",
+            "sun_1_open": "10:00",
+            "sun_1_close": "18:00"
+        }
+        expected = [
+            [("mon_1_open", "10:00"), ("mon_1_close", "12:00")],
+            [("mon_2_open", "14:00"), ("mon_2_close", "18:00")],
+            [("wed_1_open", "10:00"), ("wed_1_close", "18:00")],
+            [("thu_1_open", "10:00")],
+            [("fri_1_open", "10:30"), ("fri_1_close", "18:00")],
+            [("sat_1_open", "10:00")],
+            [("sun_1_open", "10:00"), ("sun_1_close", "18:00")]
+        ]
+        fb_hours = sort_facebook_hours(fb_hours)
+        self.assertEqual(group_facebook_hours(fb_hours), expected)
