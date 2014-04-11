@@ -825,6 +825,18 @@ class TestSeoFormatter_fr_FR(unittest.TestCase):
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 
+    def test_format_date_interval_two_months_two_years(self):
+        sch = datection.to_db(
+            u"Le 5 décembre 2013, le 7 janvier 2014", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'')
+
+    def test_sort_month_names(self):
+        sch = datection.to_db(
+            u"Le 5 décembre 2013, le 7 novembre 2013", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.display(), u'novembre et décembre 2013')
+
     def test_format_weekday_recurrence(self):
         sch = datection.to_db(
             u"Le lundi du 5 au 25 mars 2015", "fr", only_future=False)

@@ -998,7 +998,7 @@ class LongFormatter(BaseFormatter):
 class TooManyMonths(Exception):
 
     """Exception raised in SEO formatting when a schedule related to
-    more than two months.
+    more than two months or when the two months are of a different year.
 
     """
     pass
@@ -1027,13 +1027,13 @@ class SeoFormatter(BaseFormatter):
         """Return a list of datetimes which month and year describe the whole
         schedule.
 
-        If the length of the output list exceeds self.MAX_MONTHS, a
-        TooManyMonths exception is raised.
+        If the length of the output list exceeds self.MAX_MONTHS, or if several
+        months with different associated years are returned, a TooManyMonths
+        exception is raised.
 
         """
-        out = []
         monthyears = set()
-        datetimes = []
+        datetimes, out = [], []
         for drr in self.schedule:
             datetimes.extend([dt for dt in drr.rrule])
         monthyear = lambda dt: (dt.month, dt.year)
@@ -1042,6 +1042,10 @@ class SeoFormatter(BaseFormatter):
             out.append(next(group))
             if len(monthyears) > self.MAX_MONTHS:
                 raise TooManyMonths
+
+        # Make sure both months have the same year
+        if len(out) > 1 and out[0].year != out[1].year:
+            raise TooManyMonths
         return out
 
     def display(self):
