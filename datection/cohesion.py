@@ -32,17 +32,11 @@ def cohesive_rrules(drrules, created_at=None):
 def cleanup_drrule(drrules):
     """ Use property beginning with underscore to regenerate rrule. """
     def gen_drrule_dict(dr):
-        if dr.rrule._count:
-            dr.rrule._until = None
-            end = None
-        else:
-            end = dr.end_datetime
         rr = rrule(
             freq=dr.rrule._freq,
             dtstart=dr.rrule._dtstart,
             interval=dr.rrule._interval,
             wkst=dr.rrule._wkst,
-            count=dr.rrule._count,
             until=dr.rrule._until,
             bysetpos=dr.rrule._bysetpos,
             bymonth=dr.rrule._bymonth,
@@ -54,6 +48,10 @@ def cleanup_drrule(drrules):
             byhour=dr.rrule._byhour,
             byminute=dr.rrule._byminute,
             cache=False)
+        if dr.rrule._count:
+            end = None
+        else:
+            end = dr.end_datetime
         return {
             'rrule': makerrulestr(
                 dr.start_datetime,
