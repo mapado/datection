@@ -548,15 +548,14 @@ class TestMoreCohesive(unittest.TestCase):
         # Le lundi,
         # Le 31 octobre 2013 à 13 h
         # Du 1er avril au 31 octobre 2013 de 15 h à 18 h
+
         self.list_has_item_containing(res, [
             'DTSTART:20130401T150000\nRRULE:FREQ=DAILY;'
             'BYHOUR=15;BYMINUTE=0;UNTIL=20131031T180000',
 
-            'DTSTART:20130717T150000\nRRULE:FREQ=WEEKLY;'
-            'BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;UNTIL=20140717T180000',
+            '\nRRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=15;BYMINUTE=0;',
 
-            'DTSTART:20130717T000000\nRRULE:FREQ=WEEKLY;'
-            'BYDAY=MO;BYHOUR=0;BYMINUTE=0;UNTIL=20140717T235900',
+            '\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;',
 
             'DTSTART:20130401T130000\nRRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=0'
         ])
@@ -570,7 +569,20 @@ class TestMoreCohesive(unittest.TestCase):
             res[0],
             {
                 'duration': 1439,
-                'span': (0, 0),
                 'rrule': 'DTSTART:20101220T000000\nRRULE:'
                 'FREQ=DAILY;COUNT=1;BYHOUR=0;BYMINUTE=0',
+            })
+
+    def test_year_1000(self):
+        res = cohesive_rrules([{
+            'duration': 1439,
+            'rrule': 'DTSTART:10001220\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
+        }])
+        self.assertEqual(
+            res[0],
+            {
+                'duration': 1439,
+                'rrule': 'DTSTART:20140414T000000\nRRULE:FREQ=WEEKLY;'
+                'BYDAY=MO,TU,WE,TH,FR,SA,SU;'
+                'BYHOUR=0;BYMINUTE=0;UNTIL=20150414T000000',
             })

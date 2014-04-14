@@ -41,8 +41,8 @@ def cohesive_rrules(drrules, created_at=None):
 def cleanup_drrule(drrules):
     """ Use property beginning with underscore to regenerate rrule. """
     def gen_drrule_dict(dr):
-        dstart = dr.rrule._dtstart
-        dend = dr.rrule._until
+        dstart = dr.start_datetime
+        dend = dr.end_datetime
         # following avoid error at datection.display
         if ((dstart and dstart.year == 1000)
                 or (dstart and dend
@@ -57,12 +57,15 @@ def cleanup_drrule(drrules):
                 dr.rrule._freq = WEEKLY
                 dr.rrule._byweekday = (0, 1, 2, 3, 4, 5, 6)
 
-        if dstart and dend and dstart + timedelta(days=1) >= dend:
+        if dstart and dend and dstart + timedelta(days=1) > dend:
             dr.rrule._count = 1
+            dend = None
+        else:
+            dr.rrule._count = 0
 
         rr = rrule(
             dtstart=dstart,
-            until=dr.end_datetime,
+            until=dend,
             freq=dr.rrule._freq,
             interval=dr.rrule._interval,
             wkst=dr.rrule._wkst,
@@ -78,15 +81,10 @@ def cleanup_drrule(drrules):
             byminute=dr.rrule._byminute,
             cache=False)
 
-        if rr.count:
-            end = None
-        else:
-            end = dr.end_datetime
         return {
             'rrule': makerrulestr(
-                dr.start_datetime, end=end, freq=rr.freq, rule=rr),
+                dstart, end=dend, freq=rr.freq, rule=rr),
             'duration': dr.duration,
-            'span': (0, 0),
         }
     return [gen_drrule_dict(dr) for dr in drrules]
 
