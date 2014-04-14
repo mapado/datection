@@ -303,14 +303,14 @@ class TestMoreCohesive(unittest.TestCase):
         # Du 3 au 28 juillet 2013 à 13 h
 
         self.list_has_item_containing(res, [
-            'DTSTART:20140411T203000\nRRULE:FREQ=WEEKLY;'
-            'BYDAY=TH;BYHOUR=20;BYMINUTE=30;UNTIL=20150411T203000',
+            'T203000\nRRULE:FREQ=WEEKLY;'
+            'BYDAY=TH;BYHOUR=20;BYMINUTE=30;',
 
             'DTSTART:20151205T000000\nRRULE:FREQ=DAILY;'
             'COUNT=1;BYHOUR=0;BYMINUTE=0',
 
-            'DTSTART:20140113T200000\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
-            'BYHOUR=20;BYMINUTE=0;UNTIL=20140327T211500',
+            'T200000\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
+            'BYHOUR=20;BYMINUTE=0;',
 
             'DTSTART:20130703T130000\nRRULE:FREQ=DAILY;'
             'BYHOUR=13;BYMINUTE=0;UNTIL=20130728T130000',
@@ -548,7 +548,6 @@ class TestMoreCohesive(unittest.TestCase):
         # Le lundi,
         # Le 31 octobre 2013 à 13 h
         # Du 1er avril au 31 octobre 2013 de 15 h à 18 h
-
         self.list_has_item_containing(res, [
             'DTSTART:20130401T150000\nRRULE:FREQ=DAILY;'
             'BYHOUR=15;BYMINUTE=0;UNTIL=20131031T180000',
@@ -559,8 +558,7 @@ class TestMoreCohesive(unittest.TestCase):
             'DTSTART:20130717T000000\nRRULE:FREQ=WEEKLY;'
             'BYDAY=MO;BYHOUR=0;BYMINUTE=0;UNTIL=20140717T235900',
 
-            'DTSTART:20131031T130000\nRRULE:FREQ=DAILY;'
-            'COUNT=1;BYHOUR=13;BYMINUTE=0'
+            'DTSTART:20130401T130000\nRRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=0'
         ])
 
     def test_real_case_14(self):

@@ -13,8 +13,17 @@ from dateutil.rrule import DAILY
 from dateutil.rrule import rrule
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 
+from datection.normalize import ALL_DAY
 from datection.models import DurationRRule
 from datection.utils import makerrulestr
+
+MAX_DRRULES_QTE = 500
+DAYS_IN_YEAR = 365
+TIME_DISTANCE_ACCEPTABLE = 30 * 6
+
+
+class TooManyDrrulesError(Exception):
+    pass
 
 
 def cohesive_rrules(drrules, created_at=None):
@@ -36,9 +45,10 @@ def cleanup_drrule(drrules):
         dend = dr.rrule._until
         # following avoid error at datection.display
         if ((dstart and dstart.year == 1000)
-                or (dstart and dend and dstart + timedelta(days=365) < dend)):
+                or (dstart and dend
+                    and dstart + timedelta(days=DAYS_IN_YEAR) < dend)):
             dstart = datetime.now()
-            dend = datetime.now() + timedelta(days=365)
+            dend = datetime.now() + timedelta(days=DAYS_IN_YEAR)
             dstart = dstart.replace(
                 hour=0, minute=0, second=0, microsecond=0)
             dend = dend.replace(
@@ -74,16 +84,11 @@ def cleanup_drrule(drrules):
             end = dr.end_datetime
         return {
             'rrule': makerrulestr(
-                dr.start_datetime,
-                end=end,
-                freq=rr.freq,
-                rule=rr),
+                dr.start_datetime, end=end, freq=rr.freq, rule=rr),
             'duration': dr.duration,
             'span': (0, 0),
         }
-    return [gen_drrule_dict(dr)
-            for dr in drrules
-            ]
+    return [gen_drrule_dict(dr) for dr in drrules]
 
 
 def drrule_analysers_to_dict_drrules(drrules):
@@ -139,10 +144,10 @@ class DurationRRuleAnalyser(DurationRRule):
     def has_timelapse(self):
         """ Check if given duration rrule appear in a lapse time.
 
-            !! it supose that duration higher that 365 day are not timelapse
+            !! it supose that duration higher that DAYS_IN_YEAR day are not timelapse
              (we guess this info is false)
         """
-        year = timedelta(days=365)
+        year = timedelta(days=DAYS_IN_YEAR)
         return (self.end_datetime < self.start_datetime + year
                 and self.end_datetime >= self.start_datetime - timedelta(days=1))
 
@@ -180,7 +185,7 @@ class DurationRRuleAnalyser(DurationRRule):
 
     def is_everyday(self):
         """ Check a drrule happen every day without specific hour. """
-        return (self.start_datetime + timedelta(days=365) < self.end_datetime
+        return (self.start_datetime + timedelta(days=DAYS_IN_YEAR) < self.end_datetime
                 and (self.rrule._freq == DAILY
                      or (
                          self.rrule._freq == WEEKLY and
@@ -418,7 +423,10 @@ class CohesiveDurationRRuleLinter(object):
     """
 
     def __init__(self, drrules, created_at=None, accept_composition=True):
-        self.drrules = [DurationRRuleAnalyser(rr) for rr in drrules]
+        self.drrules = [DurationRRuleAnalyser(rr) for rr in {
+            str(drr['duration']) + drr['rrule']: drr
+            for drr in drrules
+        }.values()]
         self.created_at = created_at
         self.accept_composition = accept_composition
 
@@ -504,21 +512,13 @@ class CohesiveDurationRRuleLinter(object):
             self.drrules = [
                 drr for drr in self.drrules if drr not in consumed_drr]
 
-        # Delete drrule that exist as part as another one.
-        consumed_drr.clear()
-        for drr in self.drrules:
-            for cdrr in self.drrules:
-                if drr is not cdrr and drr.is_fragment_of(cdrr):
-                    consumed_drr.add(drr)
-        self.drrules = [drr for drr in self.drrules if drr not in consumed_drr]
-
         # Delete drrule that happen too far in time
         # let estimate 6 month is too far
         consumed_drr.clear()
         if self.created_at:
             for drr in sorted(self.drrules, key=lambda x: x.start_datetime,
                               reverse=True):
-                if (self.created_at + timedelta(days=30 * 6) < drr.start_datetime
+                if (self.created_at + timedelta(days=TIME_DISTANCE_ACCEPTABLE) < drr.start_datetime
                         and len(consumed_drr) + 1 != len(self.drrules)):
                     consumed_drr.add(drr)
             self.drrules = [
@@ -547,6 +547,18 @@ class CohesiveDurationRRuleLinter(object):
 
             return [drr for drr in drrules if drr not in consumed_drrules]
 
+        # Delete drrule that exist as part as another one.
+        consumed_drr = set()
+        for drr in self.drrules:
+            if drr not in consumed_drr:
+                for cdrr in self.drrules:
+                    if (drr is not cdrr
+                            and cdrr not in consumed_drr
+                            and drr.is_fragment_of(cdrr)):
+                        consumed_drr.add(drr)
+        self.drrules = [drr for drr in self.drrules if drr not in consumed_drr]
+
+        # more sofisticated drrule
         dated_drrule = merge_in_group((self.drrules_by['has_timelapse']
                                        + self.drrules_by['has_date']))
         if not dated_drrule:
@@ -591,7 +603,7 @@ class CohesiveDurationRRuleLinter(object):
                             and ndt.is_same_time(cdt)
                             and (ndt.is_same_timelapse(cdt)
                                  or (not ndt.has_timelapse and not cdt.has_timelapse))
-                                ):
+                            ):
                             cdt.take_weekdays_of(ndt)
                             consumed.append(ndt)
 
@@ -610,10 +622,10 @@ class CohesiveDurationRRuleLinter(object):
     def normalise(self):
         """ Normalise each drrule to be more consistant by itself. """
         for drr in self.drrules:
-            if (drr.duration == 1439 and drr.has_time):
+            if (drr.duration == ALL_DAY and drr.has_time):
                 drr.duration_rrule['duration'] = 0
             if (drr.duration == 0 and not drr.has_time):
-                drr.duration_rrule['duration'] = 1439
+                drr.duration_rrule['duration'] = ALL_DAY
 
             if len(drr.rrule.byweekday) > 0:
                 drr.rrule._freq = WEEKLY
@@ -627,6 +639,8 @@ class CohesiveDurationRRuleLinter(object):
 
         self.normalise()
         self.cleanup_weak_drrule()
+        if len(self.drrules) > MAX_DRRULES_QTE:
+            raise TooManyDrrulesError()
         self.avoid_doubles()
         self.merge()
 
