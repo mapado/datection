@@ -20,7 +20,7 @@ from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
 
-translations = {
+TRANSLATIONS = {
     'fr_FR': {
         'today': u"aujourd'hui",
         'tomorrow': u'demain',
@@ -35,18 +35,22 @@ translations = {
 
 
 def get_date(d):
+    """Return a date object, given a datetime or a date."""
     return d.date() if isinstance(d, datetime.datetime) else d
 
 
 def get_time(d):
+    """Return a time object, given a datetime or a time."""
     return d.time() if isinstance(d, datetime.datetime) else d
 
 
 def get_drr(drr):
+    """Return a DurationRRule object given a dict or a DurationRRule."""
     return DurationRRule(drr) if isinstance(drr, dict) else drr
 
 
 def all_day(start, end):
+    """Return True if the start/end bounds correspond to an entie day."""
     start_time, end_time = get_time(start), get_time(end)
     return (start_time == datetime.time(0, 0)
             and end_time == datetime.time(23, 59))
@@ -55,22 +59,22 @@ def all_day(start, end):
 def postprocess(strip=True, trim_whitespaces=True, lstrip_pattern=None,
                 capitalize=False, rstrip_pattern=None):
     """Post processing text formatter decorator."""
-    def wrapped_f(f):
-        @wraps(f)
+    def wrapped_f(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
-            s = f(*args, **kwargs)
-            s = s.replace(', ,', ', ')
+            text = func(*args, **kwargs)
+            text = text.replace(', ,', ', ')
             if trim_whitespaces:
-                s = re.sub(r'\s+', ' ', s)
+                text = re.sub(r'\s+', ' ', text)
             if lstrip_pattern:
-                s = s.lstrip(lstrip_pattern)
+                text = text.lstrip(lstrip_pattern)
             if rstrip_pattern:
-                s = s.rstrip(rstrip_pattern)
+                text = text.rstrip(rstrip_pattern)
             if strip:
-                s = s.strip()
+                text = text.strip()
             if capitalize:
-                s = s.capitalize()
-            return s
+                text = text.capitalize()
+            return text
         return wrapper
     return wrapped_f
 
@@ -192,23 +196,34 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
 
 
 class NoFutureOccurence(Exception):
+
+    """Exception raised when a DurationRRule does not yield future dates."""
     pass
 
 
 class BaseFormatter(object):
 
+    """Base class for all schedule formatters."""
+
     def __init__(self):
         self.language_code, self.encoding = locale.getlocale(locale.LC_TIME)
+        self.templates = None
 
     def _(self, key):
-        return translations[self.language_code][key]
+        """Return the translation of the key in the instance language."""
+        return TRANSLATIONS[self.language_code][key]
 
     def get_template(self, key=None):
+        """Return the template corresponding to the instance language
+        and key.
+
+        """
         if key is None:
             return self.templates[self.language_code]
         return self.templates[self.language_code][key]
 
-    def day_name(self, weekday_index):
+    @staticmethod
+    def day_name(weekday_index):
         """Return the weekday name associated wih the argument index
         using the current locale.
 
@@ -223,10 +238,7 @@ class DateFormatter(BaseFormatter):
     def __init__(self, date):
         super(DateFormatter, self).__init__()
         self.date = get_date(date)
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'all': u'{prefix} {dayname} {day} {month} {year}',
                 'no_year': u'{prefix} {dayname} {day} {month}',
@@ -258,6 +270,7 @@ class DateFormatter(BaseFormatter):
 
     def format_all_parts(self, include_dayname, abbrev_dayname,
                          abbrev_monthname, abbrev_year, prefix):
+        """Formats the date in the current locale."""
         template = self.get_template('all')
         if include_dayname or abbrev_dayname:
             dayname = self.format_dayname(abbrev_dayname)
@@ -273,6 +286,7 @@ class DateFormatter(BaseFormatter):
 
     def format_no_year(self, include_dayname, abbrev_dayname, abbrev_monthname,
                        prefix):
+        """Formats the date in the current locale, omitting the year."""
         template = self.get_template('no_year')
         if include_dayname or abbrev_dayname:
             dayname = self.format_dayname(abbrev_dayname)
@@ -286,6 +300,10 @@ class DateFormatter(BaseFormatter):
         return fmt
 
     def format_no_month_no_year(self, include_dayname, abbrev_dayname, prefix):
+        """Formats the date in the current locale, omitting the month
+        and year.
+
+        """
         template = self.get_template('no_year_no_month')
         if include_dayname or abbrev_dayname:
             dayname = self.format_dayname(abbrev_dayname)
@@ -309,7 +327,7 @@ class DateFormatter(BaseFormatter):
         included.
         If include_year is True, the year will be included.
         If abbrev_year is True, a 2 digit year format will be used.
-        If relative is True, a temporal reference (like 'today', 'tomorrow',
+        If relative is True, a temporal reference(like 'today', 'tomorrow',
         etc) may be used to refer to the date.
 
         """
@@ -344,10 +362,7 @@ class DateIntervalFormatter(BaseFormatter):
         super(DateIntervalFormatter, self).__init__()
         self.start_date = get_date(start_date)
         self.end_date = get_date(end_date)
-
-    @property
-    def templates(self):
-        return {
+        self.templates = {
             'fr_FR': u'du {start_date} au {end_date}',
         }
 
@@ -373,6 +388,7 @@ class DateIntervalFormatter(BaseFormatter):
         return self.start_date.year == self.end_date.year
 
     def format_same_month(self, *args, **kwargs):
+        """Formats the date interval when both dates have the same month."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
         start_kwargs['include_month'] = False
@@ -383,6 +399,7 @@ class DateIntervalFormatter(BaseFormatter):
         return template.format(start_date=start_date_fmt, end_date=end_date_fmt)
 
     def format_same_year(self, *args, **kwargs):
+        """Formats the date interval when both dates have the same year."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
         start_kwargs['include_year'] = False
@@ -427,10 +444,7 @@ class DateListFormatter(BaseFormatter):
     def __init__(self, date_list):
         super(DateListFormatter, self).__init__()
         self.date_list = [get_date(d) for d in date_list]
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': u'les {date_list} et {last_date}',
         }
 
@@ -456,10 +470,7 @@ class TimeFormatter(BaseFormatter):
     def __init__(self, time):
         super(TimeFormatter, self).__init__()
         self.time = get_time(time)
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': u'{prefix} {hour} h {minute}'
         }
 
@@ -496,10 +507,7 @@ class TimeIntervalFormatter(BaseFormatter):
         super(TimeIntervalFormatter, self).__init__()
         self.start_time = get_time(start_time)
         self.end_time = get_time(end_time) if end_time else None
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'interval': u'de {start_time} à {end_time}',
                 'single_time': u'à {time}'
@@ -529,10 +537,7 @@ class DatetimeFormatter(BaseFormatter):
     def __init__(self, _datetime):
         super(DatetimeFormatter, self).__init__()
         self.datetime = _datetime
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': u'{date} à {time}'
         }
 
@@ -562,10 +567,7 @@ class DatetimeIntervalFormatter(BaseFormatter):
         super(DatetimeIntervalFormatter, self).__init__()
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'single_day': u'le {date} {time_interval}',
                 'single_time': u'{date_interval} à {time}',
@@ -574,6 +576,10 @@ class DatetimeIntervalFormatter(BaseFormatter):
         }
 
     def same_time(self):
+        """Return True if self.start_datetime and self.end_datetime have
+        the same time.
+
+        """
         return self.start_datetime.time() == self.end_datetime.time()
 
     @postprocess()
@@ -614,15 +620,14 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         super(ContinuousDatetimeIntervalFormatter, self).__init__()
         self.start = start
         self.end = end
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
-            'fr_FR': u'du {start_date} à {start_time} au {end_date} à {end_time}'
+        self.templates = {
+            'fr_FR':
+            u'du {start_date} à {start_time} au {end_date} à {end_time}'
         }
 
     @postprocess()
     def display(self, *args, **kwargs):
+        """Display a continuous datetime interval in the current locale."""
         template = self.get_template()
         # do not include the year if both dates are in the same year
         sd_kwargs = kwargs.copy()
@@ -647,10 +652,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
     def __init__(self, drr):
         super(WeekdayReccurenceFormatter, self).__init__()
         self.drr = get_drr(drr)
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'one_day': u'le {weekday}',
                 'interval': u'du {start_weekday} au {end_weekday}',
@@ -710,6 +712,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     @postprocess(lstrip_pattern=',')
     def display(self, *args, **kwargs):
+        """Display a weekday recurrence using the current locale."""
         template = self.get_template('weekday_reccurence')
         weekdays = self.format_weekday_interval()
         dates = self.format_date_interval()
@@ -731,10 +734,7 @@ class NextOccurenceFormatter(BaseFormatter):
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
         self.start, self.end = start, end
-
-    @property
-    def templates(self):
-        return {
+        self.templates = {
             'fr_FR': u'{date} + autres dates'
         }
 
@@ -752,10 +752,12 @@ class NextOccurenceFormatter(BaseFormatter):
         return dtimes
 
     def next_occurence(self):
+        """Return the next date, as a start/end datetime dict."""
         if self.regrouped_dates:
             return self.regrouped_dates[0][0]
 
     def other_occurences(self):
+        """Return all dates (bu the next), as a start/end datetime dict."""
         return len(self.regrouped_dates) > 1
 
     @postprocess(capitalize=True)
@@ -783,7 +785,7 @@ class NextOccurenceFormatter(BaseFormatter):
 
 class OpeningHoursFormatter(BaseFormatter):
 
-    """Formats opening hours into a human-readable format using the
+    """Formats opening hours into a human - readable format using the
     current locale.
 
     """
@@ -792,10 +794,7 @@ class OpeningHoursFormatter(BaseFormatter):
         super(OpeningHoursFormatter, self).__init__()
         self._opening_hours = opening_hours
         self.opening_hours = [DurationRRule(drr) for drr in opening_hours]
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'one_opening': u'{weekday} {time_interval}',
                 'several_openings': u'{opening} {time_list} et {last_time}'
@@ -803,6 +802,7 @@ class OpeningHoursFormatter(BaseFormatter):
         }
 
     def format_opening(self, opening, day):
+        """Format an opening, for a single day."""
         template = self.get_template('one_opening')
         weekday = self.day_name(day)
         start_time, end_time = opening.time_interval
@@ -831,7 +831,7 @@ class OpeningHoursFormatter(BaseFormatter):
         return fmt
 
     def display(self):
-        """Format a list of opening hours for a single day."""
+        """Format a list of opening hours for every day of the week."""
         out = []
         for day in xrange(7):
             openings = [rec for rec in self.opening_hours
@@ -843,14 +843,16 @@ class OpeningHoursFormatter(BaseFormatter):
 
 class LongFormatter(BaseFormatter):
 
+    """Displays a schedule in the current locale without trying to use
+    as few characters as possible.
+
+    """
+
     def __init__(self, schedule):
         super(LongFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': u'{dates} {time}',
         }
 
@@ -873,7 +875,7 @@ class LongFormatter(BaseFormatter):
 
     @cached_property
     def time_groups(self):
-        """Non recurring rrules grouped by start/end datetimes"""
+        """Non recurring rrules grouped by start / end datetimes"""
         _time_groups = to_start_end_datetimes(self.non_recurring)
         # convert rrule structures to start/end datetime lists
         _time_groups = groupby_time(_time_groups)
@@ -904,27 +906,31 @@ class LongFormatter(BaseFormatter):
         and displays single dates using the self.format_date method
         and date intervals using the format_date_interval method.
 
-        Example: [[15 mars 2013], [17 mars 2013, 18 mars 2013]]
-        Output: u"le 15 mars 2013, du 17 au 18 mars 2013"
+        Example:
+            [[15 mars 2013], [17 mars 2013, 18 mars 2013]]
+        Output:
+            u"le 15 mars 2013, du 17 au 18 mars 2013"
 
         """
         out = []
-        for i, conseq in enumerate(conseq_groups):
+        for conseq in conseq_groups:
             start, end = conseq[0]['start'], conseq[-1]['end']
             fmt = DateIntervalFormatter(start, end).display(*args, **kwargs)
             out.append(fmt)
         return out
 
     def format_date_list(self, time_group, *args, **kwargs):
-        """ Second formatting technique, using non-consecutive dates lists
+        """Second formatting technique, using non - consecutive dates lists
 
         All the non-consecutive dates are first grouped by years and then by
-        months, and returned as a simple list of human readable time expressions,
-        expressed in self.lang.
+        months, and returned as a simple list of human readable time
+        expressions, expressed in self.lang.
 
         Example:
-        Input: [1 mars 2013, 4 mars 2013, 6 juin 2013, 5 juillet 2014]
-        Output: u"le 1er, 4 mars 2013, le 6 juin 2013, le 5 juillet 2014"
+        Input:
+            [1 mars 2013, 4 mars 2013, 6 juin 2013, 5 juillet 2014]
+        Output:
+            u"le 1er, 4 mars 2013, le 6 juin 2013, le 5 juillet 2014"
 
         """
         out = []
@@ -946,7 +952,7 @@ class LongFormatter(BaseFormatter):
     @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
     def display(self, *args, **kwargs):
         """Return a human readable string describing self.schedule as shortly
-        as possible (without using abbreviated forms), in the right language.
+        as possible(without using abbreviated forms), in the right language.
 
         """
         out = []
@@ -991,8 +997,9 @@ class LongFormatter(BaseFormatter):
         return self.format_output(out)
 
     @staticmethod
-    def format_output(l):
-        return '\n'.join([line.capitalize() for line in l])
+    def format_output(lines):
+        """Capitalize each line."""
+        return '\n'.join([line.capitalize() for line in lines])
 
 
 class TooManyMonths(Exception):
@@ -1008,15 +1015,13 @@ class SeoFormatter(BaseFormatter):
 
     """Generates SEO friendly human readable dates."""
 
+    MAX_MONTHS = 2
+
     def __init__(self, schedule):
         super(SeoFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
-        self.MAX_MONTHS = 2
-
-    @property
-    def templates(self):  # pragma: no cover
-        return {
+        self.templates = {
             'fr_FR': {
                 'two_months': u'{month1} et {month2}',
                 'full': u'{months} {year}'
@@ -1100,7 +1105,7 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             not even be considered
         place(bool):
             if True, an OpeningHoursFormatter will be used.
-        seo (bool):
+        seo(bool):
             if True, an SeoFormatter will be used
 
     """
