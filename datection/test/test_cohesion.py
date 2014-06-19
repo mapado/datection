@@ -5,6 +5,7 @@ Test suite of the datection.cohesive
 import unittest
 import datection
 from datetime import datetime
+from datetime import timedelta
 from datection.cohesion import cohesive_rrules
 
 
@@ -578,11 +579,16 @@ class TestMoreCohesive(unittest.TestCase):
             'duration': 1439,
             'rrule': 'DTSTART:10001220\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
         }])
+
+        now = datetime.utcnow()
+        next_year = datetime.utcnow() + timedelta(days=365)
         self.assertEqual(
             res[0],
             {
                 'duration': 1439,
-                'rrule': 'DTSTART:20140414T000000\nRRULE:FREQ=WEEKLY;'
-                'BYDAY=MO,TU,WE,TH,FR,SA,SU;'
-                'BYHOUR=0;BYMINUTE=0;UNTIL=20150414T000000',
+                'rrule': (
+                    'DTSTART:%sT000000\nRRULE:FREQ=WEEKLY;'
+                    'BYDAY=MO,TU,WE,TH,FR,SA,SU;'
+                    'BYHOUR=0;BYMINUTE=0;UNTIL=%sT000000'
+                ) % (now.strftime('%Y%m%d'), next_year.strftime('%Y%m%d')),
             })

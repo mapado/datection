@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import datetime
+
+from datetime import datetime
+from datetime import time
 
 from datection.models import DurationRRule
 from datection.utils import isoformat_concat
@@ -15,7 +17,7 @@ from datection.normalize import Time
 class UtilsTest(unittest.TestCase):
 
     def test_isoformat_concat(self):
-        dt = datetime.datetime(2013, 8, 4, 8, 30, 0)
+        dt = datetime(2013, 8, 4, 8, 30, 0)
         fmt = isoformat_concat(dt)
         self.assertEqual(fmt, '20130804T083000')
 
@@ -62,8 +64,8 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(normalize_2digit_year(80), 1980)
 
     def test_duration_time(self):
-        start_time = datetime.time(20, 0)
-        end_time = datetime.time(21, 0)
+        start_time = time(20, 0)
+        end_time = time(21, 0)
         self.assertEqual(duration(start_time, end_time), 60)
 
     def test_duration_Time(self):
@@ -72,18 +74,18 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(duration(start_time, end_time), 60)
 
     def test_duration_datetime_same_day(self):
-        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
-        end_datetime = datetime.datetime(2013, 8, 4, 21, 0)
+        start_datetime = datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime(2013, 8, 4, 21, 0)
         self.assertEqual(duration(start_datetime, end_datetime), 60)
 
     def test_duration_datetime_next_day(self):
-        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
-        end_datetime = datetime.datetime(2013, 8, 5, 21, 0)
+        start_datetime = datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime(2013, 8, 5, 21, 0)
         self.assertEqual(duration(start_datetime, end_datetime), 1500)
 
     def test_duration_datetime(self):
-        start_datetime = datetime.datetime(2013, 8, 4, 20, 0)
-        end_datetime = datetime.datetime(2013, 8, 6, 18, 0)
+        start_datetime = datetime(2013, 8, 4, 20, 0)
+        end_datetime = datetime(2013, 8, 6, 18, 0)
         self.assertEqual(duration(start_datetime, end_datetime), 2760)
 
 
@@ -184,3 +186,4 @@ class TestFacebookScheduleNormalization(unittest.TestCase):
         ]
         fb_hours = sort_facebook_hours(fb_hours)
         self.assertEqual(group_facebook_hours(fb_hours), expected)
+
