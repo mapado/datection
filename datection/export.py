@@ -9,6 +9,7 @@ from datetime import timedelta
 from datection.parse import parse
 from datection.models import DurationRRule
 
+
 def to_db(text, lang, valid=True, only_future=True, **kwargs):
     """ Perform a date detection on text with all timepoint regex.
 
@@ -52,6 +53,7 @@ def to_python(text, lang, valid=True, only_future=True, **kwargs):
                 if timepoint.future(**kwargs)]
     return [timepoint.to_python() for timepoint in timepoints]
 
+
 def export_non_continuous_schedule(schedule, start, end):
     """Export the non continuous schedule to a SQL compliant format.
 
@@ -89,7 +91,7 @@ def export_continuous_schedule(schedule, start, end):
     return out
 
 
-def schedule_to_start_end_list(schedule):
+def schedule_to_start_end_list(schedule, start=None, end=None):
     """Export the schedule to a SQL compliant format.
 
     Each duration / rrule structure will be converted to a list of
@@ -109,8 +111,10 @@ def schedule_to_start_end_list(schedule):
 
     """
     out = []
-    start = datetime.utcnow().replace(hour=0, minute=0, second=0)
-    end = (start + timedelta(days=365)).replace(hour=23, minute=59)
+    if not start:
+        start = datetime.utcnow().replace(hour=0, minute=0, second=0)
+    if not end:
+        end = (start + timedelta(days=365)).replace(hour=23, minute=59)
     for drr in schedule:
         drr = DurationRRule(drr)
         if drr.is_continuous:
@@ -125,4 +129,3 @@ def schedule_to_start_end_list(schedule):
 
             out.append(adt)
     return out
-

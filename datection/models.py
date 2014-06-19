@@ -106,7 +106,7 @@ class DurationRRule(object):
 
         """
         if (self.rrule.byminute is not None
-            and self.rrule.byhour is not None):
+                and self.rrule.byhour is not None):
             start_time = time(self.rrule.byhour[0], self.rrule.byminute[0])
             end_dt = datetime.combine(datetime.today(), start_time)
             end_time = (end_dt + timedelta(minutes=self.duration)).time()

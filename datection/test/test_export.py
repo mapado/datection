@@ -8,6 +8,7 @@ from datection.export import export_continuous_schedule
 from datection.export import export_non_continuous_schedule
 from datection.export import schedule_to_start_end_list
 
+
 class ExportScheduleToSQLTest(unittest.TestCase):
 
     """Test the rrule --> SQL schedule conversion utilities."""
@@ -93,19 +94,17 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         self.assertEqual(export, [])
 
     def test_export_schedule_to_start_end_list(self):
-        # WARNING: this test will fail after a time, due to the fact that
-        # time is constantly moving and there's no way to mock a datetme
-        # cause it's written in C... <sigh>
         schedule = [
             {
                 'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
-                'texts': [u' 4 décembre 2014 \xe0 8h au 9 décembre 2014 \xe0 17h30']
             }
         ]
-        sch = schedule_to_start_end_list(schedule)
+        start = datetime(2014, 12, 3, 0, 0)
+        end = datetime(2014, 12, 15, 0, 0)
+        sch = schedule_to_start_end_list(schedule, start, end)
         self.assertEqual(sch[0]['start'], datetime(2014, 12, 4, 8, 0))
         self.assertEqual(sch[0]['end'],   datetime(2014, 12, 4, 23, 59))
         self.assertEqual(sch[1]['start'], datetime(2014, 12, 5, 0, 0))
@@ -118,3 +117,31 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         self.assertEqual(sch[4]['end'],   datetime(2014, 12, 8, 23, 59))
         self.assertEqual(sch[5]['start'], datetime(2014, 12, 9, 0, 0))
         self.assertEqual(sch[5]['end'],   datetime(2014, 12, 9, 17, 30))
+
+    def test_export_schedule_to_start_end_list_future(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
+            }
+        ]
+        start = datetime(2014, 11, 3, 0, 0)
+        end = datetime(2014, 11, 15, 0, 0)
+        sch = schedule_to_start_end_list(schedule, start, end)
+        self.assertEqual(sch, [])
+
+    def test_export_schedule_to_start_end_list_past(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
+            }
+        ]
+        start = datetime(2014, 12, 10, 0, 0)
+        end = datetime(2014, 12, 15, 0, 0)
+        sch = schedule_to_start_end_list(schedule, start, end)
+        self.assertEqual(sch, [])
