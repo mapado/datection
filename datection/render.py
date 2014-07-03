@@ -22,7 +22,7 @@ from datection.lang import getlocale
 
 TRANSLATIONS = {
     'fr_FR': {
-        'today': u"aujourd'hui",
+        'today': u"auj.",
         'tomorrow': u'demain',
         'this': u'ce',
         'midnight': u'minuit',

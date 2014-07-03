@@ -167,7 +167,7 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
 
     def test_display_with_reference(self):
         ref = datetime.date(2013, 1, 1)
-        self.assertEqual(self.dfmt.display(reference=ref), u"aujourd'hui")
+        self.assertEqual(self.dfmt.display(reference=ref), u"auj.")
 
         ref = datetime.date(2012, 12, 31)
         self.assertEqual(self.dfmt.display(reference=ref), u"demain")
@@ -637,7 +637,7 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
     def test_format_next_occurence_today(self):
         ref = datetime.datetime(2014, 11, 14)
         self.nofmt.start = datetime.datetime(2014, 11, 14)
-        self.assertEqual(self.nofmt.display(ref), u"Aujourd'hui à 9 h")
+        self.assertEqual(self.nofmt.display(ref), u"Auj. à 9 h")
 
     def test_format_next_occurence_past(self):
         self.nofmt.start = datetime.datetime(2015, 11, 10)
