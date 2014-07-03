@@ -1,46 +1,64 @@
 # -*- coding: utf-8 -*-
 
-"""Test suite of the datection.display module."""
+"""Test suite of the datection.render module."""
 
 import unittest
 import locale
 import datetime
+import mock
 import datection
 
-from datection.display import DateFormatter
-from datection.display import DateIntervalFormatter
-from datection.display import DateListFormatter
-from datection.display import DatetimeFormatter
-from datection.display import DatetimeIntervalFormatter
-from datection.display import ContinuousDatetimeIntervalFormatter
-from datection.display import TimeFormatter
-from datection.display import TimeIntervalFormatter
-from datection.display import WeekdayReccurenceFormatter
-from datection.display import NextOccurenceFormatter
-from datection.display import OpeningHoursFormatter
-from datection.display import LongFormatter
-from datection.display import SeoFormatter
-from datection.display import NoFutureOccurence
-from datection.display import groupby_consecutive_dates
-from datection.display import groupby_date
-from datection.display import groupby_time
-from datection.display import consecutives
-from datection.display import to_start_end_datetimes
-from datection.display import display
+from datection.render import DateFormatter
+from datection.render import DateIntervalFormatter
+from datection.render import DateListFormatter
+from datection.render import DatetimeFormatter
+from datection.render import DatetimeIntervalFormatter
+from datection.render import ContinuousDatetimeIntervalFormatter
+from datection.render import TimeFormatter
+from datection.render import TimeIntervalFormatter
+from datection.render import WeekdayReccurenceFormatter
+from datection.render import NextOccurenceFormatter
+from datection.render import OpeningHoursFormatter
+from datection.render import LongFormatter
+from datection.render import SeoFormatter
+from datection.render import NoFutureOccurence
+from datection.render import groupby_consecutive_dates
+from datection.render import groupby_date
+from datection.render import groupby_time
+from datection.render import consecutives
+from datection.render import to_start_end_datetimes
+from datection.render import display
 from datection.models import DurationRRule
 
 
-class TestDateFormatterfr_FR(unittest.TestCase):
+class GetCurrentDayMocker(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.get_current_date_patch = mock.patch(
+            'datection.render.get_current_date')
+        cls.get_current_date_mock = cls.get_current_date_patch.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.get_current_date_patch.stop()
+
+    def setUp(self):
+        self.get_current_date_mock.return_value = datetime.date(2012, 1, 1)
+
+
+class TestDateFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DateFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDateFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
-        date = datetime.date(2013, 1, 1)
-        self.dfmt = DateFormatter(date)
+        self.dfmt = DateFormatter(datetime.date(2013, 1, 1))
+        super(TestDateFormatterfr_FR, self).setUp()
 
     def test_format_day_first(self):
         self.assertEqual(self.dfmt.format_day(), u'1er')
@@ -64,6 +82,15 @@ class TestDateFormatterfr_FR(unittest.TestCase):
         self.assertEqual(fmt, u'janv.')
 
     def test_format_year(self):
+        self.assertEqual(self.dfmt.format_year(), u'2013')
+
+    def test_format_year_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.assertEqual(self.dfmt.format_year(), u'')
+
+    def test_force_format_year_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.dfmt.force_format_year = True
         self.assertEqual(self.dfmt.format_year(), u'2013')
 
     def test_format_abbreviated_year(self):
@@ -167,28 +194,42 @@ class TestDateFormatterfr_FR(unittest.TestCase):
             self.dfmt.display(include_year=False, include_month=False), u'1er')
 
 
-class TestDateIntervalFormatterfr_FR(unittest.TestCase):
+class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DateIntervalFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDateIntervalFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         start = datetime.date(2013, 11, 15)
         end = datetime.date(2013, 12, 15)
         self.difmt = DateIntervalFormatter(start, end)
+        super(TestDateIntervalFormatterfr_FR, self).setUp()
 
     def test_display_same_day(self):
         self.difmt.end_date = datetime.date(2013, 11, 15)
         self.assertTrue(self.difmt.same_day_interval())
         self.assertEqual(self.difmt.display(), u'le 15 novembre 2013')
 
+    def test_display_same_day_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.difmt.end_date = datetime.date(2013, 11, 15)
+        self.assertTrue(self.difmt.same_day_interval())
+        self.assertEqual(self.difmt.display(), u'le 15 novembre')
+
     def test_display_same_month(self):
         self.difmt.end_date = datetime.date(2013, 11, 17)
         self.assertTrue(self.difmt.same_month_interval())
         self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre 2013')
+
+    def test_display_same_month_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.difmt.end_date = datetime.date(2013, 11, 17)
+        self.assertTrue(self.difmt.same_month_interval())
+        self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre')
 
     def test_display_same_year(self):
         self.difmt.end_date = datetime.date(2013, 12, 17)
@@ -196,19 +237,33 @@ class TestDateIntervalFormatterfr_FR(unittest.TestCase):
         self.assertEqual(
             self.difmt.display(), u'du 15 novembre au 17 décembre 2013')
 
+    def test_display_same_year_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.difmt.end_date = datetime.date(2013, 12, 17)
+        self.assertTrue(self.difmt.same_year_interval())
+        self.assertEqual(
+            self.difmt.display(), u'du 15 novembre au 17 décembre')
+
     def test_display(self):
         self.difmt.end_date = datetime.date(2014, 12, 17)
         self.assertEqual(
             self.difmt.display(), u'du 15 novembre 2013 au 17 décembre 2014')
 
+    def test_display_start_date_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.difmt.end_date = datetime.date(2014, 12, 17)
+        self.assertEqual(
+            self.difmt.display(), u'du 15 novembre 2013 au 17 décembre 2014')
 
-class TestDateListFormatterfr_FR(unittest.TestCase):
+
+class TestDateListFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DateListFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDateListFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         date_list = [
@@ -218,13 +273,23 @@ class TestDateListFormatterfr_FR(unittest.TestCase):
             datetime.date(2013, 3, 9),
         ]
         self.dlfmt = DateListFormatter(date_list)
+        super(TestDateListFormatterfr_FR, self).setUp()
 
     def test_display(self):
         self.assertEqual(self.dlfmt.display(), u'les 4, 5, 6 et 9 mars 2013')
 
+    def test_display_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.assertEqual(self.dlfmt.display(), u'les 4, 5, 6 et 9 mars')
+
     def test_display_one_date(self):
         self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
         self.assertEqual(self.dlfmt.display(), u'le 4 mars 2013')
+
+    def test_display_one_date_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
+        self.assertEqual(self.dlfmt.display(), u'le 4 mars')
 
 
 class TestTimeFormatterfr_FR(unittest.TestCase):
@@ -288,43 +353,63 @@ class TestTimeIntervalfr_FR(unittest.TestCase):
         self.assertEqual(tifmt.display(), u'')
 
 
-class TestDatetimeFormatterfr_FR(unittest.TestCase):
+class TestDatetimeFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DatetimeFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDatetimeFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         dt = datetime.datetime(2013, 3, 4, 12, 15)
         self.dtfmt = DatetimeFormatter(dt)
+        super(TestDatetimeFormatterfr_FR, self).setUp()
 
     def test_display(self):
         self.assertEqual(self.dtfmt.display(), u"le 4 mars 2013 à 12 h 15")
+
+    def test_display_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.assertEqual(self.dtfmt.display(), u"le 4 mars à 12 h 15")
 
     def test_display_arg_passing(self):
         self.assertEqual(
             self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
 
+    def test_display_arg_passing_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2011, 1, 1)
+        self.assertEqual(
+            self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
+        # include_year = False superseeds the 6 months rule
 
-class TestDatetimeIntervalFormatterfr_FR(unittest.TestCase):
+
+class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DatetimeIntervalFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDatetimeIntervalFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         start = datetime.datetime(2013, 3, 4, 12, 15)
         end = datetime.datetime(2013, 8, 5, 12, 15)
         self.dtifmt = DatetimeIntervalFormatter(start, end)
+        super(TestDatetimeIntervalFormatterfr_FR, self).setUp()
 
     def test_display_same_day(self):
         self.dtifmt.start_datetime = datetime.datetime(2013, 8, 5, 10, 15)
         self.assertEqual(
             self.dtifmt.display(), u'le 5 août 2013 de 10 h 15 à 12 h 15')
+
+    def test_display_same_day_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.dtifmt.start_datetime = datetime.datetime(2013, 8, 5, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(), u'le 5 août de 10 h 15 à 12 h 15')
 
     def test_display_same_month(self):
         self.dtifmt.start_datetime = datetime.datetime(2013, 8, 1, 10, 15)
@@ -332,13 +417,34 @@ class TestDatetimeIntervalFormatterfr_FR(unittest.TestCase):
             self.dtifmt.display(),
             u'du 1er au 5 août 2013 de 10 h 15 à 12 h 15')
 
+    def test_display_same_month_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.dtifmt.start_datetime = datetime.datetime(2013, 8, 1, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(),
+            u'du 1er au 5 août de 10 h 15 à 12 h 15')
+
     def test_display_same_year(self):
         self.dtifmt.start_datetime = datetime.datetime(2013, 7, 1, 10, 15)
         self.assertEqual(
             self.dtifmt.display(),
             u'du 1er juillet au 5 août 2013 de 10 h 15 à 12 h 15')
 
+    def test_display_same_year_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.dtifmt.start_datetime = datetime.datetime(2013, 7, 1, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(),
+            u'du 1er juillet au 5 août de 10 h 15 à 12 h 15')
+
     def test_display(self):
+        self.dtifmt.start_datetime = datetime.datetime(2012, 7, 1, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(),
+            u'du 1er juillet 2012 au 5 août 2013 de 10 h 15 à 12 h 15')
+
+    def test_display_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
         self.dtifmt.start_datetime = datetime.datetime(2012, 7, 1, 10, 15)
         self.assertEqual(
             self.dtifmt.display(),
@@ -357,39 +463,56 @@ class TestDatetimeIntervalFormatterfr_FR(unittest.TestCase):
             self.dtifmt.display(),
             u'du 4 mars au 5 août 2013')
 
+    def test_display_all_day_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.dtifmt.start_datetime = datetime.datetime(2013, 3, 4, 0, 0)
+        self.dtifmt.end_datetime = datetime.datetime(2013, 8, 5, 23, 59)
+        self.assertEqual(
+            self.dtifmt.display(),
+            u'du 4 mars au 5 août')
 
-class TestContinuousDatetimeIntervalFormatterfr_FR(unittest.TestCase):
+
+class TestContinuousDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the DatetimeIntervalFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestContinuousDatetimeIntervalFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         start = datetime.datetime(2013, 3, 4, 12, 15)
         end = datetime.datetime(2013, 8, 5, 12, 15)
         self.cdtifmt = ContinuousDatetimeIntervalFormatter(start, end)
+        super(TestContinuousDatetimeIntervalFormatterfr_FR, self).setUp()
 
     def test_display_same_year(self):
         self.assertEqual(
             self.cdtifmt.display(),
             u'du 4 mars à 12 h 15 au 5 août 2013 à 12 h 15')
 
+    def test_display_same_year_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.assertEqual(
+            self.cdtifmt.display(),
+            u'du 4 mars à 12 h 15 au 5 août à 12 h 15')
+
     def test_display(self):
         self.cdtifmt.start = datetime.datetime(2012, 3, 4, 12, 15)
         self.assertEqual(
             self.cdtifmt.display(),
-            u'du 4 mars 2012 à 12 h 15 au 5 août 2013 à 12 h 15')
+            u'du 4 mars à 12 h 15 au 5 août 2013 à 12 h 15')
 
 
-class TestWeekdayReccurenceFormatter_fr_FR(unittest.TestCase):
+class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
 
     """Test suite of the WeekdayReccurenceFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestWeekdayReccurenceFormatter_fr_FR, cls).setUpClass()
 
     def setUp(self):
         drr = {
@@ -414,6 +537,7 @@ class TestWeekdayReccurenceFormatter_fr_FR(unittest.TestCase):
                       'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
         }
         self.wkfmt_continuous = WeekdayReccurenceFormatter(drr)
+        super(TestWeekdayReccurenceFormatter_fr_FR, self).setUp()
 
     def test_day_name(self):
         self.assertEqual(self.wkfmt.day_name(1), u'mardi')
@@ -437,6 +561,11 @@ class TestWeekdayReccurenceFormatter_fr_FR(unittest.TestCase):
         self.assertEqual(self.wkfmt.format_date_interval(),
                          u'du 7 au 31 août 2013')
 
+    def test_format_date_interval_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.assertEqual(self.wkfmt.format_date_interval(),
+                         u'du 7 au 31 août')
+
     def test_format_time_interval(self):
         self.assertEqual(self.wkfmt.format_time_interval(),
                          u'de 22 h 30 à 23 h 30')
@@ -454,14 +583,29 @@ class TestWeekdayReccurenceFormatter_fr_FR(unittest.TestCase):
             self.wkfmt_continuous.display(),
             u'du lundi au mercredi, du 7 au 31 août 2013, de 22 h 30 à 23 h 30')
 
+    def test_display_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.assertEqual(
+            self.wkfmt.display(),
+            (u'le lundi, mardi et dimanche, du 7 au 31 août, '
+                u'de 22 h 30 à 23 h 30'))
+        self.assertEqual(
+            self.wkfmt_alldays.display(),
+            (u'du 7 au 31 août, de 22 h 30 à 23 h 30'))
 
-class TestNextOccurrencefr_FRFormatter(unittest.TestCase):
+        self.assertEqual(
+            self.wkfmt_continuous.display(),
+            u'du lundi au mercredi, du 7 au 31 août, de 22 h 30 à 23 h 30')
+
+
+class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
 
     """Test suite of the WeekdayReccurenceFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestNextOccurrenceFormatterfr_FR, cls).setUpClass()
 
     def setUp(self):
         schedule = [
@@ -475,10 +619,16 @@ class TestNextOccurrencefr_FRFormatter(unittest.TestCase):
         start = datetime.datetime(2014, 11, 10)
         end = datetime.datetime(2014, 11, 20)
         self.nofmt = NextOccurenceFormatter(schedule, start, end)
+        super(TestNextOccurrenceFormatterfr_FR, self).setUp()
 
     def test_format_next_occurence(self):
         ref = datetime.datetime(2014, 10, 10)
         self.assertEqual(self.nofmt.display(ref), u'Le 12 novembre 2014 à 9 h')
+
+    def test_format_next_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        ref = datetime.datetime(2014, 10, 10)
+        self.assertEqual(self.nofmt.display(ref), u'Le 12 novembre à 9 h')
 
     def test_format_next_occurence_soon(self):
         ref = datetime.datetime(2014, 11, 10)
@@ -501,6 +651,10 @@ class TestNextOccurrencefr_FRFormatter(unittest.TestCase):
         self.assertEqual(
             self.nofmt.display(ref, summarize=True),
             u'Le 12 novembre 2014 à 9 h + autres dates')
+        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        self.assertEqual(
+            self.nofmt.display(ref, summarize=True),
+            u'Le 12 novembre à 9 h + autres dates')
 
     def test_format_next_occurence_and_summary_all_day(self):
         schedule = [
@@ -518,6 +672,10 @@ class TestNextOccurrencefr_FRFormatter(unittest.TestCase):
         self.assertEqual(
             nofmt.display(ref, summarize=True),
             u'12 novembre 2014 + autres dates')
+        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        self.assertEqual(
+            nofmt.display(ref, summarize=True),
+            u'12 novembre + autres dates')
 
 
 class TestOpeningHoursFormatterfr_FR(unittest.TestCase):
@@ -601,30 +759,41 @@ Dimanche de 9 h à 19 h"""
         self.assertEqual(fmt, expected)
 
 
-class TestLongFormatter_fr_FR(unittest.TestCase):
+class TestLongFormatter_fr_FR(GetCurrentDayMocker):
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestLongFormatter_fr_FR, cls).setUpClass()
 
     def setUp(self):
         schedule = [
             {'duration': 0,
              'rrule': ('DTSTART:20140305\nRRULE:FREQ=DAILY;BYHOUR=9;'
                        'BYMINUTE=0;INTERVAL=1;UNTIL=20140309T235959'),
-             'span': (0, 24)},
+             },
             {'duration': 0,
              'rrule': ('DTSTART:20140226\nRRULE:FREQ=DAILY;COUNT=1;'
+                       'BYMINUTE=0;BYHOUR=9')
+             },
+            {'duration': 0,
+             'rrule': ('DTSTART:20150226\nRRULE:FREQ=DAILY;COUNT=1;'
                        'BYMINUTE=0;BYHOUR=9'),
-             'span': (49, 69)
              }
         ]
         self.fmt = LongFormatter(schedule)
+        super(TestLongFormatter_fr_FR, self).setUp()
 
     def test_display(self):
         self.assertEqual(
             self.fmt.display(),
-            u'Le 26 février 2014, du 5 au 9 mars 2014, à 9 h')
+            u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
+
+    def test_display_in_less_than_6_months(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 11, 1)
+        self.assertEqual(
+            self.fmt.display(),
+            u'Le 26 février, du 5 au 9 mars, le 26 février 2015, à 9 h')
 
     def test_display_weekday_reccurence(self):
         schedule = [
@@ -638,11 +807,12 @@ class TestLongFormatter_fr_FR(unittest.TestCase):
         self.assertEqual(fmt.display(), u'Le dimanche, de 10 h à 18 h')
 
 
-class TestDisplay_fr_FR(unittest.TestCase):
+class TestDisplay_fr_FR(GetCurrentDayMocker):
 
     def setUp(self):
         self.locale = 'fr_FR.UTF8'
         locale.setlocale(locale.LC_TIME, self.locale)
+        super(TestDisplay_fr_FR, self).setUp()
 
     def test_display_shortest(self):
         schedule = [

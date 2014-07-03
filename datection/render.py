@@ -34,6 +34,15 @@ TRANSLATIONS = {
 }
 
 
+def get_current_date():
+    """Return the current date.
+
+    Note: this function is used to enable mocking.
+
+    """
+    return datetime.date.today()
+
+
 def get_date(d):
     """Return a date object, given a datetime or a date."""
     return d.date() if isinstance(d, datetime.datetime) else d
@@ -235,9 +244,10 @@ class DateFormatter(BaseFormatter):
 
     """Formats a date into using the current locale."""
 
-    def __init__(self, date):
+    def __init__(self, date, force_format_year=False):
         super(DateFormatter, self).__init__()
         self.date = get_date(date)
+        self.force_format_year = force_format_year
         self.templates = {
             'fr_FR': {
                 'all': u'{prefix} {dayname} {day} {month} {year}',
@@ -263,10 +273,23 @@ class DateFormatter(BaseFormatter):
         return self.date.strftime('%B')
 
     def format_year(self, abbrev=False):
-        """Format the date year using the current locale."""
-        if abbrev:
-            return self.date.strftime('%y')
-        return self.date.strftime('%Y')
+        """Format the date year using the current locale.
+
+        If self.force_format_year=False, the year will be formatted only
+        if the formatted date occurs in more than 6 months (6 * 30 days).
+        Otherwise, return u''.
+        If self.force_format_year=True, the year will always be formatted.
+
+        """
+        if (
+                self.force_format_year
+                or (self.date - get_current_date()).days > 6 * 30
+        ):
+            if abbrev:
+                return self.date.strftime('%y')
+            return self.date.strftime('%Y')
+        else:
+            return u''
 
     def format_all_parts(self, include_dayname, abbrev_dayname,
                          abbrev_monthname, abbrev_year, prefix):
@@ -429,9 +452,11 @@ class DateIntervalFormatter(BaseFormatter):
         else:
             template = self.get_template()
             start_date_fmt = DateFormatter(
-                self.start_date).display(*args, **kwargs)
+                self.start_date, force_format_year=True).\
+                display(*args, **kwargs)
             end_date_fmt = DateFormatter(
-                self.end_date).display(*args, **kwargs)
+                self.end_date, force_format_year=True).\
+                display(*args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
             return fmt
@@ -745,7 +770,7 @@ class NextOccurenceFormatter(BaseFormatter):
         datetime range
 
         """
-        start = self.start or datetime.date.today()  # filter out passed dates
+        start = self.start or get_current_date()  # filter out passed dates
         dtimes = to_start_end_datetimes(self.schedule, start, self.end)
         # group the filtered values by date
         dtimes = sorted(groupby_date(dtimes))
@@ -1069,7 +1094,7 @@ class SeoFormatter(BaseFormatter):
             month_fmt = month_tpl.format(
                 month1=DateFormatter(dates[0]).format_month().decode('utf-8'),
                 month2=DateFormatter(dates[1]).format_month().decode('utf-8'))
-        year_fmt = DateFormatter(dates[0]).format_year()
+        year_fmt = DateFormatter(dates[0], force_format_year=True).format_year()
         tpl = self.get_template('full')
         fmt = tpl.format(months=month_fmt, year=year_fmt)
         return fmt
@@ -1089,7 +1114,7 @@ class TemporaryLocale(object):  # pragma: no cover
 
 
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
-            place=False, reference=datetime.date.today()):
+            place=False, reference=get_current_date()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
@@ -1124,7 +1149,11 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             try:
                 start, end = bounds
                 short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                    display(reference, summarize=True, prefix=True)
+                    display(
+                        reference,
+                        summarize=True,
+                        prefix=True,
+                        abbrev_monthname=True)
             except NoFutureOccurence:
                 return u''
             else:
