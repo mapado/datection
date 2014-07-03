@@ -23,6 +23,8 @@ TIME_DISTANCE_ACCEPTABLE = 30 * 6
 
 
 class TooManyDrrulesError(Exception):
+
+    """Exception raised when a schedule contains too many rrules."""
     pass
 
 
