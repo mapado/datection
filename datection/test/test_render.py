@@ -167,7 +167,7 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
 
     def test_display_with_reference(self):
         ref = datetime.date(2013, 1, 1)
-        self.assertEqual(self.dfmt.display(reference=ref), u"auj.")
+        self.assertEqual(self.dfmt.display(reference=ref), u"aujourd'hui")
 
         ref = datetime.date(2012, 12, 31)
         self.assertEqual(self.dfmt.display(reference=ref), u"demain")
@@ -613,7 +613,6 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
                 'duration': 0,
                 'rrule': ('DTSTART:20141112\nRRULE:FREQ=DAILY;BYHOUR=9;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141128T235959'),
-                'span': (0, 30)
             }
         ]
         start = datetime.datetime(2014, 11, 10)
@@ -637,7 +636,41 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
     def test_format_next_occurence_today(self):
         ref = datetime.datetime(2014, 11, 14)
         self.nofmt.start = datetime.datetime(2014, 11, 14)
-        self.assertEqual(self.nofmt.display(ref), u"Auj. à 9 h")
+        self.assertEqual(
+            self.nofmt.display(ref, summarize=False), u"Aujourd'hui à 9 h")
+
+    def test_format_next_occurence_today_all_day(self):
+        ref = datetime.datetime(2014, 11, 14)
+        schedule = [
+            {
+                'duration': 1439,
+                'rrule': ('DTSTART:20141112\nRRULE:FREQ=DAILY;BYHOUR=0;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141128T235959'),
+            }
+        ]
+        start = datetime.datetime(2014, 11, 14)
+        end = datetime.datetime(2014, 11, 20)
+        self.nofmt = NextOccurenceFormatter(schedule, start, end)
+        self.assertEqual(
+            self.nofmt.display(ref, summarize=False), u"Aujourd'hui")
+        self.assertEqual(
+            self.nofmt.display(ref, summarize=True), u"Auj. + autres dates")
+
+    def test_format_next_occurence_today_plus_other_occurences(self):
+        ref = datetime.datetime(2014, 11, 12)
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': ('DTSTART:20141112\nRRULE:FREQ=DAILY;BYHOUR=9;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141113T235959'),
+            }
+        ]
+        start = datetime.datetime(2014, 11, 10)
+        end = datetime.datetime(2014, 11, 20)
+        self.nofmt = NextOccurenceFormatter(schedule, start, end)
+        self.assertEqual(
+            self.nofmt.display(ref, summarize=True),
+            u"Auj. à 9 h + autres dates")
 
     def test_format_next_occurence_past(self):
         self.nofmt.start = datetime.datetime(2015, 11, 10)

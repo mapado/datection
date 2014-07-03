@@ -22,7 +22,8 @@ from datection.lang import getlocale
 
 TRANSLATIONS = {
     'fr_FR': {
-        'today': u"auj.",
+        'today': u"aujourd'hui",
+        'today_abbrev': u"auj.",
         'tomorrow': u'demain',
         'this': u'ce',
         'midnight': u'minuit',
@@ -340,7 +341,8 @@ class DateFormatter(BaseFormatter):
     @postprocess()
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
-                abbrev_year=False, reference=None, prefix=False):
+                abbrev_year=False, reference=None, abbrev_reference=False,
+                prefix=False):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -356,7 +358,10 @@ class DateFormatter(BaseFormatter):
         """
         if reference:
             if self.date == reference:
-                return self._('today')
+                if abbrev_reference:
+                    return self._('today_abbrev')
+                else:
+                    return self._('today')
             elif self.date == reference + datetime.timedelta(days=1):
                 return self._('tomorrow')
             elif reference < self.date < reference + datetime.timedelta(days=6):
@@ -432,7 +437,7 @@ class DateIntervalFormatter(BaseFormatter):
         return template.format(start_date=start_date_fmt, end_date=end_date_fmt)
 
     @postprocess()
-    def display(self, *args, **kwargs):
+    def display(self, abbrev_reference=False, *args, **kwargs):
         """Format the date interval using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -444,7 +449,8 @@ class DateIntervalFormatter(BaseFormatter):
         """
         if self.same_day_interval():
             kwargs['prefix'] = True
-            return DateFormatter(self.start_date).display(*args, **kwargs)
+            return DateFormatter(self.start_date).display(
+                abbrev_reference=abbrev_reference, *args, **kwargs)
         elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
         elif self.same_year_interval():
@@ -453,10 +459,10 @@ class DateIntervalFormatter(BaseFormatter):
             template = self.get_template()
             start_date_fmt = DateFormatter(
                 self.start_date, force_format_year=True).\
-                display(*args, **kwargs)
+                display(abbrev_reference, *args, **kwargs)
             end_date_fmt = DateFormatter(
                 self.end_date, force_format_year=True).\
-                display(*args, **kwargs)
+                display(abbrev_reference, *args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
             return fmt
@@ -796,11 +802,15 @@ class NextOccurenceFormatter(BaseFormatter):
         if not next_occurence:
             raise NoFutureOccurence
         if all_day(next_occurence['start'], next_occurence['end']):
-            formatter = DateFormatter(next_occurence['start'])
+            formatter = DateFormatter(
+                next_occurence['start'])
         else:
             formatter = DatetimeIntervalFormatter(
                 next_occurence['start'], next_occurence['end'])
-        date_fmt = formatter.display(reference=reference, *args, **kwargs)
+        date_fmt = formatter.display(
+            reference=reference,
+            abbrev_reference=self.other_occurences() and summarize,
+            *args, **kwargs)
         if summarize and self.other_occurences():
             template = self.get_template()
             return template.format(date=date_fmt)
