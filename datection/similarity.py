@@ -55,7 +55,11 @@ def similarity(schedule1, schedule2):
 
 
 def min_distance(drrules1, drrules2):
-    """ Calculate distance between drrule list. """
+    """ Calculate minimum absolute time delta of the schedules.
+
+    Return minimum absolute time delta between every drrule first date
+    of the schedules.
+    """
     drrules1 = [DurationRRule(dr) for dr in drrules1 if dr]
     drrules2 = [DurationRRule(dr) for dr in drrules2 if dr]
 
