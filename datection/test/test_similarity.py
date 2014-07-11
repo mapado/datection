@@ -14,6 +14,7 @@ from datection.similarity import jaccard_distance
 from datection.similarity import discretise_day_interval
 from datection.similarity import discretise_schedule
 from datection.similarity import similarity
+from datection.similarity import min_distance
 
 
 class ScheduleSimilarityTest(unittest.TestCase):
@@ -126,3 +127,24 @@ class ScheduleSimilarityTest(unittest.TestCase):
             }
         ]
         self.assertEqual(similarity(schedule1, schedule1), 1.0)
+
+    def test_min_days_between_fixed_date(self):
+        schedule1 = [{
+            'rrule': ('DTSTART:20140215\nRRULE:FREQ=DAILY;COUNT=1;'
+                      'BYMINUTE=0;BYHOUR=8'),
+            'duration': 60
+        }, {
+            'rrule': ('DTSTART:20140214\nRRULE:FREQ=DAILY;COUNT=1;'
+                      'BYMINUTE=0;BYHOUR=8'),
+            'duration': 60
+        }]
+        schedule2 = [{
+            'rrule': ('DTSTART:20140203\nRRULE:FREQ=DAILY;COUNT=1;'
+                      'BYMINUTE=0;BYHOUR=8'),
+            'duration': 60
+        }, {
+            'rrule': ('DTSTART:20140201\nRRULE:FREQ=DAILY;COUNT=1;'
+                      'BYMINUTE=0;BYHOUR=8'),
+            'duration': 60
+        }]
+        self.assertEqual(min_distance(schedule1, schedule2).days, 11)
