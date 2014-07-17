@@ -216,7 +216,7 @@ class BaseFormatter(object):
     """Base class for all schedule formatters."""
 
     def __init__(self):
-        self.language_code, self.encoding = _locale.getlocale(_locale.LC_TIME)
+        self.language_code, self.encoding = locale.split('.')
         self.templates = None
 
     def _(self, key):
@@ -238,7 +238,6 @@ class BaseFormatter(object):
         using the current locale.
 
         """
-        global locale
         with TemporaryLocale(_locale.LC_TIME, locale):
             return calendar.day_name[weekday_index].decode('utf-8')
 
