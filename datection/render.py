@@ -4,10 +4,9 @@
 Module in charge of transforming a rrule + duraction object into the shortest
 human-readable string possible.
 """
-
-import datetime
-import locale
 import calendar
+import datetime
+import locale as _locale
 import re
 import itertools
 
@@ -19,6 +18,7 @@ from datection.utils import cached_property
 from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
+locale = 'fr_FR.UTF8'
 
 TRANSLATIONS = {
     'fr_FR': {
@@ -216,7 +216,7 @@ class BaseFormatter(object):
     """Base class for all schedule formatters."""
 
     def __init__(self):
-        self.language_code, self.encoding = locale.getlocale(locale.LC_TIME)
+        self.language_code, self.encoding = _locale.getlocale(_locale.LC_TIME)
         self.templates = None
 
     def _(self, key):
@@ -238,7 +238,9 @@ class BaseFormatter(object):
         using the current locale.
 
         """
-        return calendar.day_name[weekday_index].decode('utf-8')
+        global locale
+        with TemporaryLocale(_locale.LC_TIME, locale):
+            return calendar.day_name[weekday_index].decode('utf-8')
 
 
 class DateFormatter(BaseFormatter):
@@ -263,23 +265,17 @@ class DateFormatter(BaseFormatter):
 
     def format_dayname(self, abbrev=False):
         """Format the date day using the current locale."""
-        if abbrev:
-            return self.date.strftime('%a')
-        return self.date.strftime('%A')
+        with TemporaryLocale(_locale.LC_TIME, locale):
+            if abbrev:
+                return self.date.strftime('%a')
+            return self.date.strftime('%A')
 
     def format_month(self, abbrev=False):
         """Format the date month using the current locale."""
-        if abbrev:
-            fmt = self.date.strftime('%b')
-        else:
-            fmt = self.date.strftime('%B')
-        # Ugly hack: sometimes, 'ao\xfbt' is returned, sometimes 'ao\xc3\xbbt'
-        # is. That indicates that something changes the locale from fr_FR.UTF8
-        # to fr_FR.iso88591 somewhere. Until we found where, that should
-        # counteract the effects
-        if fmt == 'ao\xfbt':
-            return 'ao\xc3\xbbt'
-        return fmt
+        with TemporaryLocale(_locale.LC_TIME, locale):
+            if abbrev:
+                return self.date.strftime('%b')
+            return self.date.strftime('%B')
 
     def format_year(self, abbrev=False):
         """Format the date year using the current locale.
@@ -294,9 +290,10 @@ class DateFormatter(BaseFormatter):
                 self.force_format_year
                 or (self.date - get_current_date()).days > 6 * 30
         ):
-            if abbrev:
-                return self.date.strftime('%y')
-            return self.date.strftime('%Y')
+            with TemporaryLocale(_locale.LC_TIME, locale):
+                if abbrev:
+                    return self.date.strftime('%y')
+                return self.date.strftime('%Y')
         else:
             return u''
 
@@ -521,7 +518,9 @@ class TimeFormatter(BaseFormatter):
         """Format the time hour using the current locale."""
         if self.time.minute == 0:
             return u''
-        return self.time.strftime('%M')
+        global locale
+        with TemporaryLocale(_locale.LC_TIME, locale):
+            return self.time.strftime('%M')
 
     def display(self, prefix=False):
         """Format the time using the template associated with the locale
@@ -1123,12 +1122,13 @@ class TemporaryLocale(object):  # pragma: no cover
     def __init__(self, category, locale):
         self.category = category
         self.locale = locale.encode('utf-8')
+        self.oldlocale = _locale.getlocale(category)
 
     def __enter__(self):
-        locale.setlocale(self.category, self.locale)
+        _locale.setlocale(self.category, self.locale)
 
     def __exit__(self, exception_type, exception_value, traceback):
-        locale.resetlocale(self.category)
+        _locale.setlocale(self.category, self.oldlocale)
 
 
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
@@ -1153,28 +1153,28 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
 
     """
     # make fr_FR.UTF8 the default locale
+    global locale
     if loc not in DEFAULT_LOCALES.values():
-        loc = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
+        locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
 
-    with TemporaryLocale(locale.LC_TIME, loc):
-        if place:
-            return OpeningHoursFormatter(schedule).display()
-        elif seo:
-            return SeoFormatter(schedule).display()
-        elif not short:
-            return LongFormatter(schedule).display()
-        else:
-            try:
-                start, end = bounds
-                short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                    display(
-                        reference,
-                        summarize=True,
-                        prefix=True,
-                        abbrev_monthname=True)
-            except NoFutureOccurence:
-                return u''
-            else:
-                default_fmt = LongFormatter(schedule).display(
+    if place:
+        return OpeningHoursFormatter(schedule).display()
+    elif seo:
+        return SeoFormatter(schedule).display()
+    elif not short:
+        return LongFormatter(schedule).display()
+    else:
+        try:
+            start, end = bounds
+            short_fmt = NextOccurenceFormatter(schedule, start, end).\
+                display(
+                    reference,
+                    summarize=True,
+                    prefix=True,
                     abbrev_monthname=True)
-                return get_shortest(default_fmt, short_fmt)
+        except NoFutureOccurence:
+            return u''
+        else:
+            default_fmt = LongFormatter(schedule).display(
+                abbrev_monthname=True)
+            return get_shortest(default_fmt, short_fmt)
