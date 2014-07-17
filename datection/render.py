@@ -270,8 +270,16 @@ class DateFormatter(BaseFormatter):
     def format_month(self, abbrev=False):
         """Format the date month using the current locale."""
         if abbrev:
-            return self.date.strftime('%b')
-        return self.date.strftime('%B')
+            fmt = self.date.strftime('%b')
+        else:
+            fmt = self.date.strftime('%B')
+        # Ugly hack: sometimes, 'ao\xfbt' is returned, sometimes 'ao\xc3\xbbt'
+        # is. That indicates that something changes the locale from fr_FR.UTF8
+        # to fr_FR.iso88591 somewhere. Until we found where, that should
+        # counteract the effects
+        if fmt == 'ao\xfbt':
+            return 'ao\xc3\xbbt'
+        return fmt
 
     def format_year(self, abbrev=False):
         """Format the date year using the current locale.
