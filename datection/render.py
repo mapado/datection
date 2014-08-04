@@ -287,6 +287,7 @@ class DateFormatter(BaseFormatter):
         """
         if (
                 self.force_format_year
+                or self.date.year < get_current_date().year
                 or (self.date - get_current_date()).days > 6 * 30
         ):
             with TemporaryLocale(_locale.LC_TIME, locale):
