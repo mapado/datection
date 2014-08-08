@@ -129,3 +129,38 @@ def schedule_to_start_end_list(schedule, start=None, end=None):
 
             out.append(adt)
     return out
+    
+    
+def schedule_to_discretised_days(schedule, start=None, end=None):
+    """Export the schedule to a list of datetime (one datetime for .
+    each day)
+    """
+    discretised_days = set()
+    for drr in schedule:
+        drr = DurationRRule(drr)
+        for dt in drr.rrule:
+            discretised_days.add(dt)
+    return discretised_days
+    
+    
+def discretised_days_to_scheduletags(discretised_days):
+    """ Convert a list of days to a format suitable for
+    Elasticsearch filtering
+    """
+    out = []
+    for dt in discretised_days:
+        adt = datetime.strftime(dt, "%Y-%m-%d_fullday")
+        out.append(adt)
+        if dt.hour < 20:
+            adt = datetime.strftime(dt, "%Y-%m-%d_day")
+        elif dt.hour:
+            adt = datetime.strftime(dt, "%Y-%m-%d_night")
+        out.append(adt)
+        adt = datetime.strftime(dt, "%Y_fullyear")
+        out.append(adt)
+        if dt.isoweekday() in [6,7]:
+            adt = datetime.strftime(dt, "%Y-%W_fullweekend")
+            out.append(adt)
+    if len(out) == 0:
+        out.append("no_schedule")
+    return out
