@@ -7,6 +7,9 @@ from datection.models import DurationRRule
 from datection.export import export_continuous_schedule
 from datection.export import export_non_continuous_schedule
 from datection.export import schedule_to_start_end_list
+from datection.export import schedule_to_discretised_days
+from datection.export import schedule_first_date
+from datection.export import schedule_last_date
 
 
 class ExportScheduleToSQLTest(unittest.TestCase):
@@ -145,3 +148,78 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         end = datetime(2014, 12, 15, 0, 0)
         sch = schedule_to_start_end_list(schedule, start, end)
         self.assertEqual(sch, [])
+
+    def test_schedule_to_discretised_days(self):
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),
+            },
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
+            },
+        ]
+        dates = schedule_to_discretised_days(schedule)
+
+        expected = [
+            datetime(2014, 11, 4, 8, 0, 0),
+            datetime(2014, 11, 5, 8, 0, 0),
+            datetime(2014, 12, 4, 8, 0, 0),
+            datetime(2014, 12, 5, 8, 0, 0),
+            datetime(2014, 12, 6, 8, 0, 0),
+            datetime(2014, 12, 7, 8, 0, 0),
+            datetime(2014, 12, 8, 8, 0, 0),
+            datetime(2014, 12, 9, 8, 0, 0),
+        ]
+        self.assertEqual(dates, expected)
+
+    def test_schedule_first_date(self):
+        self.assertEqual(schedule_first_date(None), None)
+        self.assertEqual(schedule_first_date([]), None)
+
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
+            },
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),
+            }
+        ]
+
+        first_date = schedule_first_date(schedule)
+
+        self.assertEqual(first_date, datetime(2014, 11, 4, 8, 0, 0))
+
+    def test_schedule_last_date(self):
+        self.assertEqual(schedule_last_date(None), None)
+        self.assertEqual(schedule_last_date([]), None)
+
+        schedule = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
+            },
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),
+            }
+        ]
+
+        last_date = schedule_last_date(schedule)
+
+        self.assertEqual(last_date, datetime(2014, 12, 9, 17, 30, 0))

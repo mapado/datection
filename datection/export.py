@@ -129,9 +129,9 @@ def schedule_to_start_end_list(schedule, start=None, end=None):
 
             out.append(adt)
     return out
-    
-    
-def schedule_to_discretised_days(schedule, start=None, end=None):
+
+
+def schedule_to_discretised_days(schedule):
     """Export the schedule to a list of datetime (one datetime for .
     each day)
     """
@@ -140,9 +140,34 @@ def schedule_to_discretised_days(schedule, start=None, end=None):
         drr = DurationRRule(drr)
         for dt in drr.rrule:
             discretised_days.add(dt)
-    return discretised_days
-    
-    
+    return sorted(discretised_days)
+
+def schedule_first_date(schedule):
+    """ Export the first date of a duration rrule list
+    """
+    curmin = None
+    if schedule:
+        for drr in schedule:
+            drr = DurationRRule(drr)
+            sdt = drr.start_datetime
+            if not(curmin) or curmin > sdt:
+                curmin = sdt
+
+    return curmin
+
+def schedule_last_date(schedule):
+    """ Export the last date of a duration rrule list
+    """
+    curmax = None
+    if schedule:
+        for drr in schedule:
+            drr = DurationRRule(drr)
+            sdt = drr.end_datetime
+            if not(curmax) or curmax < sdt:
+                curmax = sdt
+
+    return curmax
+
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
     Elasticsearch filtering
