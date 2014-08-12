@@ -10,6 +10,7 @@ from datection.export import schedule_to_start_end_list
 from datection.export import schedule_to_discretised_days
 from datection.export import schedule_first_date
 from datection.export import schedule_last_date
+from datection.export import discretised_days_to_scheduletags
 
 
 class ExportScheduleToSQLTest(unittest.TestCase):
@@ -223,3 +224,82 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         last_date = schedule_last_date(schedule)
 
         self.assertEqual(last_date, datetime(2014, 12, 9, 17, 30, 0))
+
+    def test_discretised_days_to_scheduletags(self):
+        self.assertEqual(discretised_days_to_scheduletags([]), ['no_schedule'])
+
+        dtlist = [datetime(2014, 11, 4, 8, 0, 0)];
+        self.assertEqual(
+            sorted(discretised_days_to_scheduletags(dtlist)),
+            sorted(['2014-11-04_fullday', '2014-11-04_day', '2014_fullyear'])
+        )
+
+        dtlist = [ datetime(2015, 1, 2, 21, 30, 0), ];
+        self.assertEqual(
+            sorted(discretised_days_to_scheduletags(dtlist)),
+            sorted(['2015-01-02_fullday', '2015-01-02_night', '2015_fullyear'])
+        )
+
+        dtlist = [ datetime(2014, 8, 17, 21, 30, 0), ];
+        self.assertEqual(
+            sorted(discretised_days_to_scheduletags(dtlist)),
+            sorted([
+                '2014-08-17_fullday',
+                '2014-08-17_night',
+                '2014-32_fullweekend',
+                '2014-32_weekend_night',
+                '2014_fullyear'
+            ])
+        )
+
+        dtlist = [ datetime(2014, 8, 17, 21, 30, 0), datetime(2014, 8, 16, 12, 30, 0), ];
+        self.assertEqual(
+            sorted(discretised_days_to_scheduletags(dtlist)),
+            sorted([
+                '2014-08-16_fullday',
+                '2014-08-16_day',
+                '2014-08-17_fullday',
+                '2014-08-17_night',
+                '2014-32_fullweekend',
+                '2014-32_weekend_night',
+                '2014-32_weekend_day',
+                '2014_fullyear'
+            ])
+        )
+
+        dtlist = [
+            datetime(2014, 11, 4, 20, 0, 0),
+            datetime(2014, 11, 5, 20, 0, 0),
+            datetime(2014, 12, 4, 8, 0, 0),
+            datetime(2014, 12, 5, 8, 0, 0),
+            datetime(2014, 12, 6, 8, 0, 0),
+            datetime(2014, 12, 7, 8, 0, 0),
+            datetime(2014, 12, 8, 8, 0, 0),
+            datetime(2014, 12, 9, 8, 0, 0),
+        ]
+
+        self.assertEqual(
+            sorted(discretised_days_to_scheduletags(dtlist)),
+            sorted([
+                '2014-11-04_fullday',
+                '2014-11-05_fullday',
+                '2014-12-04_fullday',
+                '2014-12-05_fullday',
+                '2014-12-06_fullday',
+                '2014-12-07_fullday',
+                '2014-12-08_fullday',
+                '2014-12-09_fullday',
+                '2014-11-04_night',
+                '2014-11-05_night',
+                '2014-12-04_day',
+                '2014-12-05_day',
+                '2014-12-06_day',
+                '2014-12-07_day',
+                '2014-12-08_day',
+                '2014-12-09_day',
+                '2014-48_fullweekend',
+                '2014-48_weekend_day',
+                '2014_fullyear',
+            ])
+        )
+

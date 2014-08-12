@@ -172,20 +172,26 @@ def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
     Elasticsearch filtering
     """
-    out = []
+    out = set()
     for dt in discretised_days:
         adt = datetime.strftime(dt, "%Y-%m-%d_fullday")
-        out.append(adt)
+        out.add(adt)
         if dt.hour < 20:
             adt = datetime.strftime(dt, "%Y-%m-%d_day")
         elif dt.hour:
             adt = datetime.strftime(dt, "%Y-%m-%d_night")
-        out.append(adt)
+        out.add(adt)
         adt = datetime.strftime(dt, "%Y_fullyear")
-        out.append(adt)
+        out.add(adt)
         if dt.isoweekday() in [6,7]:
             adt = datetime.strftime(dt, "%Y-%W_fullweekend")
-            out.append(adt)
+            out.add(adt)
+            if dt.hour < 20:
+                adt = datetime.strftime(dt, "%Y-%W_weekend_day")
+                out.add(adt)
+            elif dt.hour:
+                adt = datetime.strftime(dt, "%Y-%W_weekend_night")
+                out.add(adt)
     if len(out) == 0:
-        out.append("no_schedule")
-    return out
+        out.add("no_schedule")
+    return list(out)
