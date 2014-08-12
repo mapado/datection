@@ -231,24 +231,25 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         dtlist = [datetime(2014, 11, 4, 8, 0, 0)];
         self.assertEqual(
             sorted(discretised_days_to_scheduletags(dtlist)),
-            sorted(['2014-11-04_fullday', '2014-11-04_day', '2014_fullyear'])
+            sorted(['2014-11-04_day_full', '2014-11-04_day', '2014_year_full', '2014_year_day'])
         )
 
         dtlist = [ datetime(2015, 1, 2, 21, 30, 0), ];
         self.assertEqual(
             sorted(discretised_days_to_scheduletags(dtlist)),
-            sorted(['2015-01-02_fullday', '2015-01-02_night', '2015_fullyear'])
+            sorted(['2015-01-02_day_full', '2015-01-02_night', '2015_year_full', '2015_year_night'])
         )
 
         dtlist = [ datetime(2014, 8, 17, 21, 30, 0), ];
         self.assertEqual(
             sorted(discretised_days_to_scheduletags(dtlist)),
             sorted([
-                '2014-08-17_fullday',
+                '2014-08-17_day_full',
                 '2014-08-17_night',
-                '2014-32_fullweekend',
+                '2014-32_weekend_full',
                 '2014-32_weekend_night',
-                '2014_fullyear'
+                '2014_year_full',
+                '2014_year_night',
             ])
         )
 
@@ -256,14 +257,16 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         self.assertEqual(
             sorted(discretised_days_to_scheduletags(dtlist)),
             sorted([
-                '2014-08-16_fullday',
+                '2014-08-16_day_full',
                 '2014-08-16_day',
-                '2014-08-17_fullday',
+                '2014-08-17_day_full',
                 '2014-08-17_night',
-                '2014-32_fullweekend',
+                '2014-32_weekend_full',
                 '2014-32_weekend_night',
                 '2014-32_weekend_day',
-                '2014_fullyear'
+                '2014_year_full',
+                '2014_year_day',
+                '2014_year_night',
             ])
         )
 
@@ -281,14 +284,14 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         self.assertEqual(
             sorted(discretised_days_to_scheduletags(dtlist)),
             sorted([
-                '2014-11-04_fullday',
-                '2014-11-05_fullday',
-                '2014-12-04_fullday',
-                '2014-12-05_fullday',
-                '2014-12-06_fullday',
-                '2014-12-07_fullday',
-                '2014-12-08_fullday',
-                '2014-12-09_fullday',
+                '2014-11-04_day_full',
+                '2014-11-05_day_full',
+                '2014-12-04_day_full',
+                '2014-12-05_day_full',
+                '2014-12-06_day_full',
+                '2014-12-07_day_full',
+                '2014-12-08_day_full',
+                '2014-12-09_day_full',
                 '2014-11-04_night',
                 '2014-11-05_night',
                 '2014-12-04_day',
@@ -297,9 +300,10 @@ class ExportScheduleToSQLTest(unittest.TestCase):
                 '2014-12-07_day',
                 '2014-12-08_day',
                 '2014-12-09_day',
-                '2014-48_fullweekend',
+                '2014-48_weekend_full',
                 '2014-48_weekend_day',
-                '2014_fullyear',
+                '2014_year_full',
+                '2014_year_day',
+                '2014_year_night',
             ])
         )
-

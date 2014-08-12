@@ -174,24 +174,25 @@ def discretised_days_to_scheduletags(discretised_days):
     """
     out = set()
     for dt in discretised_days:
-        adt = datetime.strftime(dt, "%Y-%m-%d_fullday")
-        out.add(adt)
-        if dt.hour < 20:
-            adt = datetime.strftime(dt, "%Y-%m-%d_day")
-        elif dt.hour:
-            adt = datetime.strftime(dt, "%Y-%m-%d_night")
-        out.add(adt)
-        adt = datetime.strftime(dt, "%Y_fullyear")
-        out.add(adt)
+        # no daytime specific
+        out.add(datetime.strftime(dt, "%Y-%m-%d_day_full"))
+        out.add(datetime.strftime(dt, "%Y_year_full"))
         if dt.isoweekday() in [6,7]:
-            adt = datetime.strftime(dt, "%Y-%W_fullweekend")
-            out.add(adt)
+            out.add(datetime.strftime(dt, "%Y-%W_weekend_full"))
+
+        # daytime specific
+        if dt.hour < 20:
+            out.add(datetime.strftime(dt, "%Y-%m-%d_day"))
+            out.add(datetime.strftime(dt, "%Y_year_day"))
+        elif dt.hour:
+            out.add(datetime.strftime(dt, "%Y-%m-%d_night"))
+            out.add(datetime.strftime(dt, "%Y_year_night"))
+
+        if dt.isoweekday() in [6,7]:
             if dt.hour < 20:
-                adt = datetime.strftime(dt, "%Y-%W_weekend_day")
-                out.add(adt)
+                out.add(datetime.strftime(dt, "%Y-%W_weekend_day"))
             elif dt.hour:
-                adt = datetime.strftime(dt, "%Y-%W_weekend_night")
-                out.add(adt)
+                out.add(datetime.strftime(dt, "%Y-%W_weekend_night"))
     if len(out) == 0:
         out.add("no_schedule")
     return list(out)
