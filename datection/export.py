@@ -178,7 +178,8 @@ def discretised_days_to_scheduletags(discretised_days):
         out.add(datetime.strftime(dt, "%Y-%m-%d_day_full"))
         out.add(datetime.strftime(dt, "%Y_year_full"))
         if dt.isoweekday() in [6,7]:
-            out.add(datetime.strftime(dt, "%Y-%W_weekend_full"))
+            isocal = datetime.isocalendar(dt)
+            out.add("%s-%s_weekend_full" % (isocal[0], isocal[1]))
 
         # daytime specific
         if dt.hour < 20:
@@ -189,10 +190,12 @@ def discretised_days_to_scheduletags(discretised_days):
             out.add(datetime.strftime(dt, "%Y_year_night"))
 
         if dt.isoweekday() in [6,7]:
+            isocal = datetime.isocalendar(dt)
+            isoweek = "%s-%s" % (isocal[0], isocal[1])
             if dt.hour < 20:
-                out.add(datetime.strftime(dt, "%Y-%W_weekend_day"))
+                out.add("%s_weekend_day" % isoweek)
             elif dt.hour:
-                out.add(datetime.strftime(dt, "%Y-%W_weekend_night"))
+                out.add("%s_weekend_night" % isoweek)
     if len(out) == 0:
         out.add("no_schedule")
     return list(out)
