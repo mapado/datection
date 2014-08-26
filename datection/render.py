@@ -273,6 +273,41 @@ class NextDateMixin(object):
         """Return all dates (bu the next), as a start/end datetime dict."""
         return len(self.regrouped_dates) > 1
 
+
+class NextChangesMixin(object):
+    """ Add a next_changes method to output the datetime when the display value will change
+    """
+
+    def next_changes(self):
+        """ output the value when the display will change
+        """
+        if not(hasattr(self, 'next_occurence')):
+            return None
+
+        current_date = get_current_date()
+        current_date = datetime.datetime.combine(current_date, datetime.time())
+
+        start = self.next_occurence()['start']
+
+        current_delta = start - current_date
+        #import ipdb; ipdb.set_trace()
+        if current_delta < datetime.timedelta(0): # passée
+            return None
+        elif current_delta < datetime.timedelta(1): # aujourd'hui
+            return start
+        elif current_delta < datetime.timedelta(2): # demain
+            td = datetime.timedelta(days=0)
+        elif current_delta < datetime.timedelta(7): # cette semaine
+            td = datetime.timedelta(days=1)
+        else: # dans plus d'une semaine
+            td = datetime.timedelta(days=6)
+
+        next_changes = start - td
+        next_changes = next_changes.combine(next_changes.date(), datetime.time())
+
+        return next_changes
+
+
 class DateFormatter(BaseFormatter):
 
     """Formats a date into using the current locale."""
@@ -789,7 +824,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         return fmt
 
 
-class NextOccurenceFormatter(BaseFormatter, NextDateMixin):
+class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Object in charge of generating the shortest human readable
     representation of a datection schedule list, using a temporal
@@ -833,7 +868,7 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin):
             return date_fmt
 
 
-class OpeningHoursFormatter(BaseFormatter):
+class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
 
     """Formats opening hours into a human - readable format using the
     current locale.
@@ -891,7 +926,7 @@ class OpeningHoursFormatter(BaseFormatter):
         return '\n'.join([line for line in out])
 
 
-class LongFormatter(BaseFormatter):
+class LongFormatter(BaseFormatter, NextChangesMixin):
 
     """Displays a schedule in the current locale without trying to use
     as few characters as possible.
@@ -1061,7 +1096,7 @@ class TooManyMonths(Exception):
     pass
 
 
-class SeoFormatter(BaseFormatter, NextDateMixin):
+class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Generates SEO friendly human readable dates."""
 
