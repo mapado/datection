@@ -1251,7 +1251,7 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         self.assertEqual(ds.display(), 'mars 2013')
 
 
-class TestDisplaySchedule(GetCurrentDayMocker):
+class TestNextDateMixin(GetCurrentDayMocker):
 
     def test_next_date_mixin_empty(self):
         next_change = NextChangesMixin()
