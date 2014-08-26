@@ -1251,7 +1251,25 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         self.assertEqual(ds.display(), 'mars 2013')
         self.assertEqual(ds.next_changes(), datetime.datetime(2013, 2, 23, 0, 0, 0))
 
+    def test_display_schedule_past(self):
+        self.get_current_date_mock.return_value = datetime.date(2040, 11, 1)
+        ref = datetime.datetime(2040, 11, 14)
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': ('DTSTART:20141112\nRRULE:FREQ=DAILY;BYHOUR=9;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141113T235959'),
+            }
+        ]
+        start = datetime.datetime(2040, 11, 10)
+        end = datetime.datetime(2040, 11, 20)
+        formatter2 = NextOccurenceFormatter(schedule, start, end)
 
+        ds = DisplaySchedule()
+        ds.formatter_tuples.append(FormatterTuple(
+            formatter2, {'reference': ref, 'summarize': True}))
+
+        self.assertEqual(ds.display(), u'')
 
 class TestNextDateMixin(GetCurrentDayMocker):
 

@@ -1220,8 +1220,11 @@ class DisplaySchedule(object):
         """Return the smallest rendering among all the formatter options
 
         """
-        best = self._best_formatter
-        return best.formatter.display(**best.display_args)
+        try:
+            return self._best_formatter.formatter.display(
+                    **self._best_formatter.display_args)
+        except NoFutureOccurence:
+            return u''
 
     def next_changes(self):
         """ return the formatter next changes datetime
@@ -1253,29 +1256,25 @@ def get_display_schedule(
         display_schedule.formatter_tuples.append(fmt_tuple)
         return display_schedule
     else:
-        try:
-            start, end = bounds
-            short_fmt = NextOccurenceFormatter(schedule, start, end)
-        except NoFutureOccurence:
-            return u''
-        else:
-            default_fmt = LongFormatter(schedule)
+        start, end = bounds
+        short_fmt = NextOccurenceFormatter(schedule, start, end)
+        default_fmt = LongFormatter(schedule)
 
-            short_fmt_tuple = FormatterTuple(
-                short_fmt,
-                {
-                    "reference": reference,
-                    "summarize": True,
-                    "prefix": True,
-                    "abbrev_monthname": True
-                })
-            display_schedule.formatter_tuples.append(short_fmt_tuple)
+        short_fmt_tuple = FormatterTuple(
+            short_fmt,
+            {
+                "reference": reference,
+                "summarize": True,
+                "prefix": True,
+                "abbrev_monthname": True
+            })
+        display_schedule.formatter_tuples.append(short_fmt_tuple)
 
-            default_fmt_tuple = FormatterTuple(
-                default_fmt, {"abbrev_monthname": True})
-            display_schedule.formatter_tuples.append(default_fmt_tuple)
+        default_fmt_tuple = FormatterTuple(
+            default_fmt, {"abbrev_monthname": True})
+        display_schedule.formatter_tuples.append(default_fmt_tuple)
 
-            return display_schedule
+        return display_schedule
 
 
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
@@ -1299,4 +1298,5 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             if True, an SeoFormatter will be used
 
     """
-    return get_display_schedule(schedule, loc, short=short, seo=seo, bounds=bounds, place=place, reference=reference).display()
+    return get_display_schedule(schedule, loc, short=short,
+            seo=seo, bounds=bounds, place=place, reference=reference).display()
