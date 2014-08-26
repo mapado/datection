@@ -12,6 +12,7 @@ import itertools
 
 from functools import wraps
 from collections import defaultdict
+from collections import namedtuple
 
 from datection.models import DurationRRule
 from datection.utils import cached_property
@@ -33,6 +34,8 @@ TRANSLATIONS = {
         'at': u'à',
     }
 }
+
+FormatterTuple = namedtuple("FormatterTuple", ["formatter", "display_args"])
 
 
 def get_current_date():
@@ -240,6 +243,69 @@ class BaseFormatter(object):
         """
         with TemporaryLocale(_locale.LC_TIME, locale):
             return calendar.day_name[weekday_index].decode('utf-8')
+
+class NextDateMixin(object):
+    @cached_property
+    def regrouped_dates(self):
+        """Convert self.schedule to a start / end datetime list and filter
+        out the obtained values outside of the(self.start, self.end)
+        datetime range
+
+        """
+        if not hasattr(self, 'start'):
+            start = get_current_date()
+        else:
+            start = self.start or get_current_date()  # filter out passed dates
+
+        end = self.end if hasattr(self, 'end') else None
+
+        dtimes = to_start_end_datetimes(self.schedule, start, end)
+        # group the filtered values by date
+        dtimes = sorted(groupby_date(dtimes))
+        return dtimes
+
+    def next_occurence(self):
+        """Return the next date, as a start/end datetime dict."""
+        if self.regrouped_dates:
+            return self.regrouped_dates[0][0]
+
+    def other_occurences(self):
+        """Return all dates (bu the next), as a start/end datetime dict."""
+        return len(self.regrouped_dates) > 1
+
+
+class NextChangesMixin(object):
+    """ Add a next_changes method to output the datetime when the display value will change
+    """
+
+    def next_changes(self):
+        """ output the value when the display will change
+        """
+        if not(hasattr(self, 'next_occurence')):
+            return None
+
+        current_date = get_current_date()
+        current_date = datetime.datetime.combine(current_date, datetime.time())
+
+        start = self.next_occurence()['start']
+
+        current_delta = start - current_date
+        #import ipdb; ipdb.set_trace()
+        if current_delta < datetime.timedelta(0): # passée
+            return None
+        elif current_delta < datetime.timedelta(1): # aujourd'hui
+            return start
+        elif current_delta < datetime.timedelta(2): # demain
+            td = datetime.timedelta(days=0)
+        elif current_delta < datetime.timedelta(7): # cette semaine
+            td = datetime.timedelta(days=1)
+        else: # dans plus d'une semaine
+            td = datetime.timedelta(days=6)
+
+        next_changes = start - td
+        next_changes = next_changes.combine(next_changes.date(), datetime.time())
+
+        return next_changes
 
 
 class DateFormatter(BaseFormatter):
@@ -759,7 +825,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         return fmt
 
 
-class NextOccurenceFormatter(BaseFormatter):
+class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Object in charge of generating the shortest human readable
     representation of a datection schedule list, using a temporal
@@ -775,28 +841,6 @@ class NextOccurenceFormatter(BaseFormatter):
         self.templates = {
             'fr_FR': u'{date} + autres dates'
         }
-
-    @cached_property
-    def regrouped_dates(self):
-        """Convert self.schedule to a start / end datetime list and filter
-        out the obtained values outside of the(self.start, self.end)
-        datetime range
-
-        """
-        start = self.start or get_current_date()  # filter out passed dates
-        dtimes = to_start_end_datetimes(self.schedule, start, self.end)
-        # group the filtered values by date
-        dtimes = sorted(groupby_date(dtimes))
-        return dtimes
-
-    def next_occurence(self):
-        """Return the next date, as a start/end datetime dict."""
-        if self.regrouped_dates:
-            return self.regrouped_dates[0][0]
-
-    def other_occurences(self):
-        """Return all dates (bu the next), as a start/end datetime dict."""
-        return len(self.regrouped_dates) > 1
 
     @postprocess(capitalize=True)
     def display(self, reference, summarize=False, *args, **kwargs):
@@ -825,7 +869,7 @@ class NextOccurenceFormatter(BaseFormatter):
             return date_fmt
 
 
-class OpeningHoursFormatter(BaseFormatter):
+class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
 
     """Formats opening hours into a human - readable format using the
     current locale.
@@ -883,7 +927,7 @@ class OpeningHoursFormatter(BaseFormatter):
         return '\n'.join([line for line in out])
 
 
-class LongFormatter(BaseFormatter):
+class LongFormatter(BaseFormatter, NextChangesMixin):
 
     """Displays a schedule in the current locale without trying to use
     as few characters as possible.
@@ -1053,7 +1097,7 @@ class TooManyMonths(Exception):
     pass
 
 
-class SeoFormatter(BaseFormatter):
+class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Generates SEO friendly human readable dates."""
 
@@ -1131,8 +1175,82 @@ class TemporaryLocale(object):  # pragma: no cover
         _locale.setlocale(self.category, self.oldlocale)
 
 
-def display(schedule, loc, short=False, seo=False, bounds=(None, None),
+class DisplaySchedule(object):
+    """ Manage a renderer for display the best output of multiples  Formatter
+    """
+    def __init__(self):
+        self.formatter_tuples = []
+
+    def _compare_formatters(self, fmt_tuple_1, fmt_tuple_2):
+        if not fmt_tuple_1:
+            return fmt_tuple_2
+        elif not fmt_tuple_2:
+            return fmt_tuple_1
+
+        fmt_1 = fmt_tuple_1.formatter.display(**fmt_tuple_1.display_args)
+        fmt_2 = fmt_tuple_2.formatter.display(**fmt_tuple_2.display_args)
+
+        return fmt_tuple_1 if len(fmt_1) < len(fmt_2) else fmt_tuple_2
+
+    def _get_best_formatter(self):
+        best_formatter = None
+        for formatter in self.formatter_tuples:
+            best_formatter = self._compare_formatters(best_formatter, formatter)
+
+        return best_formatter
+
+
+    def display(self):
+        formatter = self._get_best_formatter()
+        return formatter[0].display(**formatter[1])
+
+
+def get_display_schedule(schedule, loc, short=False, seo=False, bounds=(None, None),
             place=False, reference=get_current_date()):
+    """ get a DisplaySchedule object according to the better ouput
+    """
+    # make fr_FR.UTF8 the default locale
+    global locale
+    if loc not in DEFAULT_LOCALES.values():
+        locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
+
+    display_schedule = DisplaySchedule()
+    if place:
+        fmt_tuple = FormatterTuple(OpeningHoursFormatter(schedule), {})
+        display_schedule.formatter_tuples.append(fmt_tuple)
+        return display_schedule
+    elif seo:
+        fmt_tuple = FormatterTuple(SeoFormatter(schedule), {})
+        display_schedule.formatter_tuples.append(fmt_tuple)
+        return display_schedule
+    elif not short:
+        fmt_tuple = FormatterTuple(LongFormatter(schedule), {})
+        display_schedule.formatter_tuples.append(fmt_tuple)
+        return display_schedule
+    else:
+        try:
+            start, end = bounds
+            short_fmt = NextOccurenceFormatter(schedule, start, end)
+        except NoFutureOccurence:
+            return u''
+        else:
+            default_fmt = LongFormatter(schedule)
+
+            short_fmt_tuple = FormatterTuple(short_fmt,
+                { "reference":reference,
+                    "summarize":True,
+                    "prefix":True,
+                    "abbrev_monthname":True})
+            display_schedule.formatter_tuples.append(short_fmt_tuple)
+
+            default_fmt_tuple = FormatterTuple(default_fmt,
+                    {"abbrev_monthname":True})
+            display_schedule.formatter_tuples.append(default_fmt_tuple)
+
+            return display_schedule
+
+def display(schedule, loc, short=False, seo=False, bounds=(None, None),
+        place=False, reference=get_current_date()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
@@ -1152,29 +1270,4 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             if True, an SeoFormatter will be used
 
     """
-    # make fr_FR.UTF8 the default locale
-    global locale
-    if loc not in DEFAULT_LOCALES.values():
-        locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
-
-    if place:
-        return OpeningHoursFormatter(schedule).display()
-    elif seo:
-        return SeoFormatter(schedule).display()
-    elif not short:
-        return LongFormatter(schedule).display()
-    else:
-        try:
-            start, end = bounds
-            short_fmt = NextOccurenceFormatter(schedule, start, end).\
-                display(
-                    reference,
-                    summarize=True,
-                    prefix=True,
-                    abbrev_monthname=True)
-        except NoFutureOccurence:
-            return u''
-        else:
-            default_fmt = LongFormatter(schedule).display(
-                abbrev_monthname=True)
-            return get_shortest(default_fmt, short_fmt)
+    return get_display_schedule(schedule, loc, short=short, seo=seo, bounds=bounds, place=place, reference=reference).display()
