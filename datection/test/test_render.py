@@ -1000,7 +1000,6 @@ class TestDisplay_fr_FR(GetCurrentDayMocker):
 
 class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
 
-
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
@@ -1088,9 +1087,11 @@ class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
     def test_next_date(self):
         self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
 
-        sch = datection.to_db(u"Du lundi 1er aout 2013 au lundi 31 aout 2013", "fr", only_future=False)
+        sch = datection.to_db(
+            u"Du lundi 1er aout 2013 au lundi 31 aout 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
-        self.assertEqual(formatter.next_occurence()['start'], datetime.datetime(2013, 8, 8))
+        self.assertEqual(
+            formatter.next_occurence()['start'], datetime.datetime(2013, 8, 8))
 
 
 class TestUtilities(unittest.TestCase):
@@ -1216,6 +1217,7 @@ class TestUtilities(unittest.TestCase):
         expected = [[datetimes[0], datetimes[1]], [datetimes[2]]]
         self.assertEqual(groupby_date(datetimes), expected)
 
+
 class TestDisplaySchedule(GetCurrentDayMocker):
 
     @classmethod
@@ -1242,13 +1244,15 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         formatter2 = NextOccurenceFormatter(schedule, start, end)
 
         ds = DisplaySchedule()
-        ds.formatter_tuples.append(FormatterTuple(formatter1,{}))
-        ds.formatter_tuples.append(FormatterTuple(formatter2, {'reference': ref, 'summarize':True}))
+        ds.formatter_tuples.append(FormatterTuple(formatter1, {}))
+        ds.formatter_tuples.append(FormatterTuple(
+            formatter2, {'reference': ref, 'summarize': True}))
 
         self.assertEqual(ds.display(), 'mars 2013')
 
 
 class TestDisplaySchedule(GetCurrentDayMocker):
+
     def test_next_date_mixin_empty(self):
         next_change = NextChangesMixin()
         self.assertEqual(next_change.next_changes(), None)
@@ -1256,15 +1260,20 @@ class TestDisplaySchedule(GetCurrentDayMocker):
     def test_next_date_gt_7_days(self):
         self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
         next_change = NextChangesMixin()
-        next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0), 'end': datetime.datetime(2013, 8, 8, 22, 0, 0)}
+        next_occur = {
+            'start': datetime.datetime(2013, 8, 8, 20, 30, 0),
+            'end': datetime.datetime(2013, 8, 8, 22, 0, 0)
+        }
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 2, 0, 0, 0))
+        self.assertEqual(
+            next_change.next_changes(), datetime.datetime(2013, 8, 2, 0, 0, 0))
 
         next_occur = {'start': datetime.datetime(2013, 8, 20, 21, 0, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 14, 0, 0, 0))
+        self.assertEqual(
+            next_change.next_changes(), datetime.datetime(2013, 8, 14, 0, 0, 0))
 
     def test_next_date_today(self):
         self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
@@ -1280,7 +1289,8 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 8, 0, 0, 0))
+        self.assertEqual(
+            next_change.next_changes(), datetime.datetime(2013, 8, 8, 0, 0, 0))
 
     def test_next_date_lt_7_days_gt_1d(self):
         self.get_current_date_mock.return_value = datetime.date(2013, 8, 2)
@@ -1288,11 +1298,13 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
+        self.assertEqual(
+            next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
 
         self.get_current_date_mock.return_value = datetime.date(2013, 8, 6)
         next_change = NextChangesMixin()
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
+        self.assertEqual(
+            next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
