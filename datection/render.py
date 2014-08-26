@@ -1192,6 +1192,7 @@ class DisplaySchedule(object):
 
     def __init__(self):
         self.formatter_tuples = []
+        self.best_formatter = None
 
     def _compare_formatters(self, fmt_tuple_1, fmt_tuple_2):
         """Return the formatter tuple generating the smallest rendering
@@ -1207,7 +1208,8 @@ class DisplaySchedule(object):
 
         return fmt_tuple_1 if len(fmt_1) < len(fmt_2) else fmt_tuple_2
 
-    def _get_best_formatter(self):
+    @cached_property
+    def _best_formatter(self):
         """Return the best formatter tuple among self.formatter_tuples"""
         best_formatter = None
         for fmt_tuple in self.formatter_tuples:
@@ -1218,8 +1220,13 @@ class DisplaySchedule(object):
         """Return the smallest rendering among all the formatter options
 
         """
-        best = self._get_best_formatter()
+        best = self._best_formatter
         return best.formatter.display(**best.display_args)
+
+    def next_changes(self):
+        """ return the formatter next changes datetime
+        """
+        return self._best_formatter.formatter.next_changes()
 
 
 def get_display_schedule(
