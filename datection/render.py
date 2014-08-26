@@ -369,7 +369,7 @@ class DateFormatter(BaseFormatter):
                     return self._('today')
             elif self.date == reference + datetime.timedelta(days=1):
                 return self._('tomorrow')
-            elif reference < self.date < reference + datetime.timedelta(days=6):
+            elif reference < self.date <= reference + datetime.timedelta(days=6):
                 # if d is next week, use its weekday name
                 return u'%s %s' % (
                     self._('this'),

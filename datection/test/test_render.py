@@ -172,8 +172,24 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
         ref = datetime.date(2012, 12, 31)
         self.assertEqual(self.dfmt.display(reference=ref), u"demain")
 
+        ref = datetime.date(2012, 12, 30)
+        self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
+
+        ref = datetime.date(2012, 12, 29)
+        self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
+
         ref = datetime.date(2012, 12, 28)
         self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
+
+        ref = datetime.date(2012, 12, 27)
+        self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
+
+        ref = datetime.date(2012, 12, 26)
+        self.assertEqual(self.dfmt.display(reference=ref), u"ce mardi")
+
+        ref = datetime.date(2012, 12, 25)
+        self.assertEqual(
+            self.dfmt.display(reference=ref), u"1er janvier 2013")
 
     def test_display_full(self):
         self.assertEqual(self.dfmt.display(), u'1er janvier 2013')
