@@ -8,12 +8,14 @@ import datetime
 import mock
 import datection
 
+from datection.render import ContinuousDatetimeIntervalFormatter
 from datection.render import DateFormatter
 from datection.render import DateIntervalFormatter
 from datection.render import DateListFormatter
 from datection.render import DatetimeFormatter
 from datection.render import DatetimeIntervalFormatter
-from datection.render import ContinuousDatetimeIntervalFormatter
+from datection.render import DisplaySchedule
+from datection.render import FormatterTuple
 from datection.render import TimeFormatter
 from datection.render import TimeIntervalFormatter
 from datection.render import WeekdayReccurenceFormatter
@@ -979,11 +981,13 @@ class TestDisplay_fr_FR(GetCurrentDayMocker):
             u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
 
 
-class TestSeoFormatter_fr_FR(unittest.TestCase):
+class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
 
-    def setUp(self):
-        self.locale = 'fr_FR.UTF8'
-        locale.setlocale(locale.LC_TIME, self.locale)
+
+    @classmethod
+    def setUpClass(cls):
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestSeoFormatter_fr_FR, cls).setUpClass()
 
     def test_format_single_day(self):
         sch = datection.to_db(
@@ -1063,6 +1067,13 @@ class TestSeoFormatter_fr_FR(unittest.TestCase):
             u"Le lundi", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
+
+    def test_next_date(self):
+        self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
+
+        sch = datection.to_db(u"Du lundi 1er aout 2013 au lundi 31 aout 2013", "fr", only_future=False)
+        formatter = SeoFormatter(sch)
+        self.assertEqual(formatter.next_occurence()['start'], datetime.datetime(2013, 8, 8))
 
 
 class TestUtilities(unittest.TestCase):
@@ -1187,3 +1198,35 @@ class TestUtilities(unittest.TestCase):
 
         expected = [[datetimes[0], datetimes[1]], [datetimes[2]]]
         self.assertEqual(groupby_date(datetimes), expected)
+
+class TestDisplaySchedule(GetCurrentDayMocker):
+
+    @classmethod
+    def setUpClass(cls):
+        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
+        super(TestDisplaySchedule, cls).setUpClass()
+
+    def test_display_schedule(self):
+        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        ref = datetime.datetime(2014, 11, 14)
+        sch = datection.to_db(
+            u"Du 1er au 19 mars 2013 à 18h30", "fr", only_future=False)
+        formatter1 = SeoFormatter(sch)
+
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': ('DTSTART:20141112\nRRULE:FREQ=DAILY;BYHOUR=9;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20141113T235959'),
+            }
+        ]
+        start = datetime.datetime(2014, 11, 10)
+        end = datetime.datetime(2014, 11, 20)
+        formatter2 = NextOccurenceFormatter(schedule, start, end)
+
+        ds = DisplaySchedule()
+        ds.formatter_tuples.append(FormatterTuple(formatter1,{}))
+        ds.formatter_tuples.append(FormatterTuple(formatter2, {'reference': ref, 'summarize':True}))
+
+        self.assertEqual(ds.display(), 'mars 2013')
+
