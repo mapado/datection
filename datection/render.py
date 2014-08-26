@@ -244,11 +244,13 @@ class BaseFormatter(object):
         with TemporaryLocale(_locale.LC_TIME, locale):
             return calendar.day_name[weekday_index].decode('utf-8')
 
+
 class NextDateMixin(object):
+
     @cached_property
     def regrouped_dates(self):
         """Convert self.schedule to a start / end datetime list and filter
-        out the obtained values outside of the(self.start, self.end)
+        out the obtained values outside of the (self.start, self.end)
         datetime range
 
         """
@@ -275,7 +277,10 @@ class NextDateMixin(object):
 
 
 class NextChangesMixin(object):
-    """ Add a next_changes method to output the datetime when the display value will change
+
+    """Add a next_changes method to output the datetime when the
+    display value will change.
+
     """
 
     def next_changes(self):
@@ -284,26 +289,27 @@ class NextChangesMixin(object):
         if not(hasattr(self, 'next_occurence')):
             return None
 
-        current_date = get_current_date()
-        current_date = datetime.datetime.combine(current_date, datetime.time())
+        current_date = datetime.datetime.combine(
+            get_current_date(), datetime.time())
 
         start = self.next_occurence()['start']
 
         current_delta = start - current_date
-        #import ipdb; ipdb.set_trace()
-        if current_delta < datetime.timedelta(0): # passée
-            return None
-        elif current_delta < datetime.timedelta(1): # aujourd'hui
-            return start
-        elif current_delta < datetime.timedelta(2): # demain
-            td = datetime.timedelta(days=0)
-        elif current_delta < datetime.timedelta(7): # cette semaine
-            td = datetime.timedelta(days=1)
-        else: # dans plus d'une semaine
-            td = datetime.timedelta(days=6)
 
-        next_changes = start - td
-        next_changes = next_changes.combine(next_changes.date(), datetime.time())
+        if current_delta < datetime.timedelta(0):  # past
+            return None
+        elif current_delta < datetime.timedelta(1):  # today
+            return start
+        elif current_delta < datetime.timedelta(2):  # tomorrow
+            delta = datetime.timedelta(days=0)
+        elif current_delta < datetime.timedelta(7):  # this week
+            delta = datetime.timedelta(days=1)
+        else:  # in more than in a week
+            delta = datetime.timedelta(days=6)
+
+        next_changes = start - delta
+        next_changes = next_changes.combine(
+            next_changes.date(), datetime.time())
 
         return next_changes
 
@@ -1163,6 +1169,8 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
 class TemporaryLocale(object):  # pragma: no cover
 
+    """Temporarily change the current locale using a context manager."""
+
     def __init__(self, category, locale):
         self.category = category
         self.locale = locale.encode('utf-8')
@@ -1176,12 +1184,19 @@ class TemporaryLocale(object):  # pragma: no cover
 
 
 class DisplaySchedule(object):
-    """ Manage a renderer for display the best output of multiples  Formatter
+
+    """Render a schedule using different formatters, and return the best
+    possible rendering.
+
     """
+
     def __init__(self):
         self.formatter_tuples = []
 
     def _compare_formatters(self, fmt_tuple_1, fmt_tuple_2):
+        """Return the formatter tuple generating the smallest rendering
+
+        """
         if not fmt_tuple_1:
             return fmt_tuple_2
         elif not fmt_tuple_2:
@@ -1193,20 +1208,23 @@ class DisplaySchedule(object):
         return fmt_tuple_1 if len(fmt_1) < len(fmt_2) else fmt_tuple_2
 
     def _get_best_formatter(self):
+        """Return the best formatter tuple among self.formatter_tuples"""
         best_formatter = None
-        for formatter in self.formatter_tuples:
-            best_formatter = self._compare_formatters(best_formatter, formatter)
-
+        for fmt_tuple in self.formatter_tuples:
+            best_formatter = self._compare_formatters(best_formatter, fmt_tuple)
         return best_formatter
 
-
     def display(self):
-        formatter = self._get_best_formatter()
-        return formatter[0].display(**formatter[1])
+        """Return the smallest rendering among all the formatter options
+
+        """
+        best = self._get_best_formatter()
+        return best.formatter.display(**best.display_args)
 
 
-def get_display_schedule(schedule, loc, short=False, seo=False, bounds=(None, None),
-            place=False, reference=get_current_date()):
+def get_display_schedule(
+    schedule, loc, short=False, seo=False, bounds=(None, None),
+        place=False, reference=get_current_date()):
     """ get a DisplaySchedule object according to the better ouput
     """
     # make fr_FR.UTF8 the default locale
@@ -1236,21 +1254,25 @@ def get_display_schedule(schedule, loc, short=False, seo=False, bounds=(None, No
         else:
             default_fmt = LongFormatter(schedule)
 
-            short_fmt_tuple = FormatterTuple(short_fmt,
-                { "reference":reference,
-                    "summarize":True,
-                    "prefix":True,
-                    "abbrev_monthname":True})
+            short_fmt_tuple = FormatterTuple(
+                short_fmt,
+                {
+                    "reference": reference,
+                    "summarize": True,
+                    "prefix": True,
+                    "abbrev_monthname": True
+                })
             display_schedule.formatter_tuples.append(short_fmt_tuple)
 
-            default_fmt_tuple = FormatterTuple(default_fmt,
-                    {"abbrev_monthname":True})
+            default_fmt_tuple = FormatterTuple(
+                default_fmt, {"abbrev_monthname": True})
             display_schedule.formatter_tuples.append(default_fmt_tuple)
 
             return display_schedule
 
+
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
-        place=False, reference=get_current_date()):
+            place=False, reference=get_current_date()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
