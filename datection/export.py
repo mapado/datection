@@ -138,9 +138,10 @@ def schedule_to_discretised_days(schedule):
     discretised_days = set()
     for drr in schedule:
         drr = DurationRRule(drr)
-        for dt in drr.rrule:
+        for dt in drr:
             discretised_days.add(dt)
     return sorted(discretised_days)
+
 
 def schedule_first_date(schedule):
     """ Export the first date of a duration rrule list
