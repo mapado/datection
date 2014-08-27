@@ -807,7 +807,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     def format_date_interval(self, *args, **kwargs):
         """Format the rrule date interval using the current locale."""
-        if (self.drr.end_datetime - self.drr.start_datetime).days == 365:
+        if not self.drr.bounded:
             return u''
         formatter = DateIntervalFormatter(
             self.drr.start_datetime, self.drr.end_datetime)

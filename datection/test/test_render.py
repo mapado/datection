@@ -858,7 +858,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             {
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
-                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0'),
             }
         ]
         fmt = LongFormatter(schedule)
@@ -1085,8 +1085,7 @@ class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
         self.assertEqual(formatter.display(), u'')
 
     def test_format_unbounded_weekday_recurrence(self):
-        sch = datection.to_db(
-            u"Le lundi", "fr", only_future=False)
+        sch = datection.to_db(u"Le lundi", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 

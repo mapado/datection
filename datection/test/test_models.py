@@ -86,7 +86,7 @@ class DurationRRuleTest(unittest.TestCase):
 
     def test_end_datetime_property_no_until(self):
         drr = DurationRRule(self.one_time)
-        self.assertEqual(drr.end_datetime, datetime(2013, 3, 5, 15, 30, 0))
+        self.assertEqual(drr.end_datetime, datetime(2014, 3, 5, 15, 30, 0))
 
     def test_end_datetime_property_unbounded_recurrence(self):
         drr = DurationRRule(self.unbounded_recurrence)
