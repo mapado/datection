@@ -653,9 +653,7 @@ class DateTimeList(Timepoint):
         start_time_match = re.search(
             TIMEPOINT_REGEX[lang]['_time'][0], start_time)
         start_time = Time._from_groupdict(start_time_match.groupdict())
-        # if not end_time:
-        #     time_interval = TimeInterval(
-        #         start_time=start_time, end_time=None, lang=lang)
+
         if end_time:
             end_time_match = re.search(
                 TIMEPOINT_REGEX[lang]['_time'][0], end_time)

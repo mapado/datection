@@ -151,10 +151,11 @@ def schedule_first_date(schedule):
         for drr in schedule:
             drr = DurationRRule(drr)
             sdt = drr.start_datetime
-            if not(curmin) or curmin > sdt:
+            if not curmin or curmin > sdt:
                 curmin = sdt
 
     return curmin
+
 
 def schedule_last_date(schedule):
     """ Export the last date of a duration rrule list
@@ -163,11 +164,12 @@ def schedule_last_date(schedule):
     if schedule:
         for drr in schedule:
             drr = DurationRRule(drr)
-            sdt = drr.end_datetime
-            if not(curmax) or curmax < sdt:
-                curmax = sdt
+            edt = drr.end_datetime
+            if not curmax or curmax < edt:
+                curmax = edt
 
     return curmax
+
 
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
@@ -178,7 +180,7 @@ def discretised_days_to_scheduletags(discretised_days):
         # no daytime specific
         out.add(datetime.strftime(dt, "%Y-%m-%d_day_full"))
         out.add(datetime.strftime(dt, "%Y_year_full"))
-        if dt.isoweekday() in [6,7]:
+        if dt.isoweekday() in [6, 7]:
             isocal = datetime.isocalendar(dt)
             out.add("%s-%s_weekend_full" % (isocal[0], isocal[1]))
 
@@ -190,7 +192,7 @@ def discretised_days_to_scheduletags(discretised_days):
             out.add(datetime.strftime(dt, "%Y-%m-%d_night"))
             out.add(datetime.strftime(dt, "%Y_year_night"))
 
-        if dt.isoweekday() in [6,7]:
+        if dt.isoweekday() in [6, 7]:
             isocal = datetime.isocalendar(dt)
             isoweek = "%s-%s" % (isocal[0], isocal[1])
             if dt.hour < 20:
