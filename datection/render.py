@@ -292,8 +292,11 @@ class NextChangesMixin(object):
         current_date = datetime.datetime.combine(
             get_current_date(), datetime.time())
 
-        start = self.next_occurence()['start']
+        next_occurence = self.next_occurence()
+        if not next_occurence or 'start' not in next_occurence:
+            return None
 
+        start = next_occurence['start']
         current_delta = start - current_date
 
         if current_delta < datetime.timedelta(0):  # past

@@ -1277,6 +1277,12 @@ class TestNextDateMixin(GetCurrentDayMocker):
         next_change = NextChangesMixin()
         self.assertEqual(next_change.next_changes(), None)
 
+        next_change.next_occurence = mock.MagicMock(return_value=None)
+        self.assertEqual(next_change.next_changes(), None)
+
+        next_change.next_occurence = mock.MagicMock(return_value={})
+        self.assertEqual(next_change.next_changes(), None)
+
     def test_next_date_gt_7_days(self):
         self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
         next_change = NextChangesMixin()
