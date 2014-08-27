@@ -1301,6 +1301,16 @@ class TestNextDateMixin(GetCurrentDayMocker):
         self.assertEqual(
             next_change.next_changes(), datetime.datetime(2013, 8, 14, 0, 0, 0))
 
+    def test_long_formatter_gt_7_days(self):
+        self.get_current_date_mock.return_value = datetime.date(2014, 8, 27)
+        sch = datection.to_db(u"Le 14 septembre 2014 à 18h", "fr")
+        formatter = LongFormatter(sch)
+
+        self.assertEqual(
+            formatter.next_changes(), datetime.datetime(2014, 9, 8, 0, 0, 0))
+
+
+
     def test_next_date_today(self):
         self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
         next_change = NextChangesMixin()

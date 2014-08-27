@@ -936,7 +936,7 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
         return '\n'.join([line for line in out])
 
 
-class LongFormatter(BaseFormatter, NextChangesMixin):
+class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Displays a schedule in the current locale without trying to use
     as few characters as possible.
