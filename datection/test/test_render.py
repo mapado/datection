@@ -274,6 +274,12 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(
             self.difmt.display(), u'du 15 novembre 2013 au 17 décembre 2014')
 
+    def test_display_date_interval_same_month_different_year(self):
+        self.difmt.start_date = datetime.date(2014, 12, 17)
+        self.difmt.end_date = datetime.date(2015, 12, 17)
+        self.assertEqual(
+            self.difmt.display(), u'du 17 décembre 2014 au 17 décembre 2015')
+
 
 class TestDateListFormatterfr_FR(GetCurrentDayMocker):
 

@@ -474,10 +474,14 @@ class DateIntervalFormatter(BaseFormatter):
         return self.start_date == self.end_date
 
     def same_month_interval(self):
-        """Return True if the start and end date have the same month,
-        else False.
+        """Return True if the start and end date have the same month
+        and the same year, else False.
 
         """
+        # To be on the same month means that both date have the same
+        # month *in the same year*, not just the same monthname!
+        if not self.same_year_interval():
+            return False
         return self.start_date.month == self.end_date.month
 
     def same_year_interval(self):
