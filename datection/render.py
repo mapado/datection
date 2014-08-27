@@ -16,6 +16,8 @@ from collections import namedtuple
 
 from datection.models import DurationRRule
 from datection.utils import cached_property
+from datection.normalize import DAY_START
+from datection.normalize import DAY_END
 from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
@@ -192,11 +194,10 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
 
             # convert the bounds to datetime if dates were given
             if isinstance(start_bound, datetime.date):
-                start_bound = datetime.datetime.combine(
-                    start_bound, datetime.time(0, 0, 0))
+                start_bound = datetime.datetime.combine(start_bound, DAY_START)
             if isinstance(end_bound, datetime.date):
                 end_bound = datetime.datetime.combine(
-                    end_bound, datetime.time(23, 59, 59))
+                    end_bound, DAY_END)
 
             # filter out all start/end pairs outside of given boundaries
             if ((start_bound and end_bound

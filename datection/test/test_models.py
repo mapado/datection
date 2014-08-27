@@ -118,7 +118,7 @@ class DurationRRuleTest(unittest.TestCase):
 
     def test_time_interval_all_day(self):
         drr = DurationRRule(self.bounded_recurrence)
-        expected = (time(0, 0), time(23, 59))
+        expected = (time(0, 0), time(23, 59, 59))
         self.assertEqual(drr.time_interval, expected)
 
     def test_weekday_indexes(self):

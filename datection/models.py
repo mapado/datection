@@ -11,6 +11,8 @@ from dateutil.rrule import rrulestr
 
 from datection.utils import cached_property
 from datection.normalize import MISSING_YEAR
+from datection.normalize import DAY_START
+from datection.normalize import DAY_END
 
 
 class DurationRRule(object):
@@ -112,7 +114,7 @@ class DurationRRule(object):
             end_time = (end_dt + timedelta(minutes=self.duration)).time()
             return (start_time, end_time)
         else:
-            return (time(0, 0), time(23, 59))
+            return (DAY_START, DAY_END)
 
     @property
     def weekday_indexes(self):

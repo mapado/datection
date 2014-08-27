@@ -26,6 +26,8 @@ from datection.utils import duration
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
+DAY_START = time(0, 0)
+DAY_END = time(23, 59, 59)
 
 
 def timepoint_factory(detector, lang, data, **kwargs):
@@ -733,7 +735,7 @@ class DateTimeInterval(Timepoint):
         start_time = self.time_interval.start_time
         start_date = self.date_interval.start_date.to_python()
         end = datetime.combine(self.date_interval.end_date.to_python(),
-                               time(23, 59, 59))
+                               DAY_END)
         return makerrulestr(start_date, end, interval=1,
                             byhour=start_time.hour, byminute=start_time.minute)
 
@@ -837,7 +839,7 @@ class ContinuousDatetimeInterval(Timepoint):
         start_time = start_dt.time()
         start_date = start_dt.date()
         end_dt = datetime.combine(self.end_datetime.to_python().date(),
-                                  time(23, 59, 59))
+                                  DAY_END)
         return makerrulestr(
             start_date, end_dt,
             interval=1, byhour=start_time.hour, byminute=start_time.minute)
