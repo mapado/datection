@@ -64,6 +64,11 @@ class DurationRRule(object):
         return int(self.duration_rrule['duration'])
 
     @property
+    def unlimited(self):
+        """Whether the DurationRRule is bounded or not."""
+        return self.duration_rrule.get('unlimited', False)
+
+    @property
     def is_continuous(self):
         """Whether the rrule is to be taken by intervals, or continuously."""
         return self.duration_rrule.get('continuous', False)
@@ -172,4 +177,4 @@ class DurationRRule(object):
         return False.
 
         """
-        return self.rrule.until is not None
+        return not self.unlimited

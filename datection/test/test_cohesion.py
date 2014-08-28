@@ -54,7 +54,8 @@ class TestMoreCohesive(unittest.TestCase):
         # wanted result
         # Le 21 mars 2014 à 14 h
         self.list_has_item_containing(res, [
-            'DTSTART:20140321T140000\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=14;BYMINUTE=0'
+            ('DTSTART:20140321T140000\nRRULE:FREQ=DAILY;'
+                'BYHOUR=14;BYMINUTE=0;UNTIL=20150321T140000')
         ])
 
     def test_precise_time_in_a_lapse_time(self):

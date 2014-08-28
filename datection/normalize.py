@@ -13,7 +13,9 @@ from datetime import date
 from datetime import time
 from datetime import timedelta
 
-from dateutil.rrule import rrule, WEEKLY
+from dateutil.rrule import rrule
+from dateutil.rrule import WEEKLY
+from dateutil.rrule import rrulestr
 from datection.regex import WEEKDAY
 from datection.regex import TIMEPOINT_REGEX
 from datection.regex import MONTH
@@ -984,11 +986,14 @@ class WeekdayRecurrence(Timepoint):
             return rrule(WEEKLY, byweekday=self.weekdays)
 
     def to_db(self):
-        return {
+        export = {
             'rrule': self.rrulestr,
             'duration': duration(start=self.start_time, end=self.end_time),
-            'span': self.span
+            'span': self.span,
         }
+        if rrulestr(self.rrulestr).until is None:
+            export['unlimited'] = True
+        return export
 
 
 class WeekdayIntervalRecurrence(WeekdayRecurrence):

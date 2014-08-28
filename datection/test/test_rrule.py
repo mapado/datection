@@ -287,7 +287,8 @@ class TestWeekdayRecurrence(unittest.TestCase):
         target = {
             'rrule': self.rec_nodatetime.rrulestr,
             'duration': 1439,
-            'span': (0, 8)
+            'span': (0, 8),
+            'unlimited': True
         }
         self.assertEqual(self.rec_nodatetime.to_db(), target)
 

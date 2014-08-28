@@ -859,6 +859,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
                           'BYHOUR=10;BYMINUTE=0'),
+                'unlimited': True,
             }
         ]
         fmt = LongFormatter(schedule)
