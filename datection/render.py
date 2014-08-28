@@ -265,7 +265,6 @@ class NextDateMixin(object):
             start = self.start or get_current_date()  # filter out passed dates
 
         end = self.end if hasattr(self, 'end') else None
-
         dtimes = to_start_end_datetimes(self.schedule, start, end)
         # group the filtered values by date
         dtimes = sorted(groupby_date(dtimes))

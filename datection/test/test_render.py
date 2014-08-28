@@ -569,7 +569,6 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
 
     def test_all_weekdays(self):
         self.assertFalse(self.wkfmt.all_weekdays())
-
         self.assertTrue(self.wkfmt_alldays.all_weekdays())
 
     def test_format_discontinuous_weekday_interval(self):

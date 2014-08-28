@@ -636,7 +636,6 @@ class CohesiveDurationRRuleLinter(object):
     def __call__(self):
         """Lint a list of DurationRRule and transform it to a set of
         more cohesive one."""
-
         self.normalise()
         self.cleanup_weak_drrule()
         if len(self.drrules) > MAX_DRRULES_QTE:

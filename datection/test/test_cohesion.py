@@ -380,10 +380,10 @@ class TestMoreCohesive(unittest.TestCase):
 
     def test_real_case_6(self):
         res = cohesive_rrules([{
-            'duration': 1439, 'texts': ['05/07.'],
+            'duration': 1439,
             'rrule': 'DTSTART:20150705\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
         }, {
-            'duration': 1439, 'texts': ['Du 04/07 au 05/07'],
+            'duration': 1439,
             'rrule': 'DTSTART:20150704\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;INTERVAL=1;UNTIL=20150705'
         }])
 
