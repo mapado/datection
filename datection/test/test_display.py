@@ -28,3 +28,16 @@ class TestDisplay(unittest.TestCase):
         self.assertDisplayEqual(
             u"Du 01/01/2013 au 31/12/2013 Périodes d'ouvertures 2013",
             u'Du 1er janvier au 31 décembre 2013')
+
+    def test_ignore_duplicates(self):
+        sch = [
+            {
+                'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20150303T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=0'),
+                'duration': '1439'
+            }]
+        dup_sch = [sch[0]] * 2
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            datection.display(dup_sch, 'fr'))

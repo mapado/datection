@@ -239,6 +239,16 @@ class BaseFormatter(object):
         with TemporaryLocale(_locale.LC_TIME, locale):
             return calendar.day_name[weekday_index].decode('utf-8')
 
+    @staticmethod
+    def deduplicate(schedule):
+        """Remove any duplicate DurationRRule in the schedule."""
+        # Note: list(set(schedule)) does not keep the order in that case
+        out = []
+        for item in schedule:
+            if item not in out:
+                out.append(item)
+        return out
+
 
 class NextDateMixin(object):
 
@@ -842,6 +852,7 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         super(NextOccurenceFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.start, self.end = start, end
         self.templates = {
             'fr_FR': u'{date} + autres dates'
@@ -885,6 +896,7 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
         super(OpeningHoursFormatter, self).__init__()
         self._opening_hours = opening_hours
         self.opening_hours = [DurationRRule(drr) for drr in opening_hours]
+        self.opening_hours = self.deduplicate(self.opening_hours)
         self.templates = {
             'fr_FR': {
                 'one_opening': u'{weekday} {time_interval}',
@@ -943,6 +955,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
         super(LongFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.templates = {
             'fr_FR': u'{dates} {time}',
         }
@@ -1112,6 +1125,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         super(SeoFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.templates = {
             'fr_FR': {
                 'two_months': u'{month1} et {month2}',
@@ -1291,4 +1305,11 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             if True, an SeoFormatter will be used
 
     """
-    return get_display_schedule(schedule, loc, short=short, seo=seo, bounds=bounds, place=place, reference=reference).display()
+    return get_display_schedule(
+        schedule,
+        loc,
+        short=short,
+        seo=seo,
+        bounds=bounds,
+        place=place,
+        reference=reference).display()

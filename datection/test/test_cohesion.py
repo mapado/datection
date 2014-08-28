@@ -39,7 +39,6 @@ class TestMoreCohesive(unittest.TestCase):
         """)
         # wanted result
         # Le lundi et mardi, du 21 au 30 mars 2014, à 14 h
-
         self.list_has_item_containing(res, [
             'DTSTART:20140321T140000\nRRULE:FREQ=WEEKLY;BYDAY=MO,'
             'TU;BYHOUR=14;BYMINUTE=0;UNTIL=20140330T140000',

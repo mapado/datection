@@ -745,50 +745,50 @@ class TestOpeningHoursFormatterfr_FR(unittest.TestCase):
     def setUp(self):
         schedule = [
             {
-                'duration': 480,
+                'duration': 120,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0')
             },
             {
                 'duration': 240,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                          'BYHOUR=14;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=14;BYMINUTE=0')
             },
             {
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
-                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0')
             },
             {
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
-                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0')
             },
             {
                 'duration': 450,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=FR;'
-                          'BYHOUR=10;BYMINUTE=30;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=30')
             },
             {
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SA;'
-                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0')
             },
             {
                 'duration': 480,
                 'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
-                          'BYHOUR=10;BYMINUTE=0;UNTIL=20150117T235959'),
+                          'BYHOUR=10;BYMINUTE=0')
             }]
         self.ohfmt = OpeningHoursFormatter(schedule)
 
     def test_display_openings(self):
         fmt = self.ohfmt.format_openings(self.ohfmt.opening_hours[:2], day=0)
-        expected = u"""Lundi de 10 h à 18 h et de 14 h à 18 h"""
+        expected = u"""Lundi de 10 h à 12 h et de 14 h à 18 h"""
         self.assertEqual(fmt, expected)
 
     def test_display(self):
         fmt = self.ohfmt.display()
-        expected = u"""Lundi de 10 h à 18 h et de 14 h à 18 h
+        expected = u"""Lundi de 10 h à 12 h et de 14 h à 18 h
 Mercredi de 10 h à 18 h
 Jeudi de 10 h à 18 h
 Vendredi de 10 h 30 à 18 h
