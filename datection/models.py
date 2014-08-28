@@ -89,13 +89,20 @@ class DurationRRule(object):
         the dtstart date, added with the rrule duration (in minutes).
 
         """
-        if self.rrule.until:
+        if self.rrule.until or self.rrule.count:
+            if self.rrule.until:
+                end_date = self.rrule.until
+            else:
+                for dtime in self:
+                    pass
+                end_date = dtime
+
             if self.is_continuous:
                 return datetime.combine(
-                    self.rrule.until.date(), self.time_interval[1])
+                    end_date, self.time_interval[1])
             else:
                 return datetime.combine(
-                    self.rrule.until.date(), self.time_interval[0]
+                    end_date, self.time_interval[0]
                 ) + timedelta(minutes=self.duration)
         else:
             return datetime.combine(

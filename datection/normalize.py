@@ -991,7 +991,8 @@ class WeekdayRecurrence(Timepoint):
             'duration': duration(start=self.start_time, end=self.end_time),
             'span': self.span,
         }
-        if rrulestr(self.rrulestr).until is None:
+        rrule = rrulestr(self.rrulestr)
+        if rrule.until is None and rrule.count is None:
             export['unlimited'] = True
         return export
 
