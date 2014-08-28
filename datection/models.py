@@ -7,6 +7,7 @@ Utility models for datection.
 from datetime import timedelta
 from datetime import datetime
 from datetime import time
+from datetime import date
 from dateutil.rrule import rrulestr
 
 from datection.utils import cached_property
@@ -45,7 +46,7 @@ class DurationRRule(object):
             for dtime in self.rrule:
                 yield dtime
         else:
-            end_bound_date = self.rrule.dtstart.date() + timedelta(days=365)
+            end_bound_date = date.today() + timedelta(days=365)
             end_bound = datetime.combine(end_bound_date, DAY_END)
             for dtime in self.rrule:
                 if dtime < end_bound:
