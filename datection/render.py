@@ -596,7 +596,7 @@ class DateListFormatter(BaseFormatter):
         date_list = ', '.join([DateFormatter(d).display(
             include_month=False, include_year=False)
             for d in self.date_list[:-1]])
-        last_date = DateFormatter(self.date_list[-1]).display()
+        last_date = DateFormatter(self.date_list[-1]).display(*args, **kwargs)
         fmt = template.format(date_list=date_list, last_date=last_date)
         return fmt
 

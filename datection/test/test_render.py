@@ -370,6 +370,12 @@ class TestDateListFormatterfr_FR(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2013, 1, 1))
         self.assertEqual(self.dlfmt.display(), u'les 4, 5, 6 et 9 mars')
 
+    def test_display_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 1, 1))
+        self.assertEqual(
+            self.dlfmt.display(force_year=True),
+            u'les 4, 5, 6 et 9 mars 2013')
+
     def test_display_one_date(self):
         self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
         self.assertEqual(self.dlfmt.display(), u'le 4 mars 2013')
