@@ -932,7 +932,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2013, 11, 1))
         self.assertEqual(
             self.fmt.display(),
-            u'Le 26 février, du 5 au 9 mars, le 26 février 2015, à 9 h')
+            u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
 
     def test_display_weekday_reccurence(self):
         schedule = [

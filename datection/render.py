@@ -566,10 +566,11 @@ class DateIntervalFormatter(BaseFormatter):
             return self.format_same_year(*args, **kwargs)
         else:
             template = self.get_template()
+            kwargs['force_year'] = True
             start_date_fmt = DateFormatter(self.start_date).\
-                display(abbrev_reference, force_year=True, *args, **kwargs)
+                display(abbrev_reference, *args, **kwargs)
             end_date_fmt = DateFormatter(self.end_date).\
-                display(abbrev_reference, force_year=True, *args, **kwargs)
+                display(abbrev_reference, *args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
             return fmt
@@ -684,11 +685,7 @@ class DatetimeFormatter(BaseFormatter):
     def display(self, *args, **kwargs):
         """Format the datetime using the current locale.
 
-        If dayname is True, the dayname will be included.
-        If abbrev_dayname is True, the abbreviated dayname will be included.
-        If abbrev_monthname is True, the abbreviated month name will be
-        included.
-        If abbrev_year is True, a 2 digit year format will be used.
+        Pass all args and kwargs to the DateFormatter.display method.
 
         """
         template = self.get_template()
@@ -726,11 +723,7 @@ class DatetimeIntervalFormatter(BaseFormatter):
     def display(self, *args, **kwargs):
         """Format the datetime interval using the current locale.
 
-        If dayname is True, the dayname will be included.
-        If abbrev_dayname is True, the abbreviated dayname will be included.
-        If abbrev_monthname is True, the abbreviated month name will be
-        included.
-        If abbrev_year is True, a 2 digit year format will be used.
+        Pass all args and kwargs to the DateFormatter.display method.
 
         """
         date_formatter = DateIntervalFormatter(
@@ -1037,6 +1030,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
             u"le 15 mars 2013, du 17 au 18 mars 2013"
 
         """
+        kwargs['force_year'] = True
         out = []
         for conseq in conseq_groups:
             start, end = conseq[0]['start'], conseq[-1]['end']
