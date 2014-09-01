@@ -322,10 +322,9 @@ class DateFormatter(BaseFormatter):
 
     """Formats a date into using the current locale."""
 
-    def __init__(self, date, force_format_year=False):
+    def __init__(self, date):
         super(DateFormatter, self).__init__()
         self.date = get_date(date)
-        self.force_format_year = force_format_year
         self.templates = {
             'fr_FR': {
                 'all': u'{prefix} {dayname} {day} {month} {year}',
@@ -352,17 +351,19 @@ class DateFormatter(BaseFormatter):
                 return self.date.strftime('%b')
             return self.date.strftime('%B')
 
-    def format_year(self, abbrev=False):
+    def format_year(self, abbrev=False, force=False):
         """Format the date year using the current locale.
 
-        If self.force_format_year=False, the year will be formatted only
-        if the formatted date occurs in more than 6 months (6 * 30 days).
+        The year will be formatted if force=True or if the date occurs
+        in more than 6 months (6 * 30 days).
         Otherwise, return u''.
-        If self.force_format_year=True, the year will always be formatted.
+
+        If abbrev = True, only the abbreviated version of the year will
+        be returned (ex: 13 instead of 2013).
 
         """
         if (
-                self.force_format_year
+                force
                 or self.date.year < get_current_date().year
                 or (self.date - get_current_date()).days > 6 * 30
         ):
@@ -373,8 +374,10 @@ class DateFormatter(BaseFormatter):
         else:
             return u''
 
-    def format_all_parts(self, include_dayname, abbrev_dayname,
-                         abbrev_monthname, abbrev_year, prefix):
+    def format_all_parts(
+        self, include_dayname, abbrev_dayname,
+        abbrev_monthname, abbrev_year, prefix, force_year=False
+    ):
         """Formats the date in the current locale."""
         template = self.get_template('all')
         if include_dayname or abbrev_dayname:
@@ -383,7 +386,10 @@ class DateFormatter(BaseFormatter):
             dayname = u''
         day = self.format_day()
         month = self.format_month(abbrev_monthname).decode('utf-8')
-        year = self.format_year(abbrev_year)
+        if force_year:
+            year = self.format_year(abbrev_year, force=True)
+        else:
+            year = self.format_year(abbrev_year)
         fmt = template.format(
             prefix=prefix, dayname=dayname, day=day, month=month, year=year)
         fmt = re.sub(r'\s+', ' ', fmt)
@@ -423,7 +429,7 @@ class DateFormatter(BaseFormatter):
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
                 abbrev_year=False, reference=None, abbrev_reference=False,
-                prefix=False):
+                prefix=False, force_year=False):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -431,12 +437,18 @@ class DateFormatter(BaseFormatter):
         If include_month is True, the month will be included.
         If abbrev_monthname is True, the abbreviated month name will be
         included.
-        If include_year is True, the year will be included.
+        If include_year is True, the year will be included (if the date
+        formatter 'decides' that the year should be displayed.
+        If force_year is True, the year will be displayed no matter what.
         If abbrev_year is True, a 2 digit year format will be used.
-        If relative is True, a temporal reference(like 'today', 'tomorrow',
-        etc) may be used to refer to the date.
+        If a reference date is given, and it is at least 6 days before
+        the formatted date, a relativistic expression will be used (today,
+            tomorrow, this {weekday})
 
         """
+        if force_year and not include_year:
+            raise ValueError(
+                "force_year can't be True if include_year is False")
         if reference:
             if self.date == reference:
                 if abbrev_reference:
@@ -453,14 +465,24 @@ class DateFormatter(BaseFormatter):
 
         prefix = self._('the') if prefix else u''
         if include_month and include_year:
-            return self.format_all_parts(include_dayname, abbrev_dayname,
-                                         abbrev_monthname, abbrev_year, prefix)
+            return self.format_all_parts(
+                include_dayname,
+                abbrev_dayname,
+                abbrev_monthname,
+                abbrev_year,
+                prefix,
+                force_year)
         elif include_month and not include_year:
             return self.format_no_year(
-                include_dayname, abbrev_dayname, abbrev_monthname, prefix)
+                include_dayname,
+                abbrev_dayname,
+                abbrev_monthname,
+                prefix)
         else:
-            return self.format_no_month_no_year(include_dayname, abbrev_dayname,
-                                                prefix)
+            return self.format_no_month_no_year(
+                include_dayname,
+                abbrev_dayname,
+                prefix)
 
 
 class DateIntervalFormatter(BaseFormatter):
@@ -504,6 +526,7 @@ class DateIntervalFormatter(BaseFormatter):
         """Formats the date interval when both dates have the same month."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
+        start_kwargs['force_year'] = False
         start_kwargs['include_month'] = False
         start_kwargs['include_year'] = False
         start_date_fmt = DateFormatter(
@@ -515,6 +538,7 @@ class DateIntervalFormatter(BaseFormatter):
         """Formats the date interval when both dates have the same year."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
+        start_kwargs['force_year'] = False
         start_kwargs['include_year'] = False
         start_date_fmt = DateFormatter(
             self.start_date).display(*args, **start_kwargs)
@@ -542,12 +566,10 @@ class DateIntervalFormatter(BaseFormatter):
             return self.format_same_year(*args, **kwargs)
         else:
             template = self.get_template()
-            start_date_fmt = DateFormatter(
-                self.start_date, force_format_year=True).\
-                display(abbrev_reference, *args, **kwargs)
-            end_date_fmt = DateFormatter(
-                self.end_date, force_format_year=True).\
-                display(abbrev_reference, *args, **kwargs)
+            start_date_fmt = DateFormatter(self.start_date).\
+                display(abbrev_reference, force_year=True, *args, **kwargs)
+            end_date_fmt = DateFormatter(self.end_date).\
+                display(abbrev_reference, force_year=True, *args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
             return fmt
@@ -1173,7 +1195,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             month_fmt = month_tpl.format(
                 month1=DateFormatter(dates[0]).format_month().decode('utf-8'),
                 month2=DateFormatter(dates[1]).format_month().decode('utf-8'))
-        year_fmt = DateFormatter(dates[0], force_format_year=True).format_year()
+        year_fmt = DateFormatter(dates[0]).format_year(force=True)
         tpl = self.get_template('full')
         fmt = tpl.format(months=month_fmt, year=year_fmt)
         return fmt

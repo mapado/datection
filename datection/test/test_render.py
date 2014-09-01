@@ -97,8 +97,7 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
 
     def test_force_format_year_in_less_than_6_months(self):
         self.set_current_date(datetime.date(2012, 11, 1))
-        self.dfmt.force_format_year = True
-        self.assertEqual(self.dfmt.format_year(), u'2013')
+        self.assertEqual(self.dfmt.format_year(force=True), u'2013')
 
     def test_format_abbreviated_year(self):
         fmt = self.dfmt.format_year(abbrev=True)
@@ -136,6 +135,28 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
             abbrev_year=True,
             prefix='le')
         self.assertEqual(fmt.strip(), u'le mar. 1er janv. 13')
+
+    def test_format_all_parts_force_year_in_less_than_6_months(self):
+        self.set_current_date(datetime.date(2012, 11, 1))
+        fmt = self.dfmt.format_all_parts(
+            include_dayname=True,
+            abbrev_dayname=False,
+            abbrev_monthname=False,
+            abbrev_year=False,
+            prefix='',
+            force_year=True)
+        self.assertEqual(fmt.strip(), u'mardi 1er janvier 2013')
+
+    def test_format_all_parts_in_less_than_6_months(self):
+        self.set_current_date(datetime.date(2012, 11, 1))
+        fmt = self.dfmt.format_all_parts(
+            include_dayname=True,
+            abbrev_dayname=False,
+            abbrev_monthname=False,
+            abbrev_year=False,
+            prefix='',
+            force_year=False)
+        self.assertEqual(fmt.strip(), u'mardi 1er janvier')
 
     def test_format_no_year(self):
         fmt = self.dfmt.format_no_year(
@@ -201,6 +222,16 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
     def test_display_full(self):
         self.assertEqual(self.dfmt.display(), u'1er janvier 2013')
 
+    def test_display_full_date_in_less_than_6_months(self):
+        self.set_current_date(datetime.date(2012, 12, 1))
+        self.assertEqual(self.dfmt.display(include_year=True), u'1er janvier')
+
+    def test_display_full_force_year_date_in_less_than_6_months(self):
+        self.set_current_date(datetime.date(2012, 12, 1))
+        self.assertEqual(
+            self.dfmt.display(include_year=True, force_year=True),
+            u'1er janvier 2013')
+
     def test_display_abbreviated(self):
         self.assertEqual(
             self.dfmt.display(abbrev_dayname=True), u'mar. 1er janvier 2013')
@@ -215,6 +246,10 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
     def test_exclude_year_and_month(self):
         self.assertEqual(
             self.dfmt.display(include_year=False, include_month=False), u'1er')
+
+    def test_contradictory_arguments(self):
+        with self.assertRaises(ValueError):
+            self.dfmt.display(include_year=False, force_year=True)
 
 
 class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
@@ -243,6 +278,14 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertTrue(self.difmt.same_day_interval())
         self.assertEqual(self.difmt.display(), u'le 15 novembre')
 
+    def test_display_same_day_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 8, 1))
+        self.difmt.end_date = datetime.date(2013, 11, 15)
+        self.assertTrue(self.difmt.same_day_interval())
+        self.assertEqual(
+            self.difmt.display(force_year=True),
+            u'le 15 novembre 2013')
+
     def test_display_same_month(self):
         self.difmt.end_date = datetime.date(2013, 11, 17)
         self.assertTrue(self.difmt.same_month_interval())
@@ -253,6 +296,14 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.difmt.end_date = datetime.date(2013, 11, 17)
         self.assertTrue(self.difmt.same_month_interval())
         self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre')
+
+    def test_display_same_month_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 8, 1))
+        self.difmt.end_date = datetime.date(2013, 11, 17)
+        self.assertTrue(self.difmt.same_month_interval())
+        self.assertEqual(
+            self.difmt.display(force_year=True),
+            u'du 15 au 17 novembre 2013')
 
     def test_display_same_year(self):
         self.difmt.end_date = datetime.date(2013, 12, 17)
@@ -266,6 +317,14 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertTrue(self.difmt.same_year_interval())
         self.assertEqual(
             self.difmt.display(), u'du 15 novembre au 17 décembre')
+
+    def test_display_same_year_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 8, 1))
+        self.difmt.end_date = datetime.date(2013, 12, 17)
+        self.assertTrue(self.difmt.same_year_interval())
+        self.assertEqual(
+            self.difmt.display(force_year=True),
+            u'du 15 novembre au 17 décembre 2013')
 
     def test_display(self):
         self.difmt.end_date = datetime.date(2014, 12, 17)
@@ -319,6 +378,11 @@ class TestDateListFormatterfr_FR(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2013, 1, 1))
         self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
         self.assertEqual(self.dlfmt.display(), u'le 4 mars')
+
+    def test_display_one_date_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 1, 1))
+        self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
+        self.assertEqual(self.dlfmt.display(force_year=True), u'le 4 mars 2013')
 
 
 class TestTimeFormatterfr_FR(unittest.TestCase):
@@ -403,6 +467,12 @@ class TestDatetimeFormatterfr_FR(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2013, 1, 1))
         self.assertEqual(self.dtfmt.display(), u"le 4 mars à 12 h 15")
 
+    def test_display_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 1, 1))
+        self.assertEqual(
+            self.dtfmt.display(force_year=True),
+            u"le 4 mars 2013 à 12 h 15")
+
     def test_display_arg_passing(self):
         self.assertEqual(
             self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
@@ -411,7 +481,6 @@ class TestDatetimeFormatterfr_FR(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2011, 1, 1))
         self.assertEqual(
             self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
-        # include_year = False superseeds the 6 months rule
 
 
 class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
@@ -453,6 +522,13 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             self.dtifmt.display(),
             u'du 1er au 5 août de 10 h 15 à 12 h 15')
 
+    def test_display_same_month_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 4, 1))
+        self.dtifmt.start_datetime = datetime.datetime(2013, 8, 1, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(force_year=True),
+            u'du 1er au 5 août 2013 de 10 h 15 à 12 h 15')
+
     def test_display_same_year(self):
         self.dtifmt.start_datetime = datetime.datetime(2013, 7, 1, 10, 15)
         self.assertEqual(
@@ -465,6 +541,13 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(
             self.dtifmt.display(),
             u'du 1er juillet au 5 août de 10 h 15 à 12 h 15')
+
+    def test_display_same_year_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 4, 1))
+        self.dtifmt.start_datetime = datetime.datetime(2013, 7, 1, 10, 15)
+        self.assertEqual(
+            self.dtifmt.display(force_year=True),
+            u'du 1er juillet au 5 août 2013 de 10 h 15 à 12 h 15')
 
     def test_display(self):
         self.dtifmt.start_datetime = datetime.datetime(2012, 7, 1, 10, 15)
@@ -499,6 +582,14 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(
             self.dtifmt.display(),
             u'du 4 mars au 5 août')
+
+    def test_display_all_day_in_less_than_6_months_force_year(self):
+        self.set_current_date(datetime.date(2013, 4, 1))
+        self.dtifmt.start_datetime = datetime.datetime(2013, 3, 4, 0, 0)
+        self.dtifmt.end_datetime = datetime.datetime(2013, 8, 5, 23, 59)
+        self.assertEqual(
+            self.dtifmt.display(force_year=True),
+            u'du 4 mars au 5 août 2013')
 
 
 class TestContinuousDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
