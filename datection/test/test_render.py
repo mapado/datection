@@ -47,7 +47,10 @@ class GetCurrentDayMocker(unittest.TestCase):
         cls.get_current_date_patch.stop()
 
     def setUp(self):
-        self.get_current_date_mock.return_value = datetime.date(2012, 1, 1)
+        self.set_current_date(datetime.date(2012, 1, 1))
+
+    def set_current_date(self, date):
+        self.get_current_date_mock.return_value = date
 
 
 class TestDateFormatterfr_FR(GetCurrentDayMocker):
@@ -84,15 +87,16 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
         fmt = self.dfmt.format_month(abbrev=True)
         self.assertEqual(fmt, u'janv.')
 
-    def test_format_year(self):
+    def test_format_year_when_past(self):
+        self.set_current_date(datetime.date(2014, 11, 1))
         self.assertEqual(self.dfmt.format_year(), u'2013')
 
     def test_format_year_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.set_current_date(datetime.date(2012, 11, 1))
         self.assertEqual(self.dfmt.format_year(), u'')
 
     def test_force_format_year_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.set_current_date(datetime.date(2012, 11, 1))
         self.dfmt.force_format_year = True
         self.assertEqual(self.dfmt.format_year(), u'2013')
 
@@ -234,7 +238,7 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.difmt.display(), u'le 15 novembre 2013')
 
     def test_display_same_day_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.set_current_date(datetime.date(2013, 8, 1))
         self.difmt.end_date = datetime.date(2013, 11, 15)
         self.assertTrue(self.difmt.same_day_interval())
         self.assertEqual(self.difmt.display(), u'le 15 novembre')
@@ -245,7 +249,7 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre 2013')
 
     def test_display_same_month_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.set_current_date(datetime.date(2013, 8, 1))
         self.difmt.end_date = datetime.date(2013, 11, 17)
         self.assertTrue(self.difmt.same_month_interval())
         self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre')
@@ -257,7 +261,7 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
             self.difmt.display(), u'du 15 novembre au 17 décembre 2013')
 
     def test_display_same_year_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.set_current_date(datetime.date(2013, 8, 1))
         self.difmt.end_date = datetime.date(2013, 12, 17)
         self.assertTrue(self.difmt.same_year_interval())
         self.assertEqual(
@@ -269,7 +273,7 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
             self.difmt.display(), u'du 15 novembre 2013 au 17 décembre 2014')
 
     def test_display_start_date_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 1)
+        self.set_current_date(datetime.date(2013, 8, 1))
         self.difmt.end_date = datetime.date(2014, 12, 17)
         self.assertEqual(
             self.difmt.display(), u'du 15 novembre 2013 au 17 décembre 2014')
@@ -304,7 +308,7 @@ class TestDateListFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.dlfmt.display(), u'les 4, 5, 6 et 9 mars 2013')
 
     def test_display_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.set_current_date(datetime.date(2013, 1, 1))
         self.assertEqual(self.dlfmt.display(), u'les 4, 5, 6 et 9 mars')
 
     def test_display_one_date(self):
@@ -312,7 +316,7 @@ class TestDateListFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.dlfmt.display(), u'le 4 mars 2013')
 
     def test_display_one_date_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.set_current_date(datetime.date(2013, 1, 1))
         self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
         self.assertEqual(self.dlfmt.display(), u'le 4 mars')
 
@@ -396,7 +400,7 @@ class TestDatetimeFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.dtfmt.display(), u"le 4 mars 2013 à 12 h 15")
 
     def test_display_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 1, 1)
+        self.set_current_date(datetime.date(2013, 1, 1))
         self.assertEqual(self.dtfmt.display(), u"le 4 mars à 12 h 15")
 
     def test_display_arg_passing(self):
@@ -404,7 +408,7 @@ class TestDatetimeFormatterfr_FR(GetCurrentDayMocker):
             self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
 
     def test_display_arg_passing_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2011, 1, 1)
+        self.set_current_date(datetime.date(2011, 1, 1))
         self.assertEqual(
             self.dtfmt.display(include_year=False), u"le 4 mars à 12 h 15")
         # include_year = False superseeds the 6 months rule
@@ -431,7 +435,7 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             self.dtifmt.display(), u'le 5 août 2013 de 10 h 15 à 12 h 15')
 
     def test_display_same_day_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.dtifmt.start_datetime = datetime.datetime(2013, 8, 5, 10, 15)
         self.assertEqual(
             self.dtifmt.display(), u'le 5 août de 10 h 15 à 12 h 15')
@@ -443,7 +447,7 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             u'du 1er au 5 août 2013 de 10 h 15 à 12 h 15')
 
     def test_display_same_month_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.dtifmt.start_datetime = datetime.datetime(2013, 8, 1, 10, 15)
         self.assertEqual(
             self.dtifmt.display(),
@@ -456,7 +460,7 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             u'du 1er juillet au 5 août 2013 de 10 h 15 à 12 h 15')
 
     def test_display_same_year_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.dtifmt.start_datetime = datetime.datetime(2013, 7, 1, 10, 15)
         self.assertEqual(
             self.dtifmt.display(),
@@ -469,7 +473,7 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             u'du 1er juillet 2012 au 5 août 2013 de 10 h 15 à 12 h 15')
 
     def test_display_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.dtifmt.start_datetime = datetime.datetime(2012, 7, 1, 10, 15)
         self.assertEqual(
             self.dtifmt.display(),
@@ -489,7 +493,7 @@ class TestDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             u'du 4 mars au 5 août 2013')
 
     def test_display_all_day_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.dtifmt.start_datetime = datetime.datetime(2013, 3, 4, 0, 0)
         self.dtifmt.end_datetime = datetime.datetime(2013, 8, 5, 23, 59)
         self.assertEqual(
@@ -518,7 +522,7 @@ class TestContinuousDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             u'du 4 mars à 12 h 15 au 5 août 2013 à 12 h 15')
 
     def test_display_same_year_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.assertEqual(
             self.cdtifmt.display(),
             u'du 4 mars à 12 h 15 au 5 août à 12 h 15')
@@ -586,7 +590,7 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
                          u'du 7 au 31 août 2013')
 
     def test_format_date_interval_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.assertEqual(self.wkfmt.format_date_interval(),
                          u'du 7 au 31 août')
 
@@ -608,7 +612,7 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
             u'du lundi au mercredi, du 7 au 31 août 2013, de 22 h 30 à 23 h 30')
 
     def test_display_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 4, 1)
+        self.set_current_date(datetime.date(2013, 4, 1))
         self.assertEqual(
             self.wkfmt.display(),
             (u'le lundi, mardi et dimanche, du 7 au 31 août, '
@@ -649,7 +653,7 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(self.nofmt.display(ref), u'Le 12 novembre 2014 à 9 h')
 
     def test_format_next_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        self.set_current_date(datetime.date(2014, 7, 1))
         ref = datetime.datetime(2014, 10, 10)
         self.assertEqual(self.nofmt.display(ref), u'Le 12 novembre à 9 h')
 
@@ -708,7 +712,7 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(
             self.nofmt.display(ref, summarize=True),
             u'Le 12 novembre 2014 à 9 h + autres dates')
-        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        self.set_current_date(datetime.date(2014, 7, 1))
         self.assertEqual(
             self.nofmt.display(ref, summarize=True),
             u'Le 12 novembre à 9 h + autres dates')
@@ -729,7 +733,7 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(
             nofmt.display(ref, summarize=True),
             u'12 novembre 2014 + autres dates')
-        self.get_current_date_mock.return_value = datetime.date(2014, 7, 1)
+        self.set_current_date(datetime.date(2014, 7, 1))
         self.assertEqual(
             nofmt.display(ref, summarize=True),
             u'12 novembre + autres dates')
@@ -847,7 +851,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
 
     def test_display_in_less_than_6_months(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 11, 1)
+        self.set_current_date(datetime.date(2013, 11, 1))
         self.assertEqual(
             self.fmt.display(),
             u'Le 26 février, du 5 au 9 mars, le 26 février 2015, à 9 h')
@@ -1090,8 +1094,7 @@ class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
         self.assertEqual(formatter.display(), u'')
 
     def test_next_date(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
-
+        self.set_current_date(datetime.date(2013, 8, 8))
         sch = datection.to_db(
             u"Du lundi 1er aout 2013 au lundi 31 aout 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
@@ -1231,7 +1234,7 @@ class TestDisplaySchedule(GetCurrentDayMocker):
         super(TestDisplaySchedule, cls).setUpClass()
 
     def test_display_schedule(self):
-        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.set_current_date(datetime.date(2012, 11, 1))
         ref = datetime.datetime(2014, 11, 14)
         sch = datection.to_db(
             u"Du 1er au 19 mars 2013 à 18h30", "fr", only_future=False)
@@ -1263,7 +1266,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
         self.assertEqual(next_change.next_changes(), None)
 
     def test_next_date_gt_7_days(self):
-        self.get_current_date_mock.return_value = datetime.date(2012, 11, 1)
+        self.set_current_date(datetime.date(2012, 11, 1))
         next_change = NextChangesMixin()
         next_occur = {
             'start': datetime.datetime(2013, 8, 8, 20, 30, 0),
@@ -1281,7 +1284,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
             next_change.next_changes(), datetime.datetime(2013, 8, 14, 0, 0, 0))
 
     def test_next_date_today(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 8)
+        self.set_current_date(datetime.date(2013, 8, 8))
         next_change = NextChangesMixin()
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
@@ -1289,7 +1292,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
         self.assertEqual(next_change.next_changes(), next_occur['start'])
 
     def test_next_date_tomorrow(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 7)
+        self.set_current_date(datetime.date(2013, 8, 7))
         next_change = NextChangesMixin()
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
@@ -1298,7 +1301,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
             next_change.next_changes(), datetime.datetime(2013, 8, 8, 0, 0, 0))
 
     def test_next_date_lt_7_days_gt_1d(self):
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 2)
+        self.set_current_date(datetime.date(2013, 8, 2))
         next_change = NextChangesMixin()
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
@@ -1306,7 +1309,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
         self.assertEqual(
             next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
 
-        self.get_current_date_mock.return_value = datetime.date(2013, 8, 6)
+        self.set_current_date(datetime.date(2013, 8, 6))
         next_change = NextChangesMixin()
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
