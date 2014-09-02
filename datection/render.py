@@ -766,6 +766,7 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         sd_kwargs = kwargs.copy()
         if self.start.year == self.end.year:
             sd_kwargs['include_year'] = False
+            sd_kwargs['force_year'] = False
         start_date_fmt = DateFormatter(self.start).display(*args, **sd_kwargs)
         end_date_fmt = DateFormatter(self.end).display(*args, **kwargs)
         start_time_fmt = TimeFormatter(self.start).display()
@@ -1053,6 +1054,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
 
         """
         out = []
+        kwargs['force_year'] = True
         # group the sparse dates by year first
         years = list(set([date['start'].year for date in time_group]))
         for year in years:
@@ -1075,6 +1077,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
 
         """
         out = []
+        kwargs['force_year'] = True
         # format recurring rrules
         for rec in self.recurring:
             out.append(WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
