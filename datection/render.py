@@ -16,6 +16,8 @@ from collections import namedtuple
 
 from datection.models import DurationRRule
 from datection.utils import cached_property
+from datection.normalize import DAY_START
+from datection.normalize import DAY_END
 from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
@@ -173,12 +175,6 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     """
     out = []
     for drr in schedule:
-        # make sure the rrule does not generate an infinite stream of
-        # datetimes if unbounded, by setting the until bound to the
-        # end_bound argument value
-        if not drr.rrule.until:
-            drr.rrule._until = end_bound
-
         for start_date in drr.rrule:
             hour = drr.rrule.byhour[0] if drr.rrule.byhour else 0
             minute = drr.rrule.byminute[0] if drr.rrule.byminute else 0
@@ -192,11 +188,10 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
 
             # convert the bounds to datetime if dates were given
             if isinstance(start_bound, datetime.date):
-                start_bound = datetime.datetime.combine(
-                    start_bound, datetime.time(0, 0, 0))
+                start_bound = datetime.datetime.combine(start_bound, DAY_START)
             if isinstance(end_bound, datetime.date):
                 end_bound = datetime.datetime.combine(
-                    end_bound, datetime.time(23, 59, 59))
+                    end_bound, DAY_END)
 
             # filter out all start/end pairs outside of given boundaries
             if ((start_bound and end_bound
@@ -244,6 +239,16 @@ class BaseFormatter(object):
         with TemporaryLocale(_locale.LC_TIME, locale):
             return calendar.day_name[weekday_index].decode('utf-8')
 
+    @staticmethod
+    def deduplicate(schedule):
+        """Remove any duplicate DurationRRule in the schedule."""
+        # Note: list(set(schedule)) does not keep the order in that case
+        out = []
+        for item in schedule:
+            if item not in out:
+                out.append(item)
+        return out
+
 
 class NextDateMixin(object):
 
@@ -260,7 +265,6 @@ class NextDateMixin(object):
             start = self.start or get_current_date()  # filter out passed dates
 
         end = self.end if hasattr(self, 'end') else None
-
         dtimes = to_start_end_datetimes(self.schedule, start, end)
         # group the filtered values by date
         dtimes = sorted(groupby_date(dtimes))
@@ -318,10 +322,9 @@ class DateFormatter(BaseFormatter):
 
     """Formats a date into using the current locale."""
 
-    def __init__(self, date, force_format_year=False):
+    def __init__(self, date):
         super(DateFormatter, self).__init__()
         self.date = get_date(date)
-        self.force_format_year = force_format_year
         self.templates = {
             'fr_FR': {
                 'all': u'{prefix} {dayname} {day} {month} {year}',
@@ -348,17 +351,19 @@ class DateFormatter(BaseFormatter):
                 return self.date.strftime('%b')
             return self.date.strftime('%B')
 
-    def format_year(self, abbrev=False):
+    def format_year(self, abbrev=False, force=False):
         """Format the date year using the current locale.
 
-        If self.force_format_year=False, the year will be formatted only
-        if the formatted date occurs in more than 6 months (6 * 30 days).
+        The year will be formatted if force=True or if the date occurs
+        in more than 6 months (6 * 30 days).
         Otherwise, return u''.
-        If self.force_format_year=True, the year will always be formatted.
+
+        If abbrev = True, only the abbreviated version of the year will
+        be returned (ex: 13 instead of 2013).
 
         """
         if (
-                self.force_format_year
+                force
                 or self.date.year < get_current_date().year
                 or (self.date - get_current_date()).days > 6 * 30
         ):
@@ -369,8 +374,10 @@ class DateFormatter(BaseFormatter):
         else:
             return u''
 
-    def format_all_parts(self, include_dayname, abbrev_dayname,
-                         abbrev_monthname, abbrev_year, prefix):
+    def format_all_parts(
+        self, include_dayname, abbrev_dayname,
+        abbrev_monthname, abbrev_year, prefix, force_year=False
+    ):
         """Formats the date in the current locale."""
         template = self.get_template('all')
         if include_dayname or abbrev_dayname:
@@ -379,7 +386,10 @@ class DateFormatter(BaseFormatter):
             dayname = u''
         day = self.format_day()
         month = self.format_month(abbrev_monthname).decode('utf-8')
-        year = self.format_year(abbrev_year)
+        if force_year:
+            year = self.format_year(abbrev_year, force=True)
+        else:
+            year = self.format_year(abbrev_year)
         fmt = template.format(
             prefix=prefix, dayname=dayname, day=day, month=month, year=year)
         fmt = re.sub(r'\s+', ' ', fmt)
@@ -419,7 +429,7 @@ class DateFormatter(BaseFormatter):
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
                 abbrev_year=False, reference=None, abbrev_reference=False,
-                prefix=False):
+                prefix=False, force_year=False):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -427,12 +437,18 @@ class DateFormatter(BaseFormatter):
         If include_month is True, the month will be included.
         If abbrev_monthname is True, the abbreviated month name will be
         included.
-        If include_year is True, the year will be included.
+        If include_year is True, the year will be included (if the date
+        formatter 'decides' that the year should be displayed.
+        If force_year is True, the year will be displayed no matter what.
         If abbrev_year is True, a 2 digit year format will be used.
-        If relative is True, a temporal reference(like 'today', 'tomorrow',
-        etc) may be used to refer to the date.
+        If a reference date is given, and it is at least 6 days before
+        the formatted date, a relativistic expression will be used (today,
+            tomorrow, this {weekday})
 
         """
+        if force_year and not include_year:
+            raise ValueError(
+                "force_year can't be True if include_year is False")
         if reference:
             if self.date == reference:
                 if abbrev_reference:
@@ -449,14 +465,24 @@ class DateFormatter(BaseFormatter):
 
         prefix = self._('the') if prefix else u''
         if include_month and include_year:
-            return self.format_all_parts(include_dayname, abbrev_dayname,
-                                         abbrev_monthname, abbrev_year, prefix)
+            return self.format_all_parts(
+                include_dayname,
+                abbrev_dayname,
+                abbrev_monthname,
+                abbrev_year,
+                prefix,
+                force_year)
         elif include_month and not include_year:
             return self.format_no_year(
-                include_dayname, abbrev_dayname, abbrev_monthname, prefix)
+                include_dayname,
+                abbrev_dayname,
+                abbrev_monthname,
+                prefix)
         else:
-            return self.format_no_month_no_year(include_dayname, abbrev_dayname,
-                                                prefix)
+            return self.format_no_month_no_year(
+                include_dayname,
+                abbrev_dayname,
+                prefix)
 
 
 class DateIntervalFormatter(BaseFormatter):
@@ -479,10 +505,14 @@ class DateIntervalFormatter(BaseFormatter):
         return self.start_date == self.end_date
 
     def same_month_interval(self):
-        """Return True if the start and end date have the same month,
-        else False.
+        """Return True if the start and end date have the same month
+        and the same year, else False.
 
         """
+        # To be on the same month means that both date have the same
+        # month *in the same year*, not just the same monthname!
+        if not self.same_year_interval():
+            return False
         return self.start_date.month == self.end_date.month
 
     def same_year_interval(self):
@@ -496,6 +526,7 @@ class DateIntervalFormatter(BaseFormatter):
         """Formats the date interval when both dates have the same month."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
+        start_kwargs['force_year'] = False
         start_kwargs['include_month'] = False
         start_kwargs['include_year'] = False
         start_date_fmt = DateFormatter(
@@ -507,6 +538,7 @@ class DateIntervalFormatter(BaseFormatter):
         """Formats the date interval when both dates have the same year."""
         template = self.get_template()
         start_kwargs = kwargs.copy()
+        start_kwargs['force_year'] = False
         start_kwargs['include_year'] = False
         start_date_fmt = DateFormatter(
             self.start_date).display(*args, **start_kwargs)
@@ -534,11 +566,10 @@ class DateIntervalFormatter(BaseFormatter):
             return self.format_same_year(*args, **kwargs)
         else:
             template = self.get_template()
-            start_date_fmt = DateFormatter(
-                self.start_date, force_format_year=True).\
+            kwargs['force_year'] = True
+            start_date_fmt = DateFormatter(self.start_date).\
                 display(abbrev_reference, *args, **kwargs)
-            end_date_fmt = DateFormatter(
-                self.end_date, force_format_year=True).\
+            end_date_fmt = DateFormatter(self.end_date).\
                 display(abbrev_reference, *args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
@@ -566,7 +597,7 @@ class DateListFormatter(BaseFormatter):
         date_list = ', '.join([DateFormatter(d).display(
             include_month=False, include_year=False)
             for d in self.date_list[:-1]])
-        last_date = DateFormatter(self.date_list[-1]).display()
+        last_date = DateFormatter(self.date_list[-1]).display(*args, **kwargs)
         fmt = template.format(date_list=date_list, last_date=last_date)
         return fmt
 
@@ -654,11 +685,7 @@ class DatetimeFormatter(BaseFormatter):
     def display(self, *args, **kwargs):
         """Format the datetime using the current locale.
 
-        If dayname is True, the dayname will be included.
-        If abbrev_dayname is True, the abbreviated dayname will be included.
-        If abbrev_monthname is True, the abbreviated month name will be
-        included.
-        If abbrev_year is True, a 2 digit year format will be used.
+        Pass all args and kwargs to the DateFormatter.display method.
 
         """
         template = self.get_template()
@@ -696,11 +723,7 @@ class DatetimeIntervalFormatter(BaseFormatter):
     def display(self, *args, **kwargs):
         """Format the datetime interval using the current locale.
 
-        If dayname is True, the dayname will be included.
-        If abbrev_dayname is True, the abbreviated dayname will be included.
-        If abbrev_monthname is True, the abbreviated month name will be
-        included.
-        If abbrev_year is True, a 2 digit year format will be used.
+        Pass all args and kwargs to the DateFormatter.display method.
 
         """
         date_formatter = DateIntervalFormatter(
@@ -743,6 +766,7 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         sd_kwargs = kwargs.copy()
         if self.start.year == self.end.year:
             sd_kwargs['include_year'] = False
+            sd_kwargs['force_year'] = False
         start_date_fmt = DateFormatter(self.start).display(*args, **sd_kwargs)
         end_date_fmt = DateFormatter(self.end).display(*args, **kwargs)
         start_time_fmt = TimeFormatter(self.start).display()
@@ -808,7 +832,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     def format_date_interval(self, *args, **kwargs):
         """Format the rrule date interval using the current locale."""
-        if (self.drr.end_datetime - self.drr.start_datetime).days == 365:
+        if not self.drr.bounded:
             return u''
         formatter = DateIntervalFormatter(
             self.drr.start_datetime, self.drr.end_datetime)
@@ -843,6 +867,7 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         super(NextOccurenceFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.start, self.end = start, end
         self.templates = {
             'fr_FR': u'{date} + autres dates'
@@ -886,6 +911,7 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
         super(OpeningHoursFormatter, self).__init__()
         self._opening_hours = opening_hours
         self.opening_hours = [DurationRRule(drr) for drr in opening_hours]
+        self.opening_hours = self.deduplicate(self.opening_hours)
         self.templates = {
             'fr_FR': {
                 'one_opening': u'{weekday} {time_interval}',
@@ -944,6 +970,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
         super(LongFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.templates = {
             'fr_FR': u'{dates} {time}',
         }
@@ -1004,6 +1031,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
             u"le 15 mars 2013, du 17 au 18 mars 2013"
 
         """
+        kwargs['force_year'] = True
         out = []
         for conseq in conseq_groups:
             start, end = conseq[0]['start'], conseq[-1]['end']
@@ -1026,6 +1054,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
 
         """
         out = []
+        kwargs['force_year'] = True
         # group the sparse dates by year first
         years = list(set([date['start'].year for date in time_group]))
         for year in years:
@@ -1048,6 +1077,7 @@ class LongFormatter(BaseFormatter, NextChangesMixin):
 
         """
         out = []
+        kwargs['force_year'] = True
         # format recurring rrules
         for rec in self.recurring:
             out.append(WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
@@ -1113,6 +1143,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         super(SeoFormatter, self).__init__()
         self._schedule = schedule
         self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = self.deduplicate(self.schedule)
         self.templates = {
             'fr_FR': {
                 'two_months': u'{month1} et {month2}',
@@ -1132,7 +1163,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         monthyears = set()
         datetimes, out = [], []
         for drr in self.schedule:
-            datetimes.extend([dt for dt in drr.rrule])
+            datetimes.extend([dt for dt in drr])
         monthyear = lambda dt: (dt.month, dt.year)
         for key, group in itertools.groupby(sorted(datetimes), key=monthyear):
             monthyears.add(key)
@@ -1161,7 +1192,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             month_fmt = month_tpl.format(
                 month1=DateFormatter(dates[0]).format_month().decode('utf-8'),
                 month2=DateFormatter(dates[1]).format_month().decode('utf-8'))
-        year_fmt = DateFormatter(dates[0], force_format_year=True).format_year()
+        year_fmt = DateFormatter(dates[0]).format_year(force=True)
         tpl = self.get_template('full')
         fmt = tpl.format(months=month_fmt, year=year_fmt)
         return fmt
@@ -1292,4 +1323,11 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             if True, an SeoFormatter will be used
 
     """
-    return get_display_schedule(schedule, loc, short=short, seo=seo, bounds=bounds, place=place, reference=reference).display()
+    return get_display_schedule(
+        schedule,
+        loc,
+        short=short,
+        seo=seo,
+        bounds=bounds,
+        place=place,
+        reference=reference).display()

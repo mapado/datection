@@ -37,7 +37,7 @@ def discretise_schedule(schedule):
     sc_set = set()
     for duration_rrule in schedule:
         drr = DurationRRule(duration_rrule)
-        for timepoint in list(drr.rrule):
+        for timepoint in drr:
             discrete_interval = discretise_day_interval(
                 start_datetime=timepoint,
                 end_datetime=timepoint + timedelta(

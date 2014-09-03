@@ -3,12 +3,23 @@
 """Test the datection.display function"""
 
 import datection
-import unittest
+import datetime
+import locale
+
+from datection.render import display
+from datection.render import NextOccurenceFormatter
+from datection.render import LongFormatter
+from datection.test import GetCurrentDayMocker
 
 
-class TestDisplay(unittest.TestCase):
+class TestDisplay(GetCurrentDayMocker):
 
     """Test the datection.display function."""
+
+    def setUp(self):
+        self.locale = 'fr_FR.UTF8'
+        locale.setlocale(locale.LC_TIME, self.locale)
+        super(TestDisplay, self).setUp()
 
     def assertDisplayEqual(self, text, result, lang='fr'):
         """Converts the argument text to a list of duration/rrule dicts,
@@ -28,3 +39,147 @@ class TestDisplay(unittest.TestCase):
         self.assertDisplayEqual(
             u"Du 01/01/2013 au 31/12/2013 Périodes d'ouvertures 2013",
             u'Du 1er janvier au 31 décembre 2013')
+
+    def test_ignore_duplicates(self):
+        sch = [
+            {
+                'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20150303T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=0'),
+                'duration': '1439'
+            }]
+        dup_sch = [sch[0]] * 2
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            datection.display(dup_sch, 'fr'))
+
+    def test_display_shortest(self):
+        schedule = [
+            {'duration': 1439,
+             'rrule': ('DTSTART:20131215\nRRULE:FREQ=DAILY;COUNT=1;'
+                       'BYMINUTE=0;BYHOUR=0'),
+             'span': (3, 25)},
+            {'duration': 1439,
+             'rrule': ('DTSTART:20131216\nRRULE:FREQ=DAILY;COUNT=1;'
+                       'BYMINUTE=0;BYHOUR=0'),
+             'span': (3, 25)}
+        ]
+        start = datetime.datetime(2013, 12, 10)
+        end = datetime.datetime(2013, 12, 17)
+        reference = start
+        short = NextOccurenceFormatter(schedule, start, end).display(
+            reference, summarize=True)
+        default = LongFormatter(schedule).display(abbrev_monthname=True)
+        shortest_fmt = display(
+            schedule,
+            self.locale,
+            short=True,
+            seo=False,
+            bounds=(start, end),
+            reference=reference)
+        self.assertGreater(len(short), len(default))
+        self.assertEqual(shortest_fmt, default)
+        self.assertEqual(short,   u'Ce dimanche + autres dates')
+        self.assertEqual(default, u'Du 15 au 16 déc. 2013')
+
+    def test_display_recurrence(self):
+        schedule = [
+            {'duration': 60,
+             'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                       'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959'),
+             'span': (0, 48)}]
+        start = datetime.datetime(2015, 3, 1)
+        end = datetime.datetime(2015, 3, 17)
+        reference = datetime.datetime(2015, 3, 1)
+        short = NextOccurenceFormatter(schedule, start, end).display(
+            reference, summarize=True)
+        default = LongFormatter(schedule).display(abbrev_monthname=True)
+        shortest_fmt = display(
+            schedule,
+            self.locale,
+            short=True,
+            seo=False,
+            bounds=(start, end),
+            reference=reference)
+        self.assertGreater(len(default), len(short))
+        self.assertEqual(shortest_fmt, short)
+        self.assertEqual(
+            default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
+        self.assertEqual(
+            shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h + autres dates')
+
+    def test_display_weekday_recurrence(self):
+        sch = datection.to_db(u"Le samedi", "fr")
+        self.assertEqual(display(sch, self.locale), u'Le samedi')
+
+    def test_display_weekday_recurrence_time(self):
+        sch = datection.to_db(u"Le samedi à 15h30", "fr")
+        self.assertEqual(display(sch, self.locale), u'Le samedi, à 15 h 30')
+
+    def test_display_weekday_recurrence_time_interval(self):
+        sch = datection.to_db(u"Le samedi de 12 h 00 à 15h30", "fr")
+        self.assertEqual(
+            display(sch, self.locale), u'Le samedi, de 12 h à 15 h 30')
+
+    def test_display_weekday_recurrence_list(self):
+        sch = datection.to_db(u"Le lundi et samedi", "fr")
+        self.assertEqual(display(sch, self.locale), u'Le lundi et samedi')
+
+    def test_display_weekday_recurrence_list_time(self):
+        sch = datection.to_db(u"Le lundi et samedi à 15h30", "fr")
+        self.assertEqual(
+            display(sch, self.locale), u'Le lundi et samedi, à 15 h 30')
+
+    def test_display_weekday_recurrence_list_time_interval(self):
+        sch = datection.to_db(u"Le lundi et mardi de 14 h à 16 h 30", "fr")
+        self.assertEqual(
+            display(sch, self.locale), u'Le lundi et mardi, de 14 h à 16 h 30')
+
+    def test_display_weekday_recurrence_interval(self):
+        sch = datection.to_db(u"Du samedi au dimanche", "fr")
+        self.assertEqual(display(sch, self.locale), u'Le samedi et dimanche')
+
+    def test_display_date(self):
+        sch = datection.to_db(u"Le 15 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, self.locale), u'Le 15 mars 2013')
+
+    def test_display_date_interval(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, self.locale), u'Du 15 au 16 mars 2013')
+
+    def test_display_date_list(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 PLOP PLOP 18 mars 2013", "fr", only_future=False)
+        self.assertEqual(display(sch, self.locale), u'Les 15 et 18 mars 2013')
+
+        sch = datection.to_db(
+            u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
+            "fr", only_future=False)
+        self.assertEqual(
+            display(sch, self.locale), u'Les 15, 16 et 18 mars 2015')
+
+    def test_display_datetime(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, self.locale), u'Le 15 mars 2013 à 18 h 30')
+
+    def test_display_datetime_interval(self):
+        sch = datection.to_db(
+            u"Le 15 mars 2013 de 16 h à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, self.locale), u'Le 15 mars 2013 de 16 h à 18 h 30')
+
+    def test_display_datetime_list(self):
+        sch = datection.to_db(
+            u"Le 15 et 18 mars 2013 à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, self.locale), u'Les 15 et 18 mars 2013 à 18 h 30')
+
+    def test_display_datetime_list_time_interval(self):
+        sch = datection.to_db(
+            u"Le 15 & 18 mars 2013 de 16 h à 18h30", "fr", only_future=False)
+        self.assertEqual(
+            display(sch, self.locale),
+            u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
