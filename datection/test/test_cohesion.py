@@ -33,7 +33,7 @@ class TestMoreCohesive(unittest.TestCase):
             self.assertTrue(cont)
 
     def test_days_recurrence_in_lapse_time(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 21 au 30 mars 2014,
             le lundi et mardi à 14h
         """)
@@ -46,7 +46,7 @@ class TestMoreCohesive(unittest.TestCase):
         self.assertEqual(0, res[0]['duration'])
 
     def test_precise_time_in_a_date(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             le 21 mars 2014,
             le 21 mars 2014 à 14h
         """)
@@ -58,7 +58,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_precise_time_in_a_lapse_time(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 18 au 25 mars 2014,
             le 21 mars 2014 à 14h
         """)
@@ -71,7 +71,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_group_successive_dates(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             1, 2 et 3 janvier 2016,
             4 et 5 janvier 2016
         """)
@@ -84,7 +84,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_avoid_doubles_date(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             1, 2 et 3 janvier 2016,
             3 et 4 janvier 2016,
             1 au 5 janvier 2016
@@ -98,7 +98,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_avoid_group_when_time_exist_and_differ(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             1, 2 et 3 janvier 2016 à 21h30,
             3 et 4 janvier 2016 à 18h
         """)
@@ -115,7 +115,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_weekdays_concat(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             le mercredi à 14h,
             le lundi et mardi à 14h
         """)
@@ -127,7 +127,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_weekdays_not_concat_if_time_different(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             le mercredi à 14h,
             le lundi et mardi à 15h,
             le lundi et mardi à 17h
@@ -146,7 +146,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_weekdays_not_concat_if_day_different_with_composition(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 2 avril au 15 août,
             le lundi et mardi à 15h',
             le mercredi à 16h
@@ -162,7 +162,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_multiple_unification_possible(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 14 avril au 16 juin 2020,
             le mercredi à 14h,
             le lundi et mardi à 15h
@@ -180,7 +180,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_union_followed_by_composition(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 14 avril au 16 juin 2020,
             du 5 juin au 9 juin 2020,
             le mercredi à 14h,
@@ -199,7 +199,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_avoid_ambiguous_composition(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 14 avril au 16 juin 2020,
             du 14 juillet au 9 août 2020,
             le mercredi à 14h,
@@ -224,7 +224,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_fuzzy_time(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             du 14 avril au 16 juin 2020 à 16h,
             du 14 avril au 16 juin 2020 à 15h,
         """)
@@ -238,7 +238,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_temporal_distance(self):
-        res = cohesive_rrules(datection.to_db("""
+        res = cohesive_rrules(datection.to_db(u"""
             du 16 avril au 16 juin 2020 à 16h,
             du 16 avril au 16 juin 2015 à 16h,
         """, 'fr', only_future=False),
@@ -249,7 +249,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_1(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             Le dimanche
             Le lundi
             Du 5 février 2014 au 5 février 2015 à 20 h
@@ -265,7 +265,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_2(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             Du jeudi au samedi, à 19 h 30
             Du jeudi au samedi, à 21 h 30
             Du jeudi au samedi
@@ -285,7 +285,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_3(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             Le jeudi, à 20 h 30
             Le jeudi, du 13 janvier au 28 février 2014, de 20 h à 21 h 15
             Du 12 septembre au 19 décembre 2013,
@@ -324,7 +324,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_4(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             Du 8 septembre au 3 novembre 2013,
             du 3 novembre au 8 décembre 2013,
             du 8 au 22 décembre 2013,
@@ -358,7 +358,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_real_case_5(self):
-        res = gen_cohesive("""
+        res = gen_cohesive(u"""
             Le dimanche
             Le vendredi, à 20 h
             Le vendredi, dimanche, du 3 au 5 octobre 2014, à 20 h
