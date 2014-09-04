@@ -5,6 +5,7 @@ import re
 from datection.regex import TIMEPOINT_REGEX
 from datection.normalize import timepoint_factory
 from datection.context import probe
+from datection.tokenize import Tokenizer
 
 
 def parse(text, lang, valid=True):
@@ -17,35 +18,47 @@ def parse(text, lang, valid=True):
     Else, invalid Timepoints can also be returned.
 
     """
+    from datection.tokenize import group_tokens
     out = []
-    if isinstance(text, str):
-        text = text.decode('utf-8')
+    tokens = Tokenizer(text, lang).tokenize()
+    for token in tokens:
+        if token.is_match:
+            normalized_timepoint = timepoint_factory(
+                detector=token.tag,
+                data=token.match.groupdict(),
+                lang=lang,
+                span=token.span)
+            out.append(normalized_timepoint)
+    return group_tokens(out)
+
+    # if isinstance(text, str):
+    #     text = text.decode('utf-8')
 
     # if not event simple date markers could be found, stop here
-    contexts = probe(text, lang)
-    if not contexts:
-        return []
+    # contexts = probe(text, lang)
+    # if not contexts:
+    #     return []
 
-    timepoint_families = [det for det in TIMEPOINT_REGEX[lang].keys()
-                          if not det.startswith('_')]
+    # timepoint_families = [det for det in TIMEPOINT_REGEX[lang].keys()
+    #                       if not det.startswith('_')]
 
-    for ctx in contexts:
-        matches = []
-        for family in timepoint_families:
-            for detector in TIMEPOINT_REGEX[lang][family]:
-                matches.extend(
-                    [(m, family) for m in re.finditer(detector, unicode(ctx))])
+    # for ctx in contexts:
+    #     matches = []
+    #     for family in timepoint_families:
+    #         for detector in TIMEPOINT_REGEX[lang][family]:
+    #             matches.extend(
+    #                 [(m, family) for m in re.finditer(detector, unicode(ctx))])
 
-        matches = _remove_subsets(matches)  # rm overlapping matches
-        for match, family in matches:
-            try:
-                timepoint = timepoint_factory(
-                    detector=family, data=match.groupdict(),
-                    lang=lang, span=ctx.position_in_text(match.span()))
-            except NotImplementedError:
-                pass
-            else:
-                out.append(timepoint)
+    # matches = _remove_subsets(matches)  # rm overlapping matches
+    #     for match, family in matches:
+    #         try:
+    #             timepoint = timepoint_factory(
+    #                 detector=family, data=match.groupdict(),
+    #                 lang=lang, span=ctx.position_in_text(match.span()))
+    #         except NotImplementedError:
+    #             pass
+    #         else:
+    #             out.append(timepoint)
 
     out = list(set(out))  # remove any redundancy (by security)
     if valid:  # only return valid Timepoints

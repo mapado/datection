@@ -435,9 +435,10 @@ FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL = re.compile(
     _FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL,
     flags=re.VERBOSE | re.IGNORECASE | re.UNICODE)
 
+FR_EXCLUSION_TOKENS = ur'(sauf|relâche)'
+
 TIMEPOINT_REGEX = {
-    'fr':
-    {
+    'fr': {
         'date': [FR_DATE, FR_NUMERIC_DATE, BACKWARDS_NUMERIC_DATE],
         'date_list': [FR_DATE_LIST_WEEKDAY, FR_DATE_LIST],
         '_date_in_list': [FR_DATE_IN_LIST],  # "private" sub-regex
@@ -453,7 +454,8 @@ TIMEPOINT_REGEX = {
             FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL],
         'weekday_recurrence': [FR_WEEKDAY_RECURRENCE],
         'weekday_interval_recurrence': [FR_WEEKDAY_INTERVAL_RECURRENCE],
-        'allweekday_recurrence': [FR_ALL_WEEKDAY_RECURRENCE]
+        'allweekday_recurrence': [FR_ALL_WEEKDAY_RECURRENCE],
+        'exclusion': [FR_EXCLUSION_TOKENS]
     }
 }
 

@@ -13,7 +13,9 @@ from datetime import date
 from datetime import time
 from datetime import timedelta
 
-from dateutil.rrule import rrule, WEEKLY
+from dateutil.rrule import rrule
+from dateutil.rrule import WEEKLY
+from dateutil.rrule import rrulestr
 from datection.regex import WEEKDAY
 from datection.regex import TIMEPOINT_REGEX
 from datection.regex import MONTH
@@ -26,6 +28,8 @@ from datection.utils import duration
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
+DAY_START = time(0, 0)
+DAY_END = time(23, 59, 59)
 
 
 def timepoint_factory(detector, lang, data, **kwargs):
@@ -651,9 +655,7 @@ class DateTimeList(Timepoint):
         start_time_match = re.search(
             TIMEPOINT_REGEX[lang]['_time'][0], start_time)
         start_time = Time._from_groupdict(start_time_match.groupdict())
-        # if not end_time:
-        #     time_interval = TimeInterval(
-        #         start_time=start_time, end_time=None, lang=lang)
+
         if end_time:
             end_time_match = re.search(
                 TIMEPOINT_REGEX[lang]['_time'][0], end_time)
@@ -733,7 +735,7 @@ class DateTimeInterval(Timepoint):
         start_time = self.time_interval.start_time
         start_date = self.date_interval.start_date.to_python()
         end = datetime.combine(self.date_interval.end_date.to_python(),
-                               time(23, 59, 59))
+                               DAY_END)
         return makerrulestr(start_date, end, interval=1,
                             byhour=start_time.hour, byminute=start_time.minute)
 
@@ -837,7 +839,7 @@ class ContinuousDatetimeInterval(Timepoint):
         start_time = start_dt.time()
         start_date = start_dt.date()
         end_dt = datetime.combine(self.end_datetime.to_python().date(),
-                                  time(23, 59, 59))
+                                  DAY_END)
         return makerrulestr(
             start_date, end_dt,
             interval=1, byhour=start_time.hour, byminute=start_time.minute)
@@ -868,11 +870,16 @@ class WeekdayRecurrence(Timepoint):
 
     """
 
-    def __init__(self, weekdays, start_datetime, end_datetime, **kwargs):
+    def __init__(
+        self, weekdays, start_date, end_date, start_time, end_time,
+        **kwargs
+    ):
         super(WeekdayRecurrence, self).__init__(**kwargs)
         self.weekdays = weekdays
-        self.start_datetime = start_datetime
-        self.end_datetime = end_datetime
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
 
     def __eq__(self, other):
         """ Equality is based on the RFC syntax """
@@ -885,8 +892,10 @@ class WeekdayRecurrence(Timepoint):
     def _from_groupdict(cls, groupdict, lang, **kwargs):
         groupdict = digit_to_int(groupdict)
         weekdays = cls._set_weekdays(groupdict, lang)
-        start_dt, end_dt = cls._set_datetime_interval(groupdict, lang)
-        return WeekdayRecurrence(weekdays, start_dt, end_dt, **kwargs)
+        start_date, end_date = cls._set_date_interval(groupdict, lang)
+        start_time, end_time = cls._set_time_interval(groupdict, lang)
+        return WeekdayRecurrence(
+            weekdays, start_date, end_date, start_time, end_time, **kwargs)
 
     @classmethod
     def _set_weekdays(cls, groupdict, lang):
@@ -903,71 +912,54 @@ class WeekdayRecurrence(Timepoint):
                 groupdict['weekdays'].lower()))
 
     @classmethod
-    def _set_datetime_interval(cls, groupdict, lang):
-        """ Return the start and end date of the recurrence.
+    def _set_date_interval(cls, groupdict, lang):
+        """Return a tuple of the bounds of the detected date interval.
 
-        If not specified, the default start date value is datetime.now().
-        If not specified, the default end date value is one year after
-        datetime.now().
+        If not date interval was found, return (today, None).
 
         """
-        if groupdict.get('date_interval') and groupdict.get('time_interval'):
-            datetime_interval = DateTimeInterval._from_groupdict(groupdict,
-                                                                 lang=lang).\
-                to_python()
-            start_datetime = datetime_interval[0][0]
-            end_datetime = datetime_interval[-1][-1]
-
-        elif groupdict.get('date_interval') and not groupdict.get('time_interval'):
-            # normalize darte interval from regex matches
-            date_interval = DateInterval._from_groupdict(groupdict, lang=lang)
-
-            # extract the start and end dates from date interval
-            start_date = date_interval.start_date.to_python()
-            end_date = date_interval.end_date.to_python()
-
-            # Create datetimes from the start and end dates by associatng
-            # each of them with a default time
-            start_time = time(hour=0, minute=0, second=0)
-            start_datetime = datetime.combine(start_date, start_time)
-            end_time = time(hour=23, minute=59, second=59)
-            end_datetime = datetime.combine(end_date, end_time)
-
-        elif groupdict.get('time_interval') and not groupdict.get('date_interval'):
-            # normalize darte interval from regex matches
-            time_interval = TimeInterval._from_groupdict(groupdict, lang=lang)
-
-            # extract the start and end times from date interval
-            start_time = time_interval.start_time.to_python()
-            if time_interval.end_time:
-                end_time = time_interval.end_time.to_python()
-            else:
-                end_time = time_interval.start_time.to_python()
-
-            # Create datetimes from the start and end times by associatng
-            # each of them with a default date
-            start_date = date.today()
-            start_datetime = datetime.combine(start_date, start_time)
-            # if not specified, the end date is one year after the start date
-            end_date = start_datetime.date() + timedelta(days=365)
-            end_datetime = datetime.combine(
-                end_date, end_time)
+        if groupdict.get('date_interval'):
+            date_interval = DateInterval._from_groupdict(
+                groupdict, lang=lang).to_python()
+            return date_interval
         else:
-            start_datetime = datetime.combine(
-                date.today(),
-                time(0, 0, 0))
-            # if not specified, the end date is one year after the start date
-            end_date = (start_datetime + timedelta(days=365)).date()
-            end_datetime = datetime.combine(end_date, time(23, 59))
-        return start_datetime, end_datetime
+            return date.today(), None
+
+    @classmethod
+    def _set_time_interval(cls, groupdict, lang):
+        """Return a tuple of the bounds of the detected time interval.
+
+        If no time interval was detected, return (DAY_START, DAY_END).
+        If a single time was detected, return it, along with None,
+        except if this time is DAY_START, in this case, return
+        (DAY_START, DAY_END).
+
+        """
+        if groupdict.get('time_interval'):
+            time_interval = TimeInterval._from_groupdict(
+                groupdict, lang=lang).to_python()
+            # TimeInterval.to_python() can either return a time instance
+            # or a list of 2 time instances, because we made the choice
+            # of always dealing with TimeInterval, to avoid having too
+            # much normalizer classes
+            if isinstance(time_interval, time):
+                if time_interval == DAY_START:  # all day
+                    return DAY_START, DAY_END
+                else:
+                    return time_interval, None
+            else:
+                return time_interval[0], time_interval[-1]
+        else:
+            return DAY_START, DAY_END
 
     @property
     def rrulestr(self):
         """ Generate a full description of the recurrence rule"""
-        end = datetime.combine(
-            self.end_datetime.date(), time(23, 59, 59))
-        return makerrulestr(
-            self.start_datetime.date(), end=end, rule=self.to_python())
+        if self.end_date is not None:
+            end = datetime.combine(self.end_date, DAY_END)
+        elif self.end_date is None:
+            end = None
+        return makerrulestr(self.start_date, end=end, rule=self.to_python())
 
     @property
     def valid(self):
@@ -979,26 +971,30 @@ class WeekdayRecurrence(Timepoint):
         return len(self.weekdays) >= 0
 
     def future(self, reference=date.today()):
-        return self.end_datetime.date() > reference
+        if self.end_date is None:
+            return True
+        return self.end_date > reference
 
     def to_python(self):
-        start_time = self.start_datetime.time()
-        if start_time.hour or start_time.minute:
+        if self.start_time.hour or self.start_time.minute:
             return rrule(
-                WEEKLY, byweekday=self.weekdays, byhour=start_time.hour,
-                byminute=start_time.minute)
+                WEEKLY,
+                byweekday=self.weekdays,
+                byhour=self.start_time.hour,
+                byminute=self.start_time.minute)
         else:
             return rrule(WEEKLY, byweekday=self.weekdays)
 
     def to_db(self):
-        # measure the duration
-        end_datetime = datetime.combine(
-            self.start_datetime, self.end_datetime.time())
-        return {
+        export = {
             'rrule': self.rrulestr,
-            'duration': duration(start=self.start_datetime, end=end_datetime),
-            'span': self.span
+            'duration': duration(start=self.start_time, end=self.end_time),
+            'span': self.span,
         }
+        rrule = rrulestr(self.rrulestr)
+        if rrule.until is None and rrule.count is None:
+            export['unlimited'] = True
+        return export
 
 
 class WeekdayIntervalRecurrence(WeekdayRecurrence):
