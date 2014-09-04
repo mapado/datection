@@ -57,6 +57,44 @@ class Token(object):
         return self.action == 'EXCLUDE'
 
 
+class TokenGroup(object):
+
+    """A list of tokens that can either contain a single token or
+    two tokens linked by an exclusion one.
+
+    """
+
+    def __init__(self, tokens):
+        if isinstance(tokens, list):
+            self.tokens = tokens
+        else:
+            self.tokens = [tokens]
+
+    def __getitem__(self, index):
+        return self.tokens[index]
+
+    def __repr__(self):
+        return '<%s: [%s]>' % (
+            self.__class__.__name__,
+            ', '.join(tok.tag for tok in self.tokens))
+
+    def append(self, token):
+        self.tokens.append(token)
+
+    @property
+    def is_single_token(self):
+        return len(self.tokens) == 1
+
+    @property
+    def is_exclusion_group(self):
+        return (
+            len(self.tokens) == 3
+            and self.tokens[0].is_match
+            and self.tokens[1].is_exclusion
+            and self.tokens[2].is_match
+        )
+
+
 class Tokenizer(object):
 
     """Splits text into time-related tokens."""
@@ -184,6 +222,28 @@ class Tokenizer(object):
             start = token.end
         return tokens
 
+    def group_tokens(self, tokens):
+        """Regroup tokens in TokenGroup when they belong together.
+
+        An example of tokens belonging together is two MATCH tokens
+        separated by an EXCLUDE one.
+
+        """
+        if len(tokens) < 3:
+            return [TokenGroup(tok) for tok in tokens]
+        out = []
+        i = 0
+        while i <= len(tokens) - 1:
+            window = tokens[i: i + 3]
+            window_sep = [tok.action for tok in window]
+            if window_sep == ['MATCH', 'EXCLUDE', 'MATCH']:
+                out.append(TokenGroup(window))
+                i += 3
+            else:
+                out.append(TokenGroup(tokens[i]))
+                i += 1
+        return out
+
     @ensure_unicode
     def tokenize(self):
         contexts = probe(self.text, self.lang)
@@ -195,26 +255,5 @@ class Tokenizer(object):
             matches.extend(self.search_context(ctx))
         non_overlapping_matches = self._remove_subsets(matches)
         tokens = self.create_tokens(non_overlapping_matches)
-        return tokens
-
-
-def group_tokens(tokens):
-    if len(tokens) == 1:
-        return tokens
-    out, group = [], [tokens[0]]
-    i = 1
-    for j, token in enumerate(tokens[1:]):
-        if j == len(tokens[1:]) - 1:  # last iteration
-            group.append(token)
-            out.append(group)
-        elif (
-            group[i - 1].is_match and token.is_exclusion
-            or group[i - 1].is_exclusion and token.is_match
-        ):
-            group.append(token)
-            i += 1
-        else:
-            out.append(group)
-            group = [token]
-            i = 1
-    return out
+        token_groups = self.group_tokens(tokens)
+        return token_groups
