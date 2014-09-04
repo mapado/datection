@@ -23,18 +23,12 @@ class Token(object):
         self.span = span
         self.action = action
 
-    def __repr__(self):
+    def __repr__(self):  # pragma:: no cover
         return u'<%s - %s - (%d, %d)>' % (
             self.action,
             self.tag,
             self.start,
             self.end)
-
-    def __unicode__(self):
-        return self.content
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     @property
     def start(self):
@@ -64,22 +58,23 @@ class TokenGroup(object):
 
     """
 
-    def __init__(self, tokens):
+    def __init__(self, tokens):  # pragma:: no cover
         if isinstance(tokens, list):
             self.tokens = tokens
         else:
             self.tokens = [tokens]
 
-    def __getitem__(self, index):
+    def __getitem__(self, index):  # pragma:: no cover
         return self.tokens[index]
 
-    def __repr__(self):
+    def __repr__(self):  # pragma:: no cover
         return '<%s: [%s]>' % (
             self.__class__.__name__,
             ', '.join(tok.tag for tok in self.tokens))
 
-    def append(self, token):
-        self.tokens.append(token)
+    def append(self, *args):
+        for token in args:
+            self.tokens.append(token)
 
     @property
     def is_single_token(self):
@@ -104,7 +99,7 @@ class Tokenizer(object):
         self.lang = lang
 
     @cached_property
-    def timepoint_families(self):
+    def timepoint_families(self):  # pragma: no cover
         """The list of all time-related regex in the Tokenizer language."""
         return [det for det in TIMEPOINT_REGEX[self.lang].keys()
                 if not det.startswith('_')]
@@ -180,6 +175,7 @@ class Tokenizer(object):
                     [(m, family, context) for m in re.finditer(pattern, ctx)])
         return matches
 
+    # pragma: no cover
     def create_token(self, tag, text=None, match=None, span=None):
         if tag == 'exclusion':
             action = 'EXCLUDE'
@@ -197,14 +193,6 @@ class Tokenizer(object):
             tag=tag,
             action=action)
 
-    def create_separator_token(self, start, end):
-        span = (start, end)
-        text = self.text[span[0]: span[1]]
-        if text:
-            sep_token = self.create_token(span=span, tag='sep', text=text)
-            if not sep_token.ignored:
-                return sep_token
-
     def create_tokens(self, matches):
         """Create a list of tokens from a list of non overlapping matches."""
         tokens = []
@@ -215,14 +203,12 @@ class Tokenizer(object):
                 tag=tag,
                 span=ctx.position_in_text(match.span()))
             sep_start, sep_end = ctx.position_in_text((start, token.start))
-            sep_token = self.create_separator_token(sep_start, sep_end)
-            if sep_token:
-                tokens.append(sep_token)
             tokens.append(token)
             start = token.end
         return tokens
 
-    def group_tokens(self, tokens):
+    @staticmethod
+    def group_tokens(tokens):
         """Regroup tokens in TokenGroup when they belong together.
 
         An example of tokens belonging together is two MATCH tokens

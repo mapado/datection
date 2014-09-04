@@ -26,6 +26,7 @@ from datection.regex import DAY_NUMBER
 from datection.regex import FR_WEEKDAY_INTERVAL_RECURRENCE
 from datection.regex import FR_CONTINUOUS_DATETIME_INTERVAL
 from datection.regex import FR_CONTINUOUS_NUMERIC_DATETIME_INTERVAL
+from datection.regex import FR_EXCLUSION_TOKENS
 
 
 class TestDateRegex(unittest.TestCase):
@@ -805,3 +806,15 @@ class TestContinuousDatetimeIntervalRegex(unittest.TestCase):
         self.assertEqual(gdict['end_month'], u'05')
         self.assertEqual(gdict['end_year'], u'2014')
         self.assertEqual(gdict['end_time'], u'06h')
+
+
+class TestExclusionTokensRegex(unittest.TestCase):
+
+    def test_exclusion_tokens(self):
+        text = u"Du lundi au dimanche, sauf le mercredi"
+        match = re.search(FR_EXCLUSION_TOKENS, text)
+        self.assertEqual(match.group(), u'sauf')
+
+        text = u"Du 12 au 25 juillet 2015, relâche le 18."
+        match = re.search(FR_EXCLUSION_TOKENS, text)
+        self.assertEqual(match.group(), u'relâche')
