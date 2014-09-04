@@ -9,6 +9,7 @@ from datetime import datetime
 from datetime import time
 from datetime import date
 from dateutil.rrule import rrulestr
+from dateutil.rrule import rruleset
 
 from datection.utils import cached_property
 from datection.normalize import MISSING_YEAR
@@ -65,7 +66,15 @@ class DurationRRule(object):
         one will be set automatically, to avoid infinite loops when
         iterating over the rrule dates.
 
+        If an exclusion RRule is present, then it will be excluded from
+        the 'rrule' one, using an rruleset.
+
         """
+        if self.duration_rrule.get('exclusion'):
+            rset = rruleset()
+            rset.rrule(rrulestr(self.duration_rrule['rrule']))
+            rset.exrule(rrulestr(self.duration_rrule['exclusion']))
+            return rset
         return rrulestr(self.duration_rrule['rrule'])
 
     @property
