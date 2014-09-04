@@ -51,9 +51,6 @@ def timepoint_factory(detector, lang, data, **kwargs):
         'weekday_interval_recurrence': WeekdayIntervalRecurrence,
         'allweekday_recurrence': AllWeekdayRecurrence,
     }
-    if detector not in factory:
-        raise NotImplementedError(
-            detector + " normalisation is not yet handled.")
     return factory[detector]._from_groupdict(data, lang, ** kwargs)
 
 
