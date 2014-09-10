@@ -17,6 +17,254 @@ from datection.normalize import DAY_START
 from datection.normalize import DAY_END
 
 
+class Timepoint(object):
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class Date(Timepoint):
+
+    """An object representing a date, more flexible than the
+    datetime.date object, as it tolerates missing information.
+
+    """
+
+    def __init__(self, year, month, day):
+        self.year = year
+        self.month = month
+        self.day = day
+
+    @classmethod
+    def from_match(self, match):
+        year = match['year'] if match['year'] else None
+        month = match['month'] if match['month'] else None
+        return Date(year, month, match['day'])
+
+    def __eq__(self, other):
+        if not other:
+            # weird hack that seems to prevent unexpected pyparsing error
+            return False
+        return (
+            self.year == other.year
+            and self.month == other.month
+            and self.day == other.day)
+
+    def __repr__(self):
+        return '%s(%s, %s, %s)' % (
+            self.__class__.__name__,
+            str(self.year) if self.year is not None else '?',
+            str(self.month) if self.month is not None else '?',
+            str(self.day)
+        )
+
+
+class Time(Timepoint):
+
+    """An object representing a time, more flexible than the
+    datetime.time object, as it tolerates missing information.
+
+    """
+
+    def __init__(self, hour, minute):
+        self.hour = hour
+        self.minute = minute
+
+    def __repr__(self):
+        return u'<%s %d:%s>' % (
+            self.__class__.__name__,
+            self.hour,
+            str(self.minute).zfill(2))
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return (self.hour == other.hour and self.minute == other.minute)
+
+
+class TimeInterval(Timepoint):
+
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+
+    def __iter__(self):
+        yield self.start_time
+        yield self.end_time
+
+    def __repr__(self):
+        return u'<%s %d:%s - %d:%s>' % (
+            self.__class__.__name__,
+            self.start_time.hour,
+            str(self.start_time.minute).zfill(2),
+            self.end_time.hour,
+            str(self.end_time.minute).zfill(2))
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return (
+            self.start_time == other.start_time and
+            self.end_time == other.end_time)
+
+
+class DateList(Timepoint):
+
+    def __init__(self, dates):
+        self.dates = dates
+
+    def __iter__(self):
+        for _date in self.dates:
+            yield _date
+
+    @classmethod
+    def from_match(cls, dates):
+        """Return a DateList instance constructed from a regex match result."""
+        dates = cls.set_months(dates)
+        dates = cls.set_years(dates)
+        return DateList(dates)
+
+    @classmethod
+    def set_years(cls, dates):
+        """Make all dates without year inherit from the last date year."""
+        last_date = dates[-1]
+        if not last_date:
+            raise ValueError('Last date must have a non nil year.')
+        for _date in dates[:-1]:
+            if not _date.year:
+                _date.year = last_date.year
+        return dates
+
+    @classmethod
+    def set_months(cls, dates):
+        """Make all dates without month inherit from the last date month."""
+        last_date = dates[-1]
+        if not last_date:
+            raise ValueError('Last date must have a non nil month.')
+        for _date in dates[:-1]:
+            if not _date.month:
+                _date.month = last_date.month
+        return dates
+
+    def __eq__(self, other):
+        if isinstance(other, list):
+            return self.dates == other
+        return self.dates == other.dates
+
+
+class DateInterval(Timepoint):
+
+    def __init__(self, start_date, end_date):
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        return (
+            self.start_date == other.start_date
+            and self.end_date == other.end_date)
+
+    @classmethod
+    def from_match(cls, start_date, end_date):
+        """Return a DateInterval instance constructed from a regex match
+        result.
+
+        """
+        start_date = cls.set_start_date_year(start_date, end_date)
+        start_date = cls.set_start_date_month(start_date, end_date)
+        return DateInterval(start_date, end_date)
+
+    @classmethod
+    def set_start_date_year(cls, start_date, end_date):
+        """Make the start_date inherit from the end_date year, if needed."""
+        if not end_date.year:
+            raise ValueError("End date must have a year")
+        if not start_date.year:
+            start_date.year = end_date.year
+        return start_date
+
+    @classmethod
+    def set_start_date_month(cls, start_date, end_date):
+        """Make the start_date inherit from the end_date month, if needed."""
+        if not end_date.month:
+            raise ValueError("End date must have a month")
+        if not start_date.month:
+            start_date.month = end_date.month
+        return start_date
+
+
+class Datetime(Timepoint):
+
+    """An object representing a datetime, more flexible than the
+    datetime.datetime object, as it tolerates missing information.
+
+    """
+
+    def __init__(self, date, start_time, end_time=None):
+        self.date = date
+        self.start_time = start_time
+        if not end_time:
+            self.end_time = start_time
+        else:
+            self.end_time = end_time
+
+    def __eq__(self, other):
+        return (
+            self.date == other.date
+            and self.start_time == other.start_time
+            and self.end_time == other.end_time)
+
+    @classmethod
+    def combine(cls, date, start_time, end_time=None):
+        return Datetime(date, start_time, end_time)
+
+
+class DatetimeList(Timepoint):
+
+    def __init__(self, datetimes):
+        self.datetimes = datetimes
+
+    def __eq__(self, other):
+        if isinstance(other, list):
+            return self.datetimes == other
+        return self.datetimes == other.datetimes
+
+    @classmethod
+    def from_match(cls, dates, time_interval):
+        st, et = time_interval
+        datetimes = [Datetime.combine(date, st, et) for date in dates]
+        return DatetimeList(datetimes)
+
+
+class DatetimeInterval(Timepoint):
+
+    def __init__(self, date_interval, time_interval):
+        self.date_interval = date_interval
+        self.time_interval = time_interval
+
+    def __eq__(self, other):
+        return (
+            self.date_interval == other.date_interval
+            and self.time_interval == other.time_interval)
+
+
+class ContinuousDatetimeInterval(Timepoint):
+
+    def __init__(self, start_date, start_time, end_date, end_time):
+        self.start_date = start_date
+        self.start_time = start_time
+        self.end_date = end_date
+        self.end_time = end_time
+
+    def __eq__(self, other):
+        return (
+            self.start_date == other.start_date
+            and self.start_time == other.start_time
+            and self.end_date == other.end_date
+            and self.end_time == other.end_time)
+
+
 class DurationRRule(object):
 
     """Wrapper around a rrule + duration object, providing handy properties
