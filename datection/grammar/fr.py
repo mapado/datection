@@ -47,7 +47,7 @@ def set_weekday_number(text, start_index, match):
 WEEKDAY = oneof_ci(
     WEEKDAYS.keys()
     + SHORT_WEEKDAYS.keys(),
-).setParseAction(set_weekday_number).setResultsName('weekday')
+).setParseAction(set_weekday_number)('weekday')
 
 # A month name can be in its full form or an abbreviated form.
 # When matched, a month name will be transformed to the corresponding
@@ -55,7 +55,7 @@ WEEKDAY = oneof_ci(
 MONTH = oneof_ci(
     MONTHS.keys()
     + SHORT_MONTHS.keys(),
-).setParseAction(set_month_number).setResultsName('month')
+).setParseAction(set_month_number)('month')
 
 DAY_NUMBER = DAY_NUMBER + optional_ci(u'er').suppress()
 
@@ -107,9 +107,9 @@ TIME = (
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
     optional_oneof_ci([u'de', u'entre', u'à']) +
-    TIME.setResultsName('start_time') +
+    TIME('start_time') +
     optional_oneof_ci([u'-', u'à', u'et']) +
-    Optional(TIME.setResultsName('end_time'))
+    Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
 # A partial date must at least have a day number, and then can
@@ -124,89 +124,89 @@ PARTIAL_DATE = (
 # A date list is a list of partial dates
 DATE_LIST = (
     optional_oneof_ci([u"le", u"les"]) +
-    OneOrMore(PARTIAL_DATE).setResultsName('dates')
+    OneOrMore(PARTIAL_DATE)('dates')
 ).setParseAction(as_datelist)
 
 # A date interval is composed of a start (possibly partial) date and an
 # end date
 DATE_INTERVAL = (
     optional_ci(u"du") +
-    PARTIAL_DATE.setResultsName('start_date') +
+    PARTIAL_DATE('start_date') +
     oneof_ci([u'au', '-']) +
-    DATE.setResultsName('end_date')
+    DATE('end_date')
 ).setParseAction(as_date_interval)
 
 # A date interval is composed of a numeric start date and a numeric end
 # date
 NUMERIC_DATE_INTERVAL = (
     optional_ci(u"du") +
-    NUMERIC_DATE.setResultsName('start_date') +
+    NUMERIC_DATE('start_date') +
     oneof_ci([u'au', '-']) +
-    NUMERIC_DATE.setResultsName('end_date')
+    NUMERIC_DATE('end_date')
 ).setParseAction(as_date_interval)
 
 # A datetime is a date, a separator and a time interval (either a single)
 # time, or a start time and an end time
 DATETIME = (
-    DATE.setResultsName('date') +
+    DATE('date') +
     optional_ci(u',') +
-    TIME_INTERVAL.setResultsName('time_interval')
+    TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
 
 # A datetime list is a list of dates, along with a time interval
 DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
-    OneOrMore(PARTIAL_DATE).setResultsName('dates') +
+    OneOrMore(PARTIAL_DATE)('dates') +
     Optional(u',') +
     optional_oneof_ci([u'à', u'-']) +
-    TIME_INTERVAL.setResultsName('time_interval')
+    TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
 # same than DATETIME_LIST with numerical dates
 NUMERICAL_DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
-    OneOrMore(NUMERIC_DATE).setResultsName('dates') +
+    OneOrMore(NUMERIC_DATE)('dates') +
     Optional(u',') +
     optional_oneof_ci([u'à', u'-']) +
-    TIME_INTERVAL.setResultsName('time_interval')
+    TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
 
 # a datetime interval is an interval of dates, and a time interval
 DATETIME_INTERVAL = (
-    DATE_INTERVAL.setResultsName('date_interval') +
+    DATE_INTERVAL('date_interval') +
     Optional(u',') +
-    TIME_INTERVAL.setResultsName('time_interval')
+    TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_interval)
 
 # a datetime interval is an interval of numeric dates, and a time interval
 NUMERIC_DATETIME_INTERVAL = (
-    NUMERIC_DATE_INTERVAL.setResultsName('date_interval') +
+    NUMERIC_DATE_INTERVAL('date_interval') +
     Optional(u',') +
-    TIME_INTERVAL.setResultsName('time_interval')
+    TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_interval)
 
 # Example: du 5 mars 2015 à 13h au 7 mars 2015 à 7h
 CONTINUOUS_DATETIME_INTERVAL = (
     optional_ci(u'du') +
-    DATE.setResultsName("start_date") +
+    DATE("start_date") +
     optional_oneof_ci([u"à", u"-"]) +
-    TIME.setResultsName("start_time") +
+    TIME("start_time") +
     optional_oneof_ci([u"au", '-']) +
-    DATE.setResultsName("end_date") +
+    DATE("end_date") +
     optional_oneof_ci([u"à", u"-"]) +
-    TIME.setResultsName("end_time")
+    TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)
 
 # Example: du 05/11/2015 à 13h au 07/11/2015 à 7h
 NUMERIC_CONTINUOUS_DATETIME_INTERVAL = (
     optional_ci(u'du') +
-    NUMERIC_DATE.setResultsName("start_date") +
+    NUMERIC_DATE("start_date") +
     optional_oneof_ci([u"à", u"-"]) +
-    TIME.setResultsName("start_time") +
+    TIME("start_time") +
     optional_oneof_ci([u"au", '-']) +
-    NUMERIC_DATE.setResultsName("end_date") +
+    NUMERIC_DATE("end_date") +
     optional_oneof_ci([u"à", u"-"]) +
-    TIME.setResultsName("end_time")
+    TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)
