@@ -25,6 +25,8 @@ from datection.grammar import as_time_interval
 from datection.grammar import as_datetime_list
 from datection.grammar import as_datetime_interval
 from datection.grammar import as_continuous_datetime_interval
+from datection.grammar import extract_time_patterns
+from datection.grammar import develop_datetime_patterns
 from datection.grammar import optional_ci
 from datection.grammar import optional_oneof_ci
 from datection.grammar import oneof_ci
@@ -109,6 +111,15 @@ TIME_INTERVAL = (
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
+
+# Meta pattern catching a list of time patterns (time or time interval)
+TIME_PATTERN = (
+    OneOrMore(
+        TIME_INTERVAL +
+        Optional(OneOrMore(oneOf([u',', u'et']))).suppress()
+    )('patterns')
+).setParseAction(extract_time_patterns)
+
 # A partial date must at least have a day number, and then can
 # have a month and a year.
 PARTIAL_DATE = (
@@ -150,6 +161,10 @@ DATETIME = (
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
+DATETIME_PATTERN = (
+    DATE('date') +
+    TIME_PATTERN('time_pattern')
+).setParseAction(develop_datetime_patterns)
 
 # A datetime list is a list of dates, along with a time interval
 DATETIME_LIST = (

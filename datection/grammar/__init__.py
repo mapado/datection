@@ -152,6 +152,19 @@ def as_continuous_datetime_interval(text, start_index, match):
     return ContinuousDatetimeInterval.from_match(
         sd, st, ed, et, span=span([sd, st, ed, et]))
 
+
+def extract_time_patterns(text, start_index, match):
+    return match
+
+
+def develop_datetime_patterns(text, start_index, match):
+    out = []
+    date = match['date']
+    times = list(match['time_pattern'])
+    for start_time, end_time in times:
+        out.append(Datetime(date,  start_time, end_time))
+    return out
+
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
     ur'(?<![\d])'  # not preceeded by a digit

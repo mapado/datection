@@ -116,6 +116,22 @@ class TestTimeIntervalRegex(TestGrammar):
         self.assert_span_equal(u'15h', (0, 2))
 
 
+class TestTimePatternRegex(TestGrammar):
+
+    pattern = TIME_PATTERN
+
+    def test_parse_time_list_formats(self):
+        self.assert_parse(u'à 18h, 19h30, et de 22h à 23h30')
+
+    def test_parse_time_list(self):
+        self.assert_parse_list_equal(
+            u'à 18h, 19h30, et de 22h à 23h30',
+            [
+                TimeInterval(Time(18, 0), Time(18, 0)),
+                TimeInterval(Time(19, 30), Time(19, 30)),
+                TimeInterval(Time(22, 0), Time(23, 30))
+            ])
+
 
 class TestPartialDate(TestGrammar):
 
@@ -244,6 +260,23 @@ class TestDatetimeRegex(TestGrammar):
         self.assert_span_equal(u'le 5 mars 2015 de 14h à 15h30', (3, 29))
         self.assert_span_equal(u'Le 5 mars 2015, à 15h30', (3, 23))
 
+
+class TestDatetimePatternRegex(TestGrammar):
+
+    pattern = DATETIME_PATTERN
+
+    def test_parse_datetime_pattern_formats(self):
+        self.assert_parse(
+            u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30')
+
+    def test_parse_datetime_pattern(self):
+        self.assert_parse_list_equal(
+            u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30',
+            [
+                Datetime(Date(2012, 11, 25), Time(20, 0), Time(20, 0)),
+                Datetime(Date(2012, 11, 25), Time(22, 30), Time(22, 30)),
+                Datetime(Date(2012, 11, 25), Time(23, 0), Time(23, 30)),
+            ])
 
 
 class TestDatetimeListRegex(TestGrammar):
