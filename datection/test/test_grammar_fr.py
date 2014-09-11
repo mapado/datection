@@ -58,12 +58,6 @@ class TestNumericDateRegex(TestGrammar):
         self.assert_parse_equal(u'01/01/15', Date(2015, 1, 1))
         self.assert_parse_equal(u'1/01/15', Date(2015, 1, 1))
 
-    @set_pattern(BACKWARDS_NUMERIC_DATE)
-    def test_parse_backwards_numeric_date(self):
-        self.assert_parse_equal(u'2015/01/01', Date(2015, 1, 1))
-        self.assert_parse_equal(u'15/01/01', Date(2015, 1, 1))
-        self.assert_parse_equal(u'15/01/1', Date(2015, 1, 1))
-
     def test_numeric_date_separators(self):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01-01-2015', Date(2015, 1, 1))

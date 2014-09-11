@@ -88,17 +88,6 @@ NUMERIC_DATE = (
     Optional(u',')
 ).setParseAction(as_date)
 
-# A backwards numeric date is a yaer, month and a day separated by a
-# one-char token. Example: 2013/10/04
-BACKWARDS_NUMERIC_DATE = (
-    NUMERIC_YEAR +
-    date_sep +
-    NUMERIC_MONTH +
-    date_sep +
-    DAY_NUMBER
-).setParseAction(as_date)
-
-
 # A time is an hour, a separator and a time
 TIME = (
     HOUR +
