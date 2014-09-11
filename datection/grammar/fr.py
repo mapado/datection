@@ -105,9 +105,9 @@ TIME = (
 # 15h30 is a time interval bewteen 15h30 and 15h30
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
-    optional_oneof_ci([u'de', u'entre', u'à']) +
+    optional_oneof_ci([u'de', u'entre', u'à']).suppress() +
     TIME('start_time') +
-    optional_oneof_ci([u'-', u'à', u'et']) +
+    optional_oneof_ci([u'-', u'à', u'et']).suppress() +
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
@@ -176,7 +176,7 @@ DATETIME_LIST = (
 ).setParseAction(as_datetime_list)
 
 # same than DATETIME_LIST with numerical dates
-NUMERICAL_DATETIME_LIST = (
+NUMERIC_DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
     OneOrMore(NUMERIC_DATE)('dates') +
     Optional(u',') +
