@@ -2,7 +2,8 @@
 
 """Test suite of the french grammar."""
 
-from datection.test.test_grammar import TestGrammar
+from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
+
 from datection.grammar.fr import DATE
 from datection.grammar.fr import NUMERIC_DATE
 from datection.grammar.fr import TIME
@@ -20,7 +21,14 @@ from datection.grammar.fr import DATETIME_INTERVAL
 from datection.grammar.fr import NUMERIC_DATETIME_INTERVAL
 from datection.grammar.fr import CONTINUOUS_DATETIME_INTERVAL
 from datection.grammar.fr import NUMERIC_CONTINUOUS_DATETIME_INTERVAL
-
+from datection.grammar.fr import WEEKDAY
+from datection.grammar.fr import WEEKDAY_LIST
+from datection.grammar.fr import WEEKDAY_INTERVAL
+from datection.grammar.fr import WEEKDAY_PATTERN
+from datection.grammar.fr import WEEKLY_RECURRENCE
+from datection.grammar.fr import WEEKLY_RECURRENCE_1
+from datection.grammar.fr import WEEKLY_RECURRENCE_2
+from datection.grammar.fr import WEEKLY_RECURRENCE_3
 from datection.models import Date
 from datection.models import Time
 from datection.models import TimeInterval
@@ -28,6 +36,9 @@ from datection.models import Datetime
 from datection.models import DateInterval
 from datection.models import DatetimeInterval
 from datection.models import ContinuousDatetimeInterval
+from datection.models import Weekdays
+from datection.test.test_grammar import TestGrammar
+from datection.test.test_grammar import set_pattern
 
 
 class TestDateRegex(TestGrammar):
@@ -482,3 +493,97 @@ class TestNumericContinuousDatetimeInterval(TestGrammar):
             u"Du 05/03/2015 à 18h au 06/03/2015 à 5h", (3, 37))
         self.assert_span_equal(u"05/03/2015 à 18h - 06/03/2015 à 5h", (0, 33))
         self.assert_span_equal(u"05/03/2015 - 18h - 06/03/2015 - 5h", (0, 33))
+
+
+class TestWeekdayRecurrence(TestGrammar):
+
+    pattern = WEEKLY_RECURRENCE
+
+    @set_pattern(WEEKDAY)
+    def test_parse_weekday_formats(self):
+        self.assert_parse(u"lundi")
+        self.assert_parse(u"lundis")
+
+    def test_parse_weekday_span(self):
+        self.assertEqual(WEEKDAY.parseString(u"lundi")[0].value, MO)
+        self.assertEqual(WEEKDAY.parseString(u"mardi")[0].value, TU)
+        self.assertEqual(WEEKDAY.parseString(u"mercredi")[0].value, WE)
+        self.assertEqual(WEEKDAY.parseString(u"jeudi")[0].value, TH)
+        self.assertEqual(WEEKDAY.parseString(u"vendredi")[0].value, FR)
+        self.assertEqual(WEEKDAY.parseString(u"samedi")[0].value, SA)
+        self.assertEqual(WEEKDAY.parseString(u"dimanche")[0].value, SU)
+
+    @set_pattern(WEEKDAY_LIST)
+    def test_parse_weekday_list_formats(self):
+        self.assert_parse(u"le lundi")
+        self.assert_parse(u"les lundis")
+        self.assert_parse(u"les lundis, mardi, et mercredis")
+
+    @set_pattern(WEEKDAY_LIST)
+    def test_parse_weekday_list_span(self):
+        self.assert_span_equal(u"le lundi", (3, 8))
+        self.assert_span_equal(u"les lundis", (4, 9))
+        self.assert_span_equal(u"les lundis, mardi, et mercredis", (4, 30))
+
+    @set_pattern(WEEKDAY_LIST)
+    def test_parse_weekday_list(self):
+        self.assert_parse_equal(u"le lundi", Weekdays([MO]))
+        self.assert_parse_equal(u"les lundis", Weekdays([MO]))
+        self.assert_parse_equal(
+            u"les lundis, mardi, et mercredis", Weekdays([MO, TU, WE]))
+
+    @set_pattern(WEEKDAY_INTERVAL)
+    def test_parse_weekday_interval_formats(self):
+        self.assert_parse(u"du lundi au mercredi")
+
+    @set_pattern(WEEKDAY_INTERVAL)
+    def test_parse_weekday_interval_span(self):
+        self.assert_span_equal(u"du lundi au mercredi", (3, 20))
+
+    @set_pattern(WEEKDAY_INTERVAL)
+    def test_parse_weekday_interval(self):
+        self.assert_parse_equal(
+            u"du lundi au mercredi", Weekdays([MO, TU, WE]))
+
+    @set_pattern(WEEKDAY_PATTERN)
+    def test_parse_weekday_pattern(self):
+        self.assert_parse(u"le lundi")
+        self.assert_parse(u"les lundis")
+        self.assert_parse(u"les lundis, mardi, et mercredis")
+        self.assert_parse(u"du lundi au mercredi")
+
+    @set_pattern(WEEKDAY_PATTERN)
+    def test_parse_weekday_pattern_span(self):
+        self.assert_span_equal(u"le lundi", (3, 8))
+        self.assert_span_equal(u"les lundis", (4, 9))
+        self.assert_span_equal(u"les lundis, mardi, et mercredis", (4, 30))
+        self.assert_span_equal(u"du lundi au mercredi", (3, 20))
+
+    @set_pattern(WEEKLY_RECURRENCE_1)
+    def test_parse_weekly_recurrence1_formats(self):
+        self.assert_parse(
+            u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h")
+        self.assert_parse(u"le vendredi, du 2 au 29 mars 2015, à 10h")
+
+    @set_pattern(WEEKLY_RECURRENCE_2)
+    def test_parse_weekly_recurrence2_formats(self):
+        self.assert_parse(
+            u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ")
+        self.assert_parse(u"le vendredi à 10h, du 2 au 29 mars 2015")
+
+    @set_pattern(WEEKLY_RECURRENCE_3)
+    def test_parse_weekly_recurrence3_formats(self):
+        self.assert_parse(
+            u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi")
+        self.assert_parse(u"du 2 au 29 mars 2015 à 10h, le vendredi")
+
+    def test_parse_weekly_recurrence_formats(self):
+        self.assert_parse(
+            u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h")
+        self.assert_parse(u"le vendredi, du 2 au 29 mars 2015, à 10h")
+        self.assert_parse(
+            u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ")
+        self.assert_parse(u"le vendredi à 10h, du 2 au 29 mars 2015")
+        self.assert_parse(
+            u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi")
+        self.assert_parse(u"du 2 au 29 mars 2015 à 10h, le vendredi")

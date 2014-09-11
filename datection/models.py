@@ -329,6 +329,29 @@ class ContinuousDatetimeInterval(Timepoint):
         return start_date
 
 
+class Weekdays(Timepoint):
+
+    def __init__(self, days, *args, **kwargs):
+        super(Weekdays, self).__init__(*args, **kwargs)
+        self.days = days
+
+    def __eq__(self, other):
+        if not other:
+            return False
+        if isinstance(other, list):
+            return self.days == other
+        return self.days == other.days
+
+
+class WeeklyRecurrence(Timepoint):
+
+    def __init__(self, date_interval, time_interval, weekdays, *args, **kwargs):
+        super(WeeklyRecurrence, self).__init__(*args, **kwargs)
+        self.date_interval = date_interval
+        self.time_interval = time_interval
+        self.weekdays = weekdays
+
+
 class DurationRRule(object):
 
     """Wrapper around a rrule + duration object, providing handy properties

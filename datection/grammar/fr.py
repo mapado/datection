@@ -8,6 +8,7 @@ Definition of French specific grammar, related to temoral expressions.
 from pyparsing import Optional
 from pyparsing import oneOf
 from pyparsing import OneOrMore
+from dateutil.rrule import weekdays
 
 from datection.grammar import DAY_NUMBER
 from datection.grammar import YEAR
@@ -25,6 +26,9 @@ from datection.grammar import as_time_interval
 from datection.grammar import as_datetime_list
 from datection.grammar import as_datetime_interval
 from datection.grammar import as_continuous_datetime_interval
+from datection.grammar import as_weekday_list
+from datection.grammar import as_weekday_interval
+from datection.grammar import as_weekly_recurrence
 from datection.grammar import extract_time_patterns
 from datection.grammar import develop_datetime_patterns
 from datection.grammar import optional_ci
@@ -45,16 +49,21 @@ def set_month_number(text, start_index, match):
     )
 
 
-def set_weekday_number(text, start_index, match):
+def set_weekday(text, start_index, match):
     """Return the month number from the month name."""
-    return WEEKDAYS.get(match[0]) or SHORT_WEEKDAYS.get(match[0])
+    idx = WEEKDAYS.get(match[0].lower())
+    if idx is None:
+        idx = SHORT_WEEKDAYS.get(match[0].lower())
+    return make_match(weekdays[idx], match[0], start_index)
 
 
 # A weekday name can be in its full form or abbreviated form
-WEEKDAY = oneof_ci(
-    WEEKDAYS.keys()
-    + SHORT_WEEKDAYS.keys(),
-).setParseAction(set_weekday_number)('weekday')
+WEEKDAY = (
+    oneof_ci(
+        WEEKDAYS.keys() +
+        SHORT_WEEKDAYS.keys()) +
+    Optional(u"s")
+).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
 # When matched, a month name will be transformed to the corresponding
@@ -222,3 +231,52 @@ NUMERIC_CONTINUOUS_DATETIME_INTERVAL = (
     optional_oneof_ci([u"à", u"-"]) +
     TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)
+
+
+# A list of several weekdays
+WEEKDAY_LIST = (
+    optional_oneof_ci([u"le", u"les"]) +
+    OneOrMore(WEEKDAY + Optional(OneOrMore(oneOf([u',', u'et']))))
+).setParseAction(as_weekday_list)('weekdays')
+
+# An interval of weekdays
+WEEKDAY_INTERVAL = (
+    optional_ci(u"du") +
+    WEEKDAY
+    + u"au"
+    + WEEKDAY
+).setParseAction(as_weekday_interval)('weekdays')
+
+# Any weekday related pattern
+WEEKDAY_PATTERN = (
+    WEEKDAY_INTERVAL | WEEKDAY_LIST
+)
+
+
+WEEKLY_RECURRENCE_1 = (
+    WEEKDAY_PATTERN('weekdays') +
+    Optional(',') +
+    DATE_INTERVAL('date_interval') +
+    Optional(',') +
+    TIME_INTERVAL('time_interval')
+).setParseAction(as_weekly_recurrence)
+
+WEEKLY_RECURRENCE_2 = (
+    WEEKDAY_PATTERN('weekdays') +
+    Optional(',') +
+    TIME_INTERVAL('time_interval') +
+    Optional(',') +
+    DATE_INTERVAL('date_interval')
+)
+
+WEEKLY_RECURRENCE_3 = (
+    DATETIME_INTERVAL +
+    Optional(',') +
+    WEEKDAY_PATTERN
+)
+
+WEEKLY_RECURRENCE = (
+    WEEKLY_RECURRENCE_1 |
+    WEEKLY_RECURRENCE_2 |
+    WEEKLY_RECURRENCE_3
+)
