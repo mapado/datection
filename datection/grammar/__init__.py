@@ -6,6 +6,7 @@ Definition of language agnostic temporal expressions related regexes .
 """
 import re
 
+from operator import attrgetter
 from pyparsing import Regex
 from pyparsing import Optional
 from pyparsing import oneOf
@@ -22,6 +23,35 @@ from datection.models import DatetimeInterval
 from datection.models import ContinuousDatetimeInterval
 
 
+class Match(object):
+
+    """Wraps the text matched by a pyparsing pattern, storing the
+    matched value, along with the start and end indices of the Match
+    in the text.
+
+    """
+
+    def __init__(self, value, start_index, end_index):
+        self.value = value
+        self.start_index = start_index
+        self.end_index = end_index
+
+    def __repr__(self):
+        return '<%s %r>' % (self.__class__.__name__, self.value)
+
+    def __nonzero__(self):
+        return self.value is not None
+
+
+def span(matches):
+    matches = sorted(matches, key=attrgetter('start_index'))
+    return (matches[0].start_index, matches[-1].end_index)
+
+
+def make_match(match, matched_text, start_index):
+    return Match(match, start_index, start_index + len(matched_text))
+
+
 def optional_ci(s):
     return Optional(Regex(s, flags=re.I))
 
@@ -36,69 +66,91 @@ def optional_oneof_ci(choices):
 
 def as_int(text, start_index, match):
     """Return the integer value of the matched text."""
-    return int(match[0])
+    return Match(int(match[0]), start_index, start_index + len(match[0]))
 
 
 def as_4digit_year(text, start_index, match):
     """Return a 4 digit, integer year from a YEAR regex match."""
     if len(match[0]) == 4:
-        return int(match[0])
+        year = int(match[0])
     elif len(match[0]) == 2:
-        return int(normalize_2digit_year(match[0]))
+        year = int(normalize_2digit_year(match[0]))
+    return make_match(year, match[0], start_index)
 
 
-def as_date(text, start_index, match):
+def as_date(text, start_index, matches):
     """Return a Date object from a DATE regex match."""
-    year = match.year if match.year else None
-    month = match.month if match.month else None
-    return Date(year, month, match.day)
+    year = matches.get('year', Match(None, None, None))
+    month = matches.get('month', Match(None, None, None))
+    day = matches['day']
+    # do not take the non matches into account in the span calculation
+    span_matches = filter(bool, [year, month, day])
+    return Date(year.value, month.value, day.value,
+                span=span(span_matches))
 
 
-def as_time(text, start_index, match):
+def as_time(text, start_index, matches):
     """Return a Time object from a TIME regex match."""
-    minute = match.minute if match.minute else 0
-    return Time(match.hour, minute)
+    hour = matches['hour']
+    minute = matches.get('minute', Match(0, None, None))
+    if matches.get('minute'):
+        span_matches = [matches['hour'], matches['minute']]
+
+    else:
+        span_matches = [matches['hour']]
+    return Time(hour.value, minute.value, span=span(span_matches))
 
 
-def as_time_interval(text, start_index, match):
+def as_time_interval(text, start_index, matches):
     """Return a TimeInterval object from the TIME_INTERVAL regex match."""
-    if not match.get('end_time'):
-        match['end_time'] = match['start_time']
-    return TimeInterval(match['start_time'], match['end_time'])
+    if not matches.get('end_time'):
+        matches['end_time'] = matches['start_time']
+    return TimeInterval(
+        matches['start_time'],
+        matches['end_time'],
+        span=span([matches['start_time'], matches['end_time']]))
 
 
-def as_datetime(text, start_index, match):
+def as_datetime(text, start_index, matches):
     """Return a Datetime object from the DATETIME regex match."""
-    d = match['date']
-    ti = match['time_interval']
-    return Datetime(d, ti.start_time, ti.end_time)
+    d = matches['date']
+    ti = matches['time_interval']
+    return Datetime(d, ti.start_time, ti.end_time, span=span([d, ti]))
 
 
-def as_datelist(text, start_index, match):
+def as_datelist(text, start_index, matches):
     """Return a DateList object from the DATE_LIST regex match."""
-    return DateList.from_match(list(match['dates']))
+    dates = list(matches['dates'])
+    return DateList.from_match(dates, span=span(dates))
 
 
-def as_date_interval(text, start_index, match):
+def as_date_interval(text, start_index, matches):
     """Return a DateInterval object from the DATE_INTERVAL regex match."""
-    return DateInterval.from_match(match['start_date'], match['end_date'])
+    sd = matches['start_date']
+    ed = matches['end_date']
+    return DateInterval.from_match(sd, ed, span=span([sd, ed]))
 
 
 def as_datetime_list(text, start_index, match):
-    dates = DateList.from_match(list(match['dates']))
-    return DatetimeList.from_match(dates, match['time_interval'])
+    match_dates = list(match['dates'])
+    dates = DateList.from_match(match_dates, span=span(match_dates))
+    span_matches = [dates, match['time_interval']]
+    return DatetimeList.from_match(
+        dates, match['time_interval'],
+        span=span(span_matches))
 
 
 def as_datetime_interval(text, start_index, match):
-    return DatetimeInterval(match['date_interval'], match['time_interval'])
+    di = match['date_interval']
+    ti = match['time_interval']
+    return DatetimeInterval(di, ti, span=span([di, ti]))
 
 
 def as_continuous_datetime_interval(text, start_index, match):
-    return ContinuousDatetimeInterval(
-        match['start_date'],
-        match['start_time'],
-        match['end_date'],
-        match['end_time'])
+    sd, st = match['start_date'], match['start_time']
+    ed, et = match['end_date'], match['end_time']
+    return ContinuousDatetimeInterval.from_match(
+        sd, st, ed, et, span=span([sd, st, ed, et]))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(

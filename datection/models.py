@@ -19,6 +19,17 @@ from datection.normalize import DAY_END
 
 class Timepoint(object):
 
+    def __init__(self, span=(0, 0)):
+        self.span = span
+
+    @property
+    def start_index(self):
+        return self.span[0]
+
+    @property
+    def end_index(self):
+        return self.span[1]
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -30,16 +41,11 @@ class Date(Timepoint):
 
     """
 
-    def __init__(self, year, month, day):
+    def __init__(self, year, month, day, *args, **kwargs):
+        super(Date, self).__init__(*args, **kwargs)
         self.year = year
         self.month = month
         self.day = day
-
-    @classmethod
-    def from_match(self, match):
-        year = match['year'] if match['year'] else None
-        month = match['month'] if match['month'] else None
-        return Date(year, month, match['day'])
 
     def __eq__(self, other):
         if not other:
@@ -58,6 +64,12 @@ class Date(Timepoint):
             str(self.day)
         )
 
+    @classmethod
+    def from_match(self, match, *args, **kwargs):
+        year = match['year'] if match['year'] else None
+        month = match['month'] if match['month'] else None
+        return Date(year, month, match['day'], *args, **kwargs)
+
 
 class Time(Timepoint):
 
@@ -66,7 +78,8 @@ class Time(Timepoint):
 
     """
 
-    def __init__(self, hour, minute):
+    def __init__(self, hour, minute, *args, **kwargs):
+        super(Time, self).__init__(*args, **kwargs)
         self.hour = hour
         self.minute = minute
 
@@ -84,7 +97,8 @@ class Time(Timepoint):
 
 class TimeInterval(Timepoint):
 
-    def __init__(self, start_time, end_time):
+    def __init__(self, start_time, end_time, *args, **kwargs):
+        super(TimeInterval, self).__init__(*args, **kwargs)
         self.start_time = start_time
         self.end_time = end_time
 
@@ -107,10 +121,14 @@ class TimeInterval(Timepoint):
             self.start_time == other.start_time and
             self.end_time == other.end_time)
 
+    def is_single_time(self):
+        return self.start_time == self.end_time
+
 
 class DateList(Timepoint):
 
-    def __init__(self, dates):
+    def __init__(self, dates, *args, **kwargs):
+        super(DateList, self).__init__(*args, **kwargs)
         self.dates = dates
 
     def __iter__(self):
@@ -118,11 +136,11 @@ class DateList(Timepoint):
             yield _date
 
     @classmethod
-    def from_match(cls, dates):
+    def from_match(cls, dates, *args, **kwargs):
         """Return a DateList instance constructed from a regex match result."""
         dates = cls.set_months(dates)
         dates = cls.set_years(dates)
-        return DateList(dates)
+        return DateList(dates, *args, **kwargs)
 
     @classmethod
     def set_years(cls, dates):
@@ -154,7 +172,8 @@ class DateList(Timepoint):
 
 class DateInterval(Timepoint):
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, *args, **kwargs):
+        super(DateInterval, self).__init__(*args, **kwargs)
         self.start_date = start_date
         self.end_date = end_date
 
@@ -165,15 +184,19 @@ class DateInterval(Timepoint):
             self.start_date == other.start_date
             and self.end_date == other.end_date)
 
+    def __iter__(self):
+        yield self.start_date
+        yield self.end_date
+
     @classmethod
-    def from_match(cls, start_date, end_date):
+    def from_match(cls, start_date, end_date, *args, **kwargs):
         """Return a DateInterval instance constructed from a regex match
         result.
 
         """
         start_date = cls.set_start_date_year(start_date, end_date)
         start_date = cls.set_start_date_month(start_date, end_date)
-        return DateInterval(start_date, end_date)
+        return DateInterval(start_date, end_date, *args, **kwargs)
 
     @classmethod
     def set_start_date_year(cls, start_date, end_date):
@@ -201,7 +224,8 @@ class Datetime(Timepoint):
 
     """
 
-    def __init__(self, date, start_time, end_time=None):
+    def __init__(self, date, start_time, end_time=None, *args, **kwargs):
+        super(Datetime, self).__init__(*args, **kwargs)
         self.date = date
         self.start_time = start_time
         if not end_time:
@@ -215,14 +239,28 @@ class Datetime(Timepoint):
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
 
+    def __repr__(self):
+        return '<%s %d/%d/%d - %d:%s%s>' % (
+            self.__class__.__name__,
+            self.date.year,
+            self.date.month,
+            self.date.day,
+            self.start_time.hour,
+            str(self.start_time.minute).zfill(2),
+            '-%s:%s' % (
+                self.end_time.hour,
+                str(self.end_time.minute).zfill(2)
+            ) if self.start_time != self.end_time else '')
+
     @classmethod
-    def combine(cls, date, start_time, end_time=None):
-        return Datetime(date, start_time, end_time)
+    def combine(cls, date, start_time, end_time=None, *args, **kwargs):
+        return Datetime(date, start_time, end_time, *args, **kwargs)
 
 
 class DatetimeList(Timepoint):
 
-    def __init__(self, datetimes):
+    def __init__(self, datetimes, *args, **kwargs):
+        super(DatetimeList, self).__init__(*args, **kwargs)
         self.datetimes = datetimes
 
     def __eq__(self, other):
@@ -231,15 +269,16 @@ class DatetimeList(Timepoint):
         return self.datetimes == other.datetimes
 
     @classmethod
-    def from_match(cls, dates, time_interval):
+    def from_match(cls, dates, time_interval, *args, **kwargs):
         st, et = time_interval
         datetimes = [Datetime.combine(date, st, et) for date in dates]
-        return DatetimeList(datetimes)
+        return DatetimeList(datetimes, *args, **kwargs)
 
 
 class DatetimeInterval(Timepoint):
 
-    def __init__(self, date_interval, time_interval):
+    def __init__(self, date_interval, time_interval, *args, **kwargs):
+        super(DatetimeInterval, self).__init__(*args, **kwargs)
         self.date_interval = date_interval
         self.time_interval = time_interval
 
@@ -251,7 +290,9 @@ class DatetimeInterval(Timepoint):
 
 class ContinuousDatetimeInterval(Timepoint):
 
-    def __init__(self, start_date, start_time, end_date, end_time):
+    def __init__(
+            self, start_date, start_time, end_date, end_time, *args, **kwargs):
+        super(ContinuousDatetimeInterval, self).__init__(*args, **kwargs)
         self.start_date = start_date
         self.start_time = start_time
         self.end_date = end_date
@@ -263,6 +304,29 @@ class ContinuousDatetimeInterval(Timepoint):
             and self.start_time == other.start_time
             and self.end_date == other.end_date
             and self.end_time == other.end_time)
+
+    @classmethod
+    def from_match(cls, start_date, start_time, end_date, end_time, *args, **kwargs):
+        start_date = cls.set_month(start_date, end_date)
+        start_date = cls.set_year(start_date, end_date)
+        return ContinuousDatetimeInterval(
+            start_date, start_time, end_date, end_time, *args, **kwargs)
+
+    @classmethod
+    def set_year(cls, start_date, end_date):
+        if not end_date.year:
+            raise ValueError("end date must have a year")
+        if not start_date.year:
+            start_date.year = end_date.year
+        return start_date
+
+    @classmethod
+    def set_month(cls, start_date, end_date):
+        if not end_date.month:
+            raise ValueError("end date must have a month")
+        if not start_date.month:
+            start_date.month = end_date.month
+        return start_date
 
 
 class DurationRRule(object):

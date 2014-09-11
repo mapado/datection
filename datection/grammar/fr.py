@@ -16,6 +16,7 @@ from datection.grammar import MINUTE
 from datection.grammar import NUMERIC_MONTH
 from datection.grammar import NUMERIC_YEAR
 from datection.grammar import as_date
+from datection.grammar import make_match
 from datection.grammar import as_time
 from datection.grammar import as_datetime
 from datection.grammar import as_datelist
@@ -35,7 +36,11 @@ from datection.data.fr import SHORT_MONTHS
 
 def set_month_number(text, start_index, match):
     """Return the month number from the month name."""
-    return MONTHS.get(match[0]) or SHORT_MONTHS.get(match[0])
+    return make_match(
+        MONTHS.get(match[0]) or SHORT_MONTHS.get(match[0]),
+        match[0],
+        start_index
+    )
 
 
 def set_weekday_number(text, start_index, match):

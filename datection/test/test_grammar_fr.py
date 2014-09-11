@@ -6,7 +6,6 @@ from datection.test.test_grammar import TestRegex
 from datection.test.test_grammar import set_pattern
 from datection.grammar.fr import DATE
 from datection.grammar.fr import NUMERIC_DATE
-from datection.grammar.fr import BACKWARDS_NUMERIC_DATE
 from datection.grammar.fr import TIME
 from datection.grammar.fr import TIME_INTERVAL
 from datection.grammar.fr import DATETIME
@@ -85,6 +84,10 @@ class TestTimeRegex(TestRegex):
     def test_parse_time_no_minute(self):
         self.assert_parse_equal('15h', Time(15, 0))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'15h30', (0, 5))
+        self.assert_span_equal(u'15h', (0, 2))
+
 
 class TestTimeIntervalRegex(TestRegex):
 
@@ -104,6 +107,13 @@ class TestTimeIntervalRegex(TestRegex):
             u'de 15h30 à 18h', TimeInterval(Time(15, 30), Time(18, 0)))
         self.assert_parse_equal(
             u'15h30', TimeInterval(Time(15, 30), Time(15, 30)))
+
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'de 15h à 15h30', (3, 14))
+        self.assert_span_equal(u'de 15h30 à 16h', (3, 13))
+        self.assert_span_equal(u'15h30', (0, 5))
+        self.assert_span_equal(u'15h', (0, 2))
+
 
 
 class TestPartialDate(TestRegex):
@@ -131,6 +141,12 @@ class TestPartialDate(TestRegex):
     def test_parse_date_in_list_missing_year_and_month(self):
         self.assert_parse_equal(u'1er', Date(None, None, 1))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'2 avril 2015 et', (0, 12))
+        self.assert_span_equal(u'1er mars 2012', (0, 13))
+        self.assert_span_equal(u'1er mars', (0, 7))
+        self.assert_span_equal(u'1er', (0, 1))
+
 
 class TestDateList(TestRegex):
 
@@ -146,6 +162,12 @@ class TestDateList(TestRegex):
         self.assert_parse_equal(
             u"5, 8, 10 mars 2015",
             [Date(2015, 3, 5), Date(2015, 3, 8), Date(2015, 3, 10)])
+
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"les 5, 6, 8 mars 2013", (4, 21))
+        self.assert_span_equal(u"5, 6 et 8 mars 2013", (0, 19))
+        self.assert_span_equal(u"Le 5, 6 et 8 mars", (3, 17))
+        self.assert_span_equal(u"Les 5, 6 et 8", (4, 13))
 
 
 class TestDateInterval(TestRegex):
@@ -174,6 +196,13 @@ class TestDateInterval(TestRegex):
             u"Du 5 au 7 octobre 2015",
             DateInterval(Date(2015, 10, 5), Date(2015, 10, 7)))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"Du 5 au 7 octobre 2015", (3, 22))
+        self.assert_span_equal(u"Du 5 septembre au 7 octobre 2015", (3, 32))
+        self.assert_span_equal(
+            u"du 5 septembre 2014 au 7 octobre 2015", (3, 37))
+        self.assert_span_equal(u"5 septembre 2014 - 7 octobre 2015", (0, 33))
+
 
 class TestNumericDateInterval(TestRegex):
 
@@ -189,6 +218,11 @@ class TestNumericDateInterval(TestRegex):
             u"Du 03/05/2014 au 03/05/2015",
             DateInterval(Date(2014, 5, 3), Date(2015, 5, 3)))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"Du 03/05/2014 au 03/05/2015", (3, 27))
+        self.assert_span_equal(u"du 03/05/2014 au 03/05/2015", (3, 27))
+        self.assert_span_equal(u"03/05/2014 - 03/05/2015", (0, 23))
+
 
 class TestDatetimeRegex(TestRegex):
 
@@ -203,6 +237,12 @@ class TestDatetimeRegex(TestRegex):
         self.assert_parse_equal(
             u'5 mars 2015 à 15h30',
             Datetime(Date(2015, 3, 5), Time(15, 30)))
+
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'Le 5 mars 2015 à 15h30', (3, 22))
+        self.assert_span_equal(u'le 5 mars 2015 de 14h à 15h30', (3, 29))
+        self.assert_span_equal(u'Le 5 mars 2015, à 15h30', (3, 23))
+
 
 
 class TestDatetimeListRegex(TestRegex):
@@ -261,6 +301,11 @@ class TestNumericalDatetimeListRegex(TestRegex):
             ]
         )
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"les 05/04/2014, 06/05/2014, à 15h20", (4, 35))
+        self.assert_span_equal(
+            u"Les 05/04/2014, 06/05/2014, de 16h à 15h20", (4, 42))
+
 
 class TestDatetimeIntervalRegex(TestRegex):
 
@@ -286,6 +331,17 @@ class TestDatetimeIntervalRegex(TestRegex):
             u"Du 5 au 28 avril 2015 de 14h à 18h",
             DatetimeInterval(date_interval, time_interval))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"Du 5 au 28 avril 2015 à 18h", (3, 26))
+        self.assert_span_equal(u"Du 5 mars au 28 avril 2015 à 18h", (3, 31))
+        self.assert_span_equal(
+            u"Du 5 mars 2014  au 28 avril 2015 à 18h", (3, 37))
+        self.assert_span_equal(u"Du 5 au 28 avril 2015 de 16h à 18h", (3, 33))
+        self.assert_span_equal(
+            u"Du 5 mars au 28 avril 2015 de 16h à 18h", (3, 38))
+        self.assert_span_equal(
+            u"Du 5 mars 2014  au 28 avril 2015 de 16h à 18h", (3, 44))
+
 
 class TestNumericDatetimeIntervalRegex(TestRegex):
 
@@ -307,6 +363,11 @@ class TestNumericDatetimeIntervalRegex(TestRegex):
             u"Du 05/04/2015 au 28/04/2015 de 14h à 18h",
             DatetimeInterval(date_interval, time_interval))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(u"Du 05/04/2015 au 28/04/2015 à 18h", (3, 32))
+        self.assert_span_equal(
+            u"Du 05/04/2015 au 28/04/2015 de 14h à 18h", (3, 39))
+
 
 class TestContinuousDatetimeInterval(TestRegex):
 
@@ -327,6 +388,13 @@ class TestContinuousDatetimeInterval(TestRegex):
             ContinuousDatetimeInterval(
                 start_date, start_time, end_date, end_time))
 
+    def test_parse_result_span(self):
+        self.assert_span_equal(
+            u"Du 5 mars 2015 à 18h au 6 mars 2015 à 5h", (3, 39))
+        self.assert_span_equal(u"5 mars 2015 à 18h - 6 mars 2015 à 5h", (0, 35))
+        self.assert_span_equal(u"5 mars 2015 - 18h - 6 mars 2015 - 5h", (0, 35))
+        self.assert_span_equal(u"5 mars - 18h - 6 mars 2015 - 5h", (0, 30))
+
 
 class TestNumericContinuousDatetimeInterval(TestRegex):
 
@@ -346,3 +414,9 @@ class TestNumericContinuousDatetimeInterval(TestRegex):
             u"Du 05/03/2015 à 18h au 06/03/2015 à 5h",
             ContinuousDatetimeInterval(
                 start_date, start_time, end_date, end_time))
+
+    def test_parse_result_span(self):
+        self.assert_span_equal(
+            u"Du 05/03/2015 à 18h au 06/03/2015 à 5h", (3, 37))
+        self.assert_span_equal(u"05/03/2015 à 18h - 06/03/2015 à 5h", (0, 33))
+        self.assert_span_equal(u"05/03/2015 - 18h - 06/03/2015 - 5h", (0, 33))
