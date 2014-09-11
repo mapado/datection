@@ -37,7 +37,7 @@ def set_pattern(pattern):
     return decorator
 
 
-class TestRegex(unittest.TestCase):
+class TestGrammar(unittest.TestCase):
 
     """Base class for all regex test classes."""
 
@@ -74,7 +74,7 @@ class TestRegex(unittest.TestCase):
             raise AssertionError("%r != %r" % (result[0].span, expected))
 
 
-class TestLanguageAgnosticRegexes(TestRegex):
+class TestLanguageAgnosticRegexes(TestGrammar):
 
     """Test suite of the language agnostic pyparsing regexes."""
 

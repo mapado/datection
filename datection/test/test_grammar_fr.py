@@ -2,8 +2,7 @@
 
 """Test suite of the french grammar."""
 
-from datection.test.test_grammar import TestRegex
-from datection.test.test_grammar import set_pattern
+from datection.test.test_grammar import TestGrammar
 from datection.grammar.fr import DATE
 from datection.grammar.fr import NUMERIC_DATE
 from datection.grammar.fr import TIME
@@ -29,7 +28,7 @@ from datection.models import DatetimeInterval
 from datection.models import ContinuousDatetimeInterval
 
 
-class TestDateRegex(TestRegex):
+class TestDateRegex(TestGrammar):
 
     pattern = DATE
 
@@ -49,7 +48,8 @@ class TestDateRegex(TestRegex):
         self.assert_parse_equal(u'le 2 mar. 2015', Date(2015, 3, 2))
 
 
-class TestNumericDateRegex(TestRegex):
+
+class TestNumericDateRegex(TestGrammar):
 
     pattern = NUMERIC_DATE
 
@@ -73,7 +73,7 @@ class TestNumericDateRegex(TestRegex):
         self.assert_unparsable(u'1/1/15')
 
 
-class TestTimeRegex(TestRegex):
+class TestTimeRegex(TestGrammar):
 
     pattern = TIME
 
@@ -89,7 +89,7 @@ class TestTimeRegex(TestRegex):
         self.assert_span_equal(u'15h', (0, 2))
 
 
-class TestTimeIntervalRegex(TestRegex):
+class TestTimeIntervalRegex(TestGrammar):
 
     pattern = TIME_INTERVAL
 
@@ -116,7 +116,7 @@ class TestTimeIntervalRegex(TestRegex):
 
 
 
-class TestPartialDate(TestRegex):
+class TestPartialDate(TestGrammar):
 
     pattern = PARTIAL_DATE
 
@@ -148,7 +148,7 @@ class TestPartialDate(TestRegex):
         self.assert_span_equal(u'1er', (0, 1))
 
 
-class TestDateList(TestRegex):
+class TestDateList(TestGrammar):
 
     pattern = DATE_LIST
 
@@ -170,7 +170,7 @@ class TestDateList(TestRegex):
         self.assert_span_equal(u"Les 5, 6 et 8", (4, 13))
 
 
-class TestDateInterval(TestRegex):
+class TestDateInterval(TestGrammar):
 
     pattern = DATE_INTERVAL
 
@@ -204,7 +204,7 @@ class TestDateInterval(TestRegex):
         self.assert_span_equal(u"5 septembre 2014 - 7 octobre 2015", (0, 33))
 
 
-class TestNumericDateInterval(TestRegex):
+class TestNumericDateInterval(TestGrammar):
 
     pattern = NUMERIC_DATE_INTERVAL
 
@@ -224,7 +224,7 @@ class TestNumericDateInterval(TestRegex):
         self.assert_span_equal(u"03/05/2014 - 03/05/2015", (0, 23))
 
 
-class TestDatetimeRegex(TestRegex):
+class TestDatetimeRegex(TestGrammar):
 
     pattern = DATETIME
 
@@ -245,7 +245,7 @@ class TestDatetimeRegex(TestRegex):
 
 
 
-class TestDatetimeListRegex(TestRegex):
+class TestDatetimeListRegex(TestGrammar):
 
     pattern = DATETIME_LIST
 
@@ -275,7 +275,7 @@ class TestDatetimeListRegex(TestRegex):
         )
 
 
-class TestNumericalDatetimeListRegex(TestRegex):
+class TestNumericDatetimeListRegex(TestGrammar):
 
     pattern = NUMERICAL_DATETIME_LIST
 
@@ -307,7 +307,7 @@ class TestNumericalDatetimeListRegex(TestRegex):
             u"Les 05/04/2014, 06/05/2014, de 16h à 15h20", (4, 42))
 
 
-class TestDatetimeIntervalRegex(TestRegex):
+class TestDatetimeIntervalRegex(TestGrammar):
 
     pattern = DATETIME_INTERVAL
 
@@ -343,7 +343,7 @@ class TestDatetimeIntervalRegex(TestRegex):
             u"Du 5 mars 2014  au 28 avril 2015 de 16h à 18h", (3, 44))
 
 
-class TestNumericDatetimeIntervalRegex(TestRegex):
+class TestNumericDatetimeIntervalRegex(TestGrammar):
 
     pattern = NUMERIC_DATETIME_INTERVAL
 
@@ -369,7 +369,7 @@ class TestNumericDatetimeIntervalRegex(TestRegex):
             u"Du 05/04/2015 au 28/04/2015 de 14h à 18h", (3, 39))
 
 
-class TestContinuousDatetimeInterval(TestRegex):
+class TestContinuousDatetimeInterval(TestGrammar):
 
     pattern = CONTINUOUS_DATETIME_INTERVAL
 
@@ -396,7 +396,7 @@ class TestContinuousDatetimeInterval(TestRegex):
         self.assert_span_equal(u"5 mars - 18h - 6 mars 2015 - 5h", (0, 30))
 
 
-class TestNumericContinuousDatetimeInterval(TestRegex):
+class TestNumericContinuousDatetimeInterval(TestGrammar):
 
     pattern = NUMERIC_CONTINUOUS_DATETIME_INTERVAL
 
