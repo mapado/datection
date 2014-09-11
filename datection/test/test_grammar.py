@@ -128,11 +128,13 @@ class TestLanguageAgnosticRegexes(TestGrammar):
     @set_pattern(NUMERIC_MONTH)
     def test_parse_numeric_month(self):
         self.assert_parse(u'01')
+        self.assert_parse(u'1')
         self.assert_parse(u'12')
 
     @set_pattern(NUMERIC_MONTH)
     def test_unparsable_numeric_month(self):
         self.assert_unparsable(u'00')
+        self.assert_unparsable(u'0')
         self.assert_unparsable(u'13')
 
     @set_pattern(NUMERIC_YEAR)

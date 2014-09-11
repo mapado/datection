@@ -184,7 +184,7 @@ MINUTE = Regex(ur'[0-5][0-9]').\
     setResultsName('minute')
 
 # The numeric version of the month: 2 digits bewteen 01 and 12
-NUMERIC_MONTH = Regex(ur'0[1-9]|1[0-2]').\
+NUMERIC_MONTH = Regex(ur'1[0-2]|0[1-9]|[1-9](?!\d)').\
     setParseAction(as_int).\
     setResultsName('month')
 

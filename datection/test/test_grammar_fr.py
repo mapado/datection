@@ -47,6 +47,11 @@ class TestDateRegex(TestGrammar):
         self.assert_parse_equal(u'2 mar 2015', Date(2015, 3, 2))
         self.assert_parse_equal(u'le 2 mar. 2015', Date(2015, 3, 2))
 
+    def test_parse_date_missing_year(self):
+        self.assert_parse_equal(u'1er janvier', Date(None, 1, 1))
+
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'le 2 mar. 2015', (3, 14))
 
 
 class TestNumericDateRegex(TestGrammar):
@@ -57,14 +62,16 @@ class TestNumericDateRegex(TestGrammar):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01/01/15', Date(2015, 1, 1))
         self.assert_parse_equal(u'1/01/15', Date(2015, 1, 1))
+        self.assert_parse_equal(u'1/1/15', Date(2015, 1, 1))
+        self.assert_parse_equal(u'26/2', Date(None, 2, 26))
 
     def test_numeric_date_separators(self):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01-01-2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01.01.2015', Date(2015, 1, 1))
 
-    def test_unparsable_numeric_date(self):
-        self.assert_unparsable(u'1/1/15')
+    def test_parse_result_span(self):
+        self.assert_span_equal(u'01/01/2015', (0, 10))
 
 
 class TestTimeRegex(TestGrammar):

@@ -65,14 +65,14 @@ MONTH = oneof_ci(
 DAY_NUMBER = DAY_NUMBER + optional_ci(u'er').suppress()
 
 # A date is composed of a day number, an optional 'er' (for '1er') that
-# we do not care about, a month and a year. Abbreviated months can also
-# have a dot at their end, that will be ignored.
+# we do not care about, a month and an optional year.
+# Abbreviated months can also have a dot at their end, that will be ignored.
 DATE = (
     optional_ci(u"le").suppress()
     + DAY_NUMBER
     + MONTH
     + Optional(u'.').suppress()  # for abbreviated months
-    + YEAR
+    + Optional(YEAR)
 ).setParseAction(as_date)
 
 
@@ -83,15 +83,18 @@ NUMERIC_DATE = (
     DAY_NUMBER +
     date_sep +
     NUMERIC_MONTH +
-    date_sep +
-    NUMERIC_YEAR +
+    Optional(
+        date_sep +
+        NUMERIC_YEAR
+    ) +
     Optional(u',')
 ).setParseAction(as_date)
 
 # A time is an hour, a separator and a time
 TIME = (
+    Optional(u'à') +
     HOUR +
-    oneof_ci([u'h', u':']).suppress() +
+    oneof_ci([u'h', u':']) +
     Optional(MINUTE)
 ).setParseAction(as_time)
 
