@@ -74,23 +74,23 @@ MONTH = oneof_ci(
     + SHORT_MONTHS.keys(),
 ).setParseAction(set_month_number)('month')
 
-DAY_NUMBER = DAY_NUMBER + optional_ci(u'er').suppress()
+DAY_NUMBER = DAY_NUMBER + optional_ci(u'er')
 
 # A date is composed of a day number, an optional 'er' (for '1er') that
 # we do not care about, a month and an optional year.
 # Abbreviated months can also have a dot at their end, that will be ignored.
 DATE = (
-    optional_ci(u"le").suppress()
+    optional_ci(u"le")
     + DAY_NUMBER
     + MONTH
-    + Optional(u'.').suppress()  # for abbreviated months
+    + Optional(u'.')  # for abbreviated months
     + Optional(YEAR)
 ).setParseAction(as_date)
 
 
 # A numeric date is a day, month and a year separated by a one-char
 # token. Example: 05/10/2012
-date_sep = oneOf([u'/', u'-', u'.']).suppress()
+date_sep = oneOf([u'/', u'-', u'.'])
 NUMERIC_DATE = (
     DAY_NUMBER +
     date_sep +
@@ -115,9 +115,9 @@ TIME = (
 # 15h30 is a time interval bewteen 15h30 and 15h30
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
-    optional_oneof_ci([u'de', u'entre', u'à']).suppress() +
+    optional_oneof_ci([u'de', u'entre', u'à']) +
     TIME('start_time') +
-    optional_oneof_ci([u'-', u'à', u'et']).suppress() +
+    optional_oneof_ci([u'-', u'à', u'et']) +
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
@@ -126,7 +126,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et']))).suppress()
+        Optional(OneOrMore(oneOf([u',', u'et'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
