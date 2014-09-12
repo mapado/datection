@@ -66,12 +66,12 @@ class TestGrammar(unittest.TestCase):
     def assert_parse_equal(self, text, expected):
         result = self.pattern.parseString(text)
         if result[0] != expected:
-            raise AssertionError("parse(%r) != %r" % (text, expected))
+            raise AssertionError("%r != %r" % (result[0], expected))
 
     def assert_parse_list_equal(self, text, expected):
         result = self.pattern.parseString(text)
         if list(result) != expected:
-            raise AssertionError("parse(%r) != %r" % (text, expected))
+            raise AssertionError("%r != %r" % (result, expected))
 
     def assert_span_equal(self, text, expected):
         result = self.pattern.parseString(text)

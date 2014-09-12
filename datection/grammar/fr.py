@@ -29,6 +29,7 @@ from datection.grammar import as_continuous_datetime_interval
 from datection.grammar import as_weekday_list
 from datection.grammar import as_weekday_interval
 from datection.grammar import as_weekly_recurrence
+from datection.grammar import complete_partial_date
 from datection.grammar import extract_time_patterns
 from datection.grammar import develop_datetime_patterns
 from datection.grammar import optional_ci
@@ -129,14 +130,34 @@ TIME_PATTERN = (
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
-# A partial date must at least have a day number, and then can
-# have a month and a year.
-PARTIAL_DATE = (
-    DAY_NUMBER +
+# A partial litteral date is both optional month and year.
+PARTIAL_LITTERAL_DATE = (
     Optional(MONTH) +
-    Optional(YEAR) +
-    optional_oneof_ci([u',', u'et'])
+    Optional(YEAR)
 ).setParseAction(as_date)
+
+# A partial litteral date is both optional numeric month and year.
+PARTIAL_NUMERIC_DATE = (
+    Optional(
+        NUMERIC_MONTH
+    ) +
+    Optional(
+        date_sep +
+        NUMERIC_YEAR
+    )
+).setParseAction(as_date)
+
+# A partial date is a mandatory day number, and optional litteral/numeric
+# month and year, and optional separator
+PARTIAL_DATE = (
+    DAY_NUMBER('day') +
+    Optional(date_sep) +
+    Optional((
+        PARTIAL_LITTERAL_DATE('partial_date') |
+        PARTIAL_NUMERIC_DATE('partial_date')
+    ))
+    + Optional(OneOrMore(oneOf([u',', u'et'])))
+).setParseAction(complete_partial_date)
 
 # A date list is a list of partial dates
 DATE_LIST = (
@@ -150,16 +171,7 @@ DATE_INTERVAL = (
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
     oneof_ci([u'au', '-']) +
-    DATE('end_date')
-).setParseAction(as_date_interval)
-
-# A date interval is composed of a numeric start date and a numeric end
-# date
-NUMERIC_DATE_INTERVAL = (
-    optional_ci(u"du") +
-    NUMERIC_DATE('start_date') +
-    oneof_ci([u'au', '-']) +
-    NUMERIC_DATE('end_date')
+    (DATE | NUMERIC_DATE)('end_date')
 ).setParseAction(as_date_interval)
 
 # A datetime is a date, a separator and a time interval (either a single)
@@ -184,15 +196,6 @@ DATETIME_LIST = (
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
-# same than DATETIME_LIST with numerical dates
-NUMERIC_DATETIME_LIST = (
-    optional_oneof_ci([u"les", u"le"]) +
-    OneOrMore(NUMERIC_DATE)('dates') +
-    Optional(u',') +
-    optional_oneof_ci([u'à', u'-']) +
-    TIME_INTERVAL('time_interval')
-).setParseAction(as_datetime_list)
-
 
 # a datetime interval is an interval of dates, and a time interval
 DATETIME_INTERVAL = (
@@ -201,33 +204,15 @@ DATETIME_INTERVAL = (
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_interval)
 
-# a datetime interval is an interval of numeric dates, and a time interval
-NUMERIC_DATETIME_INTERVAL = (
-    NUMERIC_DATE_INTERVAL('date_interval') +
-    Optional(u',') +
-    TIME_INTERVAL('time_interval')
-).setParseAction(as_datetime_interval)
 
 # Example: du 5 mars 2015 à 13h au 7 mars 2015 à 7h
 CONTINUOUS_DATETIME_INTERVAL = (
     optional_ci(u'du') +
-    DATE("start_date") +
+    (DATE | NUMERIC_DATE)("start_date") +
     optional_oneof_ci([u"à", u"-"]) +
     TIME("start_time") +
     optional_oneof_ci([u"au", '-']) +
-    DATE("end_date") +
-    optional_oneof_ci([u"à", u"-"]) +
-    TIME("end_time")
-).setParseAction(as_continuous_datetime_interval)
-
-# Example: du 05/11/2015 à 13h au 07/11/2015 à 7h
-NUMERIC_CONTINUOUS_DATETIME_INTERVAL = (
-    optional_ci(u'du') +
-    NUMERIC_DATE("start_date") +
-    optional_oneof_ci([u"à", u"-"]) +
-    TIME("start_time") +
-    optional_oneof_ci([u"au", '-']) +
-    NUMERIC_DATE("end_date") +
+    (DATE | NUMERIC_DATE)("end_date") +
     optional_oneof_ci([u"à", u"-"]) +
     TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)

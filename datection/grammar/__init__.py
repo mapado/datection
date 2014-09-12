@@ -82,7 +82,7 @@ def as_date(text, start_index, matches):
     """Return a Date object from a DATE regex match."""
     year = matches.get('year', Match(None, None, None))
     month = matches.get('month', Match(None, None, None))
-    day = matches['day']
+    day = matches.get('day', Match(None, None, None))
     # do not take the non matches into account in the span calculation
     span_matches = filter(bool, [year, month, day])
     return Date(year.value, month.value, day.value,
@@ -164,6 +164,20 @@ def develop_datetime_patterns(text, start_index, match):
     for start_time, end_time in times:
         out.append(Datetime(date,  start_time, end_time))
     return out
+
+
+def complete_partial_date(text, start_index, matches):
+    if matches.get('partial_date'):
+        date = matches['partial_date']
+        date.day = matches['day'][0].value
+        date.span = (matches['day'][0].start_index, date.end_index)
+        return date
+    else:
+        return Date(
+            year=None,
+            month=None,
+            day=matches['day'][0].value,
+            span=span([matches['day'][0]]))
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
