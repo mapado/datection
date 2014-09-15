@@ -17,7 +17,6 @@ from datection.grammar import MINUTE
 from datection.grammar import NUMERIC_MONTH
 from datection.grammar import NUMERIC_YEAR
 from datection.grammar import as_date
-from datection.grammar import make_match
 from datection.grammar import as_time
 from datection.grammar import as_datetime
 from datection.grammar import as_datelist
@@ -43,11 +42,7 @@ from datection.data.fr import SHORT_MONTHS
 
 def set_month_number(text, start_index, match):
     """Return the month number from the month name."""
-    return make_match(
-        MONTHS.get(match[0]) or SHORT_MONTHS.get(match[0]),
-        match[0],
-        start_index
-    )
+    return MONTHS.get(match[0]) or SHORT_MONTHS.get(match[0])
 
 
 def set_weekday(text, start_index, match):
@@ -55,7 +50,7 @@ def set_weekday(text, start_index, match):
     idx = WEEKDAYS.get(match[0].lower())
     if idx is None:
         idx = SHORT_WEEKDAYS.get(match[0].lower())
-    return make_match(weekdays[idx], match[0], start_index)
+    return weekdays[idx]
 
 
 # A weekday name can be in its full form or abbreviated form
@@ -132,15 +127,13 @@ TIME_PATTERN = (
 
 # A partial litteral date is both optional month and year.
 PARTIAL_LITTERAL_DATE = (
-    Optional(MONTH) +
+    MONTH +
     Optional(YEAR)
 ).setParseAction(as_date)
 
 # A partial litteral date is both optional numeric month and year.
 PARTIAL_NUMERIC_DATE = (
-    Optional(
-        NUMERIC_MONTH
-    ) +
+    NUMERIC_MONTH +
     Optional(
         date_sep +
         NUMERIC_YEAR
@@ -152,10 +145,10 @@ PARTIAL_NUMERIC_DATE = (
 PARTIAL_DATE = (
     DAY_NUMBER('day') +
     Optional(date_sep) +
-    Optional((
+    Optional(
         PARTIAL_LITTERAL_DATE('partial_date') |
         PARTIAL_NUMERIC_DATE('partial_date')
-    ))
+    )
     + Optional(OneOrMore(oneOf([u',', u'et'])))
 ).setParseAction(complete_partial_date)
 

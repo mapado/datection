@@ -73,11 +73,6 @@ class TestGrammar(unittest.TestCase):
         if list(result) != expected:
             raise AssertionError("%r != %r" % (result, expected))
 
-    def assert_span_equal(self, text, expected):
-        result = self.pattern.parseString(text)
-        if result[0].span != expected:
-            raise AssertionError("%r != %r" % (result[0].span, expected))
-
 
 class TestLanguageAgnosticRegexes(TestGrammar):
 

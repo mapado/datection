@@ -31,7 +31,16 @@ class Timepoint(object):
         return self.span[1]
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
+
+    def __eq__(self, other):
+        # weird hack that seems to prevent unexpected pyparsing error
+        if not other:
+            return False
+        # end of hack
+        if isinstance(other, Timepoint) and type(self) is not type(other):
+            return False
+        return True
 
 
 class Date(Timepoint):
@@ -48,8 +57,7 @@ class Date(Timepoint):
         self.day = day
 
     def __eq__(self, other):
-        if not other:
-            # weird hack that seems to prevent unexpected pyparsing error
+        if not super(Date, self).__eq__(other):
             return False
         return (
             self.year == other.year
@@ -90,7 +98,7 @@ class Time(Timepoint):
             str(self.minute).zfill(2))
 
     def __eq__(self, other):
-        if not other:
+        if not super(Time, self).__eq__(other):
             return False
         return (self.hour == other.hour and self.minute == other.minute)
 
@@ -115,7 +123,7 @@ class TimeInterval(Timepoint):
             str(self.end_time.minute).zfill(2))
 
     def __eq__(self, other):
-        if not other:
+        if not super(TimeInterval, self).__eq__(other):
             return False
         return (
             self.start_time == other.start_time and
@@ -165,6 +173,8 @@ class DateList(Timepoint):
         return dates
 
     def __eq__(self, other):
+        if not super(DateList, self).__eq__(other):
+            return False
         if isinstance(other, list):
             return self.dates == other
         return self.dates == other.dates
@@ -178,7 +188,7 @@ class DateInterval(Timepoint):
         self.end_date = end_date
 
     def __eq__(self, other):
-        if not other:
+        if not super(DateInterval, self).__eq__(other):
             return False
         return (
             self.start_date == other.start_date
@@ -234,6 +244,8 @@ class Datetime(Timepoint):
             self.end_time = end_time
 
     def __eq__(self, other):
+        if not super(Datetime, self).__eq__(other):
+            return False
         return (
             self.date == other.date
             and self.start_time == other.start_time
@@ -283,6 +295,8 @@ class DatetimeInterval(Timepoint):
         self.time_interval = time_interval
 
     def __eq__(self, other):
+        if not super(DatetimeInterval, self).__eq__(other):
+            return False
         return (
             self.date_interval == other.date_interval
             and self.time_interval == other.time_interval)
@@ -299,6 +313,8 @@ class ContinuousDatetimeInterval(Timepoint):
         self.end_time = end_time
 
     def __eq__(self, other):
+        if not super(ContinuousDatetimeInterval, self).__eq__(other):
+            return False
         return (
             self.start_date == other.start_date
             and self.start_time == other.start_time
@@ -336,7 +352,7 @@ class Weekdays(Timepoint):
         self.days = days
 
     def __eq__(self, other):
-        if not other:
+        if not super(Weekdays, self).__eq__(other):
             return False
         if isinstance(other, list):
             return self.days == other

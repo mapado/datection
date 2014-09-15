@@ -61,9 +61,6 @@ class TestDate(TestGrammar):
     def test_parse_date_missing_year(self):
         self.assert_parse_equal(u'1er janvier', Date(None, 1, 1))
 
-    def test_parse_result_span(self):
-        self.assert_span_equal(u'le 2 mar. 2015', (0, 14))
-
 
 class TestNumericDate(TestGrammar):
 
@@ -81,9 +78,6 @@ class TestNumericDate(TestGrammar):
         self.assert_parse_equal(u'01-01-2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01.01.2015', Date(2015, 1, 1))
 
-    def test_parse_result_span(self):
-        self.assert_span_equal(u'01/01/2015', (0, 10))
-
 
 class TestTime(TestGrammar):
 
@@ -95,11 +89,6 @@ class TestTime(TestGrammar):
 
     def test_parse_time_no_minute(self):
         self.assert_parse_equal('15h', Time(15, 0))
-
-    def test_parse_result_span(self):
-        self.assert_span_equal(u'15h30', (0, 5))
-        self.assert_span_equal(u'15h', (0, 3))
-        self.assert_span_equal(u'15:', (0, 3))
 
 
 class TestTimeInterval(TestGrammar):
@@ -120,12 +109,6 @@ class TestTimeInterval(TestGrammar):
             u'de 15h30 à 18h', TimeInterval(Time(15, 30), Time(18, 0)))
         self.assert_parse_equal(
             u'15h30', TimeInterval(Time(15, 30), Time(15, 30)))
-
-    def test_parse_result_span(self):
-        self.assert_span_equal(u'de 15h à 15h30', (0, 14))
-        self.assert_span_equal(u'de 15h30 à 16h', (0, 14))
-        self.assert_span_equal(u'15h30', (0, 5))
-        self.assert_span_equal(u'15h', (0, 3))
 
 
 class TestTimePattern(TestGrammar):
@@ -162,11 +145,6 @@ class TestPartialDate(TestGrammar):
     def test_parse_partial_litteral_date_missing_year(self):
         self.assert_parse_equal(u'mars', Date(None, 3, None))
 
-    @set_pattern(PARTIAL_LITTERAL_DATE)
-    def test_parse_partial_litteral_date_result_span(self):
-        self.assert_span_equal(u'avril 2015', (0, 10))
-        self.assert_span_equal(u'mars', (0, 4))
-
     @set_pattern(PARTIAL_NUMERIC_DATE)
     def test_parse_partial_numeric_date_formats(self):
         self.assert_parse(u'02/2014')
@@ -177,11 +155,6 @@ class TestPartialDate(TestGrammar):
     def test_parse_partial_numeric_date(self):
         self.assert_parse_equal(u'2/12', Date(2012, 2, None))
         self.assert_parse_equal(u'12/2012', Date(2012, 12, None))
-
-    @set_pattern(PARTIAL_NUMERIC_DATE)
-    def test_parse_partial_numeric_date_missing_year(self):
-        self.assert_parse_equal(u'/12', Date(2012, None, None))
-        self.assert_parse_equal(u'/2012', Date(2012, None, None))
 
     def test_parse_partial_date_formats(self):
         self.assert_parse(u'1er')
@@ -218,11 +191,6 @@ class TestDateList(TestGrammar):
         self.assert_parse_equal(
             u"5, 8, 10 mars 2015",
             [Date(2015, 3, 5), Date(2015, 3, 8), Date(2015, 3, 10)])
-
-    def test_parse_result_span(self):
-        self.assert_span_equal(u"les 5, 6, 8 mars 2013", (0, 21))
-        self.assert_span_equal(u"5, 6 et 8 mars 2013", (0, 19))
-        self.assert_span_equal(u"Le 5, 6 et 8 mars", (0, 17))
 
 
 class TestDateInterval(TestGrammar):
@@ -271,19 +239,6 @@ class TestDateInterval(TestGrammar):
             u"Du 3 au 05/05/2015",
             DateInterval(Date(2015, 5, 3), Date(2015, 5, 5)))
 
-    def test_parse_result_span(self):
-        self.assert_span_equal(u"Du 5 au 7 octobre 2015", (0, 22))
-        self.assert_span_equal(u"Du 5 septembre au 7 octobre 2015", (0, 32))
-        self.assert_span_equal(
-            u"du 5 septembre 2014 au 7 octobre 2015", (0, 37))
-        self.assert_span_equal(u"5 septembre 2014 - 7 octobre 2015", (0, 33))
-        self.assert_span_equal(u"Du 03/05/2014 au 03/05/2015", (0, 27))
-        self.assert_span_equal(u"Du 3 au 05/05/2015", (0, 18))
-        self.assert_span_equal(u"du 03/05/2014 au 03/05/2015", (0, 27))
-        self.assert_span_equal(u"03/05/2014 - 03/05/2015", (0, 23))
-        self.assert_span_equal(u"du 03/05 au 03/05/2015", (0, 22))
-        self.assert_span_equal(u"du 03/05 au 5 mai 2015", (0, 22))
-
 
 class TestDatetime(TestGrammar):
 
@@ -298,11 +253,6 @@ class TestDatetime(TestGrammar):
         self.assert_parse_equal(
             u'5 mars 2015 à 15h30',
             Datetime(Date(2015, 3, 5), Time(15, 30)))
-
-    def test_parse_result_span(self):
-        self.assert_span_equal(u'Le 5 mars 2015 à 15h30', (0, 22))
-        self.assert_span_equal(u'le 5 mars 2015 de 14h à 15h30', (0, 29))
-        self.assert_span_equal(u'Le 5 mars 2015, à 15h30', (0, 23))
 
 
 class TestDatetimePattern(TestGrammar):
@@ -321,13 +271,6 @@ class TestDatetimePattern(TestGrammar):
                 Datetime(Date(2012, 11, 25), Time(22, 30), Time(22, 30)),
                 Datetime(Date(2012, 11, 25), Time(23, 0), Time(23, 30)),
             ])
-
-    def test_parse_datetime_pattern_span(self):
-        res = self.pattern.parseString(
-            u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30')
-        self.assertEqual(res[0].span, (0, 51))
-        self.assertEqual(res[1].span, (0, 51))
-        self.assertEqual(res[2].span, (0, 51))
 
 
 class TestDatetimeList(TestGrammar):
@@ -386,20 +329,6 @@ class TestDatetimeList(TestGrammar):
                 Datetime(Date(2015, 4, 6), Time(14, 0), Time(16, 0)),
             ])
 
-    def test_parse_datetime_list_span(self):
-        self.assert_span_equal(
-            u"les 5, 6, 7 septembre 2014, à 15h20", (0, 35))
-        self.assert_span_equal(
-            u"les 5, 6, 7 septembre 2014, de 15h à 15h20", (0, 42))
-        self.assert_span_equal(
-            u"Les 5, 6, 7 septembre 2014, de 15h à 15h20", (0, 42))
-        self.assert_span_equal(
-            u"les 05/04/2014, 06/05/2014, à 15h20", (0, 35))
-        self.assert_span_equal(
-            u"Les 05/04/2014, 06/05/2014, de 16h à 15h20", (0, 42))
-        self.assert_span_equal(
-            u"Les 05/04, 6 avril 2015, de 16h à 15h20", (0, 39))
-
 
 class TestDatetimeInterval(TestGrammar):
 
@@ -452,23 +381,6 @@ class TestDatetimeInterval(TestGrammar):
             u"Du 5 mars au 28 avril 2015 de 14h à 18h",
             DatetimeInterval(date_interval, time_interval))
 
-    def test_parse_result_span(self):
-        self.assert_span_equal(u"Du 5 au 28 avril 2015 à 18h", (0, 27))
-        self.assert_span_equal(u"Du 5 mars au 28 avril 2015 à 18h", (0, 32))
-        self.assert_span_equal(
-            u"Du 5 mars 2014  au 28 avril 2015 à 18h", (0, 38))
-        self.assert_span_equal(u"Du 5 au 28 avril 2015 de 16h à 18h", (0, 34))
-        self.assert_span_equal(
-            u"Du 5 mars au 28 avril 2015 de 16h à 18h", (0, 39))
-        self.assert_span_equal(
-            u"Du 5 mars 2014  au 28 avril 2015 de 16h à 18h", (0, 45))
-        self.assert_span_equal(
-            u"Du 05/04/2015 au 28/04/2015 à 18h", (0, 33))
-        self.assert_span_equal(
-            u"Du 05/04/2015 au 28/04/2015 de 14h à 18h", (0, 40))
-        self.assert_span_equal(
-            u"Du 05/04 au 20 avril 2015 de 14h à 18h", (0, 38))
-
 
 class TestContinuousDatetimeInterval(TestGrammar):
 
@@ -519,17 +431,6 @@ class TestContinuousDatetimeInterval(TestGrammar):
             ContinuousDatetimeInterval(
                 start_date, start_time, end_date, end_time))
 
-    def test_parse_result_span(self):
-        self.assert_span_equal(
-            u"Du 5 mars 2015 à 18h au 6 mars 2015 à 5h", (0, 40))
-        self.assert_span_equal(u"5 mars 2015 à 18h - 6 mars 2015 à 5h", (0, 36))
-        self.assert_span_equal(u"5 mars 2015 - 18h - 6 mars 2015 - 5h", (0, 36))
-        self.assert_span_equal(u"5 mars - 18h - 6 mars 2015 - 5h", (0, 31))
-        self.assert_span_equal(
-            u"Du 05/03/2015 à 18h au 06/03/2015 à 5h", (0, 38))
-        self.assert_span_equal(u"05/03/2015 à 18h - 06/03/2015 à 5h", (0, 34))
-        self.assert_span_equal(u"5 mars 2015 - 18h - 06/03/2015 - 5h", (0, 35))
-
 
 class TestWeekdayRecurrence(TestGrammar):
 
@@ -541,25 +442,19 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse(u"lundis")
 
     def test_parse_weekday_span(self):
-        self.assertEqual(WEEKDAY.parseString(u"lundi")[0].value, MO)
-        self.assertEqual(WEEKDAY.parseString(u"mardi")[0].value, TU)
-        self.assertEqual(WEEKDAY.parseString(u"mercredi")[0].value, WE)
-        self.assertEqual(WEEKDAY.parseString(u"jeudi")[0].value, TH)
-        self.assertEqual(WEEKDAY.parseString(u"vendredi")[0].value, FR)
-        self.assertEqual(WEEKDAY.parseString(u"samedi")[0].value, SA)
-        self.assertEqual(WEEKDAY.parseString(u"dimanche")[0].value, SU)
+        self.assertEqual(WEEKDAY.parseString(u"lundi")[0], MO)
+        self.assertEqual(WEEKDAY.parseString(u"mardi")[0], TU)
+        self.assertEqual(WEEKDAY.parseString(u"mercredi")[0], WE)
+        self.assertEqual(WEEKDAY.parseString(u"jeudi")[0], TH)
+        self.assertEqual(WEEKDAY.parseString(u"vendredi")[0], FR)
+        self.assertEqual(WEEKDAY.parseString(u"samedi")[0], SA)
+        self.assertEqual(WEEKDAY.parseString(u"dimanche")[0], SU)
 
     @set_pattern(WEEKDAY_LIST)
     def test_parse_weekday_list_formats(self):
         self.assert_parse(u"le lundi")
         self.assert_parse(u"les lundis")
         self.assert_parse(u"les lundis, mardi, et mercredis")
-
-    @set_pattern(WEEKDAY_LIST)
-    def test_parse_weekday_list_span(self):
-        self.assert_span_equal(u"le lundi", (0, 8))
-        self.assert_span_equal(u"les lundis", (0, 9))
-        self.assert_span_equal(u"les lundis, mardi, et mercredis", (0, 30))
 
     @set_pattern(WEEKDAY_LIST)
     def test_parse_weekday_list(self):
@@ -573,10 +468,6 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse(u"du lundi au mercredi")
 
     @set_pattern(WEEKDAY_INTERVAL)
-    def test_parse_weekday_interval_span(self):
-        self.assert_span_equal(u"du lundi au mercredi", (0, 20))
-
-    @set_pattern(WEEKDAY_INTERVAL)
     def test_parse_weekday_interval(self):
         self.assert_parse_equal(
             u"du lundi au mercredi", Weekdays([MO, TU, WE]))
@@ -587,13 +478,6 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse(u"les lundis")
         self.assert_parse(u"les lundis, mardi, et mercredis")
         self.assert_parse(u"du lundi au mercredi")
-
-    @set_pattern(WEEKDAY_PATTERN)
-    def test_parse_weekday_pattern_span(self):
-        self.assert_span_equal(u"le lundi", (0, 8))
-        self.assert_span_equal(u"les lundis", (0, 9))
-        self.assert_span_equal(u"les lundis, mardi, et mercredis", (0, 30))
-        self.assert_span_equal(u"du lundi au mercredi", (0, 20))
 
     @set_pattern(WEEKLY_RECURRENCE_1)
     def test_parse_weekly_recurrence1_formats(self):
