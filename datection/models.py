@@ -70,10 +70,11 @@ class DurationRRule(object):
         the 'rrule' one, using an rruleset.
 
         """
-        if self.duration_rrule.get('exclusion'):
+        if self.duration_rrule.get('excluded'):
             rset = rruleset()
             rset.rrule(rrulestr(self.duration_rrule['rrule']))
-            rset.exrule(rrulestr(self.duration_rrule['exclusion']))
+            for ex_rrule in self.duration_rrule['excluded']:
+                rset.exrule(rrulestr(ex_rrule))
             return rset
         return rrulestr(self.duration_rrule['rrule'])
 
