@@ -16,6 +16,7 @@ from collections import namedtuple
 
 from datection.models import DurationRRule
 from datection.utils import cached_property
+from datection.utils import get_current_date
 from datection.normalize import DAY_START
 from datection.normalize import DAY_END
 from datection.lang import DEFAULT_LOCALES
@@ -38,15 +39,6 @@ TRANSLATIONS = {
 }
 
 FormatterTuple = namedtuple("FormatterTuple", ["formatter", "display_args"])
-
-
-def get_current_date():
-    """Return the current date.
-
-    Note: this function is used to enable mocking.
-
-    """
-    return datetime.date.today()
 
 
 def get_date(d):
@@ -1256,7 +1248,7 @@ class DisplaySchedule(object):
         """
         try:
             return self._best_formatter.formatter.display(
-                    **self._best_formatter.display_args)
+                **self._best_formatter.display_args)
         except NoFutureOccurence:
             return u''
 

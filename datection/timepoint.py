@@ -23,7 +23,7 @@ DAY_END = time(23, 59, 59)
 
 class Timepoint(object):
 
-    """Base class of all timeoint classes."""
+    """Base class of all timepoint classes."""
 
     def __ne__(self, other):
         return not self == other
@@ -651,6 +651,8 @@ class WeeklyRecurrence(Timepoint):
         self.excluded = []
 
     def __eq__(self, other):
+        if not super(WeeklyRecurrence, self).__eq__(other):
+            return False
         return (
             self.date_interval == other.date_interval and
             self.time_interval == other.time_interval and

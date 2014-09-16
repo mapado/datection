@@ -1196,7 +1196,8 @@ class TestDisplaySchedule(GetCurrentDayMocker):
             formatter2, {'reference': ref, 'summarize': True}))
 
         self.assertEqual(ds.display(), 'mars 2013')
-        self.assertEqual(ds.next_changes(), datetime.datetime(2013, 2, 23, 0, 0, 0))
+        self.assertEqual(
+            ds.next_changes(), datetime.datetime(2013, 2, 23, 0, 0, 0))
 
     def test_display_schedule_past(self):
         self.get_current_date_mock.return_value = datetime.date(2040, 11, 1)
@@ -1217,6 +1218,7 @@ class TestDisplaySchedule(GetCurrentDayMocker):
             formatter2, {'reference': ref, 'summarize': True}))
 
         self.assertEqual(ds.display(), u'')
+
 
 class TestNextDateMixin(GetCurrentDayMocker):
 

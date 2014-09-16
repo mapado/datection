@@ -59,6 +59,9 @@ class Context(object):
             size=self.size,
         )
 
+    def __getitem__(self, slice):
+        return self.text[slice]
+
     def __contains__(self, item):
         """ Context is in another context if their span overlap """
         return item.start in xrange(self.start, self.end)

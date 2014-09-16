@@ -68,11 +68,6 @@ class TestGrammar(unittest.TestCase):
         if result[0] != expected:
             raise AssertionError("%r != %r" % (result[0], expected))
 
-    def assert_parse_list_equal(self, text, expected):
-        result = self.pattern.parseString(text)
-        if list(result) != expected:
-            raise AssertionError("%r != %r" % (result, expected))
-
 
 class TestLanguageAgnosticRegexes(TestGrammar):
 
