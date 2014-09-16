@@ -265,3 +265,17 @@ WEEKLY_RECURRENCE = (
     WEEKLY_RECURRENCE_2 |
     WEEKLY_RECURRENCE_3
 )
+
+EXCLUSION = oneOf([u'sauf', u'relâche'])
+
+TIMEPOINTS = [
+    ('weekly_rec', WEEKLY_RECURRENCE),
+    ('weekdays', WEEKDAY_PATTERN),
+    ('date_list', DATE_LIST),
+    ('date_interval', DATE_INTERVAL),
+    ('datetime_list', DATETIME_LIST),
+    ('datetime_interval', DATETIME_INTERVAL),
+    ('date', DATE_PATTERN),
+    ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
+    ('exclusion', EXCLUSION)
+]

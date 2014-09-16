@@ -2,29 +2,45 @@
 
 """Utilities used for tokenizing a string into time-related tokens."""
 
-import re
 import unicodedata
 
-
-from datection.regex import TIMEPOINT_REGEX
 from datection.context import probe
 from datection.utils import cached_property
 from datection.utils import ensure_unicode
 
 
+class Match(object):
+
+    """A pattern match found in a text."""
+
+    def __init__(self, timepoint, timepoint_type, start_index, end_index):
+        self.timepoint = timepoint
+        self.timepoint_type = timepoint_type
+        self.start_index = start_index
+        self.end_index = end_index
+
+    def __eq__(self, other):
+        return self.timepoint == other.timepoint
+
+    @property
+    def span(self):
+        return (self.start_index, self.end_index)
+
+
 class Token(object):
 
-    """A fragment of text, with a positon and a tag."""
+    """A fragment of text, with a position, a tag and an action."""
 
-    def __init__(self, content, match, tag, span, action):
+    def __init__(self, content, timepoint, tag, span, action):
         self.content = content
-        self.match = match
+        self.timepoint = timepoint
         self.tag = tag
         self.span = span
         self.action = action
 
     def __repr__(self):  # pragma:: no cover
-        return u'<%s - %s - (%d, %d)>' % (
+        return u'<%s %s(%s) [%d:%d]>' % (
+            self.__class__.__name__,
             self.action,
             self.tag,
             self.start,
@@ -99,10 +115,12 @@ class Tokenizer(object):
         self.lang = lang
 
     @cached_property
-    def timepoint_families(self):  # pragma: no cover
-        """The list of all time-related regex in the Tokenizer language."""
-        return [det for det in TIMEPOINT_REGEX[self.lang].keys()
-                if not det.startswith('_')]
+    def timepoint_patterns(self):  # pragma: no cover
+        """The list of all time-related patterns in the Tokenizer language."""
+        lang_grammar_mod = __import__(
+            'datection.grammar.%s' % (self.lang),
+            fromlist=['grammar'])
+        return lang_grammar_mod.TIMEPOINTS
 
     @staticmethod
     def _remove_subsets(matches):
@@ -126,23 +144,35 @@ class Tokenizer(object):
 
         """
         out = matches[:]  # shallow copy
-        for tpt1, family1, ctx1 in matches:
-            for tpt2, family2, ctx2 in matches:
-                if tpt1 != tpt2:  # avoid self comparison
+        for tpt1, ctx1 in matches:
+            for tpt2, ctx2 in matches:
+                if tpt1 is not tpt2:  # avoid self comparison
                     span1, span2 = (
-                        set(range(*tpt1.span())), set(range(*tpt2.span())))
+                        set(range(*tpt1.span)),
+                        set(range(*tpt2.span))
+                    )
                     if span1.intersection(span2):
                         # if A ⊃ B or A = B: remove B
                         if span1.issuperset(span2) or span1 == span2:
-                            if (tpt2, family2, ctx2) in out:
-                                out.remove((tpt2, family2, ctx2))
+                            if (tpt2, ctx2) in out:
+                                out.remove((tpt2, ctx2))
                         # if A ⊂ B: remove A
                         elif span1.issubset(span2):
-                            if (tpt1, family1, ctx1) in out:
-                                out.remove((tpt1, family1, ctx1))
+                            if (tpt1, ctx1) in out:
+                                out.remove((tpt1, ctx1))
         # sort list by match position
-        out = sorted(out, key=lambda item: item[0].span()[0])
+        out = sorted(out, key=lambda item: item[0].start_index)
         return out
+
+    @staticmethod
+    def trim_text(text, start, end):
+        if text.find(' ') == -1:
+            return start, end
+        new_text = text.lstrip()
+        new_start = start + (len(text) - len(new_text))
+        new_text = new_text.rstrip()
+        new_end = end - (len(text) - len(new_text)) + 1
+        return new_start, new_end
 
     @staticmethod
     def is_separator(text):
@@ -168,11 +198,12 @@ class Tokenizer(object):
 
         """
         matches = []
-        for family in self.timepoint_families:
-            for pattern in TIMEPOINT_REGEX[self.lang][family]:
-                ctx = unicode(context)
-                matches.extend(
-                    [(m, family, context) for m in re.finditer(pattern, ctx)])
+        ctx = unicode(context)
+        for pname, pattern in self.timepoint_patterns:
+            for match, start, end in pattern.scanString(ctx):
+                start, end = self.trim_text(ctx[start:end], start, end)
+                match = Match(match[0], pname, start, end)
+                matches.append((match, context))
         return matches
 
     # pragma: no cover
@@ -187,9 +218,9 @@ class Tokenizer(object):
         else:
             action = 'MATCH'
         return Token(
-            match=match,
-            content=match.group() if match is not None else text,
-            span=match.span() if match is not None else span,
+            timepoint=match.timepoint,
+            content=text,
+            span=match.span if match is not None else span,
             tag=tag,
             action=action)
 
@@ -197,11 +228,13 @@ class Tokenizer(object):
         """Create a list of tokens from a list of non overlapping matches."""
         tokens = []
         start = 0
-        for match, tag, ctx in matches:
+        for match, ctx in matches:
             token = self.create_token(
                 match=match,
-                tag=tag,
-                span=ctx.position_in_text(match.span()))
+                tag=match.timepoint_type,
+                text=ctx[match.start_index: match.end_index],
+                span=ctx.position_in_text(match.span)
+            )
             sep_start, sep_end = ctx.position_in_text((start, token.start))
             tokens.append(token)
             start = token.end

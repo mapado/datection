@@ -17,7 +17,7 @@ class TestToken(unittest.TestCase):
     def setUp(self):
         self.token = Token(
             content=u"Du 8 au 25 mars 2015",
-            match=None,
+            timepoint=None,
             tag='date_interval',
             span=(20, 40),
             action='MATCH')
@@ -64,7 +64,7 @@ class TestTokenGroup(unittest.TestCase):
         self.assertFalse(self.token_group.is_single_token)
         self.token_group.append(Token(
             content=u"Du 8 au 25 mars 2015",
-            match=None,
+            timepoint=None,
             tag='date_interval',
             span=(20, 40),
             action='MATCH'))
@@ -92,18 +92,24 @@ class TestTokenizer(unittest.TestCase):
         self.tok = Tokenizer(u"Du 5 au 29 mars 2015, sauf les lundis", "fr")
 
     def test_remove_subsets(self):
-        class Timepoint(object):
+        class Span(object):
 
             def __init__(self, span):
                 self._span = span
 
+            @property
             def span(self):
                 return self._span
+
+            @property
+            def start_index(self):
+                return self.span[0]
+
         matches = [
-            (Timepoint((0, 10)), 'date', 'CONTEXT'),
-            (Timepoint((13, 18)), 'time', 'CONTEXT'),
-            (Timepoint((0, 18)), 'datetime', 'CONTEXT'),
-            (Timepoint((38, 50)), 'date', 'CONTEXT'),
+            (Span((0, 10)), 'CONTEXT'),
+            (Span((13, 18)), 'CONTEXT'),
+            (Span((0, 18)), 'CONTEXT'),
+            (Span((38, 50)), 'CONTEXT'),
         ]
         expected = matches[2:]
         self.assertEqual(Tokenizer._remove_subsets(matches), expected)
@@ -118,13 +124,13 @@ class TestTokenizer(unittest.TestCase):
     def test_search_context(self):
         ctx = Context(0, len(self.tok.text), self.tok.text)
         result = self.tok.search_context(ctx)
-        families = [r[1] for r in result]
+        families = [r[0].timepoint_type for r in result]
         self.assertItemsEqual(
             families,
-            ['date',  # 29 mars 2015
+            ['date',  # 23 mars 2015
              'date_interval',  # du 5 au 29 mars 2015
              'exclusion',  # sauf
-             'weekday_recurrence'])  # les lundis
+             'weekdays'])  # les lundis
 
     def assertTokenGroupEquals(self, tokens, expected_token_groups):
         tokens = [self.T(tok) for tok in tokens]
@@ -170,13 +176,13 @@ class TestTokenizer(unittest.TestCase):
         token_groups = self.tok.tokenize()
         self.assertTokenEquals(
             token_groups[0][0],
-            (u"Du 5 au 29 mars 2015", "MATCH", "date_interval"))
+            (u"Du 5 au 29 mars 2015,", "MATCH", "date_interval"))
         self.assertTokenEquals(
             token_groups[0][1],
             (u"sauf", "EXCLUDE", "exclusion"))
         self.assertTokenEquals(
             token_groups[0][2],
-            (u"les lundis", "MATCH", "weekday_recurrence"))
+            (u"les lundis", "MATCH", "weekdays"))
 
     def test_tokenize_no_context(self):
         self.tok.text = u"BLAH BLAH BLAH"
