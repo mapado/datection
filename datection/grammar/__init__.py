@@ -6,6 +6,8 @@ Definition of language agnostic temporal expressions related regexes .
 """
 import re
 
+from dateutil.rrule import weekdays
+from dateutil.rrule import weekday
 from pyparsing import Regex
 from pyparsing import Optional
 from pyparsing import oneOf
@@ -20,6 +22,8 @@ from datection.models import DateInterval
 from datection.models import DatetimeList
 from datection.models import DatetimeInterval
 from datection.models import ContinuousDatetimeInterval
+from datection.models import WeeklyRecurrence
+from datection.models import Weekdays
 
 
 def optional_ci(s):
@@ -113,8 +117,41 @@ def as_weekday_list(text, start_index, matches):
     return Weekdays(day_matches)
 
 
+def as_weekday_interval(text, start_index, matches):
+    day_matches = [m for m in matches if isinstance(m, weekday)]
+    interval = slice(
+        day_matches[0].weekday,
+        day_matches[-1].weekday + 1)
+    days = list(weekdays[interval])
+    return Weekdays(days)
 
 
+def as_weekly_recurrence(text, start_index, matches):
+    wkdays = [m for m in matches if isinstance(m, Weekdays)]
+    days = []
+    for wkday in wkdays:
+        days.extend(wkday.days)
+    if matches.get('datetime_interval'):
+        date_interval = matches['datetime_interval'].date_interval
+        time_interval = matches['datetime_interval'].time_interval
+    else:
+        date_interval = matches['date_interval']
+        time_interval = matches['time_interval']
+    return WeeklyRecurrence(
+        date_interval,
+        time_interval,
+        days)
+
+
+def as_weekly_recurrence_from_datetime_interval(text, start_index, matches):
+    wkdays = [m for m in matches if isinstance(m, Weekdays)]
+    days = []
+    for wkday in wkdays:
+        days.extend(wkday.days)
+    return WeeklyRecurrence(
+        matches['datetime_interval'].date_interval,
+        matches['datetime_interval'].time_interval,
+        days)
 
 
 def extract_time_patterns(text, start_index, matches):

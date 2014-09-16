@@ -245,13 +245,13 @@ WEEKLY_RECURRENCE_2 = (
     TIME_INTERVAL('time_interval') +
     Optional(',') +
     DATE_INTERVAL('date_interval')
-)
+).setParseAction(as_weekly_recurrence)
 
 WEEKLY_RECURRENCE_3 = (
-    DATETIME_INTERVAL +
+    DATETIME_INTERVAL('datetime_interval') +
     Optional(',') +
     WEEKDAY_PATTERN
-)
+).setParseAction(as_weekly_recurrence)
 
 WEEKLY_RECURRENCE = (
     WEEKLY_RECURRENCE_1 |

@@ -31,10 +31,13 @@ from datection.models import Date
 from datection.models import Time
 from datection.models import TimeInterval
 from datection.models import Datetime
+from datection.models import DatetimeList
+from datection.models import DateList
 from datection.models import DateInterval
 from datection.models import DatetimeInterval
 from datection.models import ContinuousDatetimeInterval
 from datection.models import Weekdays
+from datection.models import WeeklyRecurrence
 from datection.test.test_grammar import TestGrammar
 from datection.test.test_grammar import set_pattern
 
@@ -119,8 +122,9 @@ class TestTimePattern(TestGrammar):
         self.assert_parse(u'à 18h, 19h30, et de 22h à 23h30')
 
     def test_parse_time_list(self):
-        self.assert_parse_list_equal(
-            u'à 18h, 19h30, et de 22h à 23h30',
+        res = self.pattern.parseString(u'à 18h, 19h30, et de 22h à 23h30')
+        self.assertEqual(
+            list(res),
             [
                 TimeInterval(Time(18, 0), Time(18, 0)),
                 TimeInterval(Time(19, 30), Time(19, 30)),
@@ -190,7 +194,7 @@ class TestDateList(TestGrammar):
     def test_parse_date_list(self):
         self.assert_parse_equal(
             u"5, 8, 10 mars 2015",
-            [Date(2015, 3, 5), Date(2015, 3, 8), Date(2015, 3, 10)])
+            DateList([Date(2015, 3, 5), Date(2015, 3, 8), Date(2015, 3, 10)]))
 
 
 class TestDateInterval(TestGrammar):
@@ -264,8 +268,10 @@ class TestDatetimePattern(TestGrammar):
             u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30')
 
     def test_parse_datetime_pattern(self):
-        self.assert_parse_list_equal(
-            u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30',
+        res = self.pattern.parseString(
+            u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30')
+        self.assertEqual(
+            list(res),
             [
                 Datetime(Date(2012, 11, 25), Time(20, 0), Time(20, 0)),
                 Datetime(Date(2012, 11, 25), Time(22, 30), Time(22, 30)),
@@ -288,46 +294,46 @@ class TestDatetimeList(TestGrammar):
     def test_parse_datetime_list_single_time(self):
         self.assert_parse_equal(
             u"les 5, 8, 10 mars 2015 à 18h",
-            [
+            DatetimeList([
                 Datetime(Date(2015, 3, 5), Time(18, 0)),
                 Datetime(Date(2015, 3, 8), Time(18, 0)),
                 Datetime(Date(2015, 3, 10), Time(18, 0)),
             ]
-        )
+            ))
         self.assert_parse_equal(
             u"Les 05/04/2014, 06/04/2014, à 16h",
-            [
+            DatetimeList([
                 Datetime(Date(2014, 4, 5), Time(16, 0)),
                 Datetime(Date(2014, 4, 6), Time(16, 0)),
-            ])
+            ]))
         self.assert_parse_equal(
             u"Les 05/04, 6 avril 2015, à 16h",
-            [
+            DatetimeList([
                 Datetime(Date(2015, 4, 5), Time(16, 0)),
                 Datetime(Date(2015, 4, 6), Time(16, 0)),
-            ])
+            ]))
 
     def test_parse_datetime_list_time_interval(self):
         self.assert_parse_equal(
             u"les 5, 8, 10 mars 2015 de 16h à 18h",
-            [
+            DatetimeList([
                 Datetime(Date(2015, 3, 5), Time(16, 0), Time(18, 0)),
                 Datetime(Date(2015, 3, 8), Time(16, 0), Time(18, 0)),
                 Datetime(Date(2015, 3, 10), Time(16, 0), Time(18, 0)),
             ]
-        )
+            ))
         self.assert_parse_equal(
             u"Les 05/04/2014, 06/04/2014, de 14h à 16h",
-            [
+            DatetimeList([
                 Datetime(Date(2014, 4, 5), Time(14, 0), Time(16, 0)),
                 Datetime(Date(2014, 4, 6), Time(14, 0), Time(16, 0)),
-            ])
+            ]))
         self.assert_parse_equal(
             u"Les 05/04, 6 avril 2015, de 14h à 16h",
-            [
+            DatetimeList([
                 Datetime(Date(2015, 4, 5), Time(14, 0), Time(16, 0)),
                 Datetime(Date(2015, 4, 6), Time(14, 0), Time(16, 0)),
-            ])
+            ]))
 
 
 class TestDatetimeInterval(TestGrammar):
@@ -473,11 +479,20 @@ class TestWeekdayRecurrence(TestGrammar):
             u"du lundi au mercredi", Weekdays([MO, TU, WE]))
 
     @set_pattern(WEEKDAY_PATTERN)
-    def test_parse_weekday_pattern(self):
+    def test_parse_weekday_pattern_formats(self):
         self.assert_parse(u"le lundi")
         self.assert_parse(u"les lundis")
         self.assert_parse(u"les lundis, mardi, et mercredis")
         self.assert_parse(u"du lundi au mercredi")
+
+    @set_pattern(WEEKDAY_PATTERN)
+    def test_parse_weekday_pattern(self):
+        self.assert_parse_equal(u"le lundi", Weekdays([MO]))
+        self.assert_parse_equal(u"les lundis", Weekdays([MO]))
+        self.assert_parse_equal(
+            u"les lundis, mardi, et mercredis", Weekdays([MO, TU, WE]))
+        self.assert_parse_equal(
+            u"du lundi au mercredi", Weekdays([MO, TU, WE]))
 
     @set_pattern(WEEKLY_RECURRENCE_1)
     def test_parse_weekly_recurrence1_formats(self):
@@ -485,17 +500,62 @@ class TestWeekdayRecurrence(TestGrammar):
             u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h")
         self.assert_parse(u"le vendredi, du 2 au 29 mars 2015, à 10h")
 
+    @set_pattern(WEEKLY_RECURRENCE_1)
+    def test_parse_weekly_recurrence1(self):
+        self.assert_parse_equal(
+            u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(8, 0), Time(10, 0)),
+                [MO, TU, WE, TH, FR]))
+        self.assert_parse_equal(
+            u"le vendredi, du 2 au 29 mars 2015, à 10h",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(10, 0), Time(10, 0)),
+                [FR]))
+
     @set_pattern(WEEKLY_RECURRENCE_2)
     def test_parse_weekly_recurrence2_formats(self):
         self.assert_parse(
             u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ")
         self.assert_parse(u"le vendredi à 10h, du 2 au 29 mars 2015")
 
+    @set_pattern(WEEKLY_RECURRENCE_2)
+    def test_parse_weekly_recurrence2(self):
+        self.assert_parse_equal(
+            u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(8, 0), Time(10, 0)),
+                [MO, TU, WE, TH, FR]))
+        self.assert_parse_equal(
+            u"le vendredi à 10h, du 2 au 29 mars 2015",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(10, 0), Time(10, 0)),
+                [FR]))
+
     @set_pattern(WEEKLY_RECURRENCE_3)
     def test_parse_weekly_recurrence3_formats(self):
         self.assert_parse(
             u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi")
         self.assert_parse(u"du 2 au 29 mars 2015 à 10h, le vendredi")
+
+    @set_pattern(WEEKLY_RECURRENCE_3)
+    def test_parse_weekly_recurrence3(self):
+        self.assert_parse_equal(
+            u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(8, 0), Time(10, 0)),
+                [MO, TU, WE, TH, FR]))
+        self.assert_parse_equal(
+            u"du 2 au 29 mars 2015 à 10h, le vendredi",
+            WeeklyRecurrence(
+                DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
+                TimeInterval(Time(10, 0), Time(10, 0)),
+                [FR]))
 
     def test_parse_weekly_recurrence_formats(self):
         self.assert_parse(
