@@ -10,7 +10,7 @@ from datection.parse import parse
 from datection.models import DurationRRule
 
 
-def to_db(text, lang, valid=True, only_future=True, **kwargs):
+def export(text, lang, valid=True, only_future=True, **kwargs):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of dicts, each containing a recurrence rule
@@ -25,7 +25,7 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
     if only_future:
         timepoints = [tp for tp in timepoints if tp.future(**kwargs)]
     for timepoint in timepoints:
-        rrules = timepoint.to_db()
+        rrules = timepoint.export()
         if isinstance(rrules, list):
             out.extend(rrules)
         elif isinstance(rrules, dict):
@@ -33,25 +33,8 @@ def to_db(text, lang, valid=True, only_future=True, **kwargs):
     return out
 
 
-def to_mongo(text, lang, valid=True, only_future=True, **kwargs):
-    """ Obsolete function, kept for backwards compatibility reasons
-
-    Now, it's just a proxy to the to_db function
-    """
-    return to_db(text, lang, valid, only_future, **kwargs)
-
-
-def to_python(text, lang, valid=True, only_future=True, **kwargs):
-    """ Perform a timepoint detection on text, and normalize each result to
-        python standard objects.
-
-    Return a list of standard datetime python objects
-    """
-    timepoints = parse(text, lang, valid)
-    if only_future:
-        return [timepoint.to_python() for timepoint in timepoints
-                if timepoint.future(**kwargs)]
-    return [timepoint.to_python() for timepoint in timepoints]
+def to_db(text, lang, valid=True, only_future=True, **kwargs):
+    return export(text, lang, valid=True, only_future=True, **kwargs)
 
 
 def export_non_continuous_schedule(schedule, start, end):

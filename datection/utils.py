@@ -227,7 +227,7 @@ def normalize_fb_hours(fb_hours):
 
         reccurence = datection.normalize.WeekdayRecurrence(
             weekdays=(wk_idx, ), start_datetime=start, end_datetime=end)
-        db_format = reccurence.to_db()
+        db_format = reccurence.export()
         del db_format['span']
         schedules.append(db_format)
     return schedules

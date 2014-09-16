@@ -955,86 +955,86 @@ class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
         super(TestSeoFormatter_fr_FR, cls).setUpClass()
 
     def test_format_single_day(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le 18 mars 2013 à 18h30", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars 2013')
 
     def test_format_date_list_same_month(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le 18 et 19 mars 2013 à 18h30", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars 2013')
 
     def test_format_date_interval_same_month(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du 1er au 19 mars 2013 à 18h30", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars 2013')
 
     def test_format_date_two_months(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le 5 mars 2013, le 7 avril 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars et avril 2013')
 
     def test_format_date_interval_two_months(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du 5 au 27 mars 2013, du 7 au 8 avril 2013", "fr",
             only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars et avril 2013')
 
     def test_format_date_interval_two_months2(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du 5 mars au 8 avril 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars et avril 2013')
 
     def test_format_date_interval_three_months(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du 5 mars au 8 mai 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 
     def test_format_date_interval_two_months_two_years(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le 5 décembre 2013, le 7 janvier 2014", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 
     def test_sort_month_names(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le 5 décembre 2013, le 7 novembre 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'novembre et décembre 2013')
 
     def test_format_weekday_recurrence(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le lundi du 5 au 25 mars 2015", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars 2015')
 
     def test_format_weekday_recurrence_two_months(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le lundi du 5 mars au 25 avril 2015", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'mars et avril 2015')
 
     def test_format_weekday_recurrence_three_months(self):
-        sch = datection.to_db(
+        sch = datection.export(
             u"Le lundi du 5 mars au 25 mai 2015", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 
     def test_format_unbounded_weekday_recurrence(self):
-        sch = datection.to_db(u"Le lundi", "fr", only_future=False)
+        sch = datection.export(u"Le lundi", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(formatter.display(), u'')
 
     def test_next_date(self):
         self.set_current_date(datetime.date(2013, 8, 8))
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du lundi 1er aout 2013 au lundi 31 aout 2013", "fr", only_future=False)
         formatter = SeoFormatter(sch)
         self.assertEqual(
@@ -1175,7 +1175,7 @@ class TestDisplaySchedule(GetCurrentDayMocker):
     def test_display_schedule(self):
         self.set_current_date(datetime.date(2012, 11, 1))
         ref = datetime.datetime(2014, 11, 14)
-        sch = datection.to_db(
+        sch = datection.export(
             u"Du 1er au 19 mars 2013 à 18h30", "fr", only_future=False)
         formatter1 = SeoFormatter(sch)
 
@@ -1250,13 +1250,11 @@ class TestNextDateMixin(GetCurrentDayMocker):
 
     def test_long_formatter_gt_7_days(self):
         self.get_current_date_mock.return_value = datetime.date(2014, 8, 27)
-        sch = datection.to_db(u"Le 14 septembre 2014 à 18h", "fr")
+        sch = datection.export(u"Le 14 septembre 2014 à 18h", "fr")
         formatter = LongFormatter(sch)
 
         self.assertEqual(
             formatter.next_changes(), datetime.datetime(2014, 9, 8, 0, 0, 0))
-
-
 
     def test_next_date_today(self):
         self.set_current_date(datetime.date(2013, 8, 8))

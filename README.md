@@ -67,7 +67,7 @@ The result of the regex detection is them fed to a timepoint factory, which retu
 Each ``Timepoint`` subclass is provided with two normalization methods:
 
 * ``to_python``: exports the object to standard Python format (``time``, ``date`` or ``datetime``)
-* ``to_db``:  exports the object to a database compliant format, only based on ``datetime`` intervals
+* ``export``:  exports the object to a database compliant format, only based on ``datetime`` intervals
 
 ##### Note
 It is highly possible that some result overlap others. For example, parsing the string "lundi 15 mars 2013 à 15h30" will yield 3 different results:
@@ -80,7 +80,7 @@ The ``parse`` function automatically select the "largest" results, overlapping o
 
 ##### <a id="conv" name="conv"></a>Serialization conversion table
 
-Expression | Timepoint | to_python | to_db
+Expression | Timepoint | to_python | export
 --- | --- | --- | ---
 le 5 janvier 2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
 05/01/2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
@@ -169,7 +169,7 @@ A list of standard datetime python objects. [See the conversion table](#conv)
 [datetime.date(2013, 3, 15)]
 ```
 
-### ``datection.to_db``
+### ``datection.export``
 Performs a timepoint detection on text, and normalizes each result to python standard objects,
 in a format compliant to database insertion.
 
@@ -185,7 +185,7 @@ A list of list of 2 tuples (start datetime, end datetime) [See the conversion ta
 ####Example
 
 ```python
->>> to_db('15 mars 2013', 'fr')
+>>> export('15 mars 2013', 'fr')
 [[(datetime.datetime(2013, 3, 15, 0, 0),
    datetime.datetime(2013, 3, 15, 23, 59, 59))]]
 ```
@@ -195,7 +195,7 @@ A list of list of 2 tuples (start datetime, end datetime) [See the conversion ta
 Performs a timepoint detection on text, and normalize each result to python standard objects,
 in a format compliant to insertion into mongodb.
 
-The format chages slightly from the result of the ``datection.to_db`` function, but the changes are purely cosmetic!
+The format chages slightly from the result of the ``datection.export`` function, but the changes are purely cosmetic!
 
 ####Arguments
 * ``text`` : the text to probe (type ``str`` or UTF-8 ``unicode``)

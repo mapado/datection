@@ -10,7 +10,7 @@ from datection.cohesion import cohesive_rrules
 
 
 def gen_cohesive(mystr):
-    return cohesive_rrules(datection.to_db(mystr, 'fr', only_future=False))
+    return cohesive_rrules(datection.export(mystr, 'fr', only_future=False))
 
 
 class TestMoreCohesive(unittest.TestCase):
@@ -238,7 +238,7 @@ class TestMoreCohesive(unittest.TestCase):
         ])
 
     def test_temporal_distance(self):
-        res = cohesive_rrules(datection.to_db(u"""
+        res = cohesive_rrules(datection.export(u"""
             du 16 avril au 16 juin 2020 à 16h,
             du 16 avril au 16 juin 2015 à 16h,
         """, 'fr', only_future=False),
