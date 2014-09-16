@@ -9,6 +9,15 @@ from datetime import time
 from datetime import timedelta
 
 
+def get_current_date():
+    """Return the current date.
+
+    Note: this function is used to enable mocking.
+
+    """
+    return date.today()
+
+
 def cached_property(f):
     """Lazy loading decorator for object properties"""
     attr_name = '_' + f.__name__
@@ -39,7 +48,7 @@ def isoformat_concat(datetime):
 
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
-    """ Returns an RFC standard rrule string
+    """ Returns an RFC standard RRULE string
 
     If the 'rule' argument is None, all the keyword args will
     be used to construct the rule. Else, the rrule RFC representation
@@ -70,8 +79,8 @@ def duration(start, end):
         return 0
 
     # convert datection.normalize.Time into datetime.time variables
-    if (isinstance(start, datection.normalize.Time)
-       and isinstance(end, datection.normalize.Time)):
+    if (isinstance(start, datection.timepoint.Time)
+       and isinstance(end, datection.timepoint.Time)):
         start = start.to_python()
         end = end.to_python()
 

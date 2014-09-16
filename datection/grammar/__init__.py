@@ -13,17 +13,17 @@ from pyparsing import Optional
 from pyparsing import oneOf
 
 from datection.utils import normalize_2digit_year
-from datection.models import Date
-from datection.models import Time
-from datection.models import TimeInterval
-from datection.models import Datetime
-from datection.models import DateList
-from datection.models import DateInterval
-from datection.models import DatetimeList
-from datection.models import DatetimeInterval
-from datection.models import ContinuousDatetimeInterval
-from datection.models import WeeklyRecurrence
-from datection.models import Weekdays
+from datection.timepoint import Date
+from datection.timepoint import Time
+from datection.timepoint import TimeInterval
+from datection.timepoint import Datetime
+from datection.timepoint import DateList
+from datection.timepoint import DateInterval
+from datection.timepoint import DatetimeList
+from datection.timepoint import DatetimeInterval
+from datection.timepoint import ContinuousDatetimeInterval
+from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import Weekdays
 
 
 def optional_ci(s):
