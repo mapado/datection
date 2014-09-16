@@ -8,6 +8,8 @@ Definition of French specific grammar, related to temoral expressions.
 from pyparsing import Optional
 from pyparsing import oneOf
 from pyparsing import OneOrMore
+from pyparsing import FollowedBy
+from pyparsing import Group
 from dateutil.rrule import weekdays
 
 from datection.grammar import DAY_NUMBER
@@ -55,10 +57,9 @@ def set_weekday(text, start_index, match):
 
 # A weekday name can be in its full form or abbreviated form
 WEEKDAY = (
-    oneof_ci(
-        WEEKDAYS.keys() +
-        SHORT_WEEKDAYS.keys()) +
-    Optional(u"s")
+    (
+        oneof_ci(WEEKDAYS.keys()) + Optional('s')
+    ) | oneof_ci(SHORT_WEEKDAYS.keys()) + ~FollowedBy('s')
 ).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
@@ -96,6 +97,9 @@ NUMERIC_DATE = (
     ) +
     Optional(u',')
 ).setParseAction(as_date)
+
+
+DATE_PATTERN = (DATE | NUMERIC_DATE)
 
 # A time is an hour, a separator and a time
 TIME = (
@@ -155,7 +159,10 @@ PARTIAL_DATE = (
 # A date list is a list of partial dates
 DATE_LIST = (
     optional_oneof_ci([u"le", u"les"]) +
-    OneOrMore(PARTIAL_DATE)('dates')
+    Group(
+        PARTIAL_DATE +
+        OneOrMore(PARTIAL_DATE)
+    )('dates')
 ).setParseAction(as_datelist)
 
 # A date interval is composed of a start (possibly partial) date and an
