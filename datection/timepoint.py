@@ -20,6 +20,35 @@ DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
 
 
+def add_span(f):
+    """Add the instance span attribute to the export if the instance
+    as a 'span' attribute.
+
+    """
+    def wrapper(*args, **kwargs):
+        instance = args[0]
+        export = f(*args, **kwargs)
+        if hasattr(instance, 'span'):
+            export['span'] = instance.span
+        return export
+    return wrapper
+
+
+def transmit_span(f):
+    """Transmit the instance 'span' attribute to every member of the isinstance
+    instance, it it possesses a 'span' attribute.
+
+    """
+    def wrapper(*args, **kwargs):
+        instance = args[0]
+        export = f(*args, **kwargs)
+        if hasattr(instance, 'span'):
+            for item in export:
+                item['span'] = instance.span
+        return export
+    return wrapper
+
+
 class Timepoint(object):
 
     """Base class of all timepoint classes."""
@@ -97,6 +126,7 @@ class Date(Timepoint):
             # Eg: if one of the attributes is None
             return None
 
+    @add_span
     def export(self):
         """Return a dict containing the rrule and the duration (in min).
 
@@ -237,6 +267,7 @@ class DateList(Timepoint):
         """ Check that all dates in self.dates are valid. """
         return all([_date.valid for _date in self.dates])
 
+    @transmit_span
     def export(self):
         return [_date.export() for _date in self.dates]
 
@@ -337,6 +368,7 @@ class DateInterval(Timepoint):
     def to_python(self):
         return [_date for _date in self]
 
+    @add_span
     def export(self):
         """ Return a dict containing the recurrence rule and the duration
             (in min)
@@ -419,13 +451,7 @@ class Datetime(Timepoint):
             byhour=self.start_time.hour,
             byminute=self.start_time.minute)
 
-    def to_python(self):
-        start_datetime = datetime.combine(
-            self.date.to_python(), self.start_time.to_python())
-        end_datetime = datetime.combine(
-            self.date.to_python(), self.end_time.to_python())
-        return (start_datetime, end_datetime)
-
+    @add_span
     def export(self):
         """ Return a dict containing the recurrence rule and the duration
             (in min)
@@ -497,6 +523,7 @@ class DatetimeList(Timepoint):
         """ Check the validity of each datetime in self.datetimes. """
         return all([dt.valid for dt in self.datetimes])
 
+    @transmit_span
     def export(self):
         return [dt.export() for dt in self.datetimes]
 
@@ -550,6 +577,7 @@ class DatetimeInterval(Timepoint):
     #         out.append((i_start_datetime, i_end_datetime))
     #     return out
 
+    @add_span
     def export(self):
         export = {
             'rrule': self.rrulestr,
@@ -641,6 +669,7 @@ class ContinuousDatetimeInterval(Timepoint):
             byhour=self.start_time.hour,
             byminute=self.start_time.minute)
 
+    @add_span
     def export(self):
         """Export the ContinuousDatetimeInterval to a database-ready format."""
         start_datetime = datetime.combine(
@@ -717,6 +746,7 @@ class WeeklyRecurrence(Timepoint):
             byhour=self.time_interval.start_time.hour,
             byminute=self.time_interval.start_time.minute)
 
+    @add_span
     def export(self):
         export = {
             'rrule': self.rrulestr,

@@ -19,10 +19,12 @@ def parse(text, lang, valid=True):
     for token_group in token_groups:
         if token_group.is_single_token:
             token = token_group[0]
+            token.timepoint.span = token.span
             schedule.add(timepoint=token.timepoint)
         elif token_group.is_exclusion_group:
             token = token_group[0]
             excluded = token_group[2]
+            token.timepoint.span = token.span[0], excluded.span[1]
             schedule.add(timepoint=token.timepoint, excluded=excluded.timepoint)
 
     out = list(set(schedule._timepoints))  # remove any redundancy (by security)
