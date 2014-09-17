@@ -78,6 +78,7 @@ DAY_NUMBER = DAY_NUMBER + optional_ci(u'er')
 # Abbreviated months can also have a dot at their end, that will be ignored.
 DATE = (
     optional_ci(u"le")
+    + Optional(WEEKDAY)
     + DAY_NUMBER
     + MONTH
     + Optional(u'.')  # for abbreviated months
@@ -148,13 +149,14 @@ PARTIAL_NUMERIC_DATE = (
 # A partial date is a mandatory day number, and optional litteral/numeric
 # month and year, and optional separator
 PARTIAL_DATE = (
+    Optional(WEEKDAY) +
     DAY_NUMBER('day') +
     Optional(date_sep) +
     Optional(
         PARTIAL_LITTERAL_DATE('partial_date') |
         PARTIAL_NUMERIC_DATE('partial_date')
     )
-    + Optional(OneOrMore(oneOf([u',', u'et'])))
+    + Optional(OneOrMore(oneOf([u',', u'et', u'&'])))
 ).setParseAction(complete_partial_date)
 
 # A date list is a list of partial dates
@@ -237,7 +239,6 @@ WEEKDAY_INTERVAL = (
 WEEKDAY_PATTERN = (
     WEEKDAY_INTERVAL | WEEKDAY_LIST
 )
-
 
 WEEKLY_RECURRENCE_1 = (
     WEEKDAY_PATTERN('weekdays') +
