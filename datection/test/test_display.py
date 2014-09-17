@@ -2,6 +2,7 @@
 
 """Test the datection.display function"""
 
+import unittest
 import datection
 import datetime
 import locale
@@ -108,33 +109,40 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertEqual(
             shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h + autres dates')
 
+    @unittest.skip('Single weekday recurrence not valid anymore')
     def test_display_weekday_recurrence(self):
         sch = datection.export(u"Le samedi", "fr")
         self.assertEqual(display(sch, self.locale), u'Le samedi')
 
+    @unittest.skip('Single weekday recurrence + time should be valid with a high coverage')
     def test_display_weekday_recurrence_time(self):
         sch = datection.export(u"Le samedi à 15h30", "fr")
         self.assertEqual(display(sch, self.locale), u'Le samedi, à 15 h 30')
 
+    @unittest.skip('Single weekday recurrence + time should be valid with a high coverage')
     def test_display_weekday_recurrence_time_interval(self):
         sch = datection.export(u"Le samedi de 12 h 00 à 15h30", "fr")
         self.assertEqual(
             display(sch, self.locale), u'Le samedi, de 12 h à 15 h 30')
 
+    @unittest.skip('Single weekday recurrence not valid anymore')
     def test_display_weekday_recurrence_list(self):
         sch = datection.export(u"Le lundi et samedi", "fr")
         self.assertEqual(display(sch, self.locale), u'Le lundi et samedi')
 
+    @unittest.skip('Single weekday recurrence + time should be valid with a high coverage')
     def test_display_weekday_recurrence_list_time(self):
         sch = datection.export(u"Le lundi et samedi à 15h30", "fr")
         self.assertEqual(
             display(sch, self.locale), u'Le lundi et samedi, à 15 h 30')
 
+    @unittest.skip('Single weekday recurrence + time should be valid with a high coverage')
     def test_display_weekday_recurrence_list_time_interval(self):
         sch = datection.export(u"Le lundi et mardi de 14 h à 16 h 30", "fr")
         self.assertEqual(
             display(sch, self.locale), u'Le lundi et mardi, de 14 h à 16 h 30')
 
+    @unittest.skip('Single weekday recurrence not valid anymore')
     def test_display_weekday_recurrence_interval(self):
         sch = datection.export(u"Du samedi au dimanche", "fr")
         self.assertEqual(display(sch, self.locale), u'Le samedi et dimanche')

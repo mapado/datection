@@ -186,4 +186,3 @@ class TestFacebookScheduleNormalization(unittest.TestCase):
         ]
         fb_hours = sort_facebook_hours(fb_hours)
         self.assertEqual(group_facebook_hours(fb_hours), expected)
-

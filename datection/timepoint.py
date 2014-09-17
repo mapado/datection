@@ -6,7 +6,6 @@ from datetime import timedelta
 from datetime import datetime
 from datetime import time
 from datetime import date
-from dateutil.rrule import rrulestr
 from dateutil.rrule import rrule
 from dateutil.rrule import WEEKLY
 
@@ -60,7 +59,14 @@ class Date(Timepoint):
             and self.month == other.month
             and self.day == other.day)
 
-    def __repr__(self):
+    def __unicode__(self):
+        return u'%s/%s/%s' % (
+            str(self.year).zfill(4) if self.year is not None else '?',
+            str(self.month).zfill(2) if self.month is not None else '?',
+            str(self.day).zfill(2)
+        )
+
+    def __repr__(self):   # pragma: no cover
         return '%s(%s, %s, %s)' % (
             self.__class__.__name__,
             str(self.year) if self.year is not None else '?',
@@ -69,7 +75,7 @@ class Date(Timepoint):
         )
 
     @classmethod
-    def from_match(self, match):
+    def from_match(self, match):  # pragma: no cover
         year = match['year'] if match['year'] else None
         month = match['month'] if match['month'] else None
         return Date(year, month, match['day'])
@@ -122,7 +128,7 @@ class Time(Timepoint):
         self.hour = hour
         self.minute = minute
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return u'<%s %d:%s>' % (
             self.__class__.__name__,
             self.hour,
@@ -156,7 +162,7 @@ class TimeInterval(Timepoint):
         yield self.start_time
         yield self.end_time
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return u'<%s %d:%s - %d:%s>' % (
             self.__class__.__name__,
             self.start_time.hour,
@@ -170,6 +176,10 @@ class TimeInterval(Timepoint):
         return (
             self.start_time == other.start_time and
             self.end_time == other.end_time)
+
+    @classmethod
+    def make_all_day(self):
+        return TimeInterval(Time(0, 0), Time(23, 59))
 
     @property
     def valid(self):
@@ -267,6 +277,12 @@ class DateInterval(Timepoint):
         while current <= self.end_date.to_python():
             yield current
             current += timedelta(days=1)
+
+    def __repr__(self):
+        return '<%s %s - %s>' % (
+            self.__class__.__name__,
+            unicode(self.start_date),
+            unicode(self.end_date))
 
     @classmethod
     def make_undefined(cls):
@@ -371,7 +387,7 @@ class Datetime(Timepoint):
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<%s %d/%d/%d - %d:%s%s>' % (
             self.__class__.__name__,
             self.date.year,
@@ -385,7 +401,7 @@ class Datetime(Timepoint):
             ) if self.start_time != self.end_time else '')
 
     @classmethod
-    def combine(cls, date, start_time, end_time=None):  # pragma: no cover
+    def combine(cls, date, start_time, end_time=None):
         return Datetime(date, start_time, end_time)
 
     @property
@@ -650,6 +666,12 @@ class Weekdays(Timepoint):
         if not super(Weekdays, self).__eq__(other):
             return False
         return self.days == other.days
+
+    def __len__(self):
+        return len(self.days)
+
+    def __iter__(self):
+        return iter(self.days)
 
 
 class WeeklyRecurrence(Timepoint):
