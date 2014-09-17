@@ -44,16 +44,24 @@ class DurationRRule(object):
 
         """
         if self.bounded:
-            for dtime in self.rrule:
+            for dtime in self.date_producer:
                 yield dtime
         else:
             end_bound_date = date.today() + timedelta(days=365)
             end_bound = datetime.combine(end_bound_date, DAY_END)
-            for dtime in self.rrule:
+            for dtime in self.date_producer:
                 if dtime < end_bound:
                     yield dtime
                 else:
                     raise StopIteration
+
+    @cached_property
+    def exclusion_rrules(self):
+        """Return the list of exclusion rrules."""
+        return [
+            rrulestr(exc_rrule)
+            for exc_rrule in self.duration_rrule.get('excluded', [])
+        ]
 
     @cached_property
     def rrule(self):
@@ -70,13 +78,22 @@ class DurationRRule(object):
         the 'rrule' one, using an rruleset.
 
         """
-        if self.duration_rrule.get('excluded'):
-            rset = rruleset()
-            rset.rrule(rrulestr(self.duration_rrule['rrule']))
-            for ex_rrule in self.duration_rrule['excluded']:
-                rset.exrule(rrulestr(ex_rrule))
-            return rset
         return rrulestr(self.duration_rrule['rrule'])
+
+    @property
+    def date_producer(self):
+        """Return an iterator yielding every dates defined by both the
+        rrule and exclusion rrules.
+
+        """
+        if not self.exclusion_rrules:
+            return self.rrule
+
+        rset = rruleset()
+        rset.rrule(self.rrule)
+        for ex_rrule in self.exclusion_rrules:
+            rset.exrule(ex_rrule)
+        return rset
 
     @property
     def duration(self):

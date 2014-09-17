@@ -11,8 +11,6 @@ We use this technique for performance reasons: some regex can be greedy, thus
 it makes sense to use it only when necessary.
 """
 
-import re
-
 
 class Context(object):
 

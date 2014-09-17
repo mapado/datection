@@ -88,7 +88,7 @@ class Date(Timepoint):
             and self.month == other.month
             and self.day == other.day)
 
-    def __unicode__(self):
+    def __unicode__(self):  # pragma: no cover
         return u'%s/%s/%s' % (
             str(self.year).zfill(4) if self.year is not None else '?',
             str(self.month).zfill(2) if self.month is not None else '?',
@@ -309,7 +309,7 @@ class DateInterval(Timepoint):
             yield current
             current += timedelta(days=1)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return '<%s %s - %s>' % (
             self.__class__.__name__,
             unicode(self.start_date),

@@ -169,3 +169,9 @@ class TestParse(unittest.TestCase):
                 datetime(2014, 12, 11,  8, 0),
                 datetime(2014, 12, 15,  8, 0),
             ])
+
+    def test_weekly_recurrence_with_undefined_date_interval(self):
+        wk = parse(u"le lundi", "fr", valid=False)[0]
+        self.assertTrue(wk.date_interval.undefined)
+        export = wk.export()
+        self.assertTrue(export['unlimited'])
