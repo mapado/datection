@@ -7,8 +7,11 @@ setup(
     author=["Balthazar Rouberol"],
     author_email=['balthazar@mapado.com'],
     packages=find_packages(),
-    # test_suite='nose.collector'
-    # tests_require=['nose'],
     include_package_data=True,
-    install_requires=['python-dateutil==2.1.1'],
+    install_requires=[
+        # private packages
+        'python-dateutil==2.1.1',
+        # public packages
+        'pyparsing'
+    ],
 )
