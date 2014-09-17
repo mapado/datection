@@ -11,7 +11,7 @@ from datection.utils import normalize_2digit_year
 from datection.utils import duration
 from datection.utils import group_facebook_hours
 from datection.utils import sort_facebook_hours
-from datection.normalize import Time
+from datection.timepoint import Time
 
 
 class UtilsTest(unittest.TestCase):

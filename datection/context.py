@@ -13,8 +13,6 @@ it makes sense to use it only when necessary.
 
 import re
 
-from datection.regex import TIMEPOINT_PROBE
-
 
 class Context(object):
 
@@ -99,9 +97,10 @@ def probe(text, lang):
 
     """
     matches = []
-    for tp_probe in TIMEPOINT_PROBE[lang]:
-        for match in re.finditer(tp_probe, text):
-            start, end = match.span()  # start/end indexes of the match in text
+    probes = __import__(
+        'datection.grammar.' + lang, fromlist=['grammar']).PROBES
+    for tp_probe in probes:
+        for _, start, end in tp_probe.scanString(text):
             matches.append(Context(start, end, text))
 
     out = list(set(matches))  # remove redundant matches

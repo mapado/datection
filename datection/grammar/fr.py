@@ -279,3 +279,5 @@ TIMEPOINTS = [
     ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
     ('exclusion', EXCLUSION)
 ]
+
+PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]

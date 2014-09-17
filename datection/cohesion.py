@@ -13,7 +13,7 @@ from dateutil.rrule import DAILY
 from dateutil.rrule import rrule
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 
-from datection.normalize import ALL_DAY
+from datection.timepoint import ALL_DAY
 from datection.models import DurationRRule
 from datection.utils import makerrulestr
 

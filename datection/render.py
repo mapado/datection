@@ -17,8 +17,8 @@ from collections import namedtuple
 from datection.models import DurationRRule
 from datection.utils import cached_property
 from datection.utils import get_current_date
-from datection.normalize import DAY_START
-from datection.normalize import DAY_END
+from datection.timepoint import DAY_START
+from datection.timepoint import DAY_END
 from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
