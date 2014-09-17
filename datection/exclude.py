@@ -41,20 +41,17 @@ class TimepointExcluder(object):
             if isinstance(self.excluded, Date):
                 return self.weekly_recurrence_exclude_date(
                     self.timepoint, self.excluded)
-            elif isinstance(self.excluded, Weekdays):
-                return self.weekdays_exclusion_rrule(
-                    self.timepoint, self.excluded)
 
     @staticmethod
     def date_interval_exclude_date(date_interval, excluded_date):
+        if not excluded_date.year:
+            excluded_date.year = date_interval.end_date.year
         return excluded_date.export()['rrule']
 
     @staticmethod
     def datetime_interval_exclude_date(datetime_interval, excluded_date):
         if not excluded_date.year:
             excluded_date.year = datetime_interval.date_interval.end_date.year
-        if not excluded_date.month:
-            excluded_date.month = datetime_interval.date_interval.end_date.month
         excluded_datetime = Datetime(
             excluded_date,
             datetime_interval.time_interval.start_time,
@@ -65,8 +62,6 @@ class TimepointExcluder(object):
     def weekly_recurrence_exclude_date(weekly_recurrence, excluded_date):
         if not excluded_date.year:
             excluded_date.year = weekly_recurrence.date_interval.end_date.year
-        if not excluded_date.month:
-            excluded_date.month = weekly_recurrence.date_interval.end_date.month
         excluded_weekly_recurrence = WeeklyRecurrence(
             DateInterval(excluded_date, excluded_date),
             weekly_recurrence.time_interval,
@@ -81,12 +76,3 @@ class TimepointExcluder(object):
             start=excluded_rrule.dtstart.date(),
             end=excluded_rrule.until,
             rule=str(excluded_rrule))
-
-    @property
-    def valid(self):
-        """Wether both timepoints are valid."""
-        return self.timepoint.valid and self.excluded.valid
-
-    def future(self, reference=None):
-        """A TimepointExclusion is future if the constructive timepoint is."""
-        return self.timepoint.future(reference)

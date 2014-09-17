@@ -41,15 +41,14 @@ class DateSchedule(object):
 
     """Associate a date with several possible times."""
 
-    def __init__(self, date, times, excluded):
+    def __init__(self, date, times):
         self.date = date
         self.times = times
-        self.excluded = excluded
 
     @classmethod
     def from_date(cls, date):
         times = Times(intervals=[Time(0, 0), Time(23, 59)])
-        return DateSchedule(date, times, date.excluded)
+        return DateSchedule(date, times)
 
     @classmethod
     def from_datetime(cls, datetime):
@@ -58,29 +57,27 @@ class DateSchedule(object):
         else:
             interval = TimeInterval(datetime.start_time, datetime.end_time)
             times = Times(intervals=[interval])
-        return DateSchedule(datetime.date, times, datetime.excluded)
+        return DateSchedule(datetime.date, times)
 
 
 class DateListSchedule(object):
 
     """Associate a list of dates with several possible times."""
 
-    def __init__(self, dates, times, excluded):
+    def __init__(self, dates, times):
         self.dates = dates
         self.times = times
-        self.excluded = excluded
 
     @classmethod
     def from_datelist(cls, date_list):
-        return DateListSchedule(date_list.dates, Times(), date_list.excluded)
+        return DateListSchedule(date_list.dates, Times)
 
     @classmethod
     def from_datetime_list(cls, datetime_list):
         times = Times.from_time_interval(datetime_list.time_interval)
         return DateListSchedule(
             datetime_list.dates,
-            times,
-            datetime_list.excluded)
+            times)
 
 
 class DateIntervalSchedule(object):
