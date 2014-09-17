@@ -13,7 +13,6 @@ from datection.timepoint import Datetime
 from datection.timepoint import DatetimeList
 from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
-from datection.timepoint import Weekdays
 from datection.timepoint import WeeklyRecurrence
 from datection.exclude import TimepointExcluder
 
@@ -154,10 +153,6 @@ class Schedule(object):
         ContinuousDatetimeInterval: (
             'date_intervals',
             DateIntervalSchedule.from_continuous_datetime_interval),
-        Weekdays: (
-            'date_intervals',
-            DateIntervalSchedule.from_weekly_recurrence
-        ),
         WeeklyRecurrence: (
             'date_intervals',
             DateIntervalSchedule.from_weekly_recurrence)
@@ -170,12 +165,13 @@ class Schedule(object):
         self._timepoints = []  # TEMPORARY
 
     def add(self, timepoint, excluded=None):
-        if not excluded:
-            container_name, constructor = self.router[type(timepoint)]
+        if type(timepoint) in self.router:
+            if not excluded:
+                container_name, constructor = self.router[type(timepoint)]
+            else:
+                excluder = TimepointExcluder(timepoint, excluded)
+                timepoint.excluded.append(excluder.exclude())
+                container_name, constructor = self.router[
+                    type(excluder.timepoint)]
             getattr(self, container_name).append(constructor(timepoint))
-        else:
-            excluder = TimepointExcluder(timepoint, excluded)
-            timepoint.excluded.append(excluder.exclude())
-            container_name, constructor = self.router[type(excluder.timepoint)]
-            getattr(self, container_name).append(constructor(timepoint))
-        self._timepoints.append(timepoint)  # TEMPORARY
+            self._timepoints.append(timepoint)  # TEMPORARY

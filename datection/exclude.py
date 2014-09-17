@@ -27,14 +27,14 @@ class TimepointExcluder(object):
             if isinstance(self.excluded, Date):
                 return self.date_interval_exclude_date(
                     self.timepoint, self.excluded)
-            elif isinstance(self.excluded, Weekdays):
+            elif isinstance(self.excluded, WeeklyRecurrence):
                 return self.weekdays_exclusion_rrule(
                     self.timepoint, self.excluded)
         elif isinstance(self.timepoint, DatetimeInterval):
             if isinstance(self.excluded, Date):
                 return self.datetime_interval_exclude_date(
                     self.timepoint, self.excluded)
-            elif isinstance(self.excluded, Weekdays):
+            elif isinstance(self.excluded, WeeklyRecurrence):
                 return self.weekdays_exclusion_rrule(
                     self.timepoint, self.excluded)
         elif isinstance(self.timepoint, WeeklyRecurrence):
@@ -71,7 +71,8 @@ class TimepointExcluder(object):
     @staticmethod
     def weekdays_exclusion_rrule(timepoint, excluded_weekdays):
         excluded_rrule = rrulestr(timepoint.export()['rrule'])
-        excluded_rrule._byweekday = [d.weekday for d in excluded_weekdays.days]
+        excluded_rrule._byweekday = [
+            d.weekday for d in excluded_weekdays.weekdays.days]
         return makerrulestr(
             start=excluded_rrule.dtstart.date(),
             end=excluded_rrule.until,

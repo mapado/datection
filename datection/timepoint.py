@@ -269,6 +269,10 @@ class DateInterval(Timepoint):
             current += timedelta(days=1)
 
     @classmethod
+    def make_undefined(cls):
+        return DateInterval(Date(1, 1, 1), Date(9999, 12, 31))
+
+    @classmethod
     def from_match(cls, start_date, end_date):
         """Return a DateInterval instance constructed from a regex match
         result.
@@ -297,8 +301,14 @@ class DateInterval(Timepoint):
         return start_date
 
     @property
+    def undefined(self):
+        return self == DateInterval.make_undefined()
+
+    @property
     def valid(self):
         """ Check that start and end date are valid. """
+        if self.undefined:
+            return False
         return all([self.start_date.valid, self.end_date.valid])
 
     @property
@@ -692,8 +702,7 @@ class WeeklyRecurrence(Timepoint):
                 start=self.time_interval.start_time,
                 end=self.time_interval.end_time),
         }
-        _rrule = rrulestr(self.rrulestr)
-        if _rrule.until is None and _rrule.count is None:
+        if self.date_interval.undefined:
             export['unlimited'] = True
         if self.excluded:
             export['excluded'] = self.excluded

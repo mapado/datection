@@ -130,7 +130,7 @@ class TestTokenizer(unittest.TestCase):
             ['date',  # 23 mars 2015
              'date_interval',  # du 5 au 29 mars 2015
              'exclusion',  # sauf
-             'weekdays'])  # les lundis
+             'weekly_rec'])  # les lundis
 
     def assertTokenGroupEquals(self, tokens, expected_token_groups):
         tokens = [self.T(tok) for tok in tokens]
@@ -182,7 +182,7 @@ class TestTokenizer(unittest.TestCase):
             (u"sauf", "EXCLUDE", "exclusion"))
         self.assertTokenEquals(
             token_groups[0][2],
-            (u"les lundis", "MATCH", "weekdays"))
+            (u"les lundis", "MATCH", "weekly_rec"))
 
     def test_tokenize_no_context(self):
         self.tok.text = u"BLAH BLAH BLAH"
