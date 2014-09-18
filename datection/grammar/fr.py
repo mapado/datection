@@ -278,7 +278,7 @@ MULTIPLE_WEEKLY_RECURRENCE = (
     )('groups')
 ).setParseAction(develop_weekly_recurrence_patterns)
 
-EXCLUSION = oneOf([u'sauf', u'relâche'])
+EXCLUSION = oneOf([u'sauf', u'relâche', u'fermé'])
 
 TIMEPOINTS = [
     ('weekly_rec', WEEKLY_RECURRENCE),
