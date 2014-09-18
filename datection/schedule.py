@@ -170,7 +170,9 @@ class Schedule(object):
                 container_name, constructor = self.router[type(timepoint)]
             else:
                 excluder = TimepointExcluder(timepoint, excluded)
-                timepoint.excluded.append(excluder.exclude())
+                excluded = excluder.exclude()
+                if excluded is not None:
+                    timepoint.excluded.append(excluded)
                 container_name, constructor = self.router[
                     type(excluder.timepoint)]
             getattr(self, container_name).append(constructor(timepoint))
