@@ -474,6 +474,17 @@ class Datetime(Timepoint):
         reference = reference if reference is not None else get_current_date()
         return self.date.future(reference)
 
+    def to_python(self):
+        try:
+            return datetime(
+                self.date.year,
+                self.date.month,
+                self.date.day,
+                self.start_time.hour,
+                self.start_time.minute)
+        except (TypeError, ValueError):
+            return None
+
 
 class DatetimeList(Timepoint):
 
@@ -646,6 +657,10 @@ class ContinuousDatetimeInterval(Timepoint):
 
     @property
     def valid(self):
+        sdt = Datetime.combine(self.start_date, self.start_time).to_python()
+        edt = Datetime.combine(self.end_date, self.end_time).to_python()
+        if (sdt > edt):
+            return False
         return all([
             self.start_date.valid,
             self.end_date.valid,

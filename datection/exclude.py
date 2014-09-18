@@ -111,7 +111,7 @@ class TimepointExcluder(object):
         """
         excluded_rrule = rrulestr(timepoint.export()['rrule'])
         excluded_rrule._byweekday = [
-            d.weekday for d in excluded_weekdays.weekdays.days]
+            d.weekday for d in excluded_weekdays.weekdays]
         return makerrulestr(
             start=excluded_rrule.dtstart.date(),
             end=excluded_rrule.until,
