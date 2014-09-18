@@ -10,6 +10,8 @@ from pyparsing import oneOf
 from pyparsing import OneOrMore
 from pyparsing import FollowedBy
 from pyparsing import Group
+from pyparsing import Regex
+from pyparsing import Each
 from dateutil.rrule import weekdays
 
 from datection.grammar import DAY_NUMBER
@@ -30,7 +32,6 @@ from datection.grammar import as_continuous_datetime_interval
 from datection.grammar import as_weekday_list
 from datection.grammar import as_weekday_interval
 from datection.grammar import as_weekly_recurrence
-from datection.grammar import weekdays_as_weekly_recurrence
 from datection.grammar import complete_partial_date
 from datection.grammar import extract_time_patterns
 from datection.grammar import develop_datetime_patterns
@@ -195,16 +196,18 @@ DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
     OneOrMore(PARTIAL_DATE)('dates') +
     Optional(u',') +
-    optional_oneof_ci([u'à', u'-']) +
+    optional_oneof_ci([u'à', u'-', u'à partir de']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
 
 # a datetime interval is an interval of dates, and a time interval
 DATETIME_INTERVAL = (
+    Optional(',') +
     DATE_INTERVAL('date_interval') +
     Optional(u',') +
-    TIME_INTERVAL('time_interval')
+    TIME_INTERVAL('time_interval') +
+    Optional(',')
 ).setParseAction(as_datetime_interval)
 
 
@@ -237,42 +240,18 @@ WEEKDAY_INTERVAL = (
 
 # Any weekday related pattern
 WEEKDAY_PATTERN = (
-    WEEKDAY_INTERVAL | WEEKDAY_LIST
+    Optional(',') +
+    (WEEKDAY_INTERVAL | WEEKDAY_LIST) +
+    Optional(',')
 )
 
-WEEKLY_RECURRENCE_1 = (
-    WEEKDAY_PATTERN('weekdays') +
-    Optional(',') +
-    DATE_INTERVAL('date_interval') +
-    Optional(',') +
-    TIME_INTERVAL('time_interval')
+WEEKLY_RECURRENCE = Each(
+    [
+        WEEKDAY_PATTERN('weekdays'),
+        Optional(TIME_INTERVAL('time_interval')),
+        Optional(DATE_INTERVAL('date_interval')),
+    ]
 ).setParseAction(as_weekly_recurrence)
-
-WEEKLY_RECURRENCE_2 = (
-    WEEKDAY_PATTERN('weekdays') +
-    Optional(',') +
-    TIME_INTERVAL('time_interval') +
-    Optional(',') +
-    DATE_INTERVAL('date_interval')
-).setParseAction(as_weekly_recurrence)
-
-WEEKLY_RECURRENCE_3 = (
-    DATETIME_INTERVAL('datetime_interval') +
-    Optional(',') +
-    WEEKDAY_PATTERN
-).setParseAction(as_weekly_recurrence)
-
-WEEKLY_RECURRENCE_4 = (
-    WEEKDAY_PATTERN
-    + Optional(TIME_INTERVAL)('time_interval')
-).setParseAction(weekdays_as_weekly_recurrence)
-
-WEEKLY_RECURRENCE = (
-    WEEKLY_RECURRENCE_1 |
-    WEEKLY_RECURRENCE_2 |
-    WEEKLY_RECURRENCE_3 |
-    WEEKLY_RECURRENCE_4
-)
 
 EXCLUSION = oneOf([u'sauf', u'relâche'])
 

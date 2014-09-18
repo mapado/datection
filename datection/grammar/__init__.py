@@ -131,12 +131,14 @@ def as_weekly_recurrence(text, start_index, matches):
     days = []
     for wkday in wkdays:
         days.extend(wkday.days)
-    if matches.get('datetime_interval'):
-        date_interval = matches['datetime_interval'].date_interval
-        time_interval = matches['datetime_interval'].time_interval
-    else:
+    if matches.get('date_interval'):
         date_interval = matches['date_interval']
+    else:
+        date_interval = DateInterval.make_undefined()
+    if matches.get('time_interval'):
         time_interval = matches['time_interval']
+    else:
+        time_interval = TimeInterval.make_all_day()
     return WeeklyRecurrence(
         date_interval,
         time_interval,
@@ -152,7 +154,6 @@ def weekdays_as_weekly_recurrence(text, start_index, matches):
         date_interval=DateInterval.make_undefined(),
         time_interval=time_interval,
         weekdays=matches['weekdays'])
-
 
 
 def extract_time_patterns(text, start_index, matches):

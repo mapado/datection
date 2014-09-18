@@ -24,9 +24,6 @@ from datection.grammar.fr import WEEKDAY_LIST
 from datection.grammar.fr import WEEKDAY_INTERVAL
 from datection.grammar.fr import WEEKDAY_PATTERN
 from datection.grammar.fr import WEEKLY_RECURRENCE
-from datection.grammar.fr import WEEKLY_RECURRENCE_1
-from datection.grammar.fr import WEEKLY_RECURRENCE_2
-from datection.grammar.fr import WEEKLY_RECURRENCE_3
 from datection.timepoint import Date
 from datection.timepoint import Time
 from datection.timepoint import TimeInterval
@@ -494,13 +491,11 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse_equal(
             u"du lundi au mercredi", Weekdays([MO, TU, WE]))
 
-    @set_pattern(WEEKLY_RECURRENCE_1)
     def test_parse_weekly_recurrence1_formats(self):
         self.assert_parse(
             u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h")
         self.assert_parse(u"le vendredi, du 2 au 29 mars 2015, à 10h")
 
-    @set_pattern(WEEKLY_RECURRENCE_1)
     def test_parse_weekly_recurrence1(self):
         self.assert_parse_equal(
             u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h",
@@ -515,13 +510,11 @@ class TestWeekdayRecurrence(TestGrammar):
                 TimeInterval(Time(10, 0), Time(10, 0)),
                 [FR]))
 
-    @set_pattern(WEEKLY_RECURRENCE_2)
     def test_parse_weekly_recurrence2_formats(self):
         self.assert_parse(
             u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ")
         self.assert_parse(u"le vendredi à 10h, du 2 au 29 mars 2015")
 
-    @set_pattern(WEEKLY_RECURRENCE_2)
     def test_parse_weekly_recurrence2(self):
         self.assert_parse_equal(
             u"du lundi au vendredi, de 8h à 10h, du 2 au 29 mars 2015, ",
@@ -536,13 +529,11 @@ class TestWeekdayRecurrence(TestGrammar):
                 TimeInterval(Time(10, 0), Time(10, 0)),
                 [FR]))
 
-    @set_pattern(WEEKLY_RECURRENCE_3)
     def test_parse_weekly_recurrence3_formats(self):
         self.assert_parse(
             u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi")
         self.assert_parse(u"du 2 au 29 mars 2015 à 10h, le vendredi")
 
-    @set_pattern(WEEKLY_RECURRENCE_3)
     def test_parse_weekly_recurrence3(self):
         self.assert_parse_equal(
             u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi",
