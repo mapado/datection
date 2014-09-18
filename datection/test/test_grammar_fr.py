@@ -249,10 +249,14 @@ class TestDatetime(TestGrammar):
         self.assert_parse(u'Le 5 mars 2015 à 15h30')
         self.assert_parse(u'le 5 mars 2015 de 14h à 15h30')
         self.assert_parse(u'Le 5 mars 2015, à 15h30')
+        self.assert_parse(u'Le 5 mars 2015, à partir de 15h30')
 
     def test_parse_datetime(self):
         self.assert_parse_equal(
             u'5 mars 2015 à 15h30',
+            Datetime(Date(2015, 3, 5), Time(15, 30)))
+        self.assert_parse_equal(
+            u'Le 5 mars 2015, à partir de 15h30',
             Datetime(Date(2015, 3, 5), Time(15, 30)))
 
 

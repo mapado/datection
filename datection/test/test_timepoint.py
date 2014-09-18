@@ -385,8 +385,14 @@ class TestContinuousDatetimeInterval(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.cdti.valid)
-        self.cdti.start_date.year = None
-        self.assertFalse(self.cdti.valid)
+
+    def test_valid_startdate_after_enddate(self):
+        cdti = ContinuousDatetimeInterval(
+            Date(2015, 4, 9),
+            Time(18, 30),
+            Date(2015, 4, 8),
+            Time(5, 0))
+        self.assertFalse(cdti.valid)
 
     def test_future(self):
         self.assertTrue(self.cdti.future())  # today: before

@@ -60,7 +60,7 @@ def set_weekday(text, start_index, match):
 # A weekday name can be in its full form or abbreviated form
 WEEKDAY = (
     (
-        oneof_ci(WEEKDAYS.keys()) + Optional('s')
+        oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
     ) | oneof_ci(SHORT_WEEKDAYS.keys()) + ~FollowedBy('s')
 ).setParseAction(set_weekday)
 
@@ -117,7 +117,7 @@ TIME = (
 # 15h30 is a time interval bewteen 15h30 and 15h30
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
-    optional_oneof_ci([u'de', u'entre', u'à']) +
+    optional_oneof_ci([u'de', u'entre', u'à', u'à partir de']) +
     TIME('start_time') +
     optional_oneof_ci([u'-', u'à', u'et']) +
     Optional(TIME('end_time'))
@@ -172,10 +172,12 @@ DATE_LIST = (
 # A date interval is composed of a start (possibly partial) date and an
 # end date
 DATE_INTERVAL = (
+    Optional(',') +
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
     oneof_ci([u'au', '-']) +
-    (DATE | NUMERIC_DATE)('end_date')
+    (DATE | NUMERIC_DATE)('end_date') +
+    Optional(',')
 ).setParseAction(as_date_interval)
 
 # A datetime is a date, a separator and a time interval (either a single)
@@ -227,7 +229,10 @@ CONTINUOUS_DATETIME_INTERVAL = (
 # A list of several weekdays
 WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les"]) +
-    OneOrMore(WEEKDAY + Optional(OneOrMore(oneOf([u',', u'et']))))
+    OneOrMore(
+        WEEKDAY +
+        Optional(OneOrMore(oneOf([u',', u'et', u'le'])))
+    )
 ).setParseAction(as_weekday_list)('weekdays')
 
 # An interval of weekdays

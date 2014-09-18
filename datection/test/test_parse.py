@@ -5,6 +5,7 @@
 import unittest
 
 from datetime import datetime
+from dateutil.rrule import TU, WE
 
 from datection import parse
 from datection.models import DurationRRule
@@ -175,3 +176,12 @@ class TestParse(unittest.TestCase):
         self.assertTrue(wk.date_interval.undefined)
         export = wk.export()
         self.assertTrue(export['unlimited'])
+
+    def test_weekday_list(self):
+        wks = parse(
+            u"Le mardi et mercredi, de 10 h à 19 h 30",
+            "fr",
+            valid=False)
+        self.assertEqual(len(wks), 1)
+        wk = wks[0]
+        self.assertEqual(wk.weekdays, [TU, WE])

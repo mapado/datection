@@ -176,7 +176,7 @@ class TestTokenizer(unittest.TestCase):
         token_groups = self.tok.tokenize()
         self.assertTokenEquals(
             token_groups[0][0],
-            (u"Du 5 au 29 mars 2015,", "MATCH", "date_interval"))
+            (u"Du 5 au 29 mars 2015, ", "MATCH", "date_interval"))
         self.assertTokenEquals(
             token_groups[0][1],
             (u"sauf", "EXCLUDE", "exclusion"))
