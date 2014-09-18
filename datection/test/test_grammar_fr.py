@@ -24,6 +24,7 @@ from datection.grammar.fr import WEEKDAY_LIST
 from datection.grammar.fr import WEEKDAY_INTERVAL
 from datection.grammar.fr import WEEKDAY_PATTERN
 from datection.grammar.fr import WEEKLY_RECURRENCE
+from datection.grammar.fr import MULTIPLE_WEEKLY_RECURRENCE
 from datection.timepoint import Date
 from datection.timepoint import Time
 from datection.timepoint import TimeInterval
@@ -562,3 +563,37 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse(
             u"Du 2 au 29 mars 2015 de 8h à 10h, du lundi au vendredi")
         self.assert_parse(u"du 2 au 29 mars 2015 à 10h, le vendredi")
+
+    @set_pattern(MULTIPLE_WEEKLY_RECURRENCE)
+    def test_parse_multiple_weekly_recurrence_formats(self):
+        self.assert_parse(
+            u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
+            lundi à 18h""")
+        self.assert_parse(
+            u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
+            lundi à 18h, dimanche à 20h30""")
+
+    @set_pattern(MULTIPLE_WEEKLY_RECURRENCE)
+    def test_parse_multiple_weekly_recurrence(self):
+        wk1 = WeeklyRecurrence(
+            date_interval=DateInterval(Date(2015, 3, 29), Date(2015, 4, 2)),
+            time_interval=TimeInterval(Time(16, 0), Time(19, 0)),
+            weekdays=Weekdays([TU, WE, SA]))
+        wk2 = WeeklyRecurrence(
+            date_interval=DateInterval(Date(2015, 3, 29), Date(2015, 4, 2)),
+            time_interval=TimeInterval(Time(18, 0), Time(18, 0)),
+            weekdays=Weekdays([MO]))
+        wk3 = WeeklyRecurrence(
+            date_interval=DateInterval(Date(2015, 3, 29), Date(2015, 4, 2)),
+            time_interval=TimeInterval(Time(20, 30), Time(20, 30)),
+            weekdays=Weekdays([SU]))
+        self.assertListEqual(
+            list(self.pattern.parseString(
+                u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
+                lundi à 18h""")),
+            [wk1, wk2])
+        self.assertListEqual(
+            list(self.pattern.parseString(
+                u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
+                lundi à 18h, dimanche à 20h30""")),
+            [wk1, wk2, wk3])

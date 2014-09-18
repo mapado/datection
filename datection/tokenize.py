@@ -152,6 +152,8 @@ class Tokenizer(object):
                         set(range(*tpt2.span))
                     )
                     if span1.intersection(span2):
+                        if span1 == span2:
+                            continue
                         # if A ⊃ B or A = B: remove B
                         if span1.issuperset(span2) or span1 == span2:
                             if (tpt2, ctx2) in out:
@@ -200,10 +202,11 @@ class Tokenizer(object):
         matches = []
         ctx = unicode(context)
         for pname, pattern in self.timepoint_patterns:
-            for match, start, end in pattern.scanString(ctx):
+            for pattern_matches, start, end in pattern.scanString(ctx):
                 start, end = self.trim_text(ctx[start:end], start, end)
-                match = Match(match[0], pname, start, end)
-                matches.append((match, context))
+                for match in pattern_matches:
+                    match = Match(match, pname, start, end)
+                    matches.append((match, context))
         return matches
 
     # pragma: no cover

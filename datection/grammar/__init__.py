@@ -178,6 +178,16 @@ def complete_partial_date(text, start_index, matches):
         return Date(year=None, month=None, day=matches['day'][0])
 
 
+def develop_weekly_recurrence_patterns(text, start_index, matches):
+    out = []
+    date_interval = matches['date_interval']
+    for group in matches['groups']:
+        wk = WeeklyRecurrence(
+            date_interval=date_interval,
+            weekdays=group['weekdays'],
+            time_interval=group['patterns'][0])
+        out.append(wk)
+    return out
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
     ur'(?<![\d])'  # not preceeded by a digit

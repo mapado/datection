@@ -35,6 +35,7 @@ from datection.grammar import as_weekly_recurrence
 from datection.grammar import complete_partial_date
 from datection.grammar import extract_time_patterns
 from datection.grammar import develop_datetime_patterns
+from datection.grammar import develop_weekly_recurrence_patterns
 from datection.grammar import optional_ci
 from datection.grammar import optional_oneof_ci
 from datection.grammar import oneof_ci
@@ -172,12 +173,12 @@ DATE_LIST = (
 # A date interval is composed of a start (possibly partial) date and an
 # end date
 DATE_INTERVAL = (
-    Optional(',') +
+    optional_oneof_ci([',', '-']) +
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
     oneof_ci([u'au', '-']) +
     (DATE | NUMERIC_DATE)('end_date') +
-    Optional(',')
+    optional_oneof_ci([',', '-'])
 ).setParseAction(as_date_interval)
 
 # A datetime is a date, a separator and a time interval (either a single)
@@ -205,11 +206,11 @@ DATETIME_LIST = (
 
 # a datetime interval is an interval of dates, and a time interval
 DATETIME_INTERVAL = (
-    Optional(',') +
+    optional_oneof_ci([',', '-']) +
     DATE_INTERVAL('date_interval') +
     Optional(u',') +
     TIME_INTERVAL('time_interval') +
-    Optional(',')
+    optional_oneof_ci([',', '-'])
 ).setParseAction(as_datetime_interval)
 
 
@@ -245,9 +246,9 @@ WEEKDAY_INTERVAL = (
 
 # Any weekday related pattern
 WEEKDAY_PATTERN = (
-    Optional(',') +
+    optional_oneof_ci([',', '-']) +
     (WEEKDAY_INTERVAL | WEEKDAY_LIST) +
-    Optional(',')
+    optional_oneof_ci([',', '-'])
 )
 
 WEEKLY_RECURRENCE = Each(
@@ -258,10 +259,30 @@ WEEKLY_RECURRENCE = Each(
     ]
 ).setParseAction(as_weekly_recurrence)
 
+# Ex: Du 29/03/11 au 02/04/11 - Mardi, mercredi samedi à 19h, jeudi à
+# 20h30 et vendredi à 15h"
+MULTIPLE_WEEKLY_RECURRENCE = (
+    DATE_INTERVAL('date_interval') +
+    (
+        Group(
+            WEEKDAY_PATTERN +
+            TIME_PATTERN
+        ) +
+        OneOrMore(
+            Optional(u'et') +
+            Group(
+                WEEKDAY_PATTERN +
+                TIME_PATTERN
+            )
+        )
+    )('groups')
+).setParseAction(develop_weekly_recurrence_patterns)
+
 EXCLUSION = oneOf([u'sauf', u'relâche'])
 
 TIMEPOINTS = [
     ('weekly_rec', WEEKLY_RECURRENCE),
+    ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
     ('date_list', DATE_LIST),
     ('date_interval', DATE_INTERVAL),
     ('datetime_list', DATETIME_LIST),
