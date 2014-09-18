@@ -30,16 +30,6 @@ def cached_property(f):
     return wrapper
 
 
-def ensure_unicode(f):
-    """utf-8 decode all the str arguments of the decorated function."""
-    def wrapper(*args, **kwargs):
-        args = [x.decode('utf-8') if isinstance(x, str) else x for x in args]
-        kwargs = {k: (v.decode('utf-8') if isinstance(v, str) else v)
-                  for k, v in kwargs.items()}
-        return f(*args, **kwargs)
-    return wrapper
-
-
 def isoformat_concat(datetime):
     """ Strip all dots, dashes and ":" from the input datetime isoformat """
     isoformat = datetime.isoformat()

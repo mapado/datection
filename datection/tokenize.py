@@ -6,7 +6,6 @@ import unicodedata
 
 from datection.context import probe
 from datection.utils import cached_property
-from datection.utils import ensure_unicode
 
 
 class Match(object):
@@ -266,7 +265,6 @@ class Tokenizer(object):
                 i += 1
         return out
 
-    @ensure_unicode
     def tokenize(self):
         contexts = probe(self.text, self.lang)
         if not contexts:

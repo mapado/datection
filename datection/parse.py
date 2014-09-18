@@ -15,6 +15,8 @@ def parse(text, lang, valid=True):
     Else, invalid Timepoints can also be returned.
 
     """
+    if isinstance(text, str):
+        text = text.decode('utf-8')
     schedule = Schedule()
     token_groups = Tokenizer(text, lang).tokenize()
     for token_group in token_groups:
