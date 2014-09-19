@@ -117,20 +117,42 @@ class DateIntervalSchedule(object):
 
     @classmethod
     def from_continuous_datetime_interval(cls, co_datetime_interval, excluded):
-        raise NotImplementedError
+        pass
 
 
 class Schedule(object):
 
-    """Contains and aggregates the rrules of all the pattern matches.
+    """Container of timepoints, all coherent with each other.
 
-    TODO: MORE DOC!!!
+    All normalized timepoint objects, coherent with each other, are
+    contained in a schedule, by being transformed and mapped into 4
+    containers:
+    * dates
+    * date_lists
+    * date_intervals
+    * continuous_date_intervals
 
-    If the combination of the rrules lead to some incoherency, the
-    schedule is un-exportable.
+    The 'dates', 'date_lists' and 'continuous_date_intervals' lists
+    contain one or several isinstances of respectively DateSchedule,
+    DateListSchedule and ContinuousDateIntervalSchedule classes.
+
+    Each instance of these classes has a 'times' attribute, that holds
+    two list attributes:
+    * singles: a list of TimeInterval which start_time is equal to its
+      end_time
+    * intervals: a list if TimeInterval which start_time is unequal to
+      its end_time
+
+    The 'date_intervals' list attribute contains instances of the
+    DateIntervalSchedule class, that also holds a 'times' attribute, and
+    also a 'weekdays' list, holding a list of dateutil.rrule.weekday
+    isinstances.
+
+    The fact of mapping the timepoints onto such a tree allows for a
+    coherency check, and prevents invalid timepoints to be exported
+    as an RRule.
 
     """
-
     router = {
         Date: (
             'dates',
@@ -165,15 +187,26 @@ class Schedule(object):
         self._timepoints = []  # TEMPORARY
 
     def add(self, timepoint, excluded=None):
+        """Add the timepoint to the one of the schedule internal lists,
+        if its class is found in the schedule router.
+
+        """
         if type(timepoint) in self.router:
             if not excluded:
+                # Get the timepoint transformation method
                 container_name, constructor = self.router[type(timepoint)]
             else:
+                # perform the exclusion bewteen the 'timepoint' and 'excluded'
+                # Timepoints
                 excluder = TimepointExcluder(timepoint, excluded)
                 excluded = excluder.exclude()
                 if excluded is not None:
                     timepoint.excluded.append(excluded)
+
+                # Get the timepoint transformation method
                 container_name, constructor = self.router[
                     type(excluder.timepoint)]
+
+            # add timepoint to the schedule
             getattr(self, container_name).append(constructor(timepoint))
             self._timepoints.append(timepoint)  # TEMPORARY
