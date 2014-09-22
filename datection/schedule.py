@@ -31,6 +31,7 @@ class Times(object):
 
     @classmethod
     def from_time_interval(cls, time_interval):
+        """Construct a Times object from a TimeInterval instance."""
         if time_interval.is_single_time():
             return Times(singles=[time_interval.start_time])
         else:
@@ -47,11 +48,13 @@ class DateSchedule(object):
 
     @classmethod
     def from_date(cls, date):
-        times = Times(intervals=[Time(0, 0), Time(23, 59)])
+        """Construct a DateSchedule from a Date instance."""
+        times = Times(intervals=[TimeInterval(Time(0, 0), Time(23, 59))])
         return DateSchedule(date, times)
 
     @classmethod
     def from_datetime(cls, datetime):
+        """Construct a DateSchedule from a Datetime instance."""
         if datetime.start_time == datetime.end_time:
             times = Times(singles=[datetime.start_time])
         else:
@@ -70,10 +73,13 @@ class DateListSchedule(object):
 
     @classmethod
     def from_datelist(cls, date_list):
-        return DateListSchedule(date_list.dates, Times)
+        """Construct a DateListSchedule from a DateList instance."""
+        times = Times(intervals=[TimeInterval(Time(0, 0), Time(23, 59))])
+        return DateListSchedule(date_list.dates, times)
 
     @classmethod
     def from_datetime_list(cls, datetime_list):
+        """Construct a DateListSchedule from a DatetimeList instance."""
         times = Times.from_time_interval(datetime_list.time_interval)
         return DateListSchedule(
             datetime_list.dates,
@@ -92,6 +98,7 @@ class DateIntervalSchedule(object):
 
     @classmethod
     def from_weekly_recurrence(cls, weekly_rec):
+        """Construct a DateIntervalSchedule from a WeeklyRecurrence instance."""
         times = Times.from_time_interval(weekly_rec.time_interval)
         return DateIntervalSchedule(
             weekly_rec.date_interval,
@@ -101,14 +108,16 @@ class DateIntervalSchedule(object):
 
     @classmethod
     def from_date_interval(cls, date_interval):
+        """Construct a DateIntervalSchedule from a DateInterval instance."""
         return DateIntervalSchedule(
             date_interval,
-            Times(intervals=[Time(0, 0), Time(23, 59)]),
+            Times(intervals=[TimeInterval(Time(0, 0), Time(23, 59))]),
             all_weekdays,
             date_interval.excluded)
 
     @classmethod
     def from_datetime_interval(cls, datetime_interval):
+        """Construct a DateIntervalSchedule from a DatetimeInterval instance."""
         times = Times.from_time_interval(datetime_interval.time_interval)
         return DateIntervalSchedule(
             datetime_interval.date_interval,
@@ -118,6 +127,10 @@ class DateIntervalSchedule(object):
 
     @classmethod
     def from_continuous_datetime_interval(cls, co_datetime_interval):
+        """Construct a DateIntervalSchedule from a ContunuousDatetimeInterval
+        instance.
+
+        """
         ti = TimeInterval(
             co_datetime_interval.start_time,
             co_datetime_interval.end_time)
