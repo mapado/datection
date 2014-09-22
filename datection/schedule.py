@@ -24,9 +24,10 @@ class Times(object):
 
     """
 
-    def __init__(self, singles=[], intervals=[]):
+    def __init__(self, singles=[], intervals=[], continuous_intervals=[]):
         self.singles = singles
         self.intervals = intervals
+        self.continuous_intervals = continuous_intervals
 
     @classmethod
     def from_time_interval(cls, time_interval):
@@ -116,8 +117,19 @@ class DateIntervalSchedule(object):
             datetime_interval.excluded)
 
     @classmethod
-    def from_continuous_datetime_interval(cls, co_datetime_interval, excluded):
-        pass
+    def from_continuous_datetime_interval(cls, co_datetime_interval):
+        ti = TimeInterval(
+            co_datetime_interval.start_time,
+            co_datetime_interval.end_time)
+        di = DateInterval(
+            co_datetime_interval.start_date,
+            co_datetime_interval.end_date)
+        times = Times(continuous_intervals=[ti])
+        return DateIntervalSchedule(
+            date_interval=di,
+            times=times,
+            weekdays=all_weekdays,
+            excluded=[])
 
 
 class Schedule(object):
