@@ -118,7 +118,7 @@ TIME = (
 # 15h30 is a time interval bewteen 15h30 and 15h30
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
-    optional_oneof_ci([u'de', u'entre', u'à', u'à partir de']) +
+    optional_oneof_ci([u'de', u'entre', u'à', u'à partir de', u':']) +
     TIME('start_time') +
     optional_oneof_ci([u'-', u'à', u'et']) +
     Optional(TIME('end_time'))
