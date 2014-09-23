@@ -3,6 +3,7 @@
 """Utilities used for tokenizing a string into time-related tokens."""
 
 import unicodedata
+import datection
 
 from datection.context import probe
 from datection.utils import cached_property
@@ -109,9 +110,14 @@ class Tokenizer(object):
 
     """Splits text into time-related tokens."""
 
-    def __init__(self, text, lang):
+    def __init__(self, text, lang, reference=None):
         self.text = text
         self.lang = lang
+
+        # Ugly hack: monkey patching of the timepoint module. Insert the
+        # reference value into the REFERENCE timepoint global variable, to
+        # influence the normalization of year-less dates.
+        datection.timepoint.REFERENCE = reference
 
     @cached_property
     def timepoint_patterns(self):  # pragma: no cover

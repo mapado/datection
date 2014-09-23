@@ -18,6 +18,7 @@ ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
+REFERENCE = None
 
 
 def add_span(f):
@@ -120,10 +121,12 @@ class Date(Timepoint):
 
     def to_python(self):
         """Convert a Date object to a datetime.object"""
+        if self.year is None and REFERENCE is not None:
+            self.year = REFERENCE.year
         try:
             return date(year=self.year, month=self.month, day=self.day)
         except (TypeError, ValueError):
-            # Eg: if one of the attributes is None
+            # Eg: if one of the attributes is None or out of bounds
             return None
 
     @add_span
@@ -244,18 +247,24 @@ class DateList(Timepoint):
     def set_years(cls, dates):
         """Make all dates without year inherit from the last date year."""
         last_date = dates[-1]
-        if not last_date:
-            raise ValueError('Last date must have a non nil year.')
+        if not last_date.year:
+            if REFERENCE:
+                last_date.year = REFERENCE.year
+            else:
+                raise ValueError('Last date must have a non nil year.')
         for _date in dates[:-1]:
             if not _date.year:
-                _date.year = last_date.year
+                if _date.month > last_date.month:
+                    _date.year = last_date.year - 1
+                else:
+                    _date.year = last_date.year
         return dates
 
     @classmethod
     def set_months(cls, dates):
         """Make all dates without month inherit from the last date month."""
         last_date = dates[-1]
-        if not last_date:
+        if not last_date.month:
             raise ValueError('Last date must have a non nil month.')
         for _date in dates[:-1]:
             if not _date.month:
@@ -333,9 +342,15 @@ class DateInterval(Timepoint):
     def set_start_date_year(cls, start_date, end_date):
         """Make the start_date inherit from the end_date year, if needed."""
         if not end_date.year:
-            raise ValueError("End date must have a year")
+            if REFERENCE:
+                end_date.year = REFERENCE.year
+            else:
+                raise ValueError("End date must have a year")
         if not start_date.year:
-            start_date.year = end_date.year
+            if start_date.month > end_date.month:
+                start_date.year = end_date.year - 1
+            else:
+                start_date.year = end_date.year
         return start_date
 
     @classmethod
@@ -642,7 +657,10 @@ class ContinuousDatetimeInterval(Timepoint):
     @classmethod
     def set_year(cls, start_date, end_date):
         if not end_date.year:
-            raise ValueError("end date must have a year")
+            if REFERENCE:
+                end_date.year = REFERENCE.year
+            else:
+                raise ValueError("end date must have a year")
         if not start_date.year:
             start_date.year = end_date.year
         return start_date

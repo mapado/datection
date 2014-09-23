@@ -10,7 +10,7 @@ from datection.parse import parse
 from datection.models import DurationRRule
 
 
-def export(text, lang, valid=True, only_future=True, **kwargs):
+def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
     """ Perform a date detection on text with all timepoint regex.
 
     Returns a list of dicts, each containing a recurrence rule
@@ -19,7 +19,7 @@ def export(text, lang, valid=True, only_future=True, **kwargs):
 
     """
     out = []
-    timepoints = parse(text, lang, valid)
+    timepoints = parse(text, lang, reference=reference, valid=valid)
 
     # filter out all past timepoints, if only_future == True
     if only_future:

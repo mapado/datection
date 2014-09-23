@@ -187,7 +187,9 @@ class TestDateList(TestGrammar):
     def test_parse_date_list_formats(self):
         self.assert_parse(u"les 5, 6, 8 mars 2013")
         self.assert_parse(u"5, 6 et 8 mars 2013")
-        self.assert_parse(u"Le 5, 6 et 8 mars")
+        with self.assertRaises(ValueError):
+            # We can parse it, but information is missing
+            self.assert_parse(u"Le 5, 6 et 8 mars")
 
     def test_parse_date_list(self):
         self.assert_parse_equal(
