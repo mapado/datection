@@ -1256,8 +1256,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
             u"Le 14 septembre 2014 à 18h", "fr", only_future=False)
         formatter = LongFormatter(sch)
 
-        self.assertEqual(
-            formatter.next_changes(), datetime.datetime(2014, 9, 8, 0, 0, 0))
+        self.assertIsNone(formatter.next_changes())
 
     def test_next_date_today(self):
         self.set_current_date(datetime.date(2013, 8, 8))
