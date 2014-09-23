@@ -122,7 +122,7 @@ class Date(Timepoint):
         """Convert a Date object to a datetime.object"""
         try:
             return date(year=self.year, month=self.month, day=self.day)
-        except TypeError:
+        except (TypeError, ValueError):
             # Eg: if one of the attributes is None
             return None
 
