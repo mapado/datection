@@ -4,7 +4,7 @@
 
 import unittest
 
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.rrule import TU, WE
 
 from datection import parse
@@ -18,13 +18,15 @@ class TestParse(unittest.TestCase):
     lang = 'fr'
 
     def assert_generates(self, text, datetimes):
-        schedule = parse(text, self.lang)[0].export()
+        timepoints = parse(text, self.lang)
         generated_datetimes = []
-        if isinstance(schedule, list):
-            for item in schedule:
-                generated_datetimes.extend(list(DurationRRule(item)))
-        else:
-            generated_datetimes = list(DurationRRule(schedule))
+        for timepoint in timepoints:
+            export = timepoint.export()
+            if isinstance(export, list):
+                for item in export:
+                    generated_datetimes.extend(list(DurationRRule(item)))
+            else:
+                generated_datetimes.extend(list(DurationRRule(export)))
         self.assertListEqual(generated_datetimes, datetimes)
 
     def test_date(self):
@@ -32,11 +34,15 @@ class TestParse(unittest.TestCase):
 
     def test_datetime(self):
         self.assert_generates(
-            u"Le 5 mars 2015 à 18h30", [datetime(2015, 3, 5, 18, 30)])
+            u"Le 5 mars 2015 à 18h30", [
+            datetime(2015, 3, 5, 18, 30),
+            datetime(2015, 3, 5, 18, 30)])
 
     def test_datetime_with_time_interval(self):
         self.assert_generates(
-            u"Le 5 mars 2015 de 16h à 18h30", [datetime(2015, 3, 5, 16, 0)])
+            u"Le 5 mars 2015 de 16h à 18h30", [
+            datetime(2015, 3, 5, 16, 0),
+            datetime(2015, 3, 5, 16, 0)])
 
     def test_date_list(self):
         self.assert_generates(
@@ -185,6 +191,11 @@ class TestParse(unittest.TestCase):
         self.assertEqual(len(wks), 1)
         wk = wks[0]
         self.assertEqual(wk.weekdays, [TU, WE])
+
+    def test_datetime_pattern(self):
+        self.assert_generates(
+            u'Samedi 1 Juin 2014 de 11h à 13h et de 14h à 17h',
+            [datetime(2014, 6, 1, 11, 0), datetime(2014, 6, 1, 14, 0)])
 
 
 class TestYearLessExpressions(unittest.TestCase):

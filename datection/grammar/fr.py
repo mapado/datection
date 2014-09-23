@@ -285,6 +285,7 @@ TIMEPOINTS = [
     ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
     ('date_list', DATE_LIST),
     ('date_interval', DATE_INTERVAL),
+    ('datetime', DATETIME_PATTERN),
     ('datetime_list', DATETIME_LIST),
     ('datetime_interval', DATETIME_INTERVAL),
     ('date', DATE_PATTERN),
