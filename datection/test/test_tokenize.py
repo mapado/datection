@@ -88,6 +88,10 @@ class TestTokenizer(unittest.TestCase):
             self.action = action
             self.tag = action.lower()
 
+        @property
+        def is_match(self):
+            return self.action == 'MATCH'
+
     def setUp(self):
         self.tok = Tokenizer(u"Du 5 au 29 mars 2015, sauf les lundis", "fr")
 
@@ -157,7 +161,7 @@ class TestTokenizer(unittest.TestCase):
         self.assertTokenGroupEquals(tokens, expected)
 
         tokens = ['MATCH', 'MATCH', 'MATCH', 'EXCLUDE']
-        expected = [['MATCH'], ['MATCH'], ['MATCH'], ['EXCLUDE']]
+        expected = [['MATCH'], ['MATCH'], ['MATCH']]
         self.assertTokenGroupEquals(tokens, expected)
 
         tokens = ['MATCH', 'MATCH', 'EXCLUDE', 'MATCH']
