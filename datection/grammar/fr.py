@@ -295,3 +295,13 @@ TIMEPOINTS = [
 ]
 
 PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
+
+# List of expressions associated with their replacement
+# so that they can be easily normalized
+EXPRESSIONS = {
+    u'midi': u'12h',
+    u'minuit': u'23h59',
+    u'le matin': u'de 8h à 12h',
+    u'en journée': u'de 8h à 18h',
+    u'en soirée': u'de 18h à 22h',
+}

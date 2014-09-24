@@ -4,6 +4,7 @@
 
 import unicodedata
 import datection
+import re
 
 from datection.timepoint import NormalizationError
 from datection.context import probe
@@ -121,12 +122,23 @@ class Tokenizer(object):
         datection.timepoint.REFERENCE = reference
 
     @cached_property
-    def timepoint_patterns(self):  # pragma: no cover
-        """The list of all time-related patterns in the Tokenizer language."""
-        lang_grammar_mod = __import__(
+    def language_module(self):
+        """The grammar module object related to the Tokenizer language."""
+        return __import__(
             'datection.grammar.%s' % (self.lang),
             fromlist=['grammar'])
-        return lang_grammar_mod.TIMEPOINTS
+
+    @property
+    def timepoint_patterns(self):  # pragma: no cover
+        """The list of all time-related patterns in the Tokenizer language."""
+        return self.language_module.TIMEPOINTS
+
+    @property
+    def language_expressions(self):  # pragma: no cover
+        """The list of all time-related expressions in the Tokenizer language.
+
+        """
+        return self.language_module.EXPRESSIONS
 
     @staticmethod
     def _remove_subsets(matches):
@@ -207,6 +219,8 @@ class Tokenizer(object):
         """
         matches = []
         ctx = unicode(context)
+        for expression, translation in self.language_expressions.iteritems():
+            ctx = re.sub(expression, translation, ctx)
         for pname, pattern in self.timepoint_patterns:
             try:
                 for pattern_matches, start, end in pattern.scanString(ctx):
