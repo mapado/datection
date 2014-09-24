@@ -129,7 +129,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'ou'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
