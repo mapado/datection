@@ -373,8 +373,6 @@ class DateInterval(Timepoint):
     @property
     def valid(self):
         """ Check that start and end date are valid. """
-        if self.undefined:
-            return False
         return all([self.start_date.valid, self.end_date.valid])
 
     @property
