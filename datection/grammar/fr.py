@@ -184,13 +184,13 @@ DATE_INTERVAL = (
 # A datetime is a date, a separator and a time interval (either a single)
 # time, or a start time and an end time
 DATETIME = (
-    DATE('date') +
+    (DATE | NUMERIC_DATE)('date') +
     optional_ci(u',') +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
-    DATE('date') +
+    (DATE | NUMERIC_DATE)('date') +
     TIME_PATTERN('time_pattern')
 ).setParseAction(develop_datetime_patterns)
 
