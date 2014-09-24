@@ -185,12 +185,13 @@ DATE_INTERVAL = (
 # time, or a start time and an end time
 DATETIME = (
     (DATE | NUMERIC_DATE)('date') +
-    optional_ci(u',') +
+    optional_oneof_ci([u',', u':']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
     (DATE | NUMERIC_DATE)('date') +
+    optional_oneof_ci([u',', u':']) +
     TIME_PATTERN('time_pattern')
 ).setParseAction(develop_datetime_patterns)
 
