@@ -21,6 +21,10 @@ DAY_END = time(23, 59, 59)
 REFERENCE = None
 
 
+class NormalizationError(Exception):
+    pass
+
+
 def add_span(f):
     """Add the instance span attribute to the export if the instance
     as a 'span' attribute.
@@ -251,7 +255,7 @@ class DateList(Timepoint):
             if REFERENCE:
                 last_date.year = REFERENCE.year
             else:
-                raise ValueError('Last date must have a non nil year.')
+                raise NormalizationError('Last date must have a non nil year.')
         for _date in dates[:-1]:
             if not _date.year:
                 if _date.month > last_date.month:
@@ -265,7 +269,7 @@ class DateList(Timepoint):
         """Make all dates without month inherit from the last date month."""
         last_date = dates[-1]
         if not last_date.month:
-            raise ValueError('Last date must have a non nil month.')
+            raise NormalizationError('Last date must have a non nil month.')
         for _date in dates[:-1]:
             if not _date.month:
                 _date.month = last_date.month
@@ -345,7 +349,7 @@ class DateInterval(Timepoint):
             if REFERENCE:
                 end_date.year = REFERENCE.year
             else:
-                raise ValueError("End date must have a year")
+                raise NormalizationError("End date must have a year")
         if not start_date.year:
             if start_date.month > end_date.month:
                 start_date.year = end_date.year - 1
@@ -357,7 +361,7 @@ class DateInterval(Timepoint):
     def set_start_date_month(cls, start_date, end_date):
         """Make the start_date inherit from the end_date month, if needed."""
         if not end_date.month:
-            raise ValueError("End date must have a month")
+            raise NormalizationError("End date must have a month")
         if not start_date.month:
             start_date.month = end_date.month
         return start_date
@@ -660,7 +664,7 @@ class ContinuousDatetimeInterval(Timepoint):
             if REFERENCE:
                 end_date.year = REFERENCE.year
             else:
-                raise ValueError("end date must have a year")
+                raise NormalizationError("end date must have a year")
         if not start_date.year:
             start_date.year = end_date.year
         return start_date
@@ -668,7 +672,7 @@ class ContinuousDatetimeInterval(Timepoint):
     @classmethod
     def set_month(cls, start_date, end_date):
         if not end_date.month:
-            raise ValueError("end date must have a month")
+            raise NormalizationError("end date must have a month")
         if not start_date.month:
             start_date.month = end_date.month
         return start_date

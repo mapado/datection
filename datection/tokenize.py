@@ -5,6 +5,7 @@
 import unicodedata
 import datection
 
+from datection.timepoint import NormalizationError
 from datection.context import probe
 from datection.utils import cached_property
 
@@ -207,11 +208,14 @@ class Tokenizer(object):
         matches = []
         ctx = unicode(context)
         for pname, pattern in self.timepoint_patterns:
-            for pattern_matches, start, end in pattern.scanString(ctx):
-                start, end = self.trim_text(ctx[start:end], start, end)
-                for match in pattern_matches:
-                    match = Match(match, pname, start, end)
-                    matches.append((match, context))
+            try:
+                for pattern_matches, start, end in pattern.scanString(ctx):
+                    start, end = self.trim_text(ctx[start:end], start, end)
+                    for match in pattern_matches:
+                        match = Match(match, pname, start, end)
+                        matches.append((match, context))
+            except NormalizationError:
+                pass
         return matches
 
     # pragma: no cover

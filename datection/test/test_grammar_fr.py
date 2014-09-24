@@ -36,6 +36,7 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import Weekdays
 from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import NormalizationError
 from datection.test.test_grammar import TestGrammar
 from datection.test.test_grammar import set_pattern
 
@@ -187,7 +188,7 @@ class TestDateList(TestGrammar):
     def test_parse_date_list_formats(self):
         self.assert_parse(u"les 5, 6, 8 mars 2013")
         self.assert_parse(u"5, 6 et 8 mars 2013")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NormalizationError):
             # We can parse it, but information is missing
             self.assert_parse(u"Le 5, 6 et 8 mars")
 
@@ -360,7 +361,7 @@ class TestDatetimeInterval(TestGrammar):
         self.assert_parse(u"Du 05/04 au 20 avril 2015 de 14h à 18h")
 
     def test_missing_end_date_year_raises_exception(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NormalizationError):
             self.pattern.parseString(u"Du 26 août au 29 septembre à 15h")
 
     def test_parse_datetime_interval(self):

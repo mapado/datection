@@ -215,8 +215,6 @@ class TestYearLessExpressions(unittest.TestCase):
 
     def test_parse_yearless_date_interval(self):
         text = u"Du 5 mars au 9 avril"
-        with self.assertRaises(ValueError):
-            parse(text, self.lang)
         timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
         dt = timepoints[0]
         self.assertEqual(dt.start_date.year, 2015)
@@ -224,8 +222,6 @@ class TestYearLessExpressions(unittest.TestCase):
 
     def test_parse_yearless_date_interval_separate_years(self):
         text = u"Du 5 mars au 9 février"
-        with self.assertRaises(ValueError):
-            parse(text, self.lang)
         timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
         dt = timepoints[0]
         self.assertEqual(dt.start_date.year, 2014)
@@ -233,8 +229,6 @@ class TestYearLessExpressions(unittest.TestCase):
 
     def test_parse_yearless_date_list(self):
         text = u"Le 5 et 12 février"
-        with self.assertRaises(ValueError):
-            parse(text, self.lang)
         timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
         dt = timepoints[0]
         self.assertEqual(dt.dates[0].year, 2015)
