@@ -28,7 +28,11 @@ class DurationRRule(object):
         self.duration_rrule = duration_rrule
 
     def __hash__(self):
-        return hash(frozenset(self.duration_rrule.items()))
+        data = {
+            'duration': self.duration_rrule['duration'],
+            'rrule': self.duration_rrule['rrule'],
+        }
+        return hash(frozenset(data.items()))
 
     def __eq__(self, other):
         return hash(self) == hash(other)
