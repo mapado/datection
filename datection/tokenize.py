@@ -271,7 +271,8 @@ class Tokenizer(object):
                 out.append(TokenGroup(window))
                 i += 3
             else:
-                out.append(TokenGroup(tokens[i]))
+                if tokens[i].is_match:
+                    out.append(TokenGroup(tokens[i]))
                 i += 1
         return out
 

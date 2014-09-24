@@ -6,7 +6,7 @@ import datection
 from datetime import datetime
 from datetime import date
 from datetime import time
-from datetime import timedelta
+from dateutil.rrule import weekdays
 
 
 def get_current_date():
@@ -193,31 +193,29 @@ def group_facebook_hours(fb_hours):
 def normalize_fb_hours(fb_hours):
     """Convert a Facebook opening hours dict to a recurrent schedule."""
 
+    def time_from_striptime(data):
+        t = datetime.strptime(data, "%H:%M").time()
+        return datection.timepoint.Time(t.hour, t.minute)
+
     # sort the dict items by the order of the weekdays
     fb_hours = sort_facebook_hours(fb_hours)
     fb_hours = group_facebook_hours(fb_hours)
     # iterate over each weekday, and create the associated recurrent schedule
     schedules = []
     for fb_hour_group in fb_hours:
-        wk_idx = WEEKDAY_IDX[fb_hour_group[0][0][:3]]
-        if len(fb_hour_group) == 1:
-            opening_time = datetime.strptime(
-                fb_hour_group[0][1], "%H:%M").time()
-            start = datetime.combine(date.today(), opening_time)
-            end = datetime.combine(date.today() + timedelta(days=365),
-                                   opening_time)
-        else:
-            opening_time = datetime.strptime(
-                fb_hour_group[0][1], "%H:%M").time()
-            start = datetime.combine(date.today(), opening_time)
-            closing_time = datetime.strptime(
-                fb_hour_group[1][1], "%H:%M").time()
-            end = datetime.combine(date.today() + timedelta(days=365),
-                                   closing_time)
+        wk_idx = weekdays[WEEKDAY_IDX[fb_hour_group[0][0][:3]]]
+        opening_time = time_from_striptime(fb_hour_group[0][1])
+        time_interval = datection.timepoint.TimeInterval(
+            opening_time, opening_time)
+        if len(fb_hour_group) > 1:
+            closing_time = time_from_striptime(fb_hour_group[1][1])
+            time_interval = datection.timepoint.TimeInterval(
+                opening_time, closing_time)
 
-        reccurence = datection.normalize.WeekdayRecurrence(
-            weekdays=(wk_idx, ), start_datetime=start, end_datetime=end)
+        reccurence = datection.timepoint.WeeklyRecurrence(
+            weekdays=datection.timepoint.Weekdays([wk_idx]),
+            date_interval=datection.timepoint.DateInterval.make_undefined(),
+            time_interval=time_interval)
         db_format = reccurence.export()
-        del db_format['span']
         schedules.append(db_format)
     return schedules

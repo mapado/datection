@@ -1118,6 +1118,10 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         """Capitalize each line."""
         return '\n'.join([line.capitalize() for line in lines])
 
+    def next_changes(self):
+        """Return None, as a LongFormatter display output never varies."""
+        return None
+
 
 class TooManyMonths(Exception):
 

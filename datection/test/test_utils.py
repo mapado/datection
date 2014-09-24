@@ -4,6 +4,7 @@ import unittest
 
 from datetime import datetime
 from datetime import time
+from dateutil.rrule import MO, WE, TH, FR, SA, SU
 
 from datection.models import DurationRRule
 from datection.utils import isoformat_concat
@@ -11,7 +12,12 @@ from datection.utils import normalize_2digit_year
 from datection.utils import duration
 from datection.utils import group_facebook_hours
 from datection.utils import sort_facebook_hours
+from datection.utils import normalize_fb_hours
 from datection.timepoint import Time
+from datection.timepoint import TimeInterval
+from datection.timepoint import DateInterval
+from datection.timepoint import Weekdays
+from datection.timepoint import WeeklyRecurrence
 
 
 class UtilsTest(unittest.TestCase):
@@ -186,3 +192,50 @@ class TestFacebookScheduleNormalization(unittest.TestCase):
         ]
         fb_hours = sort_facebook_hours(fb_hours)
         self.assertEqual(group_facebook_hours(fb_hours), expected)
+
+    def test_normalize_fb_hours(self):
+        fb_hours = {
+            "mon_2_open": "14:00",
+            "mon_2_close": "18:00",
+            "mon_1_open": "10:00",
+            "mon_1_close": "12:00",
+            "wed_1_open": "10:00",
+            "wed_1_close": "18:00",
+            "thu_1_open": "10:00",
+            "fri_1_open": "10:30",
+            "fri_1_close": "18:00",
+            "sat_1_open": "10:00",
+            "sun_1_open": "10:00",
+            "sun_1_close": "18:00"
+        }
+        expected = [
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 0), Time(12, 0)),
+                weekdays=Weekdays([MO])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(14, 0), Time(18, 0)),
+                weekdays=Weekdays([MO])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 0), Time(18, 0)),
+                weekdays=Weekdays([WE])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 0), Time(10, 0)),
+                weekdays=Weekdays([TH])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 30), Time(18, 00)),
+                weekdays=Weekdays([FR])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 0), Time(10, 0)),
+                weekdays=Weekdays([SA])).export(),
+            WeeklyRecurrence(
+                date_interval=DateInterval.make_undefined(),
+                time_interval=TimeInterval(Time(10, 0), Time(18, 0)),
+                weekdays=Weekdays([SU])).export(),
+        ]
+        self.assertItemsEqual(normalize_fb_hours(fb_hours), expected)

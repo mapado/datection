@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Test suite of the datection.normalize module."""
+"""Test suite of the datection.timepoint module."""
 
 import unittest
 import mock
