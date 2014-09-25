@@ -64,7 +64,7 @@ WEEKDAY = (
         oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
     ) |
     # short weekday with no optional s
-    oneof_ci(SHORT_WEEKDAYS.keys())
+    oneof_ci(SHORT_WEEKDAYS.keys()) + Optional('.')
 ).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
