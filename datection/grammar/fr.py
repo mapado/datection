@@ -129,7 +129,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'&'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
@@ -184,13 +184,14 @@ DATE_INTERVAL = (
 # A datetime is a date, a separator and a time interval (either a single)
 # time, or a start time and an end time
 DATETIME = (
-    DATE('date') +
-    optional_ci(u',') +
+    (DATE | NUMERIC_DATE)('date') +
+    optional_oneof_ci([u',', u'-']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
-    DATE('date') +
+    (DATE | NUMERIC_DATE)('date') +
+    optional_oneof_ci([u',', u'-']) +
     TIME_PATTERN('time_pattern')
 ).setParseAction(develop_datetime_patterns)
 
@@ -229,7 +230,7 @@ CONTINUOUS_DATETIME_INTERVAL = (
 
 # A list of several weekdays
 WEEKDAY_LIST = (
-    optional_oneof_ci([u"le", u"les"]) +
+    optional_oneof_ci([u"le", u"les", u"tous les"]) +
     OneOrMore(
         WEEKDAY +
         Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-'])))
@@ -283,11 +284,12 @@ EXCLUSION = oneOf([u'sauf', u'relâche', u'fermé'])
 TIMEPOINTS = [
     ('weekly_rec', WEEKLY_RECURRENCE),
     ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
+    ('date', DATE_PATTERN),
     ('date_list', DATE_LIST),
     ('date_interval', DATE_INTERVAL),
+    ('datetime', DATETIME_PATTERN),
     ('datetime_list', DATETIME_LIST),
     ('datetime_interval', DATETIME_INTERVAL),
-    ('date', DATE_PATTERN),
     ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
     ('exclusion', EXCLUSION)
 ]

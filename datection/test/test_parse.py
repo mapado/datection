@@ -18,25 +18,32 @@ class TestParse(unittest.TestCase):
     lang = 'fr'
 
     def assert_generates(self, text, datetimes):
-        schedule = parse(text, self.lang)[0].export()
+        schedules = [tp.export() for tp in parse(text, self.lang)]
         generated_datetimes = []
-        if isinstance(schedule, list):
-            for item in schedule:
-                generated_datetimes.extend(list(DurationRRule(item)))
-        else:
-            generated_datetimes = list(DurationRRule(schedule))
-        self.assertListEqual(generated_datetimes, datetimes)
+        for schedule in schedules:
+            if isinstance(schedule, list):
+                for item in schedule:
+                    generated_datetimes.extend(list(DurationRRule(item)))
+            else:
+                generated_datetimes.extend(list(DurationRRule(schedule)))
+        self.assertItemsEqual(generated_datetimes, datetimes)
 
     def test_date(self):
         self.assert_generates(u"Le 5 mars 2015", [datetime(2015, 3, 5, 0, 0)])
 
     def test_datetime(self):
         self.assert_generates(
-            u"Le 5 mars 2015 à 18h30", [datetime(2015, 3, 5, 18, 30)])
+            u"Le 5 mars 2015 à 18h30", [
+            datetime(2015, 3, 5, 18, 30),  # datetime
+            datetime(2015, 3, 5, 18, 30)]  # datetime list
+        )
 
     def test_datetime_with_time_interval(self):
         self.assert_generates(
-            u"Le 5 mars 2015 de 16h à 18h30", [datetime(2015, 3, 5, 16, 0)])
+            u"Le 5 mars 2015 de 16h à 18h30", [
+            datetime(2015, 3, 5, 16, 0),
+            datetime(2015, 3, 5, 16, 0),
+            ])
 
     def test_date_list(self):
         self.assert_generates(
@@ -185,3 +192,11 @@ class TestParse(unittest.TestCase):
         self.assertEqual(len(wks), 1)
         wk = wks[0]
         self.assertEqual(wk.weekdays, [TU, WE])
+
+    def test_datetime_pattern(self):
+        self.assert_generates(
+            u"15-12-2015 - 11h & 16h",
+            [
+                datetime(2015, 12, 15, 11, 0),
+                datetime(2015, 12, 15, 16, 0)
+            ])
