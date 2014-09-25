@@ -283,6 +283,7 @@ class TestDatetimePattern(TestGrammar):
     def test_parse_datetime_pattern_formats(self):
         self.assert_parse(
             u'Le 25 novembre 2012 à 20h, 22h30, et de 23h à 23h30')
+        self.assert_parse(u'Dimanche 2 Juin 2014 à 15h, 16h et 17h')
 
     def test_parse_datetime_pattern(self):
         res = self.pattern.parseString(
@@ -293,6 +294,16 @@ class TestDatetimePattern(TestGrammar):
                 Datetime(Date(2012, 11, 25), Time(20, 0), Time(20, 0)),
                 Datetime(Date(2012, 11, 25), Time(22, 30), Time(22, 30)),
                 Datetime(Date(2012, 11, 25), Time(23, 0), Time(23, 30)),
+            ])
+
+        res = self.pattern.parseString(
+            u'Dimanche 2 Juin 2014 à 15h, 16h et 17h')
+        self.assertEqual(
+            list(res),
+            [
+                Datetime(Date(2014, 6, 2), Time(15, 0), Time(15, 0)),
+                Datetime(Date(2014, 6, 2), Time(16, 0), Time(16, 0)),
+                Datetime(Date(2014, 6, 2), Time(17, 0), Time(17, 0)),
             ])
 
 

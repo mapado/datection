@@ -126,7 +126,7 @@ TIME_INTERVAL = (
         ]
     ) +
     TIME('start_time') +
-    optional_oneof_ci([u'-', u'à', u'a', u'et']) +
+    optional_oneof_ci([u'-', u'à', u'a']) +
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
@@ -135,7 +135,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou', u';'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
