@@ -378,6 +378,7 @@ class TestDatetimeInterval(TestGrammar):
         self.assert_parse(u"Du 05/04/2015 au 28/04/2015 à 18h")
         self.assert_parse(u"Du 05/04/2015 au 28/04/2015 de 14h à 18h")
         self.assert_parse(u"Du 05/04 au 20 avril 2015 de 14h à 18h")
+        self.assert_parse(u"Du 05/04 au 20 avril 2015 à 14h, 18h")
 
     def test_missing_end_date_year_raises_exception(self):
         with self.assertRaises(NormalizationError):
@@ -414,6 +415,21 @@ class TestDatetimeInterval(TestGrammar):
         self.assert_parse_equal(
             u"Du 5 mars au 28 avril 2015 de 14h à 18h",
             DatetimeInterval(date_interval, time_interval))
+
+    def test_parse_datetime_interval_with_time_patterns(self):
+        timepoints = list(self.pattern.parseString(
+            u"Du 05/04 au 20 avril 2015 à 14h, 18h"))
+        self.assertListEqual(
+            timepoints,
+            [
+                DatetimeInterval(
+                    DateInterval(Date(2015, 4, 5), Date(2015, 4, 20)),
+                    TimeInterval(Time(14, 0), Time(14, 0))),
+                DatetimeInterval(
+                    DateInterval(Date(2015, 4, 5), Date(2015, 4, 20)),
+                    TimeInterval(Time(18, 0), Time(18, 0)))
+            ]
+        )
 
 
 class TestContinuousDatetimeInterval(TestGrammar):

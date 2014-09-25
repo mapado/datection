@@ -26,7 +26,7 @@ from datection.grammar import as_datelist
 from datection.grammar import as_date_interval
 from datection.grammar import as_time_interval
 from datection.grammar import as_datetime_list
-from datection.grammar import as_datetime_interval
+from datection.grammar import develop_datetime_interval_patterns
 from datection.grammar import as_continuous_datetime_interval
 from datection.grammar import as_weekday_list
 from datection.grammar import as_weekday_interval
@@ -222,9 +222,9 @@ DATETIME_INTERVAL = (
     optional_oneof_ci([',', '-']) +
     DATE_INTERVAL('date_interval') +
     Optional(u',') +
-    TIME_INTERVAL('time_interval') +
+    TIME_PATTERN('time_patterns') +
     optional_oneof_ci([',', '-'])
-).setParseAction(as_datetime_interval)
+).setParseAction(develop_datetime_interval_patterns)
 
 
 # Example: du 5 mars 2015 à 13h au 7 mars 2015 à 7h

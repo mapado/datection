@@ -100,12 +100,6 @@ def as_datetime_list(text, start_index, matches):
     return DatetimeList.from_match(dates, matches['time_interval'])
 
 
-def as_datetime_interval(text, start_index, matches):
-    di = matches['date_interval']
-    ti = matches['time_interval']
-    return DatetimeInterval(di, ti)
-
-
 def as_continuous_datetime_interval(text, start_index, matches):
     sd, st = matches['start_date'], matches['start_time']
     ed, et = matches['end_date'], matches['end_time']
@@ -176,6 +170,18 @@ def complete_partial_date(text, start_index, matches):
         return date
     else:
         return Date(year=None, month=None, day=matches['day'][0])
+
+
+def develop_datetime_interval_patterns(text, start_index, matches):
+    out = []
+    date_interval = matches['date_interval']
+    time_intervals = [m for m in matches if isinstance(m, TimeInterval)]
+    for time_interval in time_intervals:
+        dti = DatetimeInterval(
+            date_interval=date_interval,
+            time_interval=time_interval)
+        out.append(dti)
+    return out
 
 
 def develop_weekly_recurrence_patterns(text, start_index, matches):
