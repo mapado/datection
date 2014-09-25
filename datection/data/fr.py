@@ -13,10 +13,10 @@ WEEKDAYS = {
 }
 
 SHORT_WEEKDAYS = {
-    # Untested for now!
     u'lun': 0,
     u'mar': 1,
     u'mer': 2,
+    u'merc': 2,
     u'jeu': 3,
     u'ven': 4,
     u'sam': 5,

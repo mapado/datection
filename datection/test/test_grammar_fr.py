@@ -604,6 +604,12 @@ class TestWeekdayRecurrence(TestGrammar):
                 DateInterval(Date(2013, 9, 14), Date(2013, 9, 15)),
                 TimeInterval(Time(10, 0), Time(17, 0)),
                 [SA, SU]))
+        self.assert_parse_equal(
+            u"Du 15-01-2014 au 16-03-2014 - 14h30 merc/sam/dim",
+            WeeklyRecurrence(
+                DateInterval(Date(2014, 1, 15), Date(2014, 3, 16)),
+                TimeInterval(Time(14, 30), Time(14, 30)),
+                [WE, SA, SU]))
 
     def test_parse_weekly_recurrence_formats(self):
         self.assert_parse(
