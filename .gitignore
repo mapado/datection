@@ -38,3 +38,4 @@ cover/
 
 # Project files
 test/logs/
+htmlcov
