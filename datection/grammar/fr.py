@@ -8,7 +8,6 @@ Definition of French specific grammar, related to temoral expressions.
 from pyparsing import Optional
 from pyparsing import oneOf
 from pyparsing import OneOrMore
-from pyparsing import FollowedBy
 from pyparsing import Group
 from pyparsing import Regex
 from pyparsing import Each
@@ -61,8 +60,11 @@ def set_weekday(text, start_index, match):
 # A weekday name can be in its full form or abbreviated form
 WEEKDAY = (
     (
+        # weekday with optional s at the end
         oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
-    ) | oneof_ci(SHORT_WEEKDAYS.keys()) + ~FollowedBy('s')
+    ) |
+    # short weekday with no optional s
+    oneof_ci(SHORT_WEEKDAYS.keys())
 ).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
@@ -243,7 +245,7 @@ WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les", u"tous les"]) +
     OneOrMore(
         WEEKDAY +
-        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-', u'&'])))
     )
 ).setParseAction(as_weekday_list)('weekdays')
 
