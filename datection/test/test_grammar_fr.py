@@ -470,6 +470,8 @@ class TestWeekdayRecurrence(TestGrammar):
         self.assert_parse_equal(u"les lundis", Weekdays([MO]))
         self.assert_parse_equal(
             u"les lundis, mardi, et mercredis", Weekdays([MO, TU, WE]))
+        self.assert_parse_equal(
+            u"sam-dim", Weekdays([SA, SU]))
 
     @set_pattern(WEEKDAY_INTERVAL)
     def test_parse_weekday_interval_formats(self):
@@ -552,6 +554,12 @@ class TestWeekdayRecurrence(TestGrammar):
                 DateInterval(Date(2015, 3, 2), Date(2015, 3, 29)),
                 TimeInterval(Time(10, 0), Time(10, 0)),
                 [FR]))
+        self.assert_parse_equal(
+            u'Du 14/09/2013 au 15/09/2013 - sam-dim 10h-17h',
+            WeeklyRecurrence(
+                DateInterval(Date(2013, 9, 14), Date(2013, 9, 15)),
+                TimeInterval(Time(10, 0), Time(17, 0)),
+                [SA, SU]))
 
     def test_parse_weekly_recurrence_formats(self):
         self.assert_parse(

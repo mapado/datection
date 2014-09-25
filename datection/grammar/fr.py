@@ -232,7 +232,7 @@ WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les"]) +
     OneOrMore(
         WEEKDAY +
-        Optional(OneOrMore(oneOf([u',', u'et', u'le'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-'])))
     )
 ).setParseAction(as_weekday_list)('weekdays')
 
