@@ -4,11 +4,13 @@
 
 import unittest
 
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.rrule import TU, WE
 
 from datection import parse
 from datection.models import DurationRRule
+from datection.timepoint import Datetime
+from datection.timepoint import Time
 
 
 class TestParse(unittest.TestCase):
@@ -34,9 +36,12 @@ class TestParse(unittest.TestCase):
     def test_datetime(self):
         self.assert_generates(
             u"Le 5 mars 2015 à 18h30", [
-            datetime(2015, 3, 5, 18, 30),  # datetime
-            datetime(2015, 3, 5, 18, 30)]  # datetime list
-        )
+            datetime(2015, 3, 5, 18, 30),
+            datetime(2015, 3, 5, 18, 30)])
+
+    def test_numeric_datetime(self):
+        self.assert_generates(
+            u"03/12/2013 18:30", [datetime(2013, 12, 3, 18, 30)])
 
     def test_datetime_with_time_interval(self):
         self.assert_generates(
@@ -200,3 +205,73 @@ class TestParse(unittest.TestCase):
                 datetime(2015, 12, 15, 11, 0),
                 datetime(2015, 12, 15, 16, 0)
             ])
+        self.assert_generates(
+            u'Samedi 1 Juin 2014 de 11h à 13h et de 14h à 17h',
+            [datetime(2014, 6, 1, 11, 0), datetime(2014, 6, 1, 14, 0)])
+
+    def test_expression_morning(self):
+        dt = [tp for tp in parse(u"Le 5 mars 2015, le matin", "fr")
+              if isinstance(tp, Datetime)][0]
+        self.assertEqual(dt.start_time, Time(8, 0))
+        self.assertEqual(dt.end_time, Time(12, 0))
+
+    def test_expression_day(self):
+        dt = [tp for tp in parse(u"Le 5 mars 2015, en soirée", "fr")
+              if isinstance(tp, Datetime)][0]
+        self.assertEqual(dt.start_time, Time(18, 0))
+        self.assertEqual(dt.end_time, Time(22, 0))
+
+    def test_expression_evening(self):
+        dt = [tp for tp in parse(u"Le 5 mars 2015, en journée", "fr")
+              if isinstance(tp, Datetime)][0]
+        self.assertEqual(dt.start_time, Time(8, 0))
+        self.assertEqual(dt.end_time, Time(18, 0))
+
+    def test_expression_midday(self):
+        dt = [tp for tp in parse(u"Le 5 mars 2015, à midi", "fr")
+              if isinstance(tp, Datetime)][0]
+        self.assertEqual(dt.start_time, Time(12, 0))
+        self.assertEqual(dt.end_time, Time(12, 0))
+
+    def test_expression_midnight(self):
+        dt = [tp for tp in parse(u"Le 5 mars 2015, à minuit", "fr")
+              if isinstance(tp, Datetime)][0]
+        self.assertEqual(dt.start_time, Time(23, 59))
+        self.assertEqual(dt.end_time, Time(23, 59))
+
+
+class TestYearLessExpressions(unittest.TestCase):
+
+    """Test the behaviour of the parser when the year of the timempoints
+    is the specified in the text.
+
+    """
+    lang = 'fr'
+
+    def test_parse_yearless_date(self):
+        text = u"Le 5 mars"
+        self.assertEqual(parse(text, self.lang), [])
+        timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
+        d = timepoints[0]
+        self.assertEqual(d.year, 2015)
+
+    def test_parse_yearless_date_interval(self):
+        text = u"Du 5 mars au 9 avril"
+        timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
+        dt = timepoints[0]
+        self.assertEqual(dt.start_date.year, 2015)
+        self.assertEqual(dt.end_date.year, 2015)
+
+    def test_parse_yearless_date_interval_separate_years(self):
+        text = u"Du 5 mars au 9 février"
+        timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
+        dt = timepoints[0]
+        self.assertEqual(dt.start_date.year, 2014)
+        self.assertEqual(dt.end_date.year, 2015)
+
+    def test_parse_yearless_date_list(self):
+        text = u"Le 5 et 12 février"
+        timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
+        dt = timepoints[0]
+        self.assertEqual(dt.dates[0].year, 2015)
+        self.assertEqual(dt.dates[1].year, 2015)

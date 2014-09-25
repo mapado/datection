@@ -3,7 +3,10 @@
 """Utilities used for tokenizing a string into time-related tokens."""
 
 import unicodedata
+import datection
+import re
 
+from datection.timepoint import NormalizationError
 from datection.context import probe
 from datection.utils import cached_property
 
@@ -109,17 +112,33 @@ class Tokenizer(object):
 
     """Splits text into time-related tokens."""
 
-    def __init__(self, text, lang):
+    def __init__(self, text, lang, reference=None):
         self.text = text
         self.lang = lang
 
+        # Ugly hack: monkey patching of the timepoint module. Insert the
+        # reference value into the REFERENCE timepoint global variable, to
+        # influence the normalization of year-less dates.
+        datection.timepoint.REFERENCE = reference
+
     @cached_property
-    def timepoint_patterns(self):  # pragma: no cover
-        """The list of all time-related patterns in the Tokenizer language."""
-        lang_grammar_mod = __import__(
+    def language_module(self):
+        """The grammar module object related to the Tokenizer language."""
+        return __import__(
             'datection.grammar.%s' % (self.lang),
             fromlist=['grammar'])
-        return lang_grammar_mod.TIMEPOINTS
+
+    @property
+    def timepoint_patterns(self):  # pragma: no cover
+        """The list of all time-related patterns in the Tokenizer language."""
+        return self.language_module.TIMEPOINTS
+
+    @property
+    def language_expressions(self):  # pragma: no cover
+        """The list of all time-related expressions in the Tokenizer language.
+
+        """
+        return self.language_module.EXPRESSIONS
 
     @staticmethod
     def _remove_subsets(matches):
@@ -200,12 +219,17 @@ class Tokenizer(object):
         """
         matches = []
         ctx = unicode(context)
+        for expression, translation in self.language_expressions.iteritems():
+            ctx = re.sub(expression, translation, ctx)
         for pname, pattern in self.timepoint_patterns:
-            for pattern_matches, start, end in pattern.scanString(ctx):
-                start, end = self.trim_text(ctx[start:end], start, end)
-                for match in pattern_matches:
-                    match = Match(match, pname, start, end)
-                    matches.append((match, context))
+            try:
+                for pattern_matches, start, end in pattern.scanString(ctx):
+                    start, end = self.trim_text(ctx[start:end], start, end)
+                    for match in pattern_matches:
+                        match = Match(match, pname, start, end)
+                        matches.append((match, context))
+            except NormalizationError:
+                pass
         return matches
 
     # pragma: no cover

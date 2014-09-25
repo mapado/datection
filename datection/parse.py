@@ -4,7 +4,7 @@ from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 
 
-def parse(text, lang, valid=True):
+def parse(text, lang, valid=True, reference=None):
     """Extract and normalized all timepoints in the argument text, using
     the grammar of the argument language.
 
@@ -18,7 +18,7 @@ def parse(text, lang, valid=True):
     if isinstance(text, str):
         text = text.decode('utf-8')
     schedule = Schedule()
-    token_groups = Tokenizer(text, lang).tokenize()
+    token_groups = Tokenizer(text, lang, reference).tokenize()
     for token_group in token_groups:
         if token_group.is_single_token:
             token = token_group[0]

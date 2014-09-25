@@ -427,6 +427,14 @@ class TestWeeklyRecurrence(CurrentDayMock):
         self.wkr.weekdays = []
         self.assertFalse(self.wkr.valid)
 
+    def test_undefined_weekly_recurrence_valid(self):
+        wkr = WeeklyRecurrence(
+            date_interval=DateInterval.make_undefined(),
+            time_interval=TimeInterval(Time(10, 0), Time(18, 30)),
+            weekdays=[MO, TU, WE, TH]
+        )
+        self.assertTrue(wkr.valid)
+
     def test_future(self):
         self.assertTrue(self.wkr.future())  # today: before
 

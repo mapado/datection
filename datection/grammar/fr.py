@@ -107,20 +107,26 @@ DATE_PATTERN = (DATE | NUMERIC_DATE)
 
 # A time is an hour, a separator and a time
 TIME = (
-    Optional(u'à') +
+    optional_oneof_ci([u'à', u'a']) +
     HOUR +
     oneof_ci([u'h', u':']) +
     Optional(MINUTE)
 ).setParseAction(as_time)
+
 
 # A time interval is composed of a start time, an optional separator and
 # an optional end time.
 # 15h30 is a time interval bewteen 15h30 and 15h30
 # 15h30 - 17h speaks for itself
 TIME_INTERVAL = (
-    optional_oneof_ci([u'de', u'entre', u'à', u'à partir de']) +
+    optional_oneof_ci(
+        [
+            u'de', u'entre', u'à', u'a partir de', u'à partir de',
+            u':', u'a'
+        ]
+    ) +
     TIME('start_time') +
-    optional_oneof_ci([u'-', u'à', u'et']) +
+    optional_oneof_ci([u'-', u'à', u'a', u'et']) +
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
 
@@ -129,7 +135,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et', u'&'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
@@ -185,13 +191,13 @@ DATE_INTERVAL = (
 # time, or a start time and an end time
 DATETIME = (
     (DATE | NUMERIC_DATE)('date') +
-    optional_oneof_ci([u',', u'-']) +
+    optional_oneof_ci([u',', u'-', u':']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
     (DATE | NUMERIC_DATE)('date') +
-    optional_oneof_ci([u',', u'-']) +
+    optional_oneof_ci([u',', u'-', u':']) +
     TIME_PATTERN('time_pattern')
 ).setParseAction(develop_datetime_patterns)
 
@@ -200,7 +206,7 @@ DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
     OneOrMore(PARTIAL_DATE)('dates') +
     Optional(u',') +
-    optional_oneof_ci([u'à', u'-', u'à partir de']) +
+    optional_oneof_ci([u'a', u'à', u'-', u'à partir de']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
@@ -219,11 +225,11 @@ DATETIME_INTERVAL = (
 CONTINUOUS_DATETIME_INTERVAL = (
     optional_ci(u'du') +
     (DATE | NUMERIC_DATE)("start_date") +
-    optional_oneof_ci([u"à", u"-"]) +
+    optional_oneof_ci([u"à", u'a', u"-"]) +
     TIME("start_time") +
     optional_oneof_ci([u"au", '-']) +
     (DATE | NUMERIC_DATE)("end_date") +
-    optional_oneof_ci([u"à", u"-"]) +
+    optional_oneof_ci([u'a', u"à", u"-"]) +
     TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)
 
@@ -295,3 +301,13 @@ TIMEPOINTS = [
 ]
 
 PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
+
+# List of expressions associated with their replacement
+# so that they can be easily normalized
+EXPRESSIONS = {
+    u'midi': u'12h',
+    u'minuit': u'23h59',
+    u'le matin': u'de 8h à 12h',
+    u'en journée': u'de 8h à 18h',
+    u'en soirée': u'de 18h à 22h',
+}
