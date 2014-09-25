@@ -182,7 +182,7 @@ DATE_INTERVAL = (
     optional_oneof_ci([',', '-']) +
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
-    oneof_ci([u'au', '-']) +
+    oneof_ci([u'au', u'-']) +
     (DATE | NUMERIC_DATE)('end_date') +
     optional_oneof_ci([',', '-'])
 ).setParseAction(as_date_interval)
@@ -231,7 +231,7 @@ CONTINUOUS_DATETIME_INTERVAL = (
     (DATE | NUMERIC_DATE)("start_date") +
     optional_oneof_ci([u"à", u'a', u"-"]) +
     TIME("start_time") +
-    optional_oneof_ci([u"au", '-']) +
+    optional_oneof_ci([u"au", u'-', u'à']) +
     (DATE | NUMERIC_DATE)("end_date") +
     optional_oneof_ci([u'a', u"à", u"-"]) +
     TIME("end_time")

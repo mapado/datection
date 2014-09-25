@@ -417,6 +417,7 @@ class TestContinuousDatetimeInterval(TestGrammar):
         self.assert_parse(u"Du 05/03/2015 à 18h au 06/03/2015 à 5h")
         self.assert_parse(u"05/03/2015 à 18h - 06/03/2015 à 5h")
         self.assert_parse(u"5 mars 2015 - 18h - 06/03/2015 - 5h")
+        self.assert_parse(u"5 mars 2015 - 18h à 06/03/2015 - 5h")
 
     def test_parse_continuous_datetime_interval(self):
         start_date = Date(2015, 3, 5)
