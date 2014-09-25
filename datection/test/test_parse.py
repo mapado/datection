@@ -11,6 +11,7 @@ from datection import parse
 from datection.models import DurationRRule
 from datection.timepoint import Datetime
 from datection.timepoint import Time
+from datection.timepoint import WeeklyRecurrence
 
 
 class TestParse(unittest.TestCase):
@@ -238,6 +239,11 @@ class TestParse(unittest.TestCase):
               if isinstance(tp, Datetime)][0]
         self.assertEqual(dt.start_time, Time(23, 59))
         self.assertEqual(dt.end_time, Time(23, 59))
+
+    def test_expression_every_day(self):
+        wk = [tp for tp in parse(u"Du 5 au 18 mars 2015, tous les jours", "fr")
+              if isinstance(tp, WeeklyRecurrence)][0]
+        self.assertEqual(len(wk.weekdays), 7)
 
 
 class TestYearLessExpressions(unittest.TestCase):

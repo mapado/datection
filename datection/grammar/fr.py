@@ -124,7 +124,7 @@ TIME_INTERVAL = (
     optional_oneof_ci(
         [
             u'de', u'entre', u'à', u'a partir de', u'à partir de',
-            u':', u'a'
+            u':', u'a', u'et de', u'et à'
         ]
     ) +
     TIME('start_time') +
@@ -242,7 +242,7 @@ CONTINUOUS_DATETIME_INTERVAL = (
 
 # A list of several weekdays
 WEEKDAY_LIST = (
-    optional_oneof_ci([u"le", u"les", u"tous les"]) +
+    optional_oneof_ci([u"le", u"les", u"tous les", u"ouvert tous les"]) +
     OneOrMore(
         WEEKDAY +
         Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-', u'&', u'/'])))
@@ -251,6 +251,8 @@ WEEKDAY_LIST = (
 
 # An interval of weekdays
 WEEKDAY_INTERVAL = (
+    Optional(':') +
+    optional_ci(u"ouvert") +
     optional_ci(u"du") +
     WEEKDAY
     + u"au"
@@ -316,4 +318,5 @@ EXPRESSIONS = {
     u'le matin': u'de 8h à 12h',
     u'en journée': u'de 8h à 18h',
     u'en soirée': u'de 18h à 22h',
+    u'tous les jours': u'du lundi au dimanche',
 }
