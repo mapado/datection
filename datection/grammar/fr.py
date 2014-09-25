@@ -92,7 +92,7 @@ DATE = (
 
 # A numeric date is a day, month and a year separated by a one-char
 # token. Example: 05/10/2012
-date_sep = oneOf([u'/', u'-', u'.'])
+date_sep = oneOf([u'/', u'-'])
 NUMERIC_DATE = (
     DAY_NUMBER +
     date_sep +
