@@ -63,8 +63,8 @@ WEEKDAY = (
         # weekday with optional s at the end
         oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
     ) |
-    # short weekday with no optional s
-    oneof_ci(SHORT_WEEKDAYS.keys()) + Optional('.')
+    # short weekday not followed by another alphanum char
+    oneof_ci(SHORT_WEEKDAYS.keys()) + Regex(r'(?!\w)').leaveWhitespace()
 ).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
