@@ -70,6 +70,7 @@ class TestNumericDate(TestGrammar):
 
     def test_parse_numeric_date(self):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
+        self.assert_parse_equal(u'2015/05/15', Date(2015, 5, 15))
         self.assert_parse_equal(u'01/01/15', Date(2015, 1, 1))
         self.assert_parse_equal(u'1/01/15', Date(2015, 1, 1))
         self.assert_parse_equal(u'1/1/15', Date(2015, 1, 1))
@@ -78,6 +79,7 @@ class TestNumericDate(TestGrammar):
     def test_numeric_date_separators(self):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'01-01-2015', Date(2015, 1, 1))
+        self.assert_parse_equal(u'2015-01-15', Date(2015, 1, 15))
 
 
 class TestTime(TestGrammar):

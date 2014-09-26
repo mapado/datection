@@ -91,16 +91,27 @@ DATE = (
 
 
 # A numeric date is a day, month and a year separated by a one-char
-# token. Example: 05/10/2012
+# token. Example: 05/10/2012, 05/03, 2014/5/12
 date_sep = oneOf([u'/', u'-'])
-NUMERIC_DATE = (
+FR_NUMERIC_DATE = (
     DAY_NUMBER +
     date_sep +
     NUMERIC_MONTH +
     Optional(
         date_sep +
         NUMERIC_YEAR
-    ) +
+    )
+)
+US_NUMERIC_DATE = (
+    NUMERIC_YEAR +
+    date_sep +
+    NUMERIC_MONTH +
+    date_sep +
+    DAY_NUMBER
+)
+NUMERIC_DATE = (
+    FR_NUMERIC_DATE |
+    US_NUMERIC_DATE +
     Optional(u',')
 ).setParseAction(as_date)
 
