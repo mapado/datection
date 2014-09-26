@@ -81,14 +81,11 @@ DAY_NUMBER = DAY_NUMBER + optional_ci(u'er')
 # we do not care about, a month and an optional year.
 # Abbreviated months can also have a dot at their end, that will be ignored.
 DATE = (
-    optional_ci(u"le")
-    + Optional(WEEKDAY)
-    + DAY_NUMBER
+    DAY_NUMBER
     + MONTH
     + Optional(u'.')  # for abbreviated months
     + Optional(YEAR)
-).setParseAction(as_date)
-
+)
 
 # A numeric date is a day, month and a year separated by a one-char
 # token. Example: 05/10/2012, 05/03, 2014/5/12
@@ -110,13 +107,16 @@ US_NUMERIC_DATE = (
     DAY_NUMBER
 )
 NUMERIC_DATE = (
-    FR_NUMERIC_DATE |
-    US_NUMERIC_DATE +
+    (FR_NUMERIC_DATE | US_NUMERIC_DATE) +
     Optional(u',')
-).setParseAction(as_date)
+)
 
 
-DATE_PATTERN = (DATE | NUMERIC_DATE)
+DATE_PATTERN = (
+    optional_ci(u"le") +
+    Optional(WEEKDAY) +
+    (DATE | NUMERIC_DATE)
+).addParseAction(as_date)
 
 # A time is an hour, a separator and a time
 TIME = (
@@ -196,14 +196,14 @@ DATE_INTERVAL = (
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
     oneof_ci([u'au', u'-']) +
-    (DATE | NUMERIC_DATE)('end_date') +
+    DATE_PATTERN('end_date') +
     optional_oneof_ci([',', '-'])
 ).setParseAction(as_date_interval)
 
 # A datetime is a date, a separator and a time interval (either a single)
 # time, or a start time and an end time
 DATETIME = (
-    (DATE | NUMERIC_DATE)('date') +
+    DATE_PATTERN('date') +
     optional_oneof_ci([u',', u'-', u':']) +
     Optional('.') +
     TIME_INTERVAL('time_interval')
@@ -211,7 +211,7 @@ DATETIME = (
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
-    (DATE | NUMERIC_DATE)('date') +
+    DATE_PATTERN('date') +
     optional_oneof_ci([u',', u'-', u':']) +
     Optional('.') +
     TIME_PATTERN('time_pattern')
@@ -241,11 +241,11 @@ DATETIME_INTERVAL = (
 # Example: du 5 mars 2015 à 13h au 7 mars 2015 à 7h
 CONTINUOUS_DATETIME_INTERVAL = (
     optional_ci(u'du') +
-    (DATE | NUMERIC_DATE)("start_date") +
+    DATE_PATTERN("start_date") +
     optional_oneof_ci([u"à", u'a', u"-"]) +
     TIME("start_time") +
     optional_oneof_ci([u"au", u'-', u'à']) +
-    (DATE | NUMERIC_DATE)("end_date") +
+    DATE_PATTERN("end_date") +
     optional_oneof_ci([u'a', u"à", u"-"]) +
     TIME("end_time")
 ).setParseAction(as_continuous_datetime_interval)

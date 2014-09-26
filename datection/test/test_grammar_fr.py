@@ -4,7 +4,7 @@
 
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 
-from datection.grammar.fr import DATE
+from datection.grammar.fr import DATE_PATTERN
 from datection.grammar.fr import NUMERIC_DATE
 from datection.grammar.fr import TIME
 from datection.grammar.fr import TIME_INTERVAL
@@ -43,11 +43,11 @@ from datection.test.test_grammar import set_pattern
 
 class TestDate(TestGrammar):
 
-    pattern = DATE
+    pattern = DATE_PATTERN
 
     def test_parse_date(self):
-        self.assert_parse_equal(u'le 1er janvier 2015', Date(2015, 1, 1))
-        self.assert_parse_equal(u'Le 1er janvier 2015', Date(2015, 1, 1))
+        self.assert_parse_equal(u'1er janvier 2015', Date(2015, 1, 1))
+        self.assert_parse_equal(u'1er janvier 2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'1er janvier 2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'1er Janvier 2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'1ER Janvier 2015', Date(2015, 1, 1))
@@ -56,17 +56,12 @@ class TestDate(TestGrammar):
     def test_parse_date_with_abbreviated_names(self):
         self.assert_parse_equal(u'1er jan 2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'1er Jan 2015', Date(2015, 1, 1))
-        self.assert_parse_equal(u'Le 1er jan. 2015', Date(2015, 1, 1))
+        self.assert_parse_equal(u'1er jan. 2015', Date(2015, 1, 1))
         self.assert_parse_equal(u'2 mar 2015', Date(2015, 3, 2))
-        self.assert_parse_equal(u'le 2 mar. 2015', Date(2015, 3, 2))
+        self.assert_parse_equal(u'2 mar. 2015', Date(2015, 3, 2))
 
     def test_parse_date_missing_year(self):
         self.assert_parse_equal(u'1er janvier', Date(None, 1, 1))
-
-
-class TestNumericDate(TestGrammar):
-
-    pattern = NUMERIC_DATE
 
     def test_parse_numeric_date(self):
         self.assert_parse_equal(u'01/01/2015', Date(2015, 1, 1))
@@ -254,16 +249,12 @@ class TestDatetime(TestGrammar):
         self.assert_parse(u'Le 5 mars 2015 à 15h30')
         self.assert_parse(u'le 5 mars 2015 de 14h à 15h30')
         self.assert_parse(u'Le 5 mars 2015, à 15h30')
-        self.assert_parse(u'Le 5 mars 2015, à partir de 15h30')
         self.assert_parse(u'Le 5 mars 2015 : 15h30')
         self.assert_parse(u'Le 5 mars 2015 : de 15h30 à 16h30')
 
     def test_parse_datetime(self):
         self.assert_parse_equal(
             u'5 mars 2015 à 15h30',
-            Datetime(Date(2015, 3, 5), Time(15, 30)))
-        self.assert_parse_equal(
-            u'Le 5 mars 2015, à partir de 15h30',
             Datetime(Date(2015, 3, 5), Time(15, 30)))
         self.assert_parse_equal(
             u'Le 5 mars 2015 : 15h30',
