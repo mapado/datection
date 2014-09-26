@@ -195,6 +195,16 @@ class Tokenizer(object):
         return new_start, new_end
 
     @staticmethod
+    def clean_context(ctx):
+        ctx = re.sub(
+            r'\s?(:)\s',
+            lambda m: '   ' if m.group().startswith(' ') else '  ',
+            ctx)
+        ctx = re.sub(r'\(', ' ', ctx)
+        ctx = re.sub(r'\)', ' ', ctx)
+        return ctx
+
+    @staticmethod
     def is_separator(text):
         """Return True if the text is only formed of spaces and punctuation
         marks, else, return False.
@@ -219,6 +229,7 @@ class Tokenizer(object):
         """
         matches = []
         ctx = unicode(context)
+        ctx = self.clean_context(ctx)
         for expression, translation in self.language_expressions.iteritems():
             ctx = re.sub(expression, translation, ctx)
         for pname, pattern in self.timepoint_patterns:

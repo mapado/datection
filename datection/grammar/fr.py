@@ -194,17 +194,17 @@ DATE_INTERVAL = (
 DATETIME = (
     (DATE | NUMERIC_DATE)('date') +
     optional_oneof_ci([u',', u'-', u':']) +
-    Optional(u'(') +
-    TIME_INTERVAL('time_interval') +
-    Optional(u')')
+
+    TIME_INTERVAL('time_interval')
+
 ).setParseAction(as_datetime)
 
 DATETIME_PATTERN = (
     (DATE | NUMERIC_DATE)('date') +
     optional_oneof_ci([u',', u'-', u':']) +
-    Optional(u'(') +
-    TIME_PATTERN('time_pattern') +
-    Optional(u')')
+
+    TIME_PATTERN('time_pattern')
+
 ).setParseAction(develop_datetime_patterns)
 
 # A datetime list is a list of dates, along with a time interval
@@ -251,7 +251,6 @@ WEEKDAY_LIST = (
 
 # An interval of weekdays
 WEEKDAY_INTERVAL = (
-    Optional(':') +
     optional_ci(u"ouvert") +
     optional_ci(u"du") +
     WEEKDAY
