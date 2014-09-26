@@ -196,12 +196,20 @@ class Tokenizer(object):
 
     @staticmethod
     def clean_context(ctx):
+        """Replace certain tokens by whitespaces, to avoid complexifying
+        the pyparsing patterns.
+
+        Warning: the context must have the exact same length after
+        having being cleaned!
+
+        """
         ctx = re.sub(
             r'\s?(:)\s',
             lambda m: '   ' if m.group().startswith(' ') else '  ',
             ctx)
         ctx = re.sub(r'\(', ' ', ctx)
         ctx = re.sub(r'\)', ' ', ctx)
+        ctx = re.sub(r'\.\n', '  ', ctx)
         return ctx
 
     @staticmethod
@@ -231,7 +239,7 @@ class Tokenizer(object):
         ctx = unicode(context)
         ctx = self.clean_context(ctx)
         for expression, translation in self.language_expressions.iteritems():
-            ctx = re.sub(expression, translation, ctx)
+            ctx = re.sub(expression, translation, ctx, flags=re.I)
         for pname, pattern in self.timepoint_patterns:
             try:
                 for pattern_matches, start, end in pattern.scanString(ctx):
