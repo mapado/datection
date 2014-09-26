@@ -148,7 +148,7 @@ TIME_INTERVAL = (
 TIME_PATTERN = (
     OneOrMore(
         TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou', u';'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou', u';', u'/'])))
     )('patterns')
 ).setParseAction(extract_time_patterns)
 
@@ -205,7 +205,7 @@ DATE_INTERVAL = (
 DATETIME = (
     (DATE | NUMERIC_DATE)('date') +
     optional_oneof_ci([u',', u'-', u':']) +
-
+    Optional('.') +
     TIME_INTERVAL('time_interval')
 
 ).setParseAction(as_datetime)
@@ -213,7 +213,7 @@ DATETIME = (
 DATETIME_PATTERN = (
     (DATE | NUMERIC_DATE)('date') +
     optional_oneof_ci([u',', u'-', u':']) +
-
+    Optional('.') +
     TIME_PATTERN('time_pattern')
 
 ).setParseAction(develop_datetime_patterns)

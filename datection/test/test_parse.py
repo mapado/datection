@@ -55,6 +55,15 @@ class TestParse(unittest.TestCase):
             datetime(2015, 3, 5, 16, 0),
             datetime(2015, 3, 5, 16, 0),
             ])
+        self.assert_generates(
+            u"Le 5 mars 2015. De 16h à 18h30", [datetime(2015, 3, 5, 16, 0)])
+
+    def test_datetime_with_several_time_intervals(self):
+        self.assert_generates(
+            u"Le 5 mars 2015, 16h-18h30 et 19h-20h30", [
+            datetime(2015, 3, 5, 16, 0),
+            datetime(2015, 3, 5, 19, 0),
+            ])
 
     def test_date_list(self):
         self.assert_generates(
