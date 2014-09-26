@@ -323,10 +323,11 @@ PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
 # List of expressions associated with their replacement
 # so that they can be easily normalized
 EXPRESSIONS = {
-    u'midi': u'12h',
-    u'minuit': u'23h59',
-    u'le matin': u'de 8h à 12h',
-    u'en journée': u'de 8h à 18h',
-    u'en soirée': u'de 18h à 22h',
-    u'tous les jours': u'du lundi au dimanche',
+    ur'midi': u'12h',
+    ur'minuit': u'23h59',
+    ur'(uniquement )?le matin': u'de 8h à 12h',
+    ur'(uniquement )?en journée': u'de 8h à 18h',
+    ur'(uniquement )?en soirée': u'de 18h à 22h',
+    ur'tous les jours': u'du lundi au dimanche',
+    ur"toute l'année": u'Du 1er janvier au 31 décembre'
 }
