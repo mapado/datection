@@ -293,6 +293,8 @@ class Tokenizer(object):
         separated by an EXCLUDE one.
 
         """
+        if [tok.action for tok in tokens] == ['EXCLUDE', 'MATCH']:
+            return []
         if len(tokens) < 3:
             return [TokenGroup(tok) for tok in tokens]
         out = []
