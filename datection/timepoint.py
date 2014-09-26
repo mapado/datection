@@ -540,8 +540,6 @@ class DatetimeList(Timepoint):
         A DateTimeList is considered future even if a part of its
         datetimes are future.
 
-        The default time reference is the day of the method execution.
-
         """
         reference = reference if reference is not None else get_current_date()
         return any([dt.date.future(reference) for dt in self.datetimes])
@@ -554,9 +552,6 @@ class DatetimeList(Timepoint):
     @transmit_span
     def export(self):
         return [dt.export() for dt in self.datetimes]
-
-    # def to_python(self):
-    #     return [dt.to_python() for dt in self.datetimes]
 
 
 class DatetimeInterval(Timepoint):
@@ -589,21 +584,6 @@ class DatetimeInterval(Timepoint):
             interval=1,
             byhour=start_time.hour,
             byminute=start_time.minute)
-
-    # def to_python(self):
-    #     out = []
-    #     start_date = self.date_interval.start_date.to_python()
-    #     end_date = self.date_interval.end_date.to_python()
-    #     delta = end_date - start_date
-    #     start_time = self.time_interval.start_time.to_python()
-    #     end_time = self.time_interval.end_time.to_python()
-
-    #     for i in xrange(0, delta.days + 1):
-    #         i_date = start_date + timedelta(days=i)
-    #         i_start_datetime = datetime.combine(i_date, start_time)
-    #         i_end_datetime = datetime.combine(i_date, end_time)
-    #         out.append((i_start_datetime, i_end_datetime))
-    #     return out
 
     @add_span
     def export(self):
@@ -716,9 +696,6 @@ class ContinuousDatetimeInterval(Timepoint):
             'duration': duration(start=start_datetime, end=end_datetime),
             'continuous': True,
         }
-
-    # def to_python(self):
-    # return (self.start_datetime.to_python(), self.end_datetime.to_python())
 
 
 class Weekdays(Timepoint):

@@ -134,8 +134,7 @@ TIME = (
 TIME_INTERVAL = (
     optional_oneof_ci(
         [
-            u'de', u'entre', u'à', u'a partir de', u'à partir de',
-            u':', u'a', u'et de', u'et à'
+            u'de', u'entre', u'à', u':', u'a', u'et de', u'et à'
         ]
     ) +
     TIME('start_time') +
@@ -177,7 +176,7 @@ PARTIAL_DATE = (
         PARTIAL_LITTERAL_DATE('partial_date') |
         PARTIAL_NUMERIC_DATE('partial_date')
     )
-    + Optional(OneOrMore(oneOf([u',', u'et', u'&'])))
+    + Optional(OneOrMore(oneOf([u',', u'et', u'&', u'le'])))
 ).setParseAction(complete_partial_date)
 
 # A date list is a list of partial dates
@@ -223,7 +222,7 @@ DATETIME_LIST = (
     optional_oneof_ci([u"les", u"le"]) +
     OneOrMore(PARTIAL_DATE)('dates') +
     Optional(u',') +
-    optional_oneof_ci([u'a', u'à', u'-', u'à partir de']) +
+    optional_oneof_ci([u'a', u'à', u'-']) +
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
@@ -321,13 +320,16 @@ TIMEPOINTS = [
 PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
 
 # List of expressions associated with their replacement
-# so that they can be easily normalized
+# This replacement allows to reduce the complexity of the patterns
 EXPRESSIONS = {
     ur'midi': u'12h',
     ur'minuit': u'23h59',
     ur'(uniquement )?le matin': u'de 8h à 12h',
     ur'(uniquement )?en journée': u'de 8h à 18h',
     ur'(uniquement )?en soirée': u'de 18h à 22h',
+    ur"l'après-midi": u'de 14h à 18h',
     ur'tous les jours': u'du lundi au dimanche',
-    ur"toute l'année": u'Du 1er janvier au 31 décembre'
+    ur"toute l'année": u'Du 1er janvier au 31 décembre',
+    ur"jusqu'à": u"à",
+    ur'(à|a) partir de': u'de',
 }

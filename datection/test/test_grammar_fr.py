@@ -5,7 +5,6 @@
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 
 from datection.grammar.fr import DATE_PATTERN
-from datection.grammar.fr import NUMERIC_DATE
 from datection.grammar.fr import TIME
 from datection.grammar.fr import TIME_INTERVAL
 from datection.grammar.fr import TIME_PATTERN

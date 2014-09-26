@@ -203,6 +203,7 @@ class Tokenizer(object):
         having being cleaned!
 
         """
+        ctx = re.sub('\n\n', '  ', ctx)
         ctx = re.sub(
             r'\s?(:)\s',
             lambda m: '   ' if m.group().startswith(' ') else '  ',
