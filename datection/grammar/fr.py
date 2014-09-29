@@ -278,7 +278,7 @@ WEEKDAY_PATTERN = (
 WEEKLY_RECURRENCE = Each(
     [
         WEEKDAY_PATTERN('weekdays'),
-        Optional(TIME_INTERVAL('time_interval')),
+        Optional(TIME_PATTERN('time_interval')),
         Optional(DATE_INTERVAL('date_interval')),
     ]
 ).setParseAction(as_weekly_recurrence)

@@ -599,6 +599,21 @@ class TestWeekdayRecurrence(TestGrammar):
                 TimeInterval(Time(14, 30), Time(14, 30)),
                 [WE, SA, SU]))
 
+    def test_parse_weekly_recurrence_several_time_interval(self):
+        timepoints = list(self.pattern.parseString(
+            u"Du lundi au vendredi, de 8h à 12h et de 14h à 18h30"))
+        expected = [
+            WeeklyRecurrence(
+                DateInterval.make_undefined(),
+                TimeInterval(Time(8, 0), Time(12, 0)),
+                [MO, TU, WE, TH, FR]),
+            WeeklyRecurrence(
+                DateInterval.make_undefined(),
+                TimeInterval(Time(14, 0), Time(18, 30)),
+                [MO, TU, WE, TH, FR])
+        ]
+        self.assertListEqual(timepoints, expected)
+
     def test_parse_weekly_recurrence_formats(self):
         self.assert_parse(
             u"du lundi au vendredi, du 2 au 29 mars 2015, de 8h à 10h")
