@@ -10,7 +10,6 @@ from dateutil.rrule import weekdays
 from dateutil.rrule import weekday
 from pyparsing import Regex
 from pyparsing import Optional
-from pyparsing import oneOf
 
 from datection.utils import normalize_2digit_year
 from datection.timepoint import Date
@@ -31,7 +30,8 @@ def optional_ci(s):
 
 
 def oneof_ci(choices):
-    return oneOf(choices, caseless=True)
+    choices = sorted(choices, key=len, reverse=True)
+    return Regex(r'|'.join(choices), flags=re.I)
 
 
 def optional_oneof_ci(choices):

@@ -46,7 +46,7 @@ from datection.data.fr import SHORT_MONTHS
 
 def set_month_number(text, start_index, match):
     """Return the month number from the month name."""
-    return MONTHS.get(match[0]) or SHORT_MONTHS.get(match[0])
+    return MONTHS.get(match[0].lower()) or SHORT_MONTHS.get(match[0].lower())
 
 
 def set_weekday(text, start_index, match):
