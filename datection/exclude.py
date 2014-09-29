@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""Definition of classes in charge of the exclusion of a timepoint
-from another.
+"""
+Definition of classes in charge of the exclusion of a timepoint
+from another one.
 
 """
 

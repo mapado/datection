@@ -4,6 +4,7 @@
 Definition of language agnostic temporal expressions related regexes .
 
 """
+
 import re
 
 from dateutil.rrule import weekdays
@@ -26,15 +27,24 @@ from datection.timepoint import Weekdays
 
 
 def optional_ci(s):
+    """Return a Regex object matching the argument string case-insensitively."""
     return Optional(Regex(s, flags=re.I))
 
 
 def oneof_ci(choices):
+    """Return a Regex object matching any of the argument choice,
+    case-insensitively.
+
+    """
     choices = sorted(choices, key=len, reverse=True)
     return Regex(r'|'.join(choices), flags=re.I)
 
 
 def optional_oneof_ci(choices):
+    """Return a Regex Regex object matching none or any of the argument choice,
+    case-insensitively.
+
+    """
     return Optional(oneof_ci(choices))
 
 
@@ -44,7 +54,7 @@ def as_int(text, start_index, match):
 
 
 def as_4digit_year(text, start_index, match):
-    """Return a 4 digit, integer year from a YEAR regex match."""
+    """Return a 4 digit, integer year from a match of the YEAR pattern."""
     if len(match[0]) == 4:
         year = int(match[0])
     elif len(match[0]) == 2:
@@ -53,7 +63,7 @@ def as_4digit_year(text, start_index, match):
 
 
 def as_date(text, start_index, matches):
-    """Return a Date object from a DATE regex match."""
+    """Return a Date object from a match of the DATE pattern."""
     year = matches.get('year') if matches.get('year') else None
     month = matches.get('month') if matches.get('month') else None
     day = matches.get('day') if matches.get('day') else None
@@ -61,57 +71,66 @@ def as_date(text, start_index, matches):
 
 
 def as_time(text, start_index, matches):
-    """Return a Time object from a TIME regex match."""
+    """Return a Time object from a match of the TIME pattern."""
     hour = matches['hour']
     minute = matches.get('minute') if matches.get('minute') else 0
     return Time(hour, minute)
 
 
 def as_time_interval(text, start_index, matches):
-    """Return a TimeInterval object from the TIME_INTERVAL regex match."""
+    """Return a TimeInterval object from a match of the TIME_INTERVAL pattern.
+
+    """
     if not matches.get('end_time'):
         matches['end_time'] = matches['start_time']
     return TimeInterval(matches['start_time'], matches['end_time'])
 
 
 def as_datetime(text, start_index, matches):
-    """Return a Datetime object from the DATETIME regex match."""
+    """Return a Datetime object from a match of the DATETIME pattern."""
     d = matches['date']
     ti = matches['time_interval']
     return Datetime(d, ti.start_time, ti.end_time)
 
 
 def as_datelist(text, start_index, matches):
-    """Return a DateList object from the DATE_LIST regex match."""
+    """Return a DateList object from a match of the DATE_LIST pattern."""
     dates = list(matches['dates'])
     return DateList.from_match(dates)
 
 
 def as_date_interval(text, start_index, matches):
-    """Return a DateInterval object from the DATE_INTERVAL regex match."""
+    """Return a DateInterval object from a match of the DATE_INTERVAL pattern"""
     sd = matches['start_date']
     ed = matches['end_date']
     return DateInterval.from_match(sd, ed)
 
 
 def as_datetime_list(text, start_index, matches):
+    """Return a DatetimeList object from a match of the DATETIME_LIST pattern"""
     match_dates = list(matches['dates'])
     dates = DateList.from_match(match_dates)
     return DatetimeList.from_match(dates, matches['time_interval'])
 
 
 def as_continuous_datetime_interval(text, start_index, matches):
+    """Return a ContinuousDatetimeInterval object from a match of the
+    CONTTUNUOUS_DATETIME_INTERVAL pattern.
+
+    """
     sd, st = matches['start_date'], matches['start_time']
     ed, et = matches['end_date'], matches['end_time']
     return ContinuousDatetimeInterval.from_match(sd, st, ed, et)
 
 
 def as_weekday_list(text, start_index, matches):
+    """Return a Weekdays object from a match of the WEEKDAY_LIST pattern."""
     day_matches = [m for m in matches if isinstance(m, weekday)]
     return Weekdays(day_matches)
 
 
 def as_weekday_interval(text, start_index, matches):
+    """Return a Weekdays object from a match of the WEEKDAY_INTERVAL pattern."""
     day_matches = [m for m in matches if isinstance(m, weekday)]
     interval = slice(
         day_matches[0].weekday,
@@ -121,6 +140,10 @@ def as_weekday_interval(text, start_index, matches):
 
 
 def as_weekly_recurrence(text, start_index, matches):
+    """Return a WeeklyRecurrence object from a match of the WEEKLY_RECURRENCE
+    pattern.
+
+    """
     wkdays = [m for m in matches if isinstance(m, Weekdays)]
     days = []
     for wkday in wkdays:
@@ -133,13 +156,17 @@ def as_weekly_recurrence(text, start_index, matches):
         time_interval = matches['time_interval']
     else:
         time_interval = TimeInterval.make_all_day()
-    return WeeklyRecurrence(
-        date_interval,
-        time_interval,
-        days)
+    return WeeklyRecurrence(date_interval, time_interval, days)
 
 
 def weekdays_as_weekly_recurrence(text, start_index, matches):
+    """Convert a weekday match (single, interval or list) to a WeeklyRecurrence
+    object.
+
+    The WeeklyRecurrence date interval will be unlimited, and its time interval
+    will cover all day.
+
+    """
     if matches.get('time_interval'):
         time_interval = matches['time_interval'][0]
     else:
@@ -151,10 +178,15 @@ def weekdays_as_weekly_recurrence(text, start_index, matches):
 
 
 def extract_time_patterns(text, start_index, matches):
+    """Return a list of TimeInterval from the pattern match."""
     return [m for m in matches if isinstance(m, TimeInterval)]
 
 
 def develop_datetime_patterns(text, start_index, matches):
+    """Assign each time interval match to the date interval match, and
+    return a list of Datetime objects.
+
+    """
     out = []
     date = matches['date']
     times = [m for m in matches if isinstance(m, TimeInterval)]
@@ -164,6 +196,12 @@ def develop_datetime_patterns(text, start_index, matches):
 
 
 def complete_partial_date(text, start_index, matches):
+    """Return a full date, combined from the matched day and partial date.
+
+    If no partial date was matched, return a Date object with missing
+    year and month.
+
+    """
     if matches.get('partial_date'):
         date = matches['partial_date']
         date.day = matches['day'][0]
@@ -173,6 +211,12 @@ def complete_partial_date(text, start_index, matches):
 
 
 def develop_datetime_interval_patterns(text, start_index, matches):
+    """Combine each matched time interval with the matched date interval.
+
+    Each time interval is combined to the date interval, thus returning
+    a list of DatetimeInterval objects.
+
+    """
     out = []
     date_interval = matches['date_interval']
     time_intervals = [m for m in matches if isinstance(m, TimeInterval)]
@@ -185,6 +229,13 @@ def develop_datetime_interval_patterns(text, start_index, matches):
 
 
 def develop_weekly_recurrence_patterns(text, start_index, matches):
+    """Return a list of WeeklyRecurrence objects from a match of the
+    MULTIPLE_WEEKLY_RECURRENCE pattern.
+
+    Each weekday/time_interval couple is combined with the date interval
+    match, to form a WeeklyRecurrence object.
+
+    """
     out = []
     date_interval = matches['date_interval']
     for group in matches['groups']:
@@ -194,6 +245,8 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
             time_interval=group['patterns'][0])
         out.append(wk)
     return out
+
+
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
     ur'(?<![\d])'  # not preceeded by a digit

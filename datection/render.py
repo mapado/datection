@@ -3,7 +3,9 @@
 """
 Module in charge of transforming a rrule + duraction object into the shortest
 human-readable string possible.
+
 """
+
 import calendar
 import datetime
 import locale as _locale

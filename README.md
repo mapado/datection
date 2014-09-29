@@ -1,232 +1,111 @@
 # datection
+Multilingual library for normalisation and rendering of temporal expressions.
 
-Detect and normalize textual temporal expressions.
+## How to use it?
 
-Example:
+### Normalisation
+The normalisation step extracts temporal expressions from a text, using a language specific grammar, and exports them into a short, storable format.
+
+#### Example
+
 ```python
-# Detection of a simple time expression
->>> from datection import parse
->>> t = parse('15h30', 'fr')[0]
->>> t
-<datection.serialize.TimeInterval at 0x2412610>
->>> t.to_python()
-datetime.time(15, 30)
-```
+>>> import datection
 
-##  Detection of a datetime
-```python
->>> dt = parse('le lundi 15 mars 2013 de 15h30 à 17h', 'fr')[0]
->>> dt
-<datection.serialize.DateTime at 0x2412a10>
->>> dt.to_python()
-(datetime.datetime(2013, 3, 15, 15, 30), datetime.datetime(2013, 3, 15, 17, 0))
-```
+>>> from datetime import datetime
 
-###  What time expressions are supported?
+# simple datetime
+>>> datection.export(u"Le 4 mars 2015 à 18h30", "fr")
+[{'duration': 0,
+  'rrule': 'DTSTART:20150304\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=30;BYHOUR=18',
+  'span': (0, 23)}]
 
-``datection`` supports the following temporal expressions:
+# date interval with a recurrent exclusion
+>>> datection.export(u"Du 5 au 29 mars 2015, sauf le lundi", "fr")
+[{'duration': 1439,
+  'excluded': ['DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO;BYHOUR=0;BYMINUTE=0;UNTIL=20150329T000000'],
+  'rrule': 'DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;INTERVAL=1;UNTIL=20150329',
+  'span': (0, 36)}]
 
-* time (ex: 15h30)
-* time intervals (ex: 15h30 - 17h)
-* date (ex: mardi 16 mars 2013)
-* date list (ex: 15, 16 et 17 mars 2012)
-* date interval (ex: du 17 au 18 mars 2012)
-* datetime (ex: le mercredi 18 janvier 2013 à 16h)
-* datetime list (ex: le 6, 7, 8 avril 2015, de 16h à 17h)
-* datetime interval (ex: du 17 au 19 avril 2012, de 17h à 21h)
+# yearless date, with argument date reference
+>>> datection.export(u"Le 4 mars à 18h30", "fr", reference=datetime(2015, 1, 1))
+[{'duration': 0,
+  'rrule': 'DTSTART:20150304\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=30;BYHOUR=18',
+  'span': (0, 18)}]
 
-###  How does it work?
-
-####  Probing
-The input text, passed to the ``datection.parse`` function is first probed for temporal markers.
-If no weekday, month name, year or numeric date could be found, the parsing stops there and returns an empty list.
-
-Examples:
-```python
->>> from datection import probe
->>> probe('Hello world')  # no temporal markers
+# past datetime
+>>> datection.export(u"Le 4 mars 1990 à 18h30", "fr")
 []
->>> p = probe("En 2013, j'ai mangé une pomme, et elle était super bonne bonne bonne, comme le jour", 'fr')
->>> p
-["En 2013, j'ai mangé une pomme, et el"]  # context of "2013"
+
+# past datetime and authorized past exports
+>>> datection.export(u"Le 4 mars 1990 à 18h30", "fr", only_future=False)
+[{'duration': 0,
+  'rrule': 'DTSTART:19900304\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=30;BYHOUR=18',
+  'span': (0, 18)}]
+
+# continuous datetime interval
+>>> datection.export(u"Du 5 avril à 22h au 6 avril 2015 à 8h", "fr")
+[{'continuous': True,
+  'duration': 600,
+  'rrule': 'DTSTART:20150405\nRRULE:FREQ=DAILY;BYHOUR=22;BYMINUTE=0;INTERVAL=1;UNTIL=20150406T235959',
+  'span': (0, 38)}]
+
 ```
-If some temporal markers could be found, we extract the context around each of these markers.
 
-####Note
-If some of the returned Contexts overlap each other, they are automatically merged together, in a single context.
-```python
->>> p = probe("Le 7 septembre 2013, j'ai mangé une pomme, et elle était super bonne", "fr")
->>> p
-["Le 7 septembre 2013, j'ai mang\xc3\xa9 une pomme, et el"] # merged context of "septembre" and "2013"
-```
+#### Export format
 
-#### Normalizing
-Each string context is then submitted to a battery of regexes, each of them tailored to detect a variety of temporal markers.
-The result of the regex detection is them fed to a timepoint factory, which returns a Python object, subclassing the ``datection.serialize.Timepoint`` class.
+The export format contains 6 different items:
 
-Each ``Timepoint`` subclass is provided with two normalization methods:
+* ``rrule``: a parseable expression, generating all the datetimes described by the expression. See the [python-dateutil](http://labix.org/python-dateutil) documentation and [RFC 2445](http://www.ietf.org/rfc/rfc2445.txt) for more details
+* ``duratiion``: the duration (in minutes) between each start datetime, egenrated by the rrule, and its end counterpart:
 
-* ``to_python``: exports the object to standard Python format (``time``, ``date`` or ``datetime``)
-* ``export``:  exports the object to a database compliant format, only based on ``datetime`` intervals
+  * 8h → 9h: duration = 60
+  * at 8pm: duration = 0
+  * all day: duration = 1439
 
-##### Note
-It is highly possible that some result overlap others. For example, parsing the string "lundi 15 mars 2013 à 15h30" will yield 3 different results:
+* ``span``: the character interval defining where the temporal expression was found in the text
+* ``continuous``: boolean flag, indicating if the time interval is continuous or not.
+* ``excluded``: a list of rrules exclusion rrules.
+* ``unlimited``: if True, the rrules are considered as infinite.
 
-* lundi 15 mars 2013 → ``Date``
-* 15h30 → ``TimeInterval``
-* lundi 15 mars 2013 à 15h30 → ``DateTime``
+### Rendering
 
-The ``parse`` function automatically select the "largest" results, overlapping others, so you always get the most senseful results.
+The rendering step renders the export format in human readable formats, in a specific language.
 
-##### <a id="conv" name="conv"></a>Serialization conversion table
+Several formats can be chosen from:
 
-Expression | Timepoint | to_python | export
---- | --- | --- | ---
-le 5 janvier 2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
-05/01/2013 | Date | datetime.date(2013, 1, 5) | [(datetime.datetime(2013, 1, 5, 0, 0),<br><br> datetime.datetime(2013, 1, 5, 23, 59, 59))]
-Le 5 et 6 janvier 2013 | DateList | [datetime.date(2013, 1, 15),<br> datetime.date(2013, 1, 16)]` |[(datetime.datetime(2013, 1, 15, 0, 0),<br> datetime.datetime(2013, 1, 15, 23, 59, 59)),<br>(datetime.datetime(2013, 1, 16, 0, 0),<br>datetime.datetime(2013, 1, 16, 23, 59, 59))]
-du 5 au 10 juillet 2013 | DateInterval | [datetime.date(2013, 7, 5),<br> datetime.date(2013, 7, 10)] | [(datetime.datetime(2013, 7, 5, 0, 0),<br> datetime.datetime(2013, 7, 10, 23, 59, 59))]
-du 5/07/2013 au 10/07/2013 | DateInterval | [datetime.date(2013, 7, 5),<br> datetime.date(2013, 7, 10)] | [(datetime.datetime(2013, 7, 5, 0, 0),<br> datetime.datetime(2013, 7, 10, 23, 59, 59))]
-15h30 | TimeInterval | datetime.time(15, 30) | None
-de 15h30 à 16h | TimeInterval | (datetime.time(15, 30),<br> datetime.time(16, 0)) | None
-le 18 janvier 2013 à 16h | DateTime | datetime.datetime(2013, 1, 18, 16, 0) | [(datetime.datetime(2013, 1, 18, 16, 0),<br> datetime.datetime(2013, 1, 18, 16, 0))]
-le 6 et 8 avril 2015, de 16h à 17h | DateTimeList | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))] | [(datetime.datetime(2015, 4, 6, 16, 0),<br> datetime.datetime(2015, 4, 6, 17, 0)),<br>(datetime.datetime(2015, 4, 8, 16, 0),<br> datetime.datetime(2015, 4, 8, 17, 0))]
-du 17 au 18 avril 2012, de 17h à 21h | DateTimeInterval | [(datetime.datetime(2012, 4, 17, 17, 0),<br> datetime.datetime(2012, 4, 17, 21, 0)),<br>(datetime.datetime(2012, 4, 18, 17, 0),<br>datetime.datetime(2012, 4, 18, 21, 0))] | [(datetime.datetime(2012, 4, 17, 17, 0) datetime.datetime(2012, 4, 17, 21, 0)),<br> (datetime.datetime(2012, 4, 18, 17, 0),<br> datetime.datetime(2012, 4, 18, 21, 0))]
-
-#####Note:
-If the year is missing, the value of the current year is taken.
-
-Examples:
-
-* "5 octobre": 5/10/2013
-* "du 5 au 8 juin": 5/06/2013 → 8/06/2013
-* "le 5, 6, 7 et 13 novembre": 5/11/2013, 6/11/2013, 7/11/2013, 13/11/2013
-
-## API
-
-###``datection.parse``
-Performs a date detection on text with all timepoint regex.
-
-####Arguments
-
- * ``text``: text parsed for temporal expressions (``str`` or UTF-8 ``unicode``)
- * ``lang``: the 2 character code of the text language (``str``)
- * ``valid``: filter invalid results (`bool``, default to ``True``)
-
-####Returns
-A list of non overlapping normalized ``Timepoint`` objects.
-
-####Example
+ * default
+ * short: shorter than the default output, omits some information when possible (the year, for example), and contextualize the result
+ * place: display the export as opening hours
+ * SEO: synthetic information, only displaying the month and the year. Used for SEO purposes.
 
 ```python
->>> parse("du 17 au 18 avril 2012, de 17h à 21h", "fr")
-[<datection.normalize.DateTimeInterval at 0x31119d0>]
+>>> import datection
+>>> schedule = datection.export(u"Le 5 mars 2015, 15h30 - 16h", "fr")
+
+# default
+>>> datection.display(schedule, 'fr')
+u'Le 5 mars 2015 de 15 h 30 à 16 h'
+
+# short
+>>> datection.display(schedule, 'fr', short=True)
+u'Le 5 mars de 15 h 30 à 16 h'
+>>> datection.display(schedule, 'fr', short=True, reference=date(2015, 3, 3))
+u'Ce jeudi de 15 h 30 à 16 h'
+>>> datection.display(schedule, 'fr', short=True, reference=date(2015, 3, 4))
+u'Demain de 15 h 30 à 16 h'
+>>> datection.display(schedule, 'fr', short=True, reference=date(2015, 3, 5))
+u"Aujourd'hui de 15 h 30 ç 16 h"
+
+# SEO
+>>> datection.display(schedule, 'fr', seo=True)
+u'mars 2015'
+
+# opening hours / place
+>>> schedule = datection.export(u"Du lundi au vendredi de 8h à 12h30 et de 14h à 19h30", "fr")
+>>> datection.display(schedule, 'fr', place=True)
+Lundi de 8 h à 12 h 30 et de 14 h à 19 h 30
+Mardi de 8 h à 12 h 30 et de 14 h à 19 h 30
+Mercredi de 8 h à 12 h 30 et de 14 h à 19 h 30
+Jeudi de 8 h à 12 h 30 et de 14 h à 19 h 30
+Vendredi de 8 h à 12 h 30 et de 14 h à 19 h 30
 ```
-
-###``datection.probe``
-Scans the text for very simple markers, indicating the presence of temporal patterns.
-
-####Arguments
-* ``text`` : the text to probe (type ``str`` or UTF-8 ``unicode``)
-* ``lang``: the 2 character code of the text language (``str``)
-* ``context_size``: the number of character before and after a probe
-        match to be taken as context. (``int``, default to 50)
-
-####Returns
-A list of non overlapping text fragments, sorted by order of appearance in the input text.
-
-####Example
-
-```python
->>> text = u""" L'embarquement se fait 20 minutes avant.
-La croisière démarre au pied de la Tour EIffel et dure 1h.
-Réservation obligatoire au 01 76 64 14 68.
-Promenade en famille
-    La Croisière Enchantée
-Dates et horaires
-Du 6 octobre 2012 au 13 juillet 2013."""
->>> probe(text, "fr")
-[' pied de la Tour EIffel et dure 1h.\nR\xc3\xa9servation obligatoire a',
- 'roisi\xc3\xa8re Enchant\xc3\xa9e\nDates et horaires\nDu 6 octobre 2012 au 13 juillet 2013.']
-```
-
-### ``datection.to_python``
-Performs a timepoint detection on text, and normalizes each result to python standard objects.
-
-####Arguments
-* ``text`` : the text to probe (type ``str`` or UTF-8 ``unicode``)
-* ``lang``: the 2 character code of the text language (``str``)
-* ``valid``: filter invalid results (`bool``, default to ``True``)
-
-
-####Returns
-A list of standard datetime python objects. [See the conversion table](#conv)
-
-####Example
-
-```python
->>> to_python('15 mars 2013', 'fr')
-[datetime.date(2013, 3, 15)]
-```
-
-### ``datection.export``
-Performs a timepoint detection on text, and normalizes each result to python standard objects,
-in a format compliant to database insertion.
-
-####Arguments
-* ``text`` : the text to probe (type ``str`` or UTF-8 ``unicode``)
-* ``lang``: the 2 character code of the text language (``str``)
-* ``valid``: filter invalid results (`bool``, default to ``True``)
-
-
-####Returns
-A list of list of 2 tuples (start datetime, end datetime) [See the conversion table](#conv)
-
-####Example
-
-```python
->>> export('15 mars 2013', 'fr')
-[[(datetime.datetime(2013, 3, 15, 0, 0),
-   datetime.datetime(2013, 3, 15, 23, 59, 59))]]
-```
-
-### ``datection.to_mongo``
-
-Performs a timepoint detection on text, and normalize each result to python standard objects,
-in a format compliant to insertion into mongodb.
-
-The format chages slightly from the result of the ``datection.export`` function, but the changes are purely cosmetic!
-
-####Arguments
-* ``text`` : the text to probe (type ``str`` or UTF-8 ``unicode``)
-* ``lang``: the 2 character code of the text language (``str``)
-* ``valid``: filter invalid results (`bool``, default to ``True``)
-
-
-####Returns
-A list of list of dict {'start' datetime, 'end' datetime}
-
-####Example
-
-```python
->>> to_mongo('15 mars 2013', 'fr')
-[[{'end': datetime.datetime(2013, 3, 15, 23, 59, 59),
-   'start': datetime.datetime(2013, 3, 15, 0, 0)}]]
-```
-
-### ``datection.is_future``
-Assesses if the input datetime interval is located in the future.
-
-####Arguments
-* ``timepoint``: a 2-tuple composed of the start and end datetime
-* ``reference``! the datetime used as a reference to the present. All datetimes after the reference are in the future.
-
-####Returns
-``True`` if the input timepoint is in the future. Else ``False``.
-
-
-## Pitfalls
-
-For now, only French is supported, but porting to another language merely consists in translating the regexes from one language to another.
-
-Also, recurrence expressions (all wednesdays, etc) are not yet supported.

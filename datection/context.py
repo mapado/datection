@@ -9,6 +9,7 @@ is not processed.
 
 We use this technique for performance reasons: some regex can be greedy, thus
 it makes sense to use it only when necessary.
+
 """
 
 
@@ -59,7 +60,7 @@ class Context(object):
         return self.text[slice]
 
     def __contains__(self, item):
-        """ Context is in another context if their span overlap """
+        """Context is in another context if their span overlap."""
         return item.start in xrange(self.start, self.end)
 
     def __repr__(self):
@@ -78,6 +79,7 @@ class Context(object):
         return self.end - self.start
 
     def position_in_text(self, span):
+        """Return the initial position of the context in its original text."""
         return (self.start + span[0], self.start + span[1])
 
 
@@ -111,14 +113,16 @@ def probe(text, lang):
 
 
 def independants(contexts):
-    """ Reduce the input context list by combining all overlapping contexts.
+    """Reduce the input context list by combining all overlapping contexts.
 
-    If the start index of a context1 object is bewteen the start and end indexes
-    of another context2 object, context1 thus overlapps context2 (and inversely).
-    They then need to be merged into a single context.
+    If the start index of a context1 object is bewteen the start and end
+    indices of another context2 object, context1 thus overlapps context2
+    (and inversely).
+    They thus need to be merged into a single context.
 
     :param contexts: a list of datection.context.Context
-    :return: a list of non overlapping strings, containing temporal information
+    :return: a list of non overlapping strings, containing temporal
+    information
 
     """
     if not contexts:

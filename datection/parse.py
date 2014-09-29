@@ -12,11 +12,11 @@ def parse(text, lang, valid=True, reference=None):
     expressions.
 
     If valid is True, only valid Timepoints will be returned.
-    Else, invalid Timepoints can also be returned.
 
     """
     if isinstance(text, str):
         text = text.decode('utf-8')
+
     schedule = Schedule()
     token_groups = Tokenizer(text, lang, reference).tokenize()
     for token_group in token_groups:
@@ -34,7 +34,7 @@ def parse(text, lang, valid=True, reference=None):
             token.timepoint.span = token.span[0], excluded.span[1]
             schedule.add(timepoint=token.timepoint, excluded=excluded.timepoint)
 
-    out = list(set(schedule._timepoints))  # remove any redundancy (by security)
+    out = list(set(schedule._timepoints))  # remove any redundancy
     if valid:  # only return valid Timepoints
         return [match for match in out if match.valid]
     return out

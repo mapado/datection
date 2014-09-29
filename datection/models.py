@@ -51,6 +51,7 @@ class DurationRRule(object):
             for dtime in self.date_producer:
                 yield dtime
         else:
+            self.rrule._dtstart = datetime.combine(date.today(), DAY_START)
             end_bound_date = date.today() + timedelta(days=365)
             end_bound = datetime.combine(end_bound_date, DAY_END)
             for dtime in self.date_producer:
@@ -73,13 +74,6 @@ class DurationRRule(object):
 
         As this is a lazy property, the rrulestr -> rrule operation
         is only performed the first time.
-
-        If the rrule defined weekly recurrence and has no 'until' date,
-        one will be set automatically, to avoid infinite loops when
-        iterating over the rrule dates.
-
-        If an exclusion RRule is present, then it will be excluded from
-        the 'rrule' one, using an rruleset.
 
         """
         return rrulestr(self.duration_rrule['rrule'])
@@ -137,7 +131,7 @@ class DurationRRule(object):
                 end_date = self.rrule.until
             else:
                 for dtime in self:
-                    pass
+                    pass  # ugly hack
                 end_date = dtime
 
             if self.is_continuous:

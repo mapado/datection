@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-Datection exporters to python and database compliant formats.
-"""
+"""Datection exporters to database compliant formats."""
 
 from datetime import datetime
 from datetime import timedelta
@@ -11,11 +9,70 @@ from datection.models import DurationRRule
 
 
 def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
-    """ Perform a date detection on text with all timepoint regex.
+    """Extract and normalize time-related expressions from the text.
+
+    Grammar specific to the argument language will be used on the
+    argument text.
+
+    If valid is True, only valid expression exports will be returned.
+    If only_future is True, only expressions related to future datetimes
+    will be exported.
+    A reference can be passed (as a datetime object) to specify the
+    reference extraction date. It can be used to determine the year of
+    certain dates, when it is missing.
 
     Returns a list of dicts, each containing a recurrence rule
-    describing the extracted time reference, and a duration,
-    linking each start date/time to an end date/time
+    describing the extracted time reference, a duration,
+    linking each start date/time to an end date/time, a character span,
+    possible exclusion rrules, a boolean "continuous" flag indicating the
+    that the time interval is continuous, and not repeated for each date,
+    and finally, and 'unlimited' boolean flag, indicating that the dates
+    occur each year.
+
+    >>> export(u"Le 4 mars 2015 à 18h30", "fr")
+    [{'duration': 0,
+      'rrule': ('DTSTART:20150304\nRRULE:FREQ=DAILY;COUNT=1;'
+        'BYMINUTE=30;BYHOUR=18'),
+      'span': (0, 23)}]
+
+    >>> export(u"Du 5 au 29 mars 2015, sauf le lundi", "fr")
+    [{'duration': 1439,
+      'excluded': [
+        ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO;BYHOUR=0;'
+            'BYMINUTE=0;UNTIL=20150329T000000')
+        ],
+      'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=0;'
+        'BYMINUTE=0;INTERVAL=1;UNTIL=20150329'),
+      'span': (0, 36)}]
+
+    >>> export(u"Le 4 mars à 18h30", "fr", reference=datetime(2015, 1, 1))
+    [{'duration': 0,
+      'rrule': ('DTSTART:20150304\nRRULE:FREQ=DAILY;COUNT=1;'
+        'BYMINUTE=30;BYHOUR=18'),
+      'span': (0, 18)}]
+
+    >>> export(u"Le 4 mars 1990 à 18h30", "fr")
+    []
+
+    >>> export(u"Le 4 mars 1990 à 18h30", "fr", only_future=False)
+    [{'duration': 0,
+      'rrule': ('DTSTART:19900304\nRRULE:FREQ=DAILY;COUNT=1;'
+        'BYMINUTE=30;BYHOUR=18'),
+      'span': (0, 18)}]
+
+    >>> export(u"Du 5 avril à 22h au 6 avril 2015 à 8h", "fr")
+    [{'continuous': True,
+      'duration': 600,
+      'rrule': ('DTSTART:20150405\nRRULE:FREQ=DAILY;BYHOUR=22;BYMINUTE=0;'
+                'INTERVAL=1;UNTIL=20150406T235959'),
+      'span': (0, 38)}]
+
+    >>> export(u"tous les lundis à 8h", "fr")
+    [{'duration': 0,
+      'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
+                'BYMINUTE=0;UNTIL=99991231T235959'),
+      'span': (0, 21),
+      'unlimited': True}]
 
     """
     exports = []
