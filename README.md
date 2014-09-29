@@ -56,11 +56,11 @@ The normalisation step extracts temporal expressions from a text, using a langua
 The export format contains 6 different items:
 
 * ``rrule``: a parseable expression, generating all the datetimes described by the expression. See the [python-dateutil](http://labix.org/python-dateutil) documentation and [RFC 2445](http://www.ietf.org/rfc/rfc2445.txt) for more details
-* ``duratiion``: the duration (in minutes) between each start datetime, egenrated by the rrule, and its end counterpart:
+* ``duration``: the duration (in minutes) between each start datetime, egenrated by the rrule, and its end counterpart:
 
-  * 8h → 9h: duration = 60
-  * at 8pm: duration = 0
-  * all day: duration = 1439
+  - 8h → 9h: duration = 60
+  - at 8pm: duration = 0
+  - all day: duration = 1439
 
 * ``span``: the character interval defining where the temporal expression was found in the text
 * ``continuous``: boolean flag, indicating if the time interval is continuous or not.
@@ -103,9 +103,10 @@ u'mars 2015'
 # opening hours / place
 >>> schedule = datection.export(u"Du lundi au vendredi de 8h à 12h30 et de 14h à 19h30", "fr")
 >>> datection.display(schedule, 'fr', place=True)
-Lundi de 8 h à 12 h 30 et de 14 h à 19 h 30
+u"""Lundi de 8 h à 12 h 30 et de 14 h à 19 h 30
 Mardi de 8 h à 12 h 30 et de 14 h à 19 h 30
 Mercredi de 8 h à 12 h 30 et de 14 h à 19 h 30
 Jeudi de 8 h à 12 h 30 et de 14 h à 19 h 30
 Vendredi de 8 h à 12 h 30 et de 14 h à 19 h 30
+"""
 ```
