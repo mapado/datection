@@ -107,7 +107,9 @@ class DurationRRule(object):
     @property
     def unlimited(self):
         """Whether the DurationRRule is bounded or not."""
-        return self.duration_rrule.get('unlimited', False)
+        if self.duration_rrule.get('unlimited'):
+            return True
+        return self.rrule._until is None
 
     @property
     def is_continuous(self):
