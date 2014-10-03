@@ -64,7 +64,7 @@ WEEKDAY = (
         oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
     ) |
     # short weekday not followed by another alphanum char
-    oneof_ci(SHORT_WEEKDAYS.keys()) + Regex(r'(?!\w)').leaveWhitespace()
+    oneof_ci(SHORT_WEEKDAYS.keys()) + Regex(r'\.?(?!\w)').leaveWhitespace()
 ).setParseAction(set_weekday)
 
 # A month name can be in its full form or an abbreviated form.
@@ -255,7 +255,7 @@ WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les", u"tous les", u"ouvert tous les"]) +
     OneOrMore(
         WEEKDAY +
-        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'-', u'&', u'/'])))
+        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'&', u'/'])))
     )
 ).setParseAction(as_weekday_list)('weekdays')
 
@@ -264,7 +264,7 @@ WEEKDAY_INTERVAL = (
     optional_ci(u"ouvert") +
     optional_ci(u"du") +
     WEEKDAY
-    + u"au"
+    + oneof_ci([u'au', u'-'])
     + WEEKDAY
 ).setParseAction(as_weekday_interval)('weekdays')
 
