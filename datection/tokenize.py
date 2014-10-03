@@ -186,6 +186,10 @@ class Tokenizer(object):
 
     @staticmethod
     def trim_text(text, start, end):
+        """Modify the start/end span so that it does not contain point
+        to whitespaces as first and last characters.
+
+        """
         if text.find(' ') == -1:
             return start, end
         new_text = text.lstrip()
@@ -245,8 +249,8 @@ class Tokenizer(object):
             try:
                 for pattern_matches, start, end in pattern.scanString(ctx):
                     start, end = self.trim_text(ctx[start:end], start, end)
-                    for match in pattern_matches:
-                        match = Match(match, pname, start, end)
+                    for pattern_match in pattern_matches:
+                        match = Match(pattern_match, pname, start, end)
                         matches.append((match, context))
             except NormalizationError:
                 pass

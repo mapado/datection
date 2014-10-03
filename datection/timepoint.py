@@ -40,8 +40,8 @@ def add_span(f):
 
 
 def transmit_span(f):
-    """Transmit the instance 'span' attribute to every member of the isinstance
-    instance, it it possesses a 'span' attribute.
+    """Transmit the instance 'span' attribute to every member of the instance
+    export, it it possesses a 'span' attribute.
 
     """
     def wrapper(*args, **kwargs):
