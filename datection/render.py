@@ -37,6 +37,7 @@ TRANSLATIONS = {
         'the': u'le',
         'and': u'et',
         'at': u'à',
+        'except': u'sauf',
     }
 }
 
@@ -937,7 +938,8 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
             parts.append(fmt)
             for opening in openings[1:]:
                 start_time, end_time = opening.time_interval
-                time_fmt = TimeIntervalFormatter(start_time, end_time).display()
+                time_fmt = TimeIntervalFormatter(
+                    start_time, end_time).display()
                 parts.append(time_fmt)
         fmt = template.format(
             opening=parts[0],
@@ -956,6 +958,95 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
         return '\n'.join([line for line in out])
 
 
+class ExclusionFormatter(BaseFormatter):
+
+    """Render exclusion rrules into a human readabled format."""
+
+    def __init__(self, excluded):
+        super(ExclusionFormatter, self).__init__()
+        self.excluded = excluded
+        self.templates = {
+            'fr_FR': {
+                'weekday': u'le {weekday}',
+                'weekdays': u'le {weekdays} et {last_weekday}',
+                'weekday_interval': u'du {start_weekday} au {end_weekday}',
+                'date': u'le {date}',
+            }
+        }
+
+    def display_exclusion(self, excluded):
+        """Render the exclusion rrule into a human-readable format.
+
+        The rrule can either define weekdays or a single date(time).
+
+        """
+        excluded_rrule = excluded.exclusion_rrules[0]
+        # excluded recurrent weekdays
+        if excluded_rrule.byweekday:
+            return self.display_excluded_weekdays(excluded_rrule)
+        # excluded date(time)
+        else:
+            return self.display_excluded_date(
+                rrule=excluded.duration_rrule['excluded'][0],
+                duration=excluded.duration)
+
+    def display_excluded_date(self, rrule, duration):
+        """Render the excluded date into a human readable format.
+
+        The excluded date can either be a date or a datetime, but the
+        time will not be formated, as it's already present in the
+        constructive pattern formatting.
+
+        """
+        drr = DurationRRule({
+            'rrule': rrule,
+            'duration': duration
+        })
+        fmt = DateFormatter(drr.date_interval[0])
+        return fmt.display(prefix=True)
+
+    def display_excluded_weekdays(self, excluded):
+        """Render the excluded weekdays into a human-readable format.
+
+        The excluded weekdays can be a single weekday, a weekday interval
+        or a weekday list.
+
+        """
+        # single excluded recurrent weekday
+        if len(excluded.byweekday) == 1:
+            return self.get_template('weekday').format(
+                weekday=self.day_name(excluded.byweekday[0].weekday))
+        else:
+            indices = [bywk.weekday for bywk in excluded.byweekday]
+            # excluded day range
+            if indices == range(indices[0], indices[-1] + 1):
+                return self.get_template('weekday_interval').format(
+                    start_weekday=self.day_name(indices[0]),
+                    end_weekday=self.day_name(indices[-1]))
+            # excluded day list
+            else:
+                weekdays = u', '.join(self.day_name(i) for i in indices[:-1])
+                return self.get_template('weekdays').format(
+                    weekdays=weekdays,
+                    last_weekday=self.day_name(indices[-1]))
+
+    def display(self, *args, **kwargs):
+        """Render an exclusion rrule into a human readable format."""
+        # format the constructive pattern
+        fmt = LongFormatter(
+            schedule=[self.excluded.duration_rrule],
+            apply_exlusion=False,
+            format_exclusion=False)
+        constructive = fmt.display(*args, **kwargs)
+        # format the excluded pattern
+        excluded = self.display_exclusion(self.excluded)
+        # join the both of them
+        return u"{constructive}, {_except} {excluded}".format(
+            constructive=constructive,
+            _except=self._('except'),
+            excluded=excluded)
+
+
 class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """Displays a schedule in the current locale without trying to use
@@ -963,11 +1054,13 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
     """
 
-    def __init__(self, schedule):
+    def __init__(self, schedule, apply_exlusion=True, format_exclusion=True):
         super(LongFormatter, self).__init__()
         self._schedule = schedule
-        self.schedule = [DurationRRule(drr) for drr in schedule]
+        self.schedule = [
+            DurationRRule(drr, apply_exlusion) for drr in schedule]
         self.schedule = self.deduplicate(self.schedule)
+        self.format_exclusion = format_exclusion
         self.templates = {
             'fr_FR': u'{dates} {time}',
         }
@@ -978,11 +1071,15 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return [drr for drr in self.schedule if drr.is_recurring]
 
     @cached_property
-    def non_recurring(self):
-        """Select non recurring rrules from self.schedule"""
+    def non_special(self):
+        """Return all the non-continuous, non-recurring, non-excluded
+        DurationRRule objects.
+
+        """
         return [drr for drr in self.schedule
                 if not drr.is_continuous
-                if not drr.is_recurring]
+                if not drr.is_recurring
+                if not (drr.exclusion_rrules and drr.apply_exclusion)]
 
     @cached_property
     def continuous(self):
@@ -990,9 +1087,13 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return [drr for drr in self.schedule if drr.is_continuous]
 
     @cached_property
+    def excluded(self):
+        return [drr for drr in self.schedule if drr.exclusion_rrules]
+
+    @cached_property
     def time_groups(self):
         """Non recurring rrules grouped by start / end datetimes"""
-        _time_groups = to_start_end_datetimes(self.non_recurring)
+        _time_groups = to_start_end_datetimes(self.non_special)
         # convert rrule structures to start/end datetime lists
         _time_groups = groupby_time(_time_groups)
         for group in _time_groups:
@@ -1075,9 +1176,16 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         """
         out = []
         kwargs['force_year'] = True
+
+        # format rrules having an exclusion pattern
+        if self.format_exclusion:
+            for exc in self.excluded:
+                out.append(ExclusionFormatter(exc).display(*args, **kwargs))
+
         # format recurring rrules
         for rec in self.recurring:
-            out.append(WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
+            out.append(
+                WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
 
         # format continuous rrules
         for con in self.continuous:
@@ -1104,8 +1212,8 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             # concatenate dates and time
             start_time, end_time = time_group[0].values()
             template = self.get_template()
-            time_fmt = TimeIntervalFormatter(start_time, end_time).\
-                display(prefix=True)
+            time_fmt = TimeIntervalFormatter(
+                start_time, end_time).display(prefix=True)
             if time_fmt:
                 fmt = template.format(dates=date_fmt, time=time_fmt)
                 out.append(fmt)
@@ -1245,7 +1353,8 @@ class DisplaySchedule(object):
         """Return the best formatter tuple among self.formatter_tuples"""
         best_formatter = None
         for fmt_tuple in self.formatter_tuples:
-            best_formatter = self._compare_formatters(best_formatter, fmt_tuple)
+            best_formatter = self._compare_formatters(
+                best_formatter, fmt_tuple)
         return best_formatter
 
     def display(self):

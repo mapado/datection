@@ -369,7 +369,8 @@ class TestDateListFormatterfr_FR(GetCurrentDayMocker):
     def test_display_one_date_in_less_than_6_months_force_year(self):
         self.set_current_date(datetime.date(2013, 1, 1))
         self.dlfmt.date_list = [datetime.date(2013, 3, 4)]
-        self.assertEqual(self.dlfmt.display(force_year=True), u'le 4 mars 2013')
+        self.assertEqual(
+            self.dlfmt.display(force_year=True), u'le 4 mars 2013')
 
 
 class TestTimeFormatterfr_FR(unittest.TestCase):
@@ -946,6 +947,74 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         fmt = LongFormatter(schedule)
         self.assertEqual(fmt.display(), u'Le dimanche, de 10 h à 18 h')
 
+    def test_display_excluded_weekday(self):
+        # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO;BYHOUR=8;'
+                  'BYMINUTE=0;UNTIL=20150328T235959')
+             ],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le lundi")
+
+    def test_display_excluded_weekday_interval(self):
+        # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et mercredi
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO,TU,WE;BYHOUR=8;'
+                  'BYMINUTE=0;UNTIL=20150328T235959')
+             ],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
+
+    def test_display_excluded_weekday_list(self):
+        # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et jeudi
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO,TU,TH;BYHOUR=8;'
+                  'BYMINUTE=0;UNTIL=20150328T235959')
+             ],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le lundi, mardi et jeudi")
+
+    def test_display_excluded_datetime(self):
+         #"Du 5 au 28 mars 2015 de 8h à 9h, sauf le 17 mars"
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150317\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;'
+                  'BYHOUR=8')
+             ],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
+
 
 class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
 
@@ -1050,7 +1119,7 @@ class TestUtilities(unittest.TestCase):
             DurationRRule({
                 'duration': 60,
                 'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH,FR;'
-                'BYHOUR=22;BYMINUTE=30;UNTIL=20130809T235959')
+                          'BYHOUR=22;BYMINUTE=30;UNTIL=20130809T235959')
             })
         ]
         expected = [

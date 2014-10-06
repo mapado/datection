@@ -15,6 +15,7 @@ from datection.utils import cached_property
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
 from datection.timepoint import MISSING_YEAR
+from datection.timepoint import ALL_DAY
 
 
 class DurationRRule(object):
@@ -24,8 +25,9 @@ class DurationRRule(object):
 
     """
 
-    def __init__(self, duration_rrule):
+    def __init__(self, duration_rrule, apply_exclusion=True):
         self.duration_rrule = duration_rrule
+        self.apply_exclusion = apply_exclusion
 
     def __hash__(self):
         data = {
@@ -84,7 +86,7 @@ class DurationRRule(object):
         rrule and exclusion rrules.
 
         """
-        if not self.exclusion_rrules:
+        if not self.exclusion_rrules or not self.apply_exclusion:
             return self.rrule
 
         rset = rruleset()
