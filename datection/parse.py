@@ -3,6 +3,7 @@
 from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 from datection.year_inheritance import YearTransmitter
+from datection.coherency import CoherencyFilter
 from datection.timepoint import Date
 
 
@@ -42,6 +43,10 @@ def parse(text, lang, valid=True, reference=None):
 
     # Perform year inheritance, when necessary
     timepoints = YearTransmitter(timepoints, reference=reference).transmit()
+
+    # Remove timepoints already defined by others, thus removing
+    # duplicate content
+    timepoints = CoherencyFilter(timepoints).apply_coherency_rules()
 
     if valid:  # only return valid Timepoints
         # Now that all the missing year inheritance has been performed
