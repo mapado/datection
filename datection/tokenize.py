@@ -7,6 +7,7 @@ import datection
 import re
 
 from datection.timepoint import NormalizationError
+from datection.grammar import IgnorePyparsingMatch
 from datection.context import probe
 from datection.utils import cached_property
 
@@ -252,7 +253,7 @@ class Tokenizer(object):
                     for pattern_match in pattern_matches:
                         match = Match(pattern_match, pname, start, end)
                         matches.append((match, context))
-            except NormalizationError:
+            except (NormalizationError, IgnorePyparsingMatch):
                 pass
         return matches
 

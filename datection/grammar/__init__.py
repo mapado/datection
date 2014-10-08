@@ -26,6 +26,10 @@ from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import Weekdays
 
 
+class IgnorePyparsingMatch(Exception):
+    pass
+
+
 def optional_ci(s):
     """Return a Regex object matching the argument string case-insensitively."""
     return Optional(Regex(s, flags=re.I))
@@ -109,8 +113,14 @@ def as_date_interval(text, start_index, matches):
 def as_datetime_list(text, start_index, matches):
     """Return a DatetimeList object from a match of the DATETIME_LIST pattern"""
     match_dates = list(matches['dates'])
-    dates = DateList.from_match(match_dates)
-    return DatetimeList.from_match(dates, matches['time_interval'])
+    date_list = DateList.from_match(match_dates)
+    start_time = matches['time_interval'].start_time
+    end_time = matches['time_interval'].end_time
+    if len(date_list.dates) == 1 and start_time == end_time:
+        # If DATETIME_LIST only catched a single datetime, return nothing
+        # as the DATETIME pattern will catch it too
+        raise IgnorePyparsingMatch
+    return DatetimeList.from_match(date_list, matches['time_interval'])
 
 
 def as_continuous_datetime_interval(text, start_index, matches):
