@@ -168,7 +168,7 @@ class Tokenizer(object):
                         if span1 == span2:
                             continue
                         # if A ⊃ B or A = B: remove B
-                        if span1.issuperset(span2) or span1 == span2:
+                        elif span1.issuperset(span2) or span1 == span2:
                             if (tpt2, ctx2) in out:
                                 out.remove((tpt2, ctx2))
                         # if A ⊂ B: remove A

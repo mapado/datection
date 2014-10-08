@@ -2,7 +2,6 @@
 
 """Test the datection.display function"""
 
-import unittest
 import datection
 import datetime
 import locale

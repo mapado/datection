@@ -86,9 +86,12 @@ class TestDate(CurrentDayMock):
 
     def test_to_python(self):
         self.assertEqual(self.d.to_python(), date(2015, 10, 12))
+        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_to_python_invalid(self):
-        self.assertIsNone(Date(None, 12, 11).to_python())
+        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_valid(self):
         self.assertTrue(self.d.valid)

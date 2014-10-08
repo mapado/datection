@@ -183,9 +183,7 @@ class TestDateList(TestGrammar):
     def test_parse_date_list_formats(self):
         self.assert_parse(u"les 5, 6, 8 mars 2013")
         self.assert_parse(u"5, 6 et 8 mars 2013")
-        with self.assertRaises(NormalizationError):
-            # We can parse it, but information is missing
-            self.assert_parse(u"Le 5, 6 et 8 mars")
+        self.assert_parse(u"Le 5, 6 et 8 mars")
 
     def test_parse_date_list(self):
         self.assert_parse_equal(
@@ -366,10 +364,7 @@ class TestDatetimeInterval(TestGrammar):
         self.assert_parse(u"Du 05/04/2015 au 28/04/2015 de 14h à 18h")
         self.assert_parse(u"Du 05/04 au 20 avril 2015 de 14h à 18h")
         self.assert_parse(u"Du 05/04 au 20 avril 2015 à 14h, 18h")
-
-    def test_missing_end_date_year_raises_exception(self):
-        with self.assertRaises(NormalizationError):
-            self.pattern.parseString(u"Du 26 août au 29 septembre à 15h")
+        self.assert_parse(u"Du 26 août au 29 septembre à 15h")
 
     def test_parse_datetime_interval(self):
         date_interval = DateInterval(Date(2015, 4, 5), Date(2015, 4, 28))

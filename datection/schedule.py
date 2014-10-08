@@ -232,4 +232,5 @@ class Schedule(object):
 
             # add timepoint to the schedule
             getattr(self, container_name).append(constructor(timepoint))
-            self._timepoints.append(timepoint)  # TEMPORARY
+            if timepoint not in self._timepoints:
+                self._timepoints.append(timepoint)  # TEMPORARY

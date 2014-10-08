@@ -314,8 +314,8 @@ class DateList(Timepoint):
                     _date.year = last_date.year
         return dates
 
-    @classmethod
-    def set_months(cls, dates):
+    @staticmethod
+    def set_months(dates):
         """Make all dates without month inherit from the last date month."""
         last_date = dates[-1]
         if not last_date.month:
@@ -405,8 +405,8 @@ class DateInterval(AbstractDateInterval):
                 start_date.year = end_date.year
         return start_date
 
-    @classmethod
-    def set_start_date_month(cls, start_date, end_date):
+    @staticmethod
+    def set_start_date_month(start_date, end_date):
         """Make the start_date inherit from the end_date month, if needed."""
         if not end_date.month:
             raise NormalizationError("End date must have a month")
@@ -586,6 +586,14 @@ class DatetimeList(Timepoint):
         datetimes = [Datetime.combine(date, st, et) for date in dates]
         return DatetimeList(datetimes, *args, **kwargs)
 
+    @property
+    def time_interval(self):
+        return TimeInterval(self[0].start_time, self[0].end_time)
+
+    @property
+    def dates(self):
+        return [dt.date for dt in self]
+
     def future(self, reference=None):
         """Returns whether the DateTimeList is located in the future.
 
@@ -625,6 +633,11 @@ class DatetimeInterval(AbstractDateInterval):
     def __repr__(self):
         return object.__repr__(self)
 
+    def __iter__(self):
+        current = self.date_interval.start_date.to_python()
+        while current <= self.date_interval.end_date.to_python():
+            yield current
+            current += timedelta(days=1)
 
     @property
     def valid(self):
@@ -667,6 +680,9 @@ class DatetimeInterval(AbstractDateInterval):
         """
         reference = reference if reference is not None else get_current_date()
         return self.date_interval.end_date.future(reference)
+
+    def to_python(self):
+        return [_date for _date in self]
 
 
 class ContinuousDatetimeInterval(Timepoint):
@@ -761,12 +777,12 @@ class ContinuousDatetimeInterval(Timepoint):
 class Weekdays(Timepoint):
 
     def __init__(self, days, *args, **kwargs):
-        self.days = days
+        self.days = list(set(days))
 
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
             return False
-        return self.days == other.days
+        return sorted(self.days) == sorted(other.days)
 
     def __len__(self):
         return len(self.days)
@@ -792,7 +808,7 @@ class WeeklyRecurrence(Timepoint):
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval
         self.time_interval = time_interval
-        self.weekdays = weekdays
+        self.weekdays = sorted(list(set(weekdays)))
         self.excluded = []
 
     def __eq__(self, other):
@@ -813,7 +829,8 @@ class WeeklyRecurrence(Timepoint):
     @property
     def rrulestr(self):
         """ Generate a full description of the recurrence rule"""
-        end = datetime.combine(self.date_interval.end_date.to_python(), DAY_END)
+        end = datetime.combine(
+            self.date_interval.end_date.to_python(), DAY_END)
         return makerrulestr(
             self.date_interval.start_date.to_python(),
             end=end,
