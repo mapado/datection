@@ -73,7 +73,22 @@ class Timepoint(object):
         return True
 
 
-class Date(Timepoint):
+class AbstractDateInterval(Timepoint):
+
+    """Abstract base class of all Timepoint classes describing a date
+    interval.
+
+    """
+    pass
+
+
+class AbstractDate(Timepoint):
+
+    """Abstract base class of all Timepoint describing a single date."""
+    pass
+
+
+class Date(AbstractDate):
 
     """An object representing a date, more flexible than the
     datetime.date object, as it tolerates missing information.
@@ -302,7 +317,7 @@ class DateList(Timepoint):
         return any([d.future(reference) for d in self.dates])
 
 
-class DateInterval(Timepoint):
+class DateInterval(AbstractDateInterval):
 
     def __init__(self, start_date, end_date):
         self.start_date = start_date
@@ -413,7 +428,7 @@ class DateInterval(Timepoint):
         return self.end_date.future(reference)
 
 
-class Datetime(Timepoint):
+class Datetime(AbstractDate):
 
     """An object representing a datetime, more flexible than the
     datetime.datetime object, as it tolerates missing information.
@@ -554,7 +569,7 @@ class DatetimeList(Timepoint):
         return [dt.export() for dt in self.datetimes]
 
 
-class DatetimeInterval(Timepoint):
+class DatetimeInterval(AbstractDateInterval):
 
     def __init__(self, date_interval, time_interval):
         self.date_interval = date_interval
