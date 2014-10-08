@@ -13,12 +13,10 @@ from datection.utils import get_current_date
 from datection.utils import makerrulestr
 from datection.utils import duration
 
-
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
-REFERENCE = None
 
 
 class NormalizationError(Exception):
@@ -173,8 +171,6 @@ class Date(AbstractDate):
 
     def to_python(self):
         """Convert a Date object to a datetime.object"""
-        if self.year is None and REFERENCE is not None:
-            self.year = REFERENCE.year
         try:
             return date(year=self.year, month=self.month, day=self.day)
         except (TypeError, ValueError):
@@ -299,15 +295,10 @@ class DateList(Timepoint):
         dates = cls.set_years(dates)
         return DateList(dates)
 
-    @classmethod
-    def set_years(cls, dates):
+    @staticmethod
+    def set_years(dates):
         """Make all dates without year inherit from the last date year."""
         last_date = dates[-1]
-        if not last_date.year:
-            if REFERENCE:
-                last_date.year = REFERENCE.year
-            else:
-                raise NormalizationError('Last date must have a non nil year.')
         for _date in dates[:-1]:
             if not _date.year:
                 if _date.month > last_date.month:
@@ -395,14 +386,11 @@ class DateInterval(AbstractDateInterval):
         start_date = cls.set_start_date_month(start_date, end_date)
         return DateInterval(start_date, end_date)
 
-    @classmethod
-    def set_start_date_year(cls, start_date, end_date):
+    @staticmethod
+    def set_start_date_year(start_date, end_date):
         """Make the start_date inherit from the end_date year, if needed."""
         if not end_date.year:
-            if REFERENCE:
-                end_date.year = REFERENCE.year
-            else:
-                raise NormalizationError("End date must have a year")
+            return start_date
         if not start_date.year:
             if start_date.month > end_date.month:
                 start_date.year = end_date.year - 1
@@ -696,19 +684,16 @@ class ContinuousDatetimeInterval(Timepoint):
         return ContinuousDatetimeInterval(
             start_date, start_time, end_date, end_time)
 
-    @classmethod
-    def set_year(cls, start_date, end_date):
+    @staticmethod
+    def set_year(start_date, end_date):
         if not end_date.year:
-            if REFERENCE:
-                end_date.year = REFERENCE.year
-            else:
-                raise NormalizationError("end date must have a year")
+            raise NormalizationError("end date must have a year")
         if not start_date.year:
             start_date.year = end_date.year
         return start_date
 
-    @classmethod
-    def set_month(cls, start_date, end_date):
+    @staticmethod
+    def set_month(start_date, end_date):
         if not end_date.month:
             raise NormalizationError("end date must have a month")
         if not start_date.month:

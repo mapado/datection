@@ -2,6 +2,7 @@
 
 from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
+from datection.year_inheritance import YearTransmitter
 
 
 def parse(text, lang, valid=True, reference=None):
@@ -18,7 +19,7 @@ def parse(text, lang, valid=True, reference=None):
         text = text.decode('utf-8')
 
     schedule = Schedule()
-    token_groups = Tokenizer(text, lang, reference).tokenize()
+    token_groups = Tokenizer(text, lang).tokenize()
     for token_group in token_groups:
         if token_group.is_single_token:
             token = token_group[0]
@@ -32,9 +33,15 @@ def parse(text, lang, valid=True, reference=None):
             # hack, transmit the span at the last minute so that it gets
             # exported
             token.timepoint.span = token.span[0], excluded.span[1]
-            schedule.add(timepoint=token.timepoint, excluded=excluded.timepoint)
+            schedule.add(
+                timepoint=token.timepoint, excluded=excluded.timepoint)
 
-    out = list(set(schedule._timepoints))  # remove any redundancy
+    # remove any redundancy
+    timepoints = list(set(schedule._timepoints))
+
+    # Perform year inheritance, when necessary
+    timepoints = YearTransmitter(timepoints, reference=reference).transmit()
+
     if valid:  # only return valid Timepoints
-        return [match for match in out if match.valid]
-    return out
+        return [match for match in timepoints if match.valid]
+    return timepoints
