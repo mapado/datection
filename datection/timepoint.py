@@ -54,6 +54,44 @@ def transmit_span(f):
     return wrapper
 
 
+class YearDescriptor(object):
+
+    """A descriptor of the year of a timepoint, whatever its class."""
+
+    def __get__(self, instance, owner):
+        if isinstance(instance, (DateList, DatetimeList)):
+            return instance.dates[-1].year
+        elif isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            return instance.end_date.year
+        elif isinstance(instance, Datetime):
+            return instance.date.year
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            return instance.date_interval.end_date.year
+
+    def set_date_interval_year(self, date_interval, year):
+        """Set the year of the start_date and end_date of the date_interval."""
+        date_interval.end_date.year = year
+        if date_interval.start_date.month > date_interval.end_date.month:
+            date_interval.start_date.year = year - 1
+        else:
+            date_interval.start_date.year = year
+
+    def set_datelist_year(self, date_list, year):
+        """Set the year of all the dates of the date_list."""
+        for _date in date_list:
+            _date.year = year
+
+    def __set__(self, instance, value):
+        if isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            self.set_date_interval_year(instance, value)
+        elif isinstance(instance, (DateList, DatetimeList)):
+            self.set_datelist_year(instance, value)
+        elif isinstance(instance, Datetime):
+            instance.date.year = value
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            self.set_date_interval_year(instance.date_interval, value)
+
+
 class Timepoint(object):
 
     """Base class of all timepoint classes."""
@@ -237,6 +275,8 @@ class TimeInterval(Timepoint):
 
 class DateList(Timepoint):
 
+    year = YearDescriptor()
+
     def __init__(self, dates):
         self.dates = dates
 
@@ -315,6 +355,8 @@ class DateList(Timepoint):
 
 
 class DateInterval(AbstractDateInterval):
+
+    year = YearDescriptor()
 
     def __init__(self, start_date, end_date):
         self.start_date = start_date
@@ -431,6 +473,8 @@ class Datetime(AbstractDate):
 
     """
 
+    year = YearDescriptor()
+
     def __init__(self, date, start_time, end_time=None):
         self.date = date
         self.start_time = start_time
@@ -513,6 +557,8 @@ class Datetime(AbstractDate):
 
 class DatetimeList(Timepoint):
 
+    year = YearDescriptor()
+
     def __init__(self, datetimes, *args, **kwargs):
         self.datetimes = datetimes
 
@@ -558,6 +604,8 @@ class DatetimeList(Timepoint):
 
 
 class DatetimeInterval(AbstractDateInterval):
+
+    year = YearDescriptor()
 
     def __init__(self, date_interval, time_interval):
         self.date_interval = date_interval
@@ -619,6 +667,8 @@ class DatetimeInterval(AbstractDateInterval):
 
 
 class ContinuousDatetimeInterval(Timepoint):
+
+    year = YearDescriptor()
 
     def __init__(self, start_date, start_time, end_date, end_time):
         self.start_date = start_date
@@ -736,6 +786,8 @@ class Weekdays(Timepoint):
 
 
 class WeeklyRecurrence(Timepoint):
+
+    year = YearDescriptor()
 
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval
