@@ -17,6 +17,7 @@ ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
+MIN_YEAR = 1
 
 
 class NormalizationError(Exception):
@@ -138,6 +139,7 @@ class Date(AbstractDate):
         self.year = year
         self.month = month
         self.day = day
+        self.allow_missing_year = True
 
     def __eq__(self, other):
         if not super(Date, self).__eq__(other):
@@ -174,8 +176,13 @@ class Date(AbstractDate):
         try:
             return date(year=self.year, month=self.month, day=self.day)
         except (TypeError, ValueError):
-            # Eg: if one of the attributes is None or out of bounds
-            return None
+            if self.allow_missing_year:
+                # Try again with the minimum year possible
+                try:
+                    return date(year=MIN_YEAR, month=self.month, day=self.day)
+                except (TypeError, ValueError):
+                    # Eg: either the month or the day is None or out of bounds
+                    return None
 
     @add_span
     def export(self):
@@ -540,7 +547,15 @@ class Datetime(AbstractDate):
                 self.start_time.hour,
                 self.start_time.minute)
         except (TypeError, ValueError):
-            return None
+            try:
+                return datetime(
+                    MIN_YEAR,
+                    self.date.month,
+                    self.date.day,
+                    self.start_time.hour,
+                    self.start_time.minute)
+            except (TypeError, ValueError):
+                return None
 
 
 class DatetimeList(Timepoint):
