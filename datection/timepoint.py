@@ -72,6 +72,9 @@ class Timepoint(object):
             return False
         return True
 
+    def __repr__(self):
+        return u'<%s %s>' % (self.__class__.__name__, unicode(self))
+
 
 class AbstractDateInterval(Timepoint):
 
@@ -113,14 +116,6 @@ class Date(AbstractDate):
             str(self.year).zfill(4) if self.year is not None else '?',
             str(self.month).zfill(2) if self.month is not None else '?',
             str(self.day).zfill(2)
-        )
-
-    def __repr__(self):   # pragma: no cover
-        return '%s(%s, %s, %s)' % (
-            self.__class__.__name__,
-            str(self.year) if self.year is not None else '?',
-            str(self.month) if self.month is not None else '?',
-            str(self.day)
         )
 
     @classmethod
@@ -214,9 +209,8 @@ class TimeInterval(Timepoint):
         yield self.start_time
         yield self.end_time
 
-    def __repr__(self):  # pragma: no cover
-        return u'<%s %d:%s - %d:%s>' % (
-            self.__class__.__name__,
+    def __unicode__(self):
+        return u'%d:%s - %d:%s' % (
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
             self.end_time.hour,
@@ -254,6 +248,9 @@ class DateList(Timepoint):
         if not super(DateList, self).__eq__(other):
             return False
         return self.dates == other.dates
+
+    def __repr__(self):
+        return object.__repr__(self)
 
     @classmethod
     def from_match(cls, dates):
@@ -337,9 +334,8 @@ class DateInterval(AbstractDateInterval):
             yield current
             current += timedelta(days=1)
 
-    def __repr__(self):  # pragma: no cover
-        return '<%s %s - %s>' % (
-            self.__class__.__name__,
+    def __unicode__(self):
+        return u'%s - %s' % (
             unicode(self.start_date),
             unicode(self.end_date))
 
@@ -451,12 +447,9 @@ class Datetime(AbstractDate):
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
 
-    def __repr__(self):  # pragma: no cover
-        return '<%s %d/%d/%d - %d:%s%s>' % (
-            self.__class__.__name__,
-            self.date.year,
-            self.date.month,
-            self.date.day,
+    def __unicode__(self):
+        return u'%s - %d:%s%s' % (
+            unicode(self.date),
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
             '-%s:%s' % (
@@ -534,13 +527,8 @@ class DatetimeList(Timepoint):
     def __iter__(self):
         return iter(self.datetimes)
 
-    @property
-    def time_interval(self):
-        return TimeInterval(self[0].start_time, self[0].end_time)
-
-    @property
-    def dates(self):
-        return [dt.date for dt in self]
+    def __repr__(self):
+        return object.__repr__(self)
 
     @classmethod
     # pragma: no cover
@@ -582,6 +570,10 @@ class DatetimeInterval(AbstractDateInterval):
         return (
             self.date_interval == other.date_interval
             and self.time_interval == other.time_interval)
+
+    def __repr__(self):
+        return object.__repr__(self)
+
 
     @property
     def valid(self):
@@ -642,6 +634,9 @@ class ContinuousDatetimeInterval(Timepoint):
             and self.start_time == other.start_time
             and self.end_date == other.end_date
             and self.end_time == other.end_time)
+
+    def __repr__(self):
+        return object.__repr__(self)
 
     @classmethod
     def from_match(
@@ -729,6 +724,16 @@ class Weekdays(Timepoint):
     def __iter__(self):
         return iter(self.days)
 
+    def __unicode__(self):
+        if self.all_week:
+            return 'ALL_WEEK'
+        else:
+            return u', '.join(str(w) for w in self.days)
+
+    @property
+    def all_week(self):
+        return [w.weekday for w in self.days] == range(0, 7)
+
 
 class WeeklyRecurrence(Timepoint):
 
@@ -745,6 +750,13 @@ class WeeklyRecurrence(Timepoint):
             self.date_interval == other.date_interval and
             self.time_interval == other.time_interval and
             self.weekdays == other.weekdays)
+
+    def __repr__(self):
+        return u'<%s - (%s) (%s) (%s)>' % (
+            self.__class__.__name__,
+            unicode(self.date_interval),
+            unicode(self.weekdays),
+            unicode(self.time_interval))
 
     @property
     def rrulestr(self):
