@@ -91,6 +91,51 @@ class YearDescriptor(object):
             self.set_date_interval_year(instance.date_interval, value)
 
 
+class AllowMissingYearDescriptor(object):
+
+    """A descriptor handling the acceptance of timepoints with missing years."""
+
+    def __init__(self, default):
+        self.default = default
+
+    def set_date_interval_allow_missing_year(self, date_interval, value):
+        """Set the 'allow_missing_year' atribute of the date interval."""
+        date_interval.start_date.allow_missing_year = value
+        date_interval.end_date.allow_missing_year = value
+
+    def __get__(self, instance, owner):
+        """Set the allow_missing_year value on the correct object,
+        depending on the instance instance class.
+
+        """
+        if isinstance(instance, (DateList, DatetimeList)):
+            return all(d.allow_missing_year for d in instance)
+        elif isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            return all(
+                d.allow_missing_year
+                for d in (instance.start_date, instance.end_date))
+        elif isinstance(instance, Datetime):
+            return instance.date.allow_missing_year
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            return instance.date_interval.allow_missing_year
+
+    def __set__(self, instance, value):
+        """Set the allow_missing_year value on the correct object,
+        depending on the instance instance class.
+
+        """
+        if isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            self.set_date_interval_allow_missing_year(instance, value)
+        elif isinstance(instance, (DateList, DatetimeList)):
+            for _date in instance:
+                _date.allow_missing_year = value
+        elif isinstance(instance, Datetime):
+            instance.date.allow_missing_year = value
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            self.set_date_interval_allow_missing_year(
+                instance.date_interval, value)
+
+
 class Timepoint(object):
 
     """Base class of all timepoint classes."""
@@ -279,6 +324,7 @@ class TimeInterval(Timepoint):
 class DateList(Timepoint):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, dates):
         self.dates = dates
@@ -355,6 +401,7 @@ class DateList(Timepoint):
 class DateInterval(AbstractDateInterval):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, start_date, end_date):
         self.start_date = start_date
@@ -469,6 +516,7 @@ class Datetime(AbstractDate):
     """
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date, start_time, end_time=None):
         self.date = date
@@ -561,6 +609,7 @@ class Datetime(AbstractDate):
 class DatetimeList(Timepoint):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, datetimes, *args, **kwargs):
         self.datetimes = datetimes
@@ -617,6 +666,7 @@ class DatetimeList(Timepoint):
 class DatetimeInterval(AbstractDateInterval):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date_interval, time_interval):
         self.date_interval = date_interval
@@ -688,6 +738,7 @@ class DatetimeInterval(AbstractDateInterval):
 class ContinuousDatetimeInterval(Timepoint):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, start_date, start_time, end_date, end_time):
         self.start_date = start_date
@@ -804,6 +855,7 @@ class Weekdays(Timepoint):
 class WeeklyRecurrence(Timepoint):
 
     year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval

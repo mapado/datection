@@ -4,7 +4,6 @@ from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 from datection.year_inheritance import YearTransmitter
 from datection.coherency import CoherencyFilter
-from datection.timepoint import Date
 
 
 def parse(text, lang, valid=True, reference=None):
@@ -50,9 +49,8 @@ def parse(text, lang, valid=True, reference=None):
 
     if valid:  # only return valid Timepoints
         # Now that all the missing year inheritance has been performed
-        # if a Date is still missing a year, we consider it as invalid
+        # if a Timepoint is still missing a year, we consider it as invalid
         for timepoint in timepoints:
-            if isinstance(timepoint, Date):
-                timepoint.allow_missing_year = False
+            timepoint.allow_missing_year = False
         return [match for match in timepoints if match.valid]
     return timepoints
