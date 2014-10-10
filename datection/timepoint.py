@@ -58,6 +58,10 @@ class YearDescriptor(object):
     """A descriptor of the year of a timepoint, whatever its class."""
 
     def __get__(self, instance, owner):
+        """Get the year value on the correct object, depending on the instance
+        instance class.
+
+        """
         if isinstance(instance, (DateList, DatetimeList)):
             return instance.dates[-1].year
         elif isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
@@ -81,6 +85,10 @@ class YearDescriptor(object):
             _date.year = year
 
     def __set__(self, instance, value):
+        """Set the year value on the correct object, depending on the instance
+        instance class.
+
+        """
         if isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
             self.set_date_interval_year(instance, value)
         elif isinstance(instance, (DateList, DatetimeList)):
