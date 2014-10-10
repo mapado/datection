@@ -258,7 +258,7 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
-    ur'(?<![\d])'  # not preceeded by a digit
+    ur'(?<![\dh])'  # not preceeded by a digit or a h
     # OK: (0)1..(0)9...10...29, 30, 31
     ur'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
     # no number, prices or time tags after

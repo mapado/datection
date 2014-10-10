@@ -35,7 +35,6 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import Weekdays
 from datection.timepoint import WeeklyRecurrence
-from datection.timepoint import NormalizationError
 from datection.test.test_grammar import TestGrammar
 from datection.test.test_grammar import set_pattern
 
