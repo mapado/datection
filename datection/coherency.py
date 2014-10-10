@@ -9,7 +9,6 @@ from datetime import datetime
 
 from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
-from datection.timepoint import WeeklyRecurrence
 
 
 class CoherencyFilter(object):
@@ -38,13 +37,6 @@ class CoherencyFilter(object):
 
         """
         return [t for t in self.timepoints if isinstance(t, AbstractDate)]
-
-    @property
-    def weekly_recurrences(self):
-        """The list of all weekly recurrences among the timepoint list.
-
-        """
-        return [t for t in self.timepoints if isinstance(t, WeeklyRecurrence)]
 
     def deduplicate_date_interval_and_dates(self):
         """Remove the date intervals which dates are all re-defined by
