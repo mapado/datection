@@ -111,7 +111,6 @@ NUMERIC_DATE = (
     Optional(u',')
 )
 
-
 DATE_PATTERN = (
     optional_ci(u"le") +
     Optional(WEEKDAY) +
