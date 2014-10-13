@@ -49,7 +49,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 5, 8, 30, 0),
             datetime(2014, 2, 5, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule), expected)
+        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_several_schedules(self):
         schedule = [
@@ -72,7 +72,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 6, 8, 30, 0),
             datetime(2014, 2, 6, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule), expected)
+        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_day_interval(self):
         start = datetime(2014, 2, 5, 8, 0, 0)
@@ -116,7 +116,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
                 'duration': 120,
             }
         ]
-        self.assertEqual(similarity(schedule1, schedule2), 0.6)
+        self.assertEqual(similarity(schedule1, schedule2, grain_level="min", grain_quantity=30), 0.6)
 
     def test_similarity_total_overlap(self):
         schedule1 = [
@@ -126,7 +126,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
                 'duration': 60,
             }
         ]
-        self.assertEqual(similarity(schedule1, schedule1), 1.0)
+        self.assertEqual(similarity(schedule1, schedule1, grain_level="min", grain_quantity=30), 1.0)
 
     def test_min_days_between_fixed_date(self):
         schedule1 = [{

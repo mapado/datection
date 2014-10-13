@@ -35,7 +35,6 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import Weekdays
 from datection.timepoint import WeeklyRecurrence
-from datection.timepoint import NormalizationError
 from datection.test.test_grammar import TestGrammar
 from datection.test.test_grammar import set_pattern
 
@@ -183,9 +182,7 @@ class TestDateList(TestGrammar):
     def test_parse_date_list_formats(self):
         self.assert_parse(u"les 5, 6, 8 mars 2013")
         self.assert_parse(u"5, 6 et 8 mars 2013")
-        with self.assertRaises(NormalizationError):
-            # We can parse it, but information is missing
-            self.assert_parse(u"Le 5, 6 et 8 mars")
+        self.assert_parse(u"Le 5, 6 et 8 mars")
 
     def test_parse_date_list(self):
         self.assert_parse_equal(
@@ -306,29 +303,32 @@ class TestDatetimeList(TestGrammar):
         self.assert_parse(u"Les 05/04/2014, 06/05/2014, de 16h à 15h20")
         self.assert_parse(u"Les 05/04, 6 avril 2015, de 16h à 15h20")
 
-    def test_parse_datetime_list_single_time(self):
+    def test_parse_non_contiguous_datetime_list_single_time(self):
         self.assert_parse_equal(
             u"les 5, 8, 10 mars 2015 à 18h",
             DatetimeList([
                 Datetime(Date(2015, 3, 5), Time(18, 0)),
                 Datetime(Date(2015, 3, 8), Time(18, 0)),
                 Datetime(Date(2015, 3, 10), Time(18, 0)),
-            ]
-            ))
-        self.assert_parse_equal(
-            u"Les 05/04/2014, 06/04/2014, à 16h",
-            DatetimeList([
-                Datetime(Date(2014, 4, 5), Time(16, 0)),
-                Datetime(Date(2014, 4, 6), Time(16, 0)),
-            ]))
-        self.assert_parse_equal(
-            u"Les 05/04, 6 avril 2015, à 16h",
-            DatetimeList([
-                Datetime(Date(2015, 4, 5), Time(16, 0)),
-                Datetime(Date(2015, 4, 6), Time(16, 0)),
             ]))
 
-    def test_parse_datetime_list_time_interval(self):
+    def test_parse_contiguous_datetime_list_single_time(self):
+        self.assert_parse_equal(
+            u"Les 05/04/2014, 06/04/2014, à 16h",
+            DatetimeInterval(
+                DateInterval(Date(2014, 4, 5), Date(2014, 4, 6)),
+                TimeInterval(Time(16, 0), Time(16, 0))
+            ))
+
+    def test_parse_contiguous_datetime_list_single_time_mixed_formats(self):
+        self.assert_parse_equal(
+            u"Les 05/04, 6 avril 2015, à 16h",
+            DatetimeInterval(
+                DateInterval(Date(2015, 4, 5), Date(2015, 4, 6)),
+                TimeInterval(Time(16, 0), Time(16, 0))
+            ))
+
+    def test_parse_non_consecutive_datetime_list_time_interval(self):
         self.assert_parse_equal(
             u"les 5, 8, 10 mars 2015 de 16h à 18h",
             DatetimeList([
@@ -337,18 +337,41 @@ class TestDatetimeList(TestGrammar):
                 Datetime(Date(2015, 3, 10), Time(16, 0), Time(18, 0)),
             ]
             ))
+
+    def test_parse_consecutive_datetime_list_time_interval(self):
         self.assert_parse_equal(
             u"Les 05/04/2014, 06/04/2014, de 14h à 16h",
-            DatetimeList([
-                Datetime(Date(2014, 4, 5), Time(14, 0), Time(16, 0)),
-                Datetime(Date(2014, 4, 6), Time(14, 0), Time(16, 0)),
-            ]))
+            DatetimeInterval(
+                DateInterval(Date(2014, 4, 5), Date(2014, 4, 6)),
+                TimeInterval(Time(14, 0), Time(16, 0)),
+            ))
+
+    def test_parse_datetime_list_mixed_formats(self):
         self.assert_parse_equal(
-            u"Les 05/04, 6 avril 2015, de 14h à 16h",
+            u"Les 05/04, 7 avril 2015, de 14h à 16h",
             DatetimeList([
                 Datetime(Date(2015, 4, 5), Time(14, 0), Time(16, 0)),
-                Datetime(Date(2015, 4, 6), Time(14, 0), Time(16, 0)),
+                Datetime(Date(2015, 4, 7), Time(14, 0), Time(16, 0)),
             ]))
+
+    def test_parse_datetime_list(self):
+        matches = self.pattern.parseString(
+            u"Les 5, 6, 7, 9 et 11 avril 2015, de 14h à 16h")
+        self.assertEqual(
+            list(matches),
+            [
+                DatetimeInterval(
+                    DateInterval(Date(2015, 4, 5), Date(2015, 4, 7)),
+                    TimeInterval(Time(14, 0), Time(16, 0))
+                ),
+                DatetimeList(
+                    [
+                        Datetime(Date(2015, 4, 9), Time(14, 0), Time(16, 0)),
+                        Datetime(Date(2015, 4, 11), Time(14, 0), Time(16, 0)),
+                    ]
+                )
+            ]
+        )
 
 
 class TestDatetimeInterval(TestGrammar):
@@ -366,10 +389,7 @@ class TestDatetimeInterval(TestGrammar):
         self.assert_parse(u"Du 05/04/2015 au 28/04/2015 de 14h à 18h")
         self.assert_parse(u"Du 05/04 au 20 avril 2015 de 14h à 18h")
         self.assert_parse(u"Du 05/04 au 20 avril 2015 à 14h, 18h")
-
-    def test_missing_end_date_year_raises_exception(self):
-        with self.assertRaises(NormalizationError):
-            self.pattern.parseString(u"Du 26 août au 29 septembre à 15h")
+        self.assert_parse(u"Du 26 août au 29 septembre à 15h")
 
     def test_parse_datetime_interval(self):
         date_interval = DateInterval(Date(2015, 4, 5), Date(2015, 4, 28))

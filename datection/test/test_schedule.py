@@ -93,7 +93,7 @@ class TestDateIntervalSchedule(unittest.TestCase):
         self.assertEqual(
             disch.date_interval,
             DateInterval(Date(2015, 6, 1), Date(2015, 7, 15)))
-        self.assertEqual(disch.weekdays, Weekdays([MO, TU, FR]))
+        self.assertEqual(disch.weekdays, [MO, TU, FR])
 
     def test_from_date_interval(self):
         di = DateInterval(Date(2015, 6, 2), Date(2015, 6, 28))

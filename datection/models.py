@@ -4,6 +4,8 @@
 Utility models for datection.
 """
 
+import re
+
 from datetime import timedelta
 from datetime import datetime
 from datetime import time
@@ -12,9 +14,10 @@ from dateutil.rrule import rrulestr
 from dateutil.rrule import rruleset
 
 from datection.utils import cached_property
+from datection.utils import UNLIMITED_DATETIME_START
+from datection.utils import UNLIMITED_DATETIME_END
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
-from datection.timepoint import MISSING_YEAR
 from datection.timepoint import ALL_DAY
 
 
@@ -25,9 +28,16 @@ class DurationRRule(object):
 
     """
 
-    def __init__(self, duration_rrule, apply_exclusion=True):
+    def __init__(
+            self,
+            duration_rrule,
+            apply_exclusion=True,
+            forced_lower_bound=None,
+            forced_upper_bound=None):
         self.duration_rrule = duration_rrule
         self.apply_exclusion = apply_exclusion
+        self.forced_lower_bound = forced_lower_bound
+        self.forced_upper_bound = forced_upper_bound
 
     def __hash__(self):
         data = {
@@ -53,14 +63,32 @@ class DurationRRule(object):
             for dtime in self.date_producer:
                 yield dtime
         else:
-            self.rrule._dtstart = datetime.combine(date.today(), DAY_START)
-            end_bound_date = date.today() + timedelta(days=365)
+            if self.forced_lower_bound:
+                start_bound_date = self.forced_lower_bound
+            else:
+                start_bound_date = date.today()
+            self.rrule._dtstart = datetime.combine(start_bound_date, DAY_START)
+            if self.forced_upper_bound:
+                end_bound_date = self.forced_upper_bound
+            else:
+                end_bound_date = date.today() + timedelta(days=365)
             end_bound = datetime.combine(end_bound_date, DAY_END)
             for dtime in self.date_producer:
                 if dtime < end_bound:
                     yield dtime
                 else:
                     raise StopIteration
+
+    def set_weekdays(self, weekdays):
+        """Update the rrule byweekday property and the underlying
+        duration_rrule rrule string.
+
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r'(?<=BYDAY=)[^;]+',
+            ','.join(str(w) for w in weekdays),
+            self.duration_rrule['rrule'])
+        self.rrule._byweekday = [w.weekday for w in weekdays]
 
     @cached_property
     def exclusion_rrules(self):
@@ -78,7 +106,15 @@ class DurationRRule(object):
         is only performed the first time.
 
         """
-        return rrulestr(self.duration_rrule['rrule'])
+        rrule = rrulestr(self.duration_rrule['rrule'])
+
+        # when we are in unlimited mode, datection need to
+        # have DTSTART=01-01-0001 & UNTIL=31-12-9999
+        if self.duration_rrule.get('unlimited'):
+            rrule._dtstart   = UNLIMITED_DATETIME_START
+            rrule._until     = UNLIMITED_DATETIME_END
+
+        return rrule
 
     @property
     def date_producer(self):
@@ -99,18 +135,6 @@ class DurationRRule(object):
     def duration(self):
         """The DurationRRule duration, in minutes (as an integer)."""
         return int(self.duration_rrule['duration'])
-
-    @property
-    def unlimited(self):
-        """Whether the DurationRRule is bounded or not."""
-        if self.duration_rrule.get('unlimited'):
-            return True
-        return self.rrule._until is None and self.rrule._count is None
-
-    @property
-    def is_continuous(self):
-        """Whether the rrule is to be taken by intervals, or continuously."""
-        return self.duration_rrule.get('continuous', False)
 
     @property
     def start_datetime(self):
@@ -140,13 +164,20 @@ class DurationRRule(object):
                 return datetime.combine(
                     end_date, self.time_interval[1])
             else:
-                return datetime.combine(
-                    end_date, self.time_interval[0]
-                ) + timedelta(minutes=self.duration)
+                date = datetime.combine(end_date, self.time_interval[0])
+                try:
+                    return date + timedelta(minutes=self.duration)
+                except OverflowError:
+                    return date
         else:
-            return datetime.combine(
-                self.rrule.dtstart.date(), self.time_interval[0]
-            ) + timedelta(days=365, minutes=self.duration)
+            date = datetime.combine(
+                self.rrule.dtstart.date(),
+                self.time_interval[0]
+            )
+            try:
+                return date + timedelta(days=365, minutes=self.duration)
+            except OverflowError:
+                return date
 
     @property
     def date_interval(self):
@@ -212,10 +243,7 @@ class DurationRRule(object):
             return False
         return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
 
-    @property
-    def missing_year(self):
-        """Return True if the recurrence rule year is 1."""
-        return self.rrule.dtstart.year == MISSING_YEAR
+    # Properties describing the RRule typology
 
     @property
     def bounded(self):
@@ -224,3 +252,60 @@ class DurationRRule(object):
 
         """
         return not self.unlimited
+
+    @property
+    def unlimited(self):
+        """Whether the DurationRRule is bounded or not."""
+        if self.duration_rrule.get('unlimited'):
+            return True
+        # if more than 12 month event
+        if self.rrule._until and (self.end_datetime - self.start_datetime).days > 364:
+            return True
+
+        return self.rrule._until is None and self.rrule._count is None
+
+    @property
+    def is_continuous(self):
+        """Whether the rrule is to be taken by intervals, or continuously."""
+        return self.duration_rrule.get('continuous', False)
+
+    @property
+    def single_date(self):
+        """Return True if the RRule describes a single date(time)."""
+        return (
+            self.rrule.count == 1 and
+            self.duration <= ALL_DAY
+        )
+
+    @property
+    def small_date_interval(self):
+        """Return True if the RRule describes a date interval of less
+        than 4 months and more than a day.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return 1 <= (end_date - start_date).days <= 4 * 30
+
+    @property
+    def long_date_interval(self):
+        """Return True if the RRule describes a date interval of less
+        than 8 months and than 4 months.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return 4 * 30 < (end_date - start_date).days <= 8 * 30
+
+    @property
+    def unlimited_date_interval(self):
+        """Return True if the RRule describes a date interval of more
+        than 8 months.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return (end_date - start_date).days > 8 * 30

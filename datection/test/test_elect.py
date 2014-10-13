@@ -48,7 +48,7 @@ class TestScheduleElection(unittest.TestCase):
 
         """
         # discretise the schedules in 30 minute intervals
-        discrete = [discretise_schedule(schedule)
+        discrete = [discretise_schedule(schedule, grain_level="min", grain_quantity=30)
                     for schedule in self.schedules]
         expected = set([
             datetime(2014, 3, 10, 8, 0),

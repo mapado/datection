@@ -86,13 +86,16 @@ class TestDate(CurrentDayMock):
 
     def test_to_python(self):
         self.assertEqual(self.d.to_python(), date(2015, 10, 12))
+        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_to_python_invalid(self):
-        self.assertIsNone(Date(None, 12, 11).to_python())
+        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_valid(self):
         self.assertTrue(self.d.valid)
-        self.assertFalse(Date(None, 12, 11).valid)
+        self.assertTrue(Date(None, 12, 11).valid)
 
     def test_export(self):
         expected = {
@@ -122,7 +125,7 @@ class TestDateList(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.dl.valid)
-        self.dl.dates[0].year = None
+        self.dl.dates[0].month = 13
         self.assertFalse(self.dl.valid)
 
     def test_to_python(self):
@@ -167,7 +170,7 @@ class TestDateInterval(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.di.valid)
-        self.di.start_date.year = None
+        self.di.start_date.month = 13
         self.assertFalse(self.di.valid)
 
     def test_to_python(self):
@@ -221,7 +224,7 @@ class TestDatetime(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.dt.valid)
-        self.dt.date.year = None
+        self.dt.date.month = 13
         self.assertFalse(self.dt.valid)
 
     def test_export(self):
@@ -266,7 +269,7 @@ class TestDatetimeList(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.dtl.valid)
-        self.dtl[0].date.year = None
+        self.dtl[0].date.month = 13
         self.assertFalse(self.dtl.valid)
 
     def test_export(self):
@@ -331,7 +334,7 @@ class TestDatetimeInterval(CurrentDayMock):
 
     def test_valid(self):
         self.assertTrue(self.dtl.valid)
-        self.dtl.date_interval.start_date.year = None
+        self.dtl.date_interval.start_date.month = 13
         self.assertFalse(self.dtl.valid)
 
     def test_future(self):

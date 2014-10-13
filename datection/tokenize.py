@@ -2,10 +2,10 @@
 
 """Utilities used for tokenizing a string into time-related tokens."""
 
-import unicodedata
-import datection
 import re
+import unicodedata
 
+from collections import Counter
 from datection.timepoint import NormalizationError
 from datection.context import probe
 from datection.utils import cached_property
@@ -112,14 +112,9 @@ class Tokenizer(object):
 
     """Splits text into time-related tokens."""
 
-    def __init__(self, text, lang, reference=None):
+    def __init__(self, text, lang):
         self.text = text
         self.lang = lang
-
-        # Ugly hack: monkey patching of the timepoint module. Insert the
-        # reference value into the REFERENCE timepoint global variable, to
-        # influence the normalization of year-less dates.
-        datection.timepoint.REFERENCE = reference
 
     @cached_property
     def language_module(self):
@@ -161,27 +156,51 @@ class Tokenizer(object):
         Output: [(match4, 'time'), (match1, 'datetime')]
 
         """
+        def spanset(span):
+            return frozenset(range(span[0], span[1]))
+
+        matches = [(tpt, ctx, spanset(tpt.span)) for tpt, ctx in matches]
         out = matches[:]  # shallow copy
-        for tpt1, ctx1 in matches:
-            for tpt2, ctx2 in matches:
-                if tpt1 is not tpt2:  # avoid self comparison
-                    span1, span2 = (
-                        set(range(*tpt1.span)),
-                        set(range(*tpt2.span))
-                    )
-                    if span1.intersection(span2):
-                        if span1 == span2:
-                            continue
-                        # if A ⊃ B or A = B: remove B
-                        if span1.issuperset(span2) or span1 == span2:
-                            if (tpt2, ctx2) in out:
-                                out.remove((tpt2, ctx2))
-                        # if A ⊂ B: remove A
-                        elif span1.issubset(span2):
-                            if (tpt1, ctx1) in out:
-                                out.remove((tpt1, ctx1))
+
+        # First, remove all timepoints which span set is a subset of
+        # other timepoints span set
+        for group1 in matches:
+            for group2 in matches:
+                if group1 is group2:
+                    continue
+                (tpt1, ctx1, span1), (tpt2, ctx2, span2) = group1, group2
+                if span1.intersection(span2):
+                    if span1 == span2:
+                        continue
+                    # if A ⊃ B or A = B: remove B
+                    elif span1.issuperset(span2) or span1 == span2:
+                        if (tpt2, ctx2, span2) in out:
+                            out.remove((tpt2, ctx2, span2))
+                    # if A ⊂ B: remove A
+                    elif span1.issubset(span2):
+                        if (tpt1, ctx1, span1) in out:
+                            out.remove((tpt1, ctx1, span1))
+
+        # Now, remove all timepoints which span set is intersecting with at
+        # least 2 other ones.
+        intersections = Counter()
+        for group1 in out:
+            for group2 in out:
+                if group1 is group2:
+                    continue
+                # Tolerate spans that are exactly the same (they do not really
+                # intersect)
+                if span1 == span2:
+                    continue
+                (tpt1, ctx1, span1), (tpt2, ctx2, span2) = group1, group2
+                if span1.intersection(span2):
+                    intersections[group1] += 1
+        out = [(group[0], group[1])
+               for group in out if intersections[group] < 2]
+
         # sort list by match position
         out = sorted(out, key=lambda item: item[0].start_index)
+
         return out
 
     @staticmethod
@@ -195,7 +214,7 @@ class Tokenizer(object):
         new_text = text.lstrip()
         new_start = start + (len(text) - len(new_text))
         new_text = new_text.rstrip()
-        new_end = end - (len(text) - len(new_text)) + 1
+        new_end = end - (len(text) - len(new_text))
         return new_start, new_end
 
     @staticmethod

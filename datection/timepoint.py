@@ -8,17 +8,19 @@ from datetime import time
 from datetime import date
 from dateutil.rrule import rrule
 from dateutil.rrule import WEEKLY
+from operator import attrgetter
 
 from datection.utils import get_current_date
 from datection.utils import makerrulestr
 from datection.utils import duration
-
+from datection.utils import UNLIMITED_DATE_START
+from datection.utils import UNLIMITED_DATE_END
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
-REFERENCE = None
+MIN_YEAR = 1
 
 
 class NormalizationError(Exception):
@@ -54,6 +56,97 @@ def transmit_span(f):
     return wrapper
 
 
+class YearDescriptor(object):
+
+    """A descriptor of the year of a timepoint, whatever its class."""
+
+    def __get__(self, instance, owner):
+        """Get the year value on the correct object, depending on the instance
+        instance class.
+
+        """
+        if isinstance(instance, (DateList, DatetimeList)):
+            return instance.dates[-1].year
+        elif isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            return instance.end_date.year
+        elif isinstance(instance, Datetime):
+            return instance.date.year
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            return instance.date_interval.end_date.year
+
+    def set_date_interval_year(self, date_interval, year):
+        """Set the year of the start_date and end_date of the date_interval."""
+        date_interval.end_date.year = year
+        if date_interval.start_date.month > date_interval.end_date.month:
+            date_interval.start_date.year = year - 1
+        else:
+            date_interval.start_date.year = year
+
+    def set_datelist_year(self, date_list, year):
+        """Set the year of all the dates of the date_list."""
+        for _date in date_list:
+            _date.year = year
+
+    def __set__(self, instance, value):
+        """Set the year value on the correct object, depending on the instance
+        instance class.
+
+        """
+        if isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            self.set_date_interval_year(instance, value)
+        elif isinstance(instance, (DateList, DatetimeList)):
+            self.set_datelist_year(instance, value)
+        elif isinstance(instance, Datetime):
+            instance.date.year = value
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            self.set_date_interval_year(instance.date_interval, value)
+
+
+class AllowMissingYearDescriptor(object):
+
+    """A descriptor handling the acceptance of timepoints with missing years."""
+
+    def __init__(self, default):
+        self.default = default
+
+    def set_date_interval_allow_missing_year(self, date_interval, value):
+        """Set the 'allow_missing_year' atribute of the date interval."""
+        date_interval.start_date.allow_missing_year = value
+        date_interval.end_date.allow_missing_year = value
+
+    def __get__(self, instance, owner):
+        """Set the allow_missing_year value on the correct object,
+        depending on the instance instance class.
+
+        """
+        if isinstance(instance, (DateList, DatetimeList)):
+            return all(d.allow_missing_year for d in instance)
+        elif isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            return all(
+                d.allow_missing_year
+                for d in (instance.start_date, instance.end_date))
+        elif isinstance(instance, Datetime):
+            return instance.date.allow_missing_year
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            return instance.date_interval.allow_missing_year
+
+    def __set__(self, instance, value):
+        """Set the allow_missing_year value on the correct object,
+        depending on the instance instance class.
+
+        """
+        if isinstance(instance, (DateInterval, ContinuousDatetimeInterval)):
+            self.set_date_interval_allow_missing_year(instance, value)
+        elif isinstance(instance, (DateList, DatetimeList)):
+            for _date in instance:
+                _date.allow_missing_year = value
+        elif isinstance(instance, Datetime):
+            instance.date.allow_missing_year = value
+        elif isinstance(instance, (DatetimeInterval, WeeklyRecurrence)):
+            self.set_date_interval_allow_missing_year(
+                instance.date_interval, value)
+
+
 class Timepoint(object):
 
     """Base class of all timepoint classes."""
@@ -72,8 +165,26 @@ class Timepoint(object):
             return False
         return True
 
+    def __repr__(self):
+        return u'<%s %s>' % (self.__class__.__name__, unicode(self))
 
-class Date(Timepoint):
+
+class AbstractDateInterval(Timepoint):
+
+    """Abstract base class of all Timepoint classes describing a date
+    interval.
+
+    """
+    pass
+
+
+class AbstractDate(Timepoint):
+
+    """Abstract base class of all Timepoint describing a single date."""
+    pass
+
+
+class Date(AbstractDate):
 
     """An object representing a date, more flexible than the
     datetime.date object, as it tolerates missing information.
@@ -84,6 +195,7 @@ class Date(Timepoint):
         self.year = year
         self.month = month
         self.day = day
+        self.allow_missing_year = True
 
     def __eq__(self, other):
         if not super(Date, self).__eq__(other):
@@ -100,19 +212,15 @@ class Date(Timepoint):
             str(self.day).zfill(2)
         )
 
-    def __repr__(self):   # pragma: no cover
-        return '%s(%s, %s, %s)' % (
-            self.__class__.__name__,
-            str(self.year) if self.year is not None else '?',
-            str(self.month) if self.month is not None else '?',
-            str(self.day)
-        )
-
     @classmethod
     def from_match(self, match):  # pragma: no cover
         year = match['year'] if match['year'] else None
         month = match['month'] if match['month'] else None
         return Date(year, month, match['day'])
+
+    @classmethod
+    def from_date(self, date):
+        return Date(date.year, date.month, date.day)
 
     @property
     def rrulestr(self):
@@ -125,13 +233,16 @@ class Date(Timepoint):
 
     def to_python(self):
         """Convert a Date object to a datetime.object"""
-        if self.year is None and REFERENCE is not None:
-            self.year = REFERENCE.year
         try:
             return date(year=self.year, month=self.month, day=self.day)
         except (TypeError, ValueError):
-            # Eg: if one of the attributes is None or out of bounds
-            return None
+            if self.allow_missing_year:
+                # Try again with the minimum year possible
+                try:
+                    return date(year=MIN_YEAR, month=self.month, day=self.day)
+                except (TypeError, ValueError):
+                    # Eg: either the month or the day is None or out of bounds
+                    return None
 
     @add_span
     def export(self):
@@ -199,9 +310,8 @@ class TimeInterval(Timepoint):
         yield self.start_time
         yield self.end_time
 
-    def __repr__(self):  # pragma: no cover
-        return u'<%s %d:%s - %d:%s>' % (
-            self.__class__.__name__,
+    def __unicode__(self):
+        return u'%d:%s - %d:%s' % (
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
             self.end_time.hour,
@@ -222,11 +332,18 @@ class TimeInterval(Timepoint):
     def valid(self):
         return self.start_time.valid and self.end_time.valid
 
+    @property
+    def undefined(self):
+        return self == TimeInterval.make_all_day()
+
     def is_single_time(self):
         return self.start_time == self.end_time
 
 
 class DateList(Timepoint):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, dates):
         self.dates = dates
@@ -240,6 +357,9 @@ class DateList(Timepoint):
             return False
         return self.dates == other.dates
 
+    def __repr__(self):
+        return object.__repr__(self)
+
     @classmethod
     def from_match(cls, dates):
         """Return a DateList instance constructed from a regex match result."""
@@ -247,15 +367,10 @@ class DateList(Timepoint):
         dates = cls.set_years(dates)
         return DateList(dates)
 
-    @classmethod
-    def set_years(cls, dates):
+    @staticmethod
+    def set_years(dates):
         """Make all dates without year inherit from the last date year."""
         last_date = dates[-1]
-        if not last_date.year:
-            if REFERENCE:
-                last_date.year = REFERENCE.year
-            else:
-                raise NormalizationError('Last date must have a non nil year.')
         for _date in dates[:-1]:
             if not _date.year:
                 if _date.month > last_date.month:
@@ -264,8 +379,8 @@ class DateList(Timepoint):
                     _date.year = last_date.year
         return dates
 
-    @classmethod
-    def set_months(cls, dates):
+    @staticmethod
+    def set_months(dates):
         """Make all dates without month inherit from the last date month."""
         last_date = dates[-1]
         if not last_date.month:
@@ -283,6 +398,28 @@ class DateList(Timepoint):
     @transmit_span
     def export(self):
         return [_date.export() for _date in self.dates]
+
+    def contiguous_groups(self):
+        """Group contiguous dates together."""
+        def consecutive(date1, date2):
+            return date1.to_python() + timedelta(days=1) == date2.to_python()
+
+        contiguous_groups = [[self.dates[0]], ]
+        group_index = 0
+        previous_date = self.dates[0]
+        for current_date in self.dates[1:]:
+            if not consecutive(previous_date, current_date):
+                group_index += 1
+                contiguous_groups.append([])
+            contiguous_groups[group_index].append(current_date)
+            previous_date = current_date
+        return contiguous_groups
+
+    def contiguous_dates(self):
+        """Return True if all the dates in ther interval are continuous.
+
+        """
+        return len(self.contiguous_groups()) == 1
 
     def to_python(self):
         """Convert self.dates to a list of datetime.date objects."""
@@ -302,7 +439,10 @@ class DateList(Timepoint):
         return any([d.future(reference) for d in self.dates])
 
 
-class DateInterval(Timepoint):
+class DateInterval(AbstractDateInterval):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, start_date, end_date):
         self.start_date = start_date
@@ -322,15 +462,20 @@ class DateInterval(Timepoint):
             yield current
             current += timedelta(days=1)
 
-    def __repr__(self):  # pragma: no cover
-        return '<%s %s - %s>' % (
-            self.__class__.__name__,
+    def __unicode__(self):
+        return u'%s - %s%s' % (
             unicode(self.start_date),
-            unicode(self.end_date))
+            unicode(self.end_date),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}")
+        )
 
     @classmethod
     def make_undefined(cls):
-        return DateInterval(Date(1, 1, 1), Date(9999, 12, 31))
+        start = Date.from_date(UNLIMITED_DATE_START)
+        end = Date.from_date(UNLIMITED_DATE_END)
+
+        return DateInterval(start, end)
 
     @classmethod
     def from_match(cls, start_date, end_date):
@@ -342,14 +487,11 @@ class DateInterval(Timepoint):
         start_date = cls.set_start_date_month(start_date, end_date)
         return DateInterval(start_date, end_date)
 
-    @classmethod
-    def set_start_date_year(cls, start_date, end_date):
+    @staticmethod
+    def set_start_date_year(start_date, end_date):
         """Make the start_date inherit from the end_date year, if needed."""
         if not end_date.year:
-            if REFERENCE:
-                end_date.year = REFERENCE.year
-            else:
-                raise NormalizationError("End date must have a year")
+            return start_date
         if not start_date.year:
             if start_date.month > end_date.month:
                 start_date.year = end_date.year - 1
@@ -357,8 +499,8 @@ class DateInterval(Timepoint):
                 start_date.year = end_date.year
         return start_date
 
-    @classmethod
-    def set_start_date_month(cls, start_date, end_date):
+    @staticmethod
+    def set_start_date_month(start_date, end_date):
         """Make the start_date inherit from the end_date month, if needed."""
         if not end_date.month:
             raise NormalizationError("End date must have a month")
@@ -413,12 +555,15 @@ class DateInterval(Timepoint):
         return self.end_date.future(reference)
 
 
-class Datetime(Timepoint):
+class Datetime(AbstractDate):
 
     """An object representing a datetime, more flexible than the
     datetime.datetime object, as it tolerates missing information.
 
     """
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date, start_time, end_time=None):
         self.date = date
@@ -436,12 +581,9 @@ class Datetime(Timepoint):
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
 
-    def __repr__(self):  # pragma: no cover
-        return '<%s %d/%d/%d - %d:%s%s>' % (
-            self.__class__.__name__,
-            self.date.year,
-            self.date.month,
-            self.date.day,
+    def __unicode__(self):
+        return u'%s - %d:%s%s' % (
+            unicode(self.date),
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
             '-%s:%s' % (
@@ -500,10 +642,21 @@ class Datetime(Timepoint):
                 self.start_time.hour,
                 self.start_time.minute)
         except (TypeError, ValueError):
-            return None
+            try:
+                return datetime(
+                    MIN_YEAR,
+                    self.date.month,
+                    self.date.day,
+                    self.start_time.hour,
+                    self.start_time.minute)
+            except (TypeError, ValueError):
+                return None
 
 
 class DatetimeList(Timepoint):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, datetimes, *args, **kwargs):
         self.datetimes = datetimes
@@ -519,13 +672,8 @@ class DatetimeList(Timepoint):
     def __iter__(self):
         return iter(self.datetimes)
 
-    @property
-    def time_interval(self):
-        return TimeInterval(self[0].start_time, self[0].end_time)
-
-    @property
-    def dates(self):
-        return [dt.date for dt in self]
+    def __repr__(self):
+        return object.__repr__(self)
 
     @classmethod
     # pragma: no cover
@@ -533,6 +681,14 @@ class DatetimeList(Timepoint):
         st, et = time_interval
         datetimes = [Datetime.combine(date, st, et) for date in dates]
         return DatetimeList(datetimes, *args, **kwargs)
+
+    @property
+    def time_interval(self):
+        return TimeInterval(self[0].start_time, self[0].end_time)
+
+    @property
+    def dates(self):
+        return [dt.date for dt in self]
 
     def future(self, reference=None):
         """Returns whether the DateTimeList is located in the future.
@@ -554,7 +710,10 @@ class DatetimeList(Timepoint):
         return [dt.export() for dt in self.datetimes]
 
 
-class DatetimeInterval(Timepoint):
+class DatetimeInterval(AbstractDateInterval):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date_interval, time_interval):
         self.date_interval = date_interval
@@ -567,6 +726,21 @@ class DatetimeInterval(Timepoint):
         return (
             self.date_interval == other.date_interval
             and self.time_interval == other.time_interval)
+
+    def __repr__(self):
+        return u'<%s (%s) (%s)%s>' % (
+            unicode(self.__class__.__name__),
+            unicode(self.date_interval),
+            unicode(self.time_interval),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}"),
+        )
+
+    def __iter__(self):
+        current = self.date_interval.start_date.to_python()
+        while current <= self.date_interval.end_date.to_python():
+            yield current
+            current += timedelta(days=1)
 
     @property
     def valid(self):
@@ -610,8 +784,14 @@ class DatetimeInterval(Timepoint):
         reference = reference if reference is not None else get_current_date()
         return self.date_interval.end_date.future(reference)
 
+    def to_python(self):
+        return [_date for _date in self]
+
 
 class ContinuousDatetimeInterval(Timepoint):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, start_date, start_time, end_date, end_time):
         self.start_date = start_date
@@ -628,6 +808,9 @@ class ContinuousDatetimeInterval(Timepoint):
             and self.end_date == other.end_date
             and self.end_time == other.end_time)
 
+    def __repr__(self):
+        return object.__repr__(self)
+
     @classmethod
     def from_match(
             cls, start_date, start_time, end_date, end_time):
@@ -636,19 +819,16 @@ class ContinuousDatetimeInterval(Timepoint):
         return ContinuousDatetimeInterval(
             start_date, start_time, end_date, end_time)
 
-    @classmethod
-    def set_year(cls, start_date, end_date):
+    @staticmethod
+    def set_year(start_date, end_date):
         if not end_date.year:
-            if REFERENCE:
-                end_date.year = REFERENCE.year
-            else:
-                raise NormalizationError("end date must have a year")
+            raise NormalizationError("end date must have a year")
         if not start_date.year:
             start_date.year = end_date.year
         return start_date
 
-    @classmethod
-    def set_month(cls, start_date, end_date):
+    @staticmethod
+    def set_month(start_date, end_date):
         if not end_date.month:
             raise NormalizationError("end date must have a month")
         if not start_date.month:
@@ -701,12 +881,12 @@ class ContinuousDatetimeInterval(Timepoint):
 class Weekdays(Timepoint):
 
     def __init__(self, days, *args, **kwargs):
-        self.days = days
+        self.days = list(set(days))
 
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
             return False
-        return self.days == other.days
+        return sorted(self.days) == sorted(other.days)
 
     def __len__(self):
         return len(self.days)
@@ -714,13 +894,26 @@ class Weekdays(Timepoint):
     def __iter__(self):
         return iter(self.days)
 
+    def __unicode__(self):
+        if self.all_week:
+            return 'ALL_WEEK'
+        else:
+            return u', '.join(str(w) for w in self.days)
+
+    @property
+    def all_week(self):
+        return [w.weekday for w in self.days] == range(0, 7)
+
 
 class WeeklyRecurrence(Timepoint):
+
+    year = YearDescriptor()
+    allow_missing_year = AllowMissingYearDescriptor(True)
 
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval
         self.time_interval = time_interval
-        self.weekdays = weekdays
+        self.weekdays = sorted(list(set(weekdays)))
         self.excluded = []
 
     def __eq__(self, other):
@@ -731,10 +924,21 @@ class WeeklyRecurrence(Timepoint):
             self.time_interval == other.time_interval and
             self.weekdays == other.weekdays)
 
+    def __repr__(self):
+        return u'<%s - (%s) (%s) (%s)%s>' % (
+            self.__class__.__name__,
+            unicode(self.date_interval),
+            unicode(self.weekdays),
+            unicode(self.time_interval),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}"),
+        )
+
     @property
     def rrulestr(self):
         """ Generate a full description of the recurrence rule"""
-        end = datetime.combine(self.date_interval.end_date.to_python(), DAY_END)
+        end = datetime.combine(
+            self.date_interval.end_date.to_python(), DAY_END)
         return makerrulestr(
             self.date_interval.start_date.to_python(),
             end=end,
@@ -770,4 +974,7 @@ class WeeklyRecurrence(Timepoint):
             export['unlimited'] = True
         if self.excluded:
             export['excluded'] = self.excluded
+
+        self.weekdays = sorted(self.weekdays, key=attrgetter('weekday'))
+
         return export
