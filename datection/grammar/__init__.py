@@ -93,10 +93,33 @@ def as_datetime(text, start_index, matches):
     return Datetime(d, ti.start_time, ti.end_time)
 
 
+def regroup_dates_by_continuty(date_list):
+    """Return a DateInterval instance per date continuity group in the
+    DateList dates, and a DateList object containing all the non
+    continuous dates.
+
+    """
+    out = []
+    groups = date_list.contiguous_groups()
+    interval_groups = [group for group in groups if len(group) > 1]
+    single_dates = [group[0] for group in groups if len(group) == 1]
+    for interval_group in interval_groups:
+        out.append(DateInterval(
+            start_date=interval_group[0],
+            end_date=interval_group[-1]))
+    out.append(DateList(dates=single_dates))
+    return out
+
+
 def as_datelist(text, start_index, matches):
     """Return a DateList object from a match of the DATE_LIST pattern."""
-    dates = list(matches['dates'])
-    return DateList.from_match(dates)
+    date_list = DateList.from_match(list(matches['dates']))
+    if date_list.contiguous_dates():
+        return DateInterval(
+            start_date=date_list.dates[0],
+            end_date=date_list.dates[-1])
+    else:
+        return regroup_dates_by_continuty(date_list)
 
 
 def as_date_interval(text, start_index, matches):
@@ -108,9 +131,28 @@ def as_date_interval(text, start_index, matches):
 
 def as_datetime_list(text, start_index, matches):
     """Return a DatetimeList object from a match of the DATETIME_LIST pattern"""
-    match_dates = list(matches['dates'])
-    dates = DateList.from_match(match_dates)
-    return DatetimeList.from_match(dates, matches['time_interval'])
+    timepoints = as_datelist(text, start_index, matches)
+    if isinstance(timepoints, DateInterval):
+        return DatetimeInterval(timepoints, matches['time_interval'])
+    else:
+        out = []
+        start_time = matches['time_interval'].start_time
+        end_time = matches['time_interval'].end_time
+        date_intervals = [
+            timepoint for timepoint in timepoints
+            if isinstance(timepoint, DateInterval)]
+        date_lists = [
+            timepoint for timepoint in timepoints
+            if isinstance(timepoint, DateList)]
+        for date_interval in date_intervals:
+            out.append(DatetimeInterval(
+                date_interval, matches['time_interval']))
+        datetimes = [
+            Datetime.combine(date, start_time, end_time)
+            for date_list in date_lists
+            for date in date_list]
+        out.append(DatetimeList(datetimes))
+        return out
 
 
 def as_continuous_datetime_interval(text, start_index, matches):
@@ -248,7 +290,7 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
-    ur'(?<![\d])'  # not preceeded by a digit
+    ur'(?<![\dh])'  # not preceeded by a digit or a h
     # OK: (0)1..(0)9...10...29, 30, 31
     ur'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
     # no number, prices or time tags after

@@ -96,6 +96,8 @@ class TestLanguageAgnosticRegexes(TestGrammar):
     def test_unparsable_year(self):
         self.assert_unparsable(u'999')
         self.assert_unparsable(u'3001')
+        self.assert_unparsable(u'h4')
+        self.assert_unparsable(u'h30')
 
     @set_pattern(HOUR)
     def test_parse_hour(self):

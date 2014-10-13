@@ -36,14 +36,10 @@ class TestParse(unittest.TestCase):
 
     def test_datetime(self):
         self.assert_generates(
-            u"Le 5 mars 2015 à 18h30", [
-            datetime(2015, 3, 5, 18, 30),
-            datetime(2015, 3, 5, 18, 30)])
+            u"Le 5 mars 2015 à 18h30", [datetime(2015, 3, 5, 18, 30)])
 
         self.assert_generates(
-            u"Le 5 mars 2015.\nA 18h30", [
-            datetime(2015, 3, 5, 18, 30),
-            datetime(2015, 3, 5, 18, 30)])
+            u"Le 5 mars 2015.\nA 18h30", [datetime(2015, 3, 5, 18, 30)])
 
     def test_numeric_datetime(self):
         self.assert_generates(
@@ -52,8 +48,7 @@ class TestParse(unittest.TestCase):
     def test_datetime_with_time_interval(self):
         self.assert_generates(
             u"Le 5 mars 2015 de 16h à 18h30", [
-            datetime(2015, 3, 5, 16, 0),
-            datetime(2015, 3, 5, 16, 0),
+                datetime(2015, 3, 5, 16, 0),
             ])
         self.assert_generates(
             u"Le 5 mars 2015. De 16h à 18h30", [datetime(2015, 3, 5, 16, 0)])
@@ -61,8 +56,8 @@ class TestParse(unittest.TestCase):
     def test_datetime_with_several_time_intervals(self):
         self.assert_generates(
             u"Le 5 mars 2015, 16h-18h30 et 19h-20h30", [
-            datetime(2015, 3, 5, 16, 0),
-            datetime(2015, 3, 5, 19, 0),
+                datetime(2015, 3, 5, 16, 0),
+                datetime(2015, 3, 5, 19, 0),
             ])
 
     def test_date_list(self):
@@ -258,6 +253,9 @@ class TestParse(unittest.TestCase):
         wk = [tp for tp in parse(u"Du 5 au 18 mars 2015, tous les jours", "fr")
               if isinstance(tp, WeeklyRecurrence)][0]
         self.assertEqual(len(wk.weekdays), 7)
+
+    def test_accented_uppercase_date(self):
+        self.assert_generates(u"sam 21 FÉVRIER 2015 20H00", [datetime(2015, 2, 21, 20, 0)])
 
 
 class TestYearLessExpressions(unittest.TestCase):

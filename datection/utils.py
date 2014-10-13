@@ -8,6 +8,11 @@ from datetime import date
 from datetime import time
 from dateutil.rrule import weekdays
 
+UNLIMITED_DATE_START        = date(0001, 01, 01)
+UNLIMITED_DATE_END          = date(9999, 12, 31)
+
+UNLIMITED_DATETIME_START    = datetime(0001, 01, 01)
+UNLIMITED_DATETIME_END      = datetime(9999, 12, 31, 23, 59, 59)
 
 def get_current_date():
     """Return the current date.
@@ -36,6 +41,23 @@ def isoformat_concat(datetime):
     concat = re.sub(r'[\.:-]', '', isoformat)
     return concat
 
+def is_unlimited_start(start):
+    """ Check is "start" match the date 01-01-0001
+    """
+    # cast to date if datetime
+    if type(start) is datetime:
+        start = start.date()
+
+    return start == UNLIMITED_DATE_START
+
+def is_unlimited_end(end):
+    """ Check is "end" match the date 12-31-9999
+    """
+    # cast to date if datetime
+    if type(end) is datetime:
+        end = end.date()
+
+    return end == UNLIMITED_DATE_END
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
     """ Returns an RFC standard RRULE string
@@ -45,12 +67,17 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
     will be inserted.
 
     """
-    # use dates as start/until points
-    dtstart = "DTSTART:%s\n" % isoformat_concat(start)
-    if end:
+    # set a DTSTART if start date is empty or equal 01-01-0001
+    dtstart = ''
+    if not is_unlimited_start(start):
+        dtstart = isoformat_concat(start)
+        dtstart = "DTSTART:%s\n" % dtstart
+
+    # same behaviour for the end date
+    until = ''
+    if end and not is_unlimited_end(end):
         until = "UNTIL=%s" % isoformat_concat(end)
-    else:
-        until = ''
+
     if rule:
         rulestr = "RRULE:" + str(rule) + ";"
         rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')

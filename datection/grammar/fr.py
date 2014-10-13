@@ -125,6 +125,12 @@ TIME = (
     Optional(MINUTE)
 ).setParseAction(as_time)
 
+P_START_TIME = (
+    HOUR +
+    optional_oneof_ci([u'h', u':']) +
+    Optional(MINUTE)
+).setParseAction(as_time)
+
 
 # A time interval is composed of a start time, an optional separator and
 # an optional end time.
@@ -136,7 +142,7 @@ TIME_INTERVAL = (
             u'de', u'entre', u'à', u':', u'a', u'et de', u'et à'
         ]
     ) +
-    TIME('start_time') +
+    P_START_TIME('start_time') +
     optional_oneof_ci([u'-', u'à', u'a']) +
     Optional(TIME('end_time'))
 ).setParseAction(as_time_interval)
@@ -254,7 +260,7 @@ WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les", u"tous les", u"ouvert tous les"]) +
     OneOrMore(
         WEEKDAY +
-        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'&', u'/'])))
+        Optional(OneOrMore(oneOf([u';', u',', u'et', u'le', u'&', u'/'])))
     )
 ).setParseAction(as_weekday_list)('weekdays')
 
@@ -262,9 +268,9 @@ WEEKDAY_LIST = (
 WEEKDAY_INTERVAL = (
     optional_ci(u"ouvert") +
     optional_ci(u"du") +
+    WEEKDAY +
+    oneof_ci([u'au', u'-']) +
     WEEKDAY
-    + oneof_ci([u'au', u'-'])
-    + WEEKDAY
 ).setParseAction(as_weekday_interval)('weekdays')
 
 # Any weekday related pattern
@@ -313,10 +319,10 @@ TIMEPOINTS = [
     ('datetime_list', DATETIME_LIST),
     ('datetime_interval', DATETIME_INTERVAL),
     ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
-    ('exclusion', EXCLUSION)
+    ('exclusion', EXCLUSION),
 ]
 
-PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
+PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY, DAY_NUMBER]
 
 # List of expressions associated with their replacement
 # This replacement allows to reduce the complexity of the patterns

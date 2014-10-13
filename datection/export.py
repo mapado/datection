@@ -6,9 +6,10 @@ from datetime import datetime
 from datetime import timedelta
 from datection.parse import parse
 from datection.models import DurationRRule
+from datection.coherency import RRuleCoherencyFilter
 
 
-def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
+def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     """Extract and normalize time-related expressions from the text.
 
     Grammar specific to the argument language will be used on the
@@ -69,8 +70,8 @@ def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
 
     >>> export(u"tous les lundis à 8h", "fr")
     [{'duration': 0,
-      'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
-                'BYMINUTE=0;UNTIL=99991231T235959'),
+      'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
+                'BYMINUTE=0'),
       'span': (0, 21),
       'unlimited': True}]
 
@@ -88,11 +89,17 @@ def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
         elif isinstance(tp_export, dict):
             exports.append(tp_export)
 
-    # Deduplicate the output, keeping the order (thus list(set) is not possible)
+    # Deduplicate the output, keeping the order (thus list(set) is not
+    # possible)
     drrs, seen = [DurationRRule(export) for export in exports], []
+
+    # Apply rrule coherency heuristics
+    drrs = RRuleCoherencyFilter(drrs).apply_coherency_heuristics()
+
     for drr in drrs:
         if drr not in seen:
             seen.append(drr)
+
     out = [drr.duration_rrule for drr in seen]
     return out
 
