@@ -11,7 +11,7 @@ from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
 
 
-class CoherencyFilter(object):
+class TimepointCoherencyFilter(object):
 
     """Object in charge of removing Timepoints from a list when it only
     bring redundant information.

@@ -9,10 +9,11 @@ from datection.timepoint import DateInterval
 from datection.timepoint import Datetime
 from datection.timepoint import Time
 
-from datection.coherency import CoherencyFilter
+from datection.models import DurationRRule
+from datection.coherency import TimepointCoherencyFilter
 
 
-class TestCoherencyFilter(unittest.TestCase):
+class TestTimepointCoherencyFilter(unittest.TestCase):
 
     """Test suite of the timepoint coherency filter."""
 
@@ -23,7 +24,7 @@ class TestCoherencyFilter(unittest.TestCase):
             Date(2014, 11, 13),
             Date(2014, 11, 14)
         ]
-        cf = CoherencyFilter(timepoints)
+        cf = TimepointCoherencyFilter(timepoints)
         cf.deduplicate_date_interval_and_dates()
 
         self.assertEqual(
@@ -42,7 +43,7 @@ class TestCoherencyFilter(unittest.TestCase):
             Datetime(Date(2014, 11, 13), Time(18, 0), Time(20, 0)),
             Datetime(Date(2014, 11, 14), Time(18, 0), Time(20, 0))
         ]
-        cf = CoherencyFilter(timepoints)
+        cf = TimepointCoherencyFilter(timepoints)
         cf.deduplicate_date_interval_and_dates()
 
         self.assertEqual(
