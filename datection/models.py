@@ -14,7 +14,6 @@ from dateutil.rrule import rruleset
 from datection.utils import cached_property
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
-from datection.timepoint import MISSING_YEAR
 from datection.timepoint import ALL_DAY
 
 

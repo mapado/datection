@@ -70,3 +70,159 @@ class TimepointCoherencyFilter(object):
         """Call every coherency rules."""
         self.deduplicate_date_interval_and_dates()
         return self.timepoints
+
+
+class RRuleCoherencyFilter(object):
+
+    """Object in charge of removing rrules from a list by applying a set
+    of heuristics.
+
+    """
+
+    MAX_SINGLE_DATE_RRULES = 40
+    MAX_SMALL_DATE_INTERVAL_RRULES = 5
+    MAX_LARGE_DATE_INTERVAL_RRULES = 2
+    MAX_UNLIMITED_DATE_INTERVAL_RRULES = 1
+
+    def __init__(self, drrs):
+        self.drrs = drrs
+
+    def apply_single_date_coherency_heuristics(self):
+        """If at least one rrule describing a single date is present in
+        the DurationRRule list, remove all rrules not describing another
+        single date or a small date interval.
+
+        """
+        if any(drr.single_date for drr in self.drrs):
+            out = [
+                drr for drr in self.drrs
+                if drr.single_date
+                or drr.small_date_interval]
+            self.drrs = out
+
+    def apply_long_date_interval_coherency_heuristics(self):
+        """If at least one rrule describing a long date interval is
+        present in the DurationRRule list, remove all rrules not
+        describing another long date interval.
+
+        """
+        if any(drr.long_date_interval for drr in self.drrs):
+            out = [
+                drr for drr in self.drrs if drr.long_date_interval]
+            self.drrs = out
+
+    def apply_unlimited_date_interval_coherency_heuristics(self):
+        """If at least one rrule describing a, unlimited date interval
+        is present in the DurationRRule list, remove all rrules not
+        describing another unlimited date interval.
+
+        """
+        if any(drr.unlimited_date_interval for drr in self.drrs):
+            out = [
+                drr for drr in self.drrs if drr.unlimited_date_interval]
+            self.drrs = out
+
+    def apply_single_date_number_coherency_heuristics(self):
+        """Keep the 40 first single date rrules."""
+        out = []
+        kept_single_date_rrules = 0
+        for drr in self.drrs:
+            if drr.single_date:
+                if kept_single_date_rrules < self.MAX_SINGLE_DATE_RRULES:
+                    kept_single_date_rrules += 1
+                    out.append(drr)
+            else:
+                out.append(drr)
+        self.drrs = out
+
+    def apply_small_date_interval_number_coherency_heuristics(self):
+        """Keep only the 5 first small date interval rrules."""
+        out = []
+        kept_small_date_interval_rrules = 0
+        for drr in self.drrs:
+            if drr.small_date_interval:
+                if (kept_small_date_interval_rrules <
+                        self.MAX_SMALL_DATE_INTERVAL_RRULES):
+                    kept_small_date_interval_rrules += 1
+                    out.append(drr)
+            else:
+                out.append(drr)
+        self.drrs = out
+
+    def apply_long_date_interval_number_coherency_heuristics(self):
+        """Keep only the 2 long date interval rrules per weekday."""
+        out = []
+        kept_long_date_intervals = {}
+        for drr in self.drrs:
+            if drr.small_date_interval:
+                if (kept_long_date_intervals[drr.weekday] <
+                        self.MAX_LARGE_DATE_INTERVAL_RRULES):
+                    kept_long_date_intervals += 1
+                    out.append(drr)
+            else:
+                out.append(drr)
+        self.drrs = out
+
+    def apply_unlimited_date_interval_number_coherency_heuristics(self):
+        """Keep only the 2 unlimited date interval rrules per weekday."""
+        out = []
+        kept_unlimited_date_intervals = {}
+        for drr in self.drrs:
+            if drr.small_date_interval:
+                if (kept_unlimited_date_intervals[drr.weekday] <
+                        self.MAX_UNLIMITED_DATE_INTERVAL_RRULES):
+                    kept_unlimited_date_intervals += 1
+                    out.append(drr)
+            else:
+                out.append(drr)
+        self.drrs = out
+
+    def rrule_type_coherency(self):
+        """Apply coherency heuristics based on the type of the rrules.
+
+        * Single dates can only cohabit with other single dates and
+        small date intervals. All the other rrules must be discarded.
+        * Large date interval can only cohabit with other long date
+        intervals. All other rrules must be discarded.
+        * Unlimited date intervals can only cohabit with other unlimited
+        date intervals. All other rrules must be discarded.
+
+        """
+        self.apply_single_date_coherency_heuristics()
+        self.apply_long_date_interval_coherency_heuristics()
+        self.apply_unlimited_date_interval_coherency_heuristics()
+
+    def rrule_size_coherency(self):
+        """Apply coherency heuristics based on the size of the rrules.
+
+        * There can be at most 40 single dates rrules
+        * There can be at most 5 small date interval rrules
+        * There can be at most 2 long date interval rrules per
+        described weekday
+        * There can be at most 1 unlimited date interval rrule per
+        described weekday
+
+        """
+        self.apply_single_date_number_coherency_heuristics()
+        self.apply_small_date_interval_number_coherency_heuristics()
+        self.apply_long_date_interval_number_coherency_heuristics()
+        self.apply_unlimited_date_interval_number_coherency_heuristics()
+
+    def rrule_day_level_coherency(self):
+        """Apply coherency heuristics based on the day level of the
+        rrules.
+
+        * Several RRules cannot generate the same day AND the same time.
+
+        """
+        self.apply_day_level_collison_coherency_heuristics()
+
+    def apply_coherency_heuristics(self):
+        """Apply all coherency heuristics, and return the filtered list
+        of DurationRRule objects.
+
+        """
+        self.apply_rrule_type_coherency_heuristics()
+        self.apply_rrule_size_coherency_heuristics()
+        self.apply_rrule_day_level_coherency_heuristics()
+        return self.drrs

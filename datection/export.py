@@ -88,7 +88,8 @@ def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
         elif isinstance(tp_export, dict):
             exports.append(tp_export)
 
-    # Deduplicate the output, keeping the order (thus list(set) is not possible)
+    # Deduplicate the output, keeping the order (thus list(set) is not
+    # possible)
     drrs, seen = [DurationRRule(export) for export in exports], []
     for drr in drrs:
         if drr not in seen:
