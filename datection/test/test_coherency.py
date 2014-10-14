@@ -137,3 +137,140 @@ class TestRRuleTypeCoherencyHeuristics(unittest.TestCase):
         rcf = RRuleCoherencyFilter(drrs)
         rcf.apply_unlimited_date_interval_coherency_heuristics()
         self.assertEqual(rcf.drrs, drrs[:2])  # 'Le 5 mars 2015' was removed
+
+
+class TestRRuleNumberCoherencyHeuristics(unittest.TestCase):
+
+    """Test the heuristics based on the RRule number."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Change the heuristics limits, to enable smaller datasets."""
+        RRuleCoherencyFilter.MAX_SINGLE_DATE_RRULES = 2
+        RRuleCoherencyFilter.MAX_SMALL_DATE_INTERVAL_RRULES = 2
+
+    def test_apply_single_date_number_coherency_heuristics(self):
+        schedule = [
+            # Le 5, 6, 7 novembre 2015
+            {
+                'duration': 1439,
+                'rrule': ('DTSTART:20151105\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=0'),
+            },
+            {
+                'duration': 1439,
+                'rrule': ('DTSTART:20151106\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=0'),
+            },
+            {
+                'duration': 1439,
+                'rrule': ('DTSTART:20151107\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=0'),
+            }
+        ]
+        drrs = [DurationRRule(item) for item in schedule]
+        rcf = RRuleCoherencyFilter(drrs)
+        rcf.apply_single_date_number_coherency_heuristics()
+        self.assertEqual(rcf.drrs, drrs[:2])
+
+    def test_apply_small_date_interval_number_coherency_heuristics(self):
+        schedule = [
+            {   # Du 5 au 9 mars 2015,
+                'duration': 1439,
+                'rrule': ('DTSTART:20150315\nRRULE:FREQ=DAILY;BYHOUR=0;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150318'),
+            },
+            {  # Du 15 au 18 mars 2015
+                'duration': 1439,
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=0;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150309'),
+            },
+            {   # Du 21 au 24 mars 2015
+                'duration': 1439,
+                'rrule': ('DTSTART:20150321\nRRULE:FREQ=DAILY;BYHOUR=0;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150324'),
+            }
+        ]
+        drrs = [DurationRRule(item) for item in schedule]
+        rcf = RRuleCoherencyFilter(drrs)
+        rcf.apply_small_date_interval_number_coherency_heuristics()
+        self.assertEqual(rcf.drrs, drrs[:2])
+
+    def test_apply_long_date_interval_number_coherency_heuristics(self):
+        schedule = [
+            {   # Le lundi et mardi, Du 1er janvier au 2 mai 2015, de 8h à 15h
+                'duration': 420,
+                'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20150502T235959'),
+            },
+            {   # le lundi du 3 mai 2015 au 1er octobre 2015 de 8h à 12h
+                'duration': 240,
+                'rrule': ('DTSTART:20150503\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20151001T235959'),
+            },
+            {   # le mardi du 3 mai 2015 au 1er octobre 2015 de 8h à 12h
+                'duration': 240,
+                'rrule': ('DTSTART:20150503\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20151001T235959'),
+            },
+            {   # le lundi du 2 octobre 2015 au 4 mars 2016 de 8h à 12h
+                'duration': 240,
+                'rrule': ('DTSTART:20151002\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20160304T235959')
+            }
+        ]
+        drrs = [DurationRRule(item) for item in schedule]
+        rcf = RRuleCoherencyFilter(drrs)
+        rcf.apply_long_date_interval_number_coherency_heuristics()
+        new_drr1 = {
+            # Le lundi Du 1er janvier au 2 mai 2015, de 8h à 15h
+            'duration': 420,
+            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20150502T235959'),
+        }
+        new_drr2 = {
+            # Le mardi Du 1er janvier au 2 mai 2015, de 8h à 15h
+            'duration': 420,
+            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20150502T235959'),
+        }
+        out_schedule = [drr.duration_rrule for drr in rcf.drrs]
+        self.assertListEqual(
+            [new_drr1, new_drr2, schedule[1], schedule[2]],
+            out_schedule)
+
+    def test_apply_unlimited_date_interval_number_coherency_heuristics(self):
+        schedule = [
+            {   # Le lundi et mardi, Du 1er janvier au 2 octobre 2015, de 8h à 15h
+                'duration': 420,
+                'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
+            },
+            {   # le lundi du 3 octobre 2015 au 7 juillet 2016 de 8h à 12h
+                'duration': 240,
+                'rrule': ('DTSTART:20151003\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20160707T235959'),
+            },
+            {   # le mardi du 3 octobre 2015 au 7 juillet 2016 de 8h à 12h
+                'duration': 240,
+                'rrule': ('DTSTART:20151003\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=20160707T235959'),
+            },
+        ]
+        drrs = [DurationRRule(item) for item in schedule]
+        rcf = RRuleCoherencyFilter(drrs)
+        rcf.apply_unlimited_date_interval_number_coherency_heuristics()
+        new_drr1 = {
+            # Le lundi Du 1er janvier au 2 octobre 2015, de 8h à 15h
+            'duration': 420,
+            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
+        }
+        new_drr2 = {
+            # Le mardi, Du 1er janvier au 2 octobre 2015, de 8h à 15h
+            'duration': 420,
+            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                      'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
+        }
+        out_schedule = [drr.duration_rrule for drr in rcf.drrs]
+        self.assertListEqual([new_drr1, new_drr2], out_schedule)

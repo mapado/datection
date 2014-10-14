@@ -4,7 +4,10 @@
 Timepoint objects. The Timepoints bringing redundancy will be removed.
 
 """
+import re
 
+from copy import deepcopy
+from collections import Counter
 from datetime import datetime
 
 from datection.timepoint import AbstractDate
@@ -81,7 +84,7 @@ class RRuleCoherencyFilter(object):
 
     MAX_SINGLE_DATE_RRULES = 40
     MAX_SMALL_DATE_INTERVAL_RRULES = 5
-    MAX_LARGE_DATE_INTERVAL_RRULES = 2
+    MAX_LONG_DATE_INTERVAL_RRULES = 2
     MAX_UNLIMITED_DATE_INTERVAL_RRULES = 1
 
     def __init__(self, drrs):
@@ -152,13 +155,16 @@ class RRuleCoherencyFilter(object):
     def apply_long_date_interval_number_coherency_heuristics(self):
         """Keep only the 2 long date interval rrules per weekday."""
         out = []
-        kept_long_date_intervals = {}
+        kept_long_date_intervals = Counter()
         for drr in self.drrs:
-            if drr.small_date_interval:
-                if (kept_long_date_intervals[drr.weekday] <
-                        self.MAX_LARGE_DATE_INTERVAL_RRULES):
-                    kept_long_date_intervals += 1
-                    out.append(drr)
+            if drr.long_date_interval:
+                for w in drr.rrule.byweekday:
+                    if (kept_long_date_intervals[w.weekday] <
+                            self.MAX_LONG_DATE_INTERVAL_RRULES):
+                        kept_long_date_intervals[w.weekday] += 1
+                        _drr = deepcopy(drr)
+                        _drr.set_weekdays((w, ))
+                        out.append(_drr)
             else:
                 out.append(drr)
         self.drrs = out
@@ -166,18 +172,21 @@ class RRuleCoherencyFilter(object):
     def apply_unlimited_date_interval_number_coherency_heuristics(self):
         """Keep only the 2 unlimited date interval rrules per weekday."""
         out = []
-        kept_unlimited_date_intervals = {}
+        kept_unlimited_date_intervals = Counter()
         for drr in self.drrs:
-            if drr.small_date_interval:
-                if (kept_unlimited_date_intervals[drr.weekday] <
-                        self.MAX_UNLIMITED_DATE_INTERVAL_RRULES):
-                    kept_unlimited_date_intervals += 1
-                    out.append(drr)
+            if drr.unlimited_date_interval:
+                for w in drr.rrule.byweekday:
+                    if (kept_unlimited_date_intervals[w.weekday] <
+                            self.MAX_UNLIMITED_DATE_INTERVAL_RRULES):
+                        kept_unlimited_date_intervals[w.weekday] += 1
+                        _drr = deepcopy(drr)
+                        _drr.set_weekdays((w, ))
+                        out.append(_drr)
             else:
                 out.append(drr)
         self.drrs = out
 
-    def rrule_type_coherency(self):
+    def apply_rrule_type_coherency_heuristics(self):
         """Apply coherency heuristics based on the type of the rrules.
 
         * Single dates can only cohabit with other single dates and
@@ -192,7 +201,7 @@ class RRuleCoherencyFilter(object):
         self.apply_long_date_interval_coherency_heuristics()
         self.apply_unlimited_date_interval_coherency_heuristics()
 
-    def rrule_size_coherency(self):
+    def apply_rrule_size_coherency_heuristics(self):
         """Apply coherency heuristics based on the size of the rrules.
 
         * There can be at most 40 single dates rrules
@@ -208,7 +217,7 @@ class RRuleCoherencyFilter(object):
         self.apply_long_date_interval_number_coherency_heuristics()
         self.apply_unlimited_date_interval_number_coherency_heuristics()
 
-    def rrule_day_level_coherency(self):
+    def apply_rrule_day_level_coherency_heuristics(self):
         """Apply coherency heuristics based on the day level of the
         rrules.
 

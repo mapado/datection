@@ -4,6 +4,8 @@
 Utility models for datection.
 """
 
+import re
+
 from datetime import timedelta
 from datetime import datetime
 from datetime import time
@@ -60,6 +62,17 @@ class DurationRRule(object):
                     yield dtime
                 else:
                     raise StopIteration
+
+    def set_weekdays(self, weekdays):
+        """Update the rrule byweekday property and the underlying
+        duration_rrule rrule string.
+
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r'(?<=BYDAY=)[^;]+',
+            ','.join(str(w) for w in weekdays),
+            self.duration_rrule['rrule'])
+        self.rrule._byweekday = [w.weekday for w in weekdays]
 
     @cached_property
     def exclusion_rrules(self):
