@@ -144,3 +144,85 @@ class DurationRRuleTest(unittest.TestCase):
     def test_weekday_interval_no_weekday_recurrence(self):
         drr = DurationRRule(self.one_time)
         self.assertIsNone(drr.weekday_interval)
+
+
+class TestDurationRRuleTopology(unittest.TestCase):
+
+    """Test the different topologies of a DurationRRule."""
+
+    def test_single_date(self):
+        structs = [
+            {
+                # Le X, de 19h à 20h
+                'duration': 60,
+                'rrule': ('DTSTART:20141205\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=19'),
+            },
+            {
+                # Le X
+                'duration': 1439,
+                'rrule': ('DTSTART:20141205\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=19'),
+            }
+        ]
+        for struct in structs:
+            drr = DurationRRule(struct)
+            self.assertTrue(drr.single_date)
+            self.assertFalse(drr.small_date_interval)
+            self.assertFalse(drr.long_date_interval)
+            self.assertFalse(drr.unlimited_date_interval)
+
+    def test_small_date_interval(self):
+        structs = [
+            {
+                # Du X au X+1, de H à H+1
+                'duration': 60,
+                'rrule': ('DTSTART:20151205\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20151206T235959'),
+            },
+            {
+                'duration': 120,
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150507T235959'),
+            }
+        ]
+        for struct in structs:
+            drr = DurationRRule(struct)
+            self.assertFalse(drr.single_date)
+            self.assertTrue(drr.small_date_interval)
+            self.assertFalse(drr.long_date_interval)
+            self.assertFalse(drr.unlimited_date_interval)
+
+    def test_large_date_interval(self):
+        struct = {
+            'duration': 60,
+            'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                      'BYMINUTE=0;INTERVAL=1;UNTIL=20151007T235959'),
+        }
+        drr = DurationRRule(struct)
+        self.assertFalse(drr.single_date)
+        self.assertFalse(drr.small_date_interval)
+        self.assertTrue(drr.long_date_interval)
+        self.assertFalse(drr.unlimited_date_interval)
+
+    def test_unlimited_date_interval(self):
+        structs = [
+            {
+                'duration': 60,
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20151207T235959'),
+            },
+            {
+                # les lundis à 8h
+                'duration': 0,
+                'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=8;BYMINUTE=0;UNTIL=99991231T235959'),
+                'unlimited': True
+            }
+        ]
+        for struct in structs:
+            drr = DurationRRule(struct)
+            self.assertFalse(drr.single_date)
+            self.assertFalse(drr.small_date_interval)
+            self.assertFalse(drr.long_date_interval)
+            self.assertTrue(drr.unlimited_date_interval)

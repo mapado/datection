@@ -101,18 +101,6 @@ class DurationRRule(object):
         return int(self.duration_rrule['duration'])
 
     @property
-    def unlimited(self):
-        """Whether the DurationRRule is bounded or not."""
-        if self.duration_rrule.get('unlimited'):
-            return True
-        return self.rrule._until is None and self.rrule._count is None
-
-    @property
-    def is_continuous(self):
-        """Whether the rrule is to be taken by intervals, or continuously."""
-        return self.duration_rrule.get('continuous', False)
-
-    @property
     def start_datetime(self):
         """The DurationRRule start is a combination of the rrule.dstart
         and the start time.
@@ -212,10 +200,7 @@ class DurationRRule(object):
             return False
         return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
 
-    @property
-    def missing_year(self):
-        """Return True if the recurrence rule year is 1."""
-        return self.rrule.dtstart.year == MISSING_YEAR
+    # Properties describing the RRule typology
 
     @property
     def bounded(self):
@@ -224,3 +209,56 @@ class DurationRRule(object):
 
         """
         return not self.unlimited
+
+    @property
+    def unlimited(self):
+        """Whether the DurationRRule is bounded or not."""
+        if self.duration_rrule.get('unlimited'):
+            return True
+        return self.rrule._until is None and self.rrule._count is None
+
+    @property
+    def is_continuous(self):
+        """Whether the rrule is to be taken by intervals, or continuously."""
+        return self.duration_rrule.get('continuous', False)
+
+    @property
+    def single_date(self):
+        """Return True if the RRule describes a single date(time)."""
+        return (
+            self.rrule.count == 1 and
+            self.duration <= ALL_DAY
+        )
+
+    @property
+    def small_date_interval(self):
+        """Return True if the RRule describes a date interval of less
+        than 4 months and more than a day.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return 1 <= (end_date - start_date).days <= 4 * 30
+
+    @property
+    def long_date_interval(self):
+        """Return True if the RRule describes a date interval of less
+        than 8 months and than 4 months.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return 4 * 30 < (end_date - start_date).days <= 8 * 30
+
+    @property
+    def unlimited_date_interval(self):
+        """Return True if the RRule describes a date interval of more
+        than 8 months.
+
+        """
+        start_date, end_date = self.date_interval
+        if not end_date:
+            return False
+        return (end_date - start_date).days > 8 * 30
