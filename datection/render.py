@@ -24,22 +24,8 @@ from datection.timepoint import DAY_END
 from datection.lang import DEFAULT_LOCALES
 from datection.lang import getlocale
 
-locale = 'fr_FR.UTF8'
 
-TRANSLATIONS = {
-    'fr_FR': {
-        'today': u"aujourd'hui",
-        'today_abbrev': u"auj.",
-        'tomorrow': u'demain',
-        'this': u'ce',
-        'midnight': u'minuit',
-        'every day': u'tous les jours',
-        'the': u'le',
-        'and': u'et',
-        'at': u'à',
-        'except': u'sauf',
-    }
-}
+locale = 'fr_FR.UTF8'
 
 FormatterTuple = namedtuple("FormatterTuple", ["formatter", "display_args"])
 
@@ -212,9 +198,16 @@ class BaseFormatter(object):
         self.language_code, self.encoding = locale.split('.')
         self.templates = None
 
+    @cached_property
+    def translations(self):
+        """Return a translation dict using the current locale language"""
+        lang = self.language_code.split('_')[0]
+        mod = __import__('datection.data.' + lang, fromlist=['data'])
+        return mod.TRANSLATIONS
+
     def _(self, key):
         """Return the translation of the key in the instance language."""
-        return TRANSLATIONS[self.language_code][key]
+        return self.translations[self.language_code][key]
 
     def get_template(self, key=None):
         """Return the template corresponding to the instance language
@@ -328,12 +321,24 @@ class DateFormatter(BaseFormatter):
                 'all': u'{prefix} {dayname} {day} {month} {year}',
                 'no_year': u'{prefix} {dayname} {day} {month}',
                 'no_year_no_month': u'{prefix} {dayname} {day}',
+            },
+            'en_US': {
+                'all': u'{prefix} {dayname} {day} of {month} {year}',
+                'no_year': u'{prefix} {dayname} {day} of {month}',
+                'no_year_no_month': u'{prefix} {dayname} {day}',
             }
         }
 
     def format_day(self):
         """Format the date day using the current locale."""
-        return u'1er' if self.date.day == 1 else unicode(self.date.day)
+        if self.language_code == 'fr_FR':
+            return u'1er' if self.date.day == 1 else unicode(self.date.day)
+        elif self.language_code in ['en_US', 'en_GB']:
+            if 4 <= self.date.day <= 20 or 24 <= self.date.day <= 30:
+                suffix = 'th'
+            else:
+                suffix = ['st', 'nd', 'rd'][self.date.day % 10 - 1]
+            return u'%d%s' % (self.date.day, suffix)
 
     def format_dayname(self, abbrev=False):
         """Format the date day using the current locale."""
@@ -493,6 +498,7 @@ class DateIntervalFormatter(BaseFormatter):
         self.end_date = get_date(end_date)
         self.templates = {
             'fr_FR': u'du {start_date} au {end_date}',
+            'en_US': u'{start_date} - {end_date}',
         }
 
     def same_day_interval(self):
@@ -583,6 +589,7 @@ class DateListFormatter(BaseFormatter):
         self.date_list = [get_date(d) for d in date_list]
         self.templates = {
             'fr_FR': u'les {date_list} et {last_date}',
+            'en_US': u'{date_list} and {last_date}',
         }
 
     @postprocess()
@@ -608,7 +615,8 @@ class TimeFormatter(BaseFormatter):
         super(TimeFormatter, self).__init__()
         self.time = get_time(time)
         self.templates = {
-            'fr_FR': u'{prefix} {hour} h {minute}'
+            'fr_FR': u'{prefix} {hour} h {minute}',
+            'en_US': u'{prefix} {hour}:{minute}',
         }
 
     def format_hour(self):
@@ -618,8 +626,10 @@ class TimeFormatter(BaseFormatter):
     def format_minute(self):
         """Format the time hour using the current locale."""
         if self.time.minute == 0:
-            return u''
-        global locale
+            if self.language_code == 'fr_FR':
+                return u''
+            elif self.language_code in ['en_US', 'en_GB']:
+                return u'00'
         with TemporaryLocale(_locale.LC_TIME, locale):
             return self.time.strftime('%M')
 
@@ -649,8 +659,12 @@ class TimeIntervalFormatter(BaseFormatter):
         self.templates = {
             'fr_FR': {
                 'interval': u'de {start_time} à {end_time}',
-                'single_time': u'à {time}'
-            }
+                'single_time': u'à {time}',
+            },
+            'en_US': {
+                'interval': u'{start_time} - {end_time}',
+                'single_time': u'at {time}',
+            },
         }
 
     def display(self, prefix=False):
@@ -677,7 +691,8 @@ class DatetimeFormatter(BaseFormatter):
         super(DatetimeFormatter, self).__init__()
         self.datetime = _datetime
         self.templates = {
-            'fr_FR': u'{date} à {time}'
+            'fr_FR': u'{date} à {time}',
+            'en_US': u'{date} at {time}',
         }
 
     def display(self, *args, **kwargs):
@@ -706,6 +721,11 @@ class DatetimeIntervalFormatter(BaseFormatter):
             'fr_FR': {
                 'single_day': u'le {date} {time_interval}',
                 'single_time': u'{date_interval} à {time}',
+                'date_interval': u'{date_interval} {time_interval}',
+            },
+            'en_US': {
+                'single_day': u'the {date} {time_interval}',
+                'single_time': u'{date_interval} at {time}',
                 'date_interval': u'{date_interval} {time_interval}',
             }
         }
@@ -753,7 +773,9 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         self.end = end
         self.templates = {
             'fr_FR':
-            u'du {start_date} à {start_time} au {end_date} à {end_time}'
+            u'du {start_date} à {start_time} au {end_date} à {end_time}',
+            'en_US':
+            u'{start_date} at {start_time} - {end_date} at {end_time}'
         }
 
     @postprocess()
@@ -788,6 +810,11 @@ class WeekdayReccurenceFormatter(BaseFormatter):
             'fr_FR': {
                 'one_day': u'le {weekday}',
                 'interval': u'du {start_weekday} au {end_weekday}',
+                'weekday_reccurence': u'{weekdays}, {dates}, {time}',
+            },
+            'en_US': {
+                'one_day': u'the {weekday}',
+                'interval': u'from {start_weekday} to {end_weekday}',
                 'weekday_reccurence': u'{weekdays}, {dates}, {time}',
             }
         }
@@ -868,7 +895,8 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.schedule = self.deduplicate(self.schedule)
         self.start, self.end = start, end
         self.templates = {
-            'fr_FR': u'{date} + autres dates'
+            'fr_FR': u'{date} + autres dates',
+            'en_US': u'{date} + more dates',
         }
 
     @postprocess(capitalize=True)
@@ -914,6 +942,10 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
             'fr_FR': {
                 'one_opening': u'{weekday} {time_interval}',
                 'several_openings': u'{opening} {time_list} et {last_time}'
+            },
+            'en_US': {
+                'one_opening': u'{weekday} {time_interval}',
+                'several_openings': u'{opening} {time_list} and {last_time}'
             }
         }
 
@@ -1063,6 +1095,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.format_exclusion = format_exclusion
         self.templates = {
             'fr_FR': u'{dates} {time}',
+            'en_US': u'{dates} {time}',
         }
 
     @cached_property
@@ -1256,6 +1289,10 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.templates = {
             'fr_FR': {
                 'two_months': u'{month1} et {month2}',
+                'full': u'{months} {year}'
+            },
+            'en_US': {
+                'two_months': u'{month1} and {month2}',
                 'full': u'{months} {year}'
             }
         }

@@ -50,3 +50,19 @@ SHORT_MONTHS = {
     u'nov': 11,
     u'dec': 12,
 }
+
+
+TRANSLATIONS = {
+    'en_US': {
+        'today': u"today",
+        'today_abbrev': u"today",
+        'tomorrow': u'tomorrow',
+        'this': u'this',
+        'midnight': u'midnight',
+        'every day': u'every day',
+        'the': u'the',
+        'and': u'and',
+        'at': u'et',
+        'except': u'except',
+    }
+}

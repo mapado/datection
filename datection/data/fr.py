@@ -42,7 +42,6 @@ MONTHS = {
 }
 
 SHORT_MONTHS = {
-    # Untested for now!
     u'jan': 1,
     u'janv': 1,
     u'fév': 2,
@@ -59,4 +58,19 @@ SHORT_MONTHS = {
     u'nov': 11,
     u'dec': 12,
     u'déc': 12,
+}
+
+TRANSLATIONS = {
+    'fr_FR': {
+        'today': u"aujourd'hui",
+        'today_abbrev': u"auj.",
+        'tomorrow': u'demain',
+        'this': u'ce',
+        'midnight': u'minuit',
+        'every day': u'tous les jours',
+        'the': u'le',
+        'and': u'et',
+        'at': u'à',
+        'except': u'sauf',
+    },
 }
