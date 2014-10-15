@@ -1,4 +1,6 @@
-""" Some utility functions """
+# -*- coding: utf-8 -*-
+
+"""Some utility functions"""
 
 import re
 import datection
