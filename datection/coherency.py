@@ -4,7 +4,6 @@
 Timepoint objects. The Timepoints bringing redundancy will be removed.
 
 """
-import re
 
 from copy import deepcopy
 from collections import Counter
@@ -170,7 +169,7 @@ class RRuleCoherencyFilter(object):
         self.drrs = out
 
     def apply_unlimited_date_interval_number_coherency_heuristics(self):
-        """Keep only the 2 unlimited date interval rrules per weekday."""
+        """Keep only the 1 unlimited date interval rrules per weekday."""
         out = []
         kept_unlimited_date_intervals = Counter()
         for drr in self.drrs:
@@ -185,6 +184,9 @@ class RRuleCoherencyFilter(object):
             else:
                 out.append(drr)
         self.drrs = out
+
+    def apply_day_level_collison_coherency_heuristics(self):
+        pass
 
     def apply_rrule_type_coherency_heuristics(self):
         """Apply coherency heuristics based on the type of the rrules.
