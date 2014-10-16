@@ -49,7 +49,6 @@ class TestParse(unittest.TestCase):
         self.assert_generates(
             u"Le 5 mars 2015 de 16h à 18h30", [
                 datetime(2015, 3, 5, 16, 0),
-                datetime(2015, 3, 5, 16, 0),
             ])
         self.assert_generates(
             u"Le 5 mars 2015. De 16h à 18h30", [datetime(2015, 3, 5, 16, 0)])
