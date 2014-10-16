@@ -146,8 +146,18 @@ class TestRRuleNumberCoherencyHeuristics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Change the heuristics limits, to enable smaller datasets."""
+        cls.MAX_SINGLE_DATE_RRULES = RRuleCoherencyFilter.MAX_SINGLE_DATE_RRULES
+        cls.MAX_SMALL_DATE_INTERVAL_RRULES = RRuleCoherencyFilter.\
+            MAX_SMALL_DATE_INTERVAL_RRULES
+
         RRuleCoherencyFilter.MAX_SINGLE_DATE_RRULES = 2
         RRuleCoherencyFilter.MAX_SMALL_DATE_INTERVAL_RRULES = 2
+
+    @classmethod
+    def tearDownClass(cls):
+        RRuleCoherencyFilter.MAX_SINGLE_DATE_RRULES = cls.MAX_SINGLE_DATE_RRULES
+        RRuleCoherencyFilter.MAX_SMALL_DATE_INTERVAL_RRULES = cls.\
+            MAX_SMALL_DATE_INTERVAL_RRULES
 
     def test_apply_single_date_number_coherency_heuristics(self):
         schedule = [
@@ -222,26 +232,13 @@ class TestRRuleNumberCoherencyHeuristics(unittest.TestCase):
         drrs = [DurationRRule(item) for item in schedule]
         rcf = RRuleCoherencyFilter(drrs)
         rcf.apply_long_date_interval_number_coherency_heuristics()
-        new_drr1 = {
-            # Le lundi Du 1er janvier au 2 mai 2015, de 8h à 15h
-            'duration': 420,
-            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20150502T235959'),
-        }
-        new_drr2 = {
-            # Le mardi Du 1er janvier au 2 mai 2015, de 8h à 15h
-            'duration': 420,
-            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20150502T235959'),
-        }
         out_schedule = [drr.duration_rrule for drr in rcf.drrs]
-        self.assertListEqual(
-            [new_drr1, new_drr2, schedule[1], schedule[2]],
-            out_schedule)
+        self.assertListEqual(out_schedule, schedule[:3])
 
     def test_apply_unlimited_date_interval_number_coherency_heuristics(self):
         schedule = [
-            {   # Le lundi et mardi, Du 1er janvier au 2 octobre 2015, de 8h à 15h
+            {   # Le lundi et mardi, Du 1er janvier au 2 octobre 2015,
+                # de 8h à 15h
                 'duration': 420,
                 'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
                           'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
@@ -260,17 +257,5 @@ class TestRRuleNumberCoherencyHeuristics(unittest.TestCase):
         drrs = [DurationRRule(item) for item in schedule]
         rcf = RRuleCoherencyFilter(drrs)
         rcf.apply_unlimited_date_interval_number_coherency_heuristics()
-        new_drr1 = {
-            # Le lundi Du 1er janvier au 2 octobre 2015, de 8h à 15h
-            'duration': 420,
-            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
-        }
-        new_drr2 = {
-            # Le mardi, Du 1er janvier au 2 octobre 2015, de 8h à 15h
-            'duration': 420,
-            'rrule': ('DTSTART:20150101\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
-                      'BYHOUR=8;BYMINUTE=0;UNTIL=20151002T235959'),
-        }
         out_schedule = [drr.duration_rrule for drr in rcf.drrs]
-        self.assertListEqual([new_drr1, new_drr2], out_schedule)
+        self.assertListEqual(out_schedule, schedule[:1])

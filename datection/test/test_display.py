@@ -152,7 +152,6 @@ class TestDisplay(GetCurrentDayMocker):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 18 mars 2013", "fr", only_future=False)
         self.assertEqual(display(sch, self.locale), u'Les 15 et 18 mars 2013')
-
         sch = datection.export(
             u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
             "fr", only_future=False)
