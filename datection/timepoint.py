@@ -388,6 +388,28 @@ class DateList(Timepoint):
     def export(self):
         return [_date.export() for _date in self.dates]
 
+    def contiguous_groups(self):
+        """Group contiguous dates together."""
+        def consecutive(date1, date2):
+            return date1.to_python() + timedelta(days=1) == date2.to_python()
+
+        contiguous_groups = [[self.dates[0]], ]
+        group_index = 0
+        previous_date = self.dates[0]
+        for current_date in self.dates[1:]:
+            if not consecutive(previous_date, current_date):
+                group_index += 1
+                contiguous_groups.append([])
+            contiguous_groups[group_index].append(current_date)
+            previous_date = current_date
+        return contiguous_groups
+
+    def contiguous_dates(self):
+        """Return True if all the dates in ther interval are continuous.
+
+        """
+        return len(self.contiguous_groups()) == 1
+
     def to_python(self):
         """Convert self.dates to a list of datetime.date objects."""
         return [_date.to_python() for _date in self.dates]
