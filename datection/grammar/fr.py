@@ -317,7 +317,7 @@ TIMEPOINTS = [
     ('exclusion', EXCLUSION)
 ]
 
-PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY]
+PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY, DAY_NUMBER]
 
 # List of expressions associated with their replacement
 # This replacement allows to reduce the complexity of the patterns

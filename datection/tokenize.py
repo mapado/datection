@@ -188,6 +188,10 @@ class Tokenizer(object):
             for group2 in out:
                 if group1 is group2:
                     continue
+                # Tolerate spans that are exactly the same (they do not really
+                # intersect)
+                if span1 == span2:
+                    continue
                 (tpt1, ctx1, span1), (tpt2, ctx2, span2) = group1, group2
                 if span1.intersection(span2):
                     intersections[group1] += 1
