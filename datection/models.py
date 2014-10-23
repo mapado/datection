@@ -227,8 +227,8 @@ class DurationRRule(object):
         """Whether the DurationRRule is bounded or not."""
         if self.duration_rrule.get('unlimited'):
             return True
-        # if more than 8 month event
-        if (self.end_datetime - self.start_datetime).days > 240:
+        # if more than 12 month event
+        if self.rrule._until and (self.end_datetime - self.start_datetime).days > 364:
             return True
 
         return self.rrule._until is None and self.rrule._count is None
