@@ -66,7 +66,7 @@ def min_distance(drrules1, drrules2):
     current_minimal = timedelta(365)
     for x, y in cartesian_product(drrules1, drrules2):
         if x.rrule and y.rrule:
-            ddistance = abs(x.rrule[0] - y.rrule[0])
+            ddistance = abs(x.start_datetime - y.start_datetime)
             if ddistance < current_minimal:
                 current_minimal = ddistance
     return current_minimal
