@@ -140,13 +140,20 @@ class DurationRRule(object):
                 return datetime.combine(
                     end_date, self.time_interval[1])
             else:
-                return datetime.combine(
-                    end_date, self.time_interval[0]
-                ) + timedelta(minutes=self.duration)
+                date = datetime.combine(end_date, self.time_interval[0])
+                try:
+                    return date + timedelta(minutes=self.duration)
+                except OverflowError:
+                    return date
         else:
-            return datetime.combine(
-                self.rrule.dtstart.date(), self.time_interval[0]
-            ) + timedelta(days=365, minutes=self.duration)
+            date = datetime.combine(
+                self.rrule.dtstart.date(),
+                self.time_interval[0]
+            )
+            try:
+                return date + timedelta(days=365, minutes=self.duration)
+            except OverflowError:
+                return date
 
     @property
     def date_interval(self):
