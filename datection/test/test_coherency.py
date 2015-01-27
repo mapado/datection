@@ -75,8 +75,8 @@ class TestRRuleTypeCoherencyHeuristics(unittest.TestCase):
             },
             {   # les lundis à 18h
                 'duration': 0,
-                'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                          'BYHOUR=18;BYMINUTE=0;UNTIL=99991231T235959'),
+                'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                          'BYHOUR=18;BYMINUTE=0;UNTIL='),
                 'unlimited': True
             },
         ]
@@ -115,16 +115,16 @@ class TestRRuleTypeCoherencyHeuristics(unittest.TestCase):
         schedule = [
             {   # les lundis à 18h
                 'duration': 0,
-                'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;'
+                'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;'
                           'BYDAY=MO;BYHOUR=18;BYMINUTE=0;'
-                          'UNTIL=99991231T235959'),
+                          'UNTIL='),
                 'unlimited': True
             },
             {   # les mardi à 20h
                 'duration': 0,
-                'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;'
+                'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;'
                           'BYDAY=TU;BYHOUR=20;BYMINUTE=0;'
-                          'UNTIL=99991231T235959'),
+                          'UNTIL='),
                 'unlimited': True
             },
             {   # le 5 mars 2015
