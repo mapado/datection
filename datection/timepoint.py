@@ -217,6 +217,10 @@ class Date(AbstractDate):
         month = match['month'] if match['month'] else None
         return Date(year, month, match['day'])
 
+    @classmethod
+    def from_date(self, date):
+        return Date(date.year, date.month, date.day)
+
     @property
     def rrulestr(self):
         """ Return a reccurence rule string tailored for a single Date """
@@ -460,7 +464,7 @@ class DateInterval(AbstractDateInterval):
 
     @classmethod
     def make_undefined(cls):
-        return DateInterval(Date(1, 1, 1), Date(9999, 12, 31))
+        return DateInterval(Date.from_date(UNLIMITED_DATE_START), Date.from_date(UNLIMITED_DATE_END))
 
     @classmethod
     def from_match(cls, start_date, end_date):

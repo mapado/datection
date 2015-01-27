@@ -48,7 +48,7 @@ def is_unlimited_start(start):
     if type(start) is datetime:
         start = start.date()
 
-    return start == date(1, 1, 1)
+    return start == UNLIMITED_DATE_START
 
 def is_unlimited_end(end):
     """ Check is "end" match the date 12-31-9999
@@ -57,7 +57,7 @@ def is_unlimited_end(end):
     if type(end) is datetime:
         end = end.date()
 
-    return end == date(9999, 12, 31)
+    return end == UNLIMITED_DATE_END
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
     """ Returns an RFC standard RRULE string
