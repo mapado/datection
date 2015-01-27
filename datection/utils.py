@@ -42,7 +42,7 @@ def isoformat_concat(datetime):
     return concat
 
 def is_unlimited_start(start):
-    """ Check is "start"" match the date 01-01-0001
+    """ Check is "start" match the date 01-01-0001
     """
     # cast to date if datetime
     if type(start) is datetime:
