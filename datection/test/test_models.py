@@ -216,7 +216,7 @@ class TestDurationRRuleTopology(unittest.TestCase):
                 # les lundis à 8h
                 'duration': 0,
                 'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                          'BYHOUR=8;BYMINUTE=0;UNTIL='),
+                          'BYHOUR=8;BYMINUTE=0'),
                 'unlimited': True
             }
         ]
