@@ -70,8 +70,8 @@ def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
 
     >>> export(u"tous les lundis à 8h", "fr")
     [{'duration': 0,
-      'rrule': ('DTSTART:00010101\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
-                'BYMINUTE=0;UNTIL=99991231T235959'),
+      'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
+                'BYMINUTE=0;UNTIL='),
       'span': (0, 21),
       'unlimited': True}]
 

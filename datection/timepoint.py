@@ -12,6 +12,8 @@ from dateutil.rrule import WEEKLY
 from datection.utils import get_current_date
 from datection.utils import makerrulestr
 from datection.utils import duration
+from datection.utils import UNLIMITED_DATE_START
+from datection.utils import UNLIMITED_DATE_END
 
 ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000

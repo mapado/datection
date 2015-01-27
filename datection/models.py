@@ -14,6 +14,8 @@ from dateutil.rrule import rrulestr
 from dateutil.rrule import rruleset
 
 from datection.utils import cached_property
+from datection.utils import UNLIMITED_DATETIME_START
+from datection.utils import UNLIMITED_DATETIME_END
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
 from datection.timepoint import ALL_DAY
@@ -90,7 +92,15 @@ class DurationRRule(object):
         is only performed the first time.
 
         """
-        return rrulestr(self.duration_rrule['rrule'])
+        rrule = rrulestr(self.duration_rrule['rrule'])
+
+        # when we are in unlimited mode, datection need to
+        # have DTSTART=01-01-0001 & UNTIL=31-12-9999
+        if self.duration_rrule.get('unlimited'):
+            rrule._dtstart   = UNLIMITED_DATETIME_START
+            rrule._until     = UNLIMITED_DATETIME_END
+
+        return rrule
 
     @property
     def date_producer(self):
