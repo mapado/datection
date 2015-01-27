@@ -464,7 +464,10 @@ class DateInterval(AbstractDateInterval):
 
     @classmethod
     def make_undefined(cls):
-        return DateInterval(Date.from_date(UNLIMITED_DATE_START), Date.from_date(UNLIMITED_DATE_END))
+        start = Date.from_date(UNLIMITED_DATE_START)
+        end = Date.from_date(UNLIMITED_DATE_END)
+
+        return DateInterval(start, end)
 
     @classmethod
     def from_match(cls, start_date, end_date):
