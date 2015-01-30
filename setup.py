@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="datection",
-    version='2.3.5',
+    version='2.3.6',
     description='Parse strings and extract normalized temporal data.',
     author=["Balthazar Rouberol"],
     author_email=['balthazar@mapado.com'],
