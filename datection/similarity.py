@@ -21,36 +21,54 @@ def jaccard_distance(set1, set2):
     return len(set1.intersection(set2)) / len(set1.union(set2))
 
 
-def discretise_day_interval(start_datetime, end_datetime):
+def discretise_day_interval(start_datetime, end_datetime, minutes_interval=30):
     """Discretise the day interval of duration_rrule by 30 minutes slots
     """
     out = []
     current = start_datetime
     while current <= end_datetime:
         out.append(current)
-        current += timedelta(minutes=30)
+        current += timedelta(minutes=minutes_interval)
     return out
 
 
-def discretise_schedule(schedule):
+def discretise_schedule(schedule, grain_level="min", grain_quantity=30):
     """Discretise the schedule in chunks of 30 minutes"""
     sc_set = set()
     for duration_rrule in schedule:
         drr = DurationRRule(duration_rrule)
         for timepoint in drr:
-            discrete_interval = discretise_day_interval(
-                start_datetime=timepoint,
-                end_datetime=timepoint + timedelta(
-                    minutes=drr.duration))
-            for d_timepoint in discrete_interval:
-                sc_set.add(d_timepoint)
+            if grain_level == "min":
+                discrete_interval = discretise_day_interval(
+                    start_datetime=timepoint,
+                    end_datetime=timepoint + timedelta(
+                        minutes=drr.duration), minutes_interval=grain_quantity)
+                for d_timepoint in discrete_interval:
+                    sc_set.add(d_timepoint)
+            elif grain_level =="hour":
+                discrete_interval = discretise_day_interval(
+                    start_datetime=timepoint,
+                    end_datetime=timepoint + timedelta(
+                        minutes=drr.duration), minutes_interval=60*grain_quantity)
+                for d_timepoint in discrete_interval:
+                    d_timepoint.replace(minute=0)
+                    sc_set.add(d_timepoint)
+            elif grain_level == "day":
+                timepoint = timepoint.date()
+                sc_set.add(timepoint)
+            elif grain_level == "month":
+                timepoint = timepoint.replace(day=1,hour=0,minute=0)
+                sc_set.add(timepoint)
+            elif grain_level == "year":
+                timepoint = timepoint.replace(month=1,day=1,hour=0,minute=0)
+                sc_set.add(timepoint)
     return sc_set
 
 
-def similarity(schedule1, schedule2):
+def similarity(schedule1, schedule2, grain_level="min", grain_quantity=30):
     """Returns the jaccard similarity distance bewteen the schedules"""
-    discrete_schedule1 = discretise_schedule(schedule1)
-    discrete_schedule2 = discretise_schedule(schedule2)
+    discrete_schedule1 = discretise_schedule(schedule1, grain_level=grain_level, grain_quantity=grain_quantity)
+    discrete_schedule2 = discretise_schedule(schedule2, grain_level=grain_level, grain_quantity=grain_quantity)
     return jaccard_distance(discrete_schedule1, discrete_schedule2)
 
 

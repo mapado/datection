@@ -30,7 +30,7 @@ def best_schedule(schedules):
 
     """
     # discretise each schedule into datetimes
-    discretised = [discretise_schedule(schedule)
+    discretised = [discretise_schedule(schedule, grain_level="min", grain_quantity=30)
                    for schedule in schedules]
 
     # find the datetime subset common to all schedules

@@ -49,7 +49,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 5, 8, 30, 0),
             datetime(2014, 2, 5, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule), expected)
+        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_several_schedules(self):
         schedule = [
@@ -72,7 +72,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 6, 8, 30, 0),
             datetime(2014, 2, 6, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule), expected)
+        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_day_interval(self):
         start = datetime(2014, 2, 5, 8, 0, 0)
