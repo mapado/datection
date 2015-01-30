@@ -32,7 +32,7 @@ def discretise_day_interval(start_datetime, end_datetime, minutes_interval=30):
     return out
 
 
-def discretise_schedule(schedule, grain_level="min", grain_quantity=30):
+def discretise_schedule(schedule, grain_level="day", grain_quantity=1):
     """Discretise the schedule in chunks of 30 minutes"""
     sc_set = set()
     for duration_rrule in schedule:
@@ -54,7 +54,7 @@ def discretise_schedule(schedule, grain_level="min", grain_quantity=30):
                     d_timepoint.replace(minute=0)
                     sc_set.add(d_timepoint)
             elif grain_level == "day":
-                timepoint = timepoint.date()
+                timepoint = timepoint.replace(hour=0,minute=0)
                 sc_set.add(timepoint)
             elif grain_level == "month":
                 timepoint = timepoint.replace(day=1,hour=0,minute=0)
