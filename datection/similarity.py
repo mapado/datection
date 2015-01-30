@@ -65,7 +65,7 @@ def discretise_schedule(schedule, grain_level="min", grain_quantity=30):
     return sc_set
 
 
-def similarity(schedule1, schedule2, grain_level="min", grain_quantity=30):
+def similarity(schedule1, schedule2, grain_level="day", grain_quantity=1):
     """Returns the jaccard similarity distance bewteen the schedules"""
     discrete_schedule1 = discretise_schedule(schedule1, grain_level=grain_level, grain_quantity=grain_quantity)
     discrete_schedule2 = discretise_schedule(schedule2, grain_level=grain_level, grain_quantity=grain_quantity)

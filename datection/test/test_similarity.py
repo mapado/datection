@@ -116,7 +116,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
                 'duration': 120,
             }
         ]
-        self.assertEqual(similarity(schedule1, schedule2), 0.6)
+        self.assertEqual(similarity(schedule1, schedule2, grain_level="min", grain_quantity=30), 0.6)
 
     def test_similarity_total_overlap(self):
         schedule1 = [
@@ -126,7 +126,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
                 'duration': 60,
             }
         ]
-        self.assertEqual(similarity(schedule1, schedule1), 1.0)
+        self.assertEqual(similarity(schedule1, schedule1, grain_level="min", grain_quantity=30), 1.0)
 
     def test_min_days_between_fixed_date(self):
         schedule1 = [{
