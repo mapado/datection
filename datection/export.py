@@ -9,7 +9,7 @@ from datection.models import DurationRRule
 from datection.coherency import RRuleCoherencyFilter
 
 
-def export(text, lang, valid=True, only_future=True, reference=None, **kwargs):
+def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     """Extract and normalize time-related expressions from the text.
 
     Grammar specific to the argument language will be used on the
