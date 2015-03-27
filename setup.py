@@ -11,6 +11,7 @@ setup(
     install_requires=[
         # private packages
         'python-dateutil==2.1.1',
+        'datamining',
         # public packages
         'pyparsing'
     ],
