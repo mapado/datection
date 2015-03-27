@@ -4,6 +4,7 @@ from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 from datection.year_inheritance import YearTransmitter
 from datection.coherency import TimepointCoherencyFilter
+from datamining.utils.text import normalize_text
 
 
 def parse(text, lang, valid=True, reference=None):
@@ -16,8 +17,7 @@ def parse(text, lang, valid=True, reference=None):
     If valid is True, only valid Timepoints will be returned.
 
     """
-    if isinstance(text, str):
-        text = text.decode('utf-8')
+    text = normalize_text(text, trim_space=True).lower()
 
     schedule = Schedule()
     token_groups = Tokenizer(text, lang).tokenize()
