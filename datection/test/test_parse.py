@@ -254,6 +254,9 @@ class TestParse(unittest.TestCase):
               if isinstance(tp, WeeklyRecurrence)][0]
         self.assertEqual(len(wk.weekdays), 7)
 
+    def test_accented_uppercase_date(self):
+        self.assert_generates(u"sam 21 FÉVRIER 2015 20H00", [datetime(2015, 2, 21, 20, 0)])
+
 
 class TestYearLessExpressions(unittest.TestCase):
 
