@@ -28,9 +28,16 @@ class DurationRRule(object):
 
     """
 
-    def __init__(self, duration_rrule, apply_exclusion=True):
+    def __init__(
+            self,
+            duration_rrule,
+            apply_exclusion=True,
+            forced_lower_bound=None,
+            forced_upper_bound=None):
         self.duration_rrule = duration_rrule
         self.apply_exclusion = apply_exclusion
+        self.forced_lower_bound = forced_lower_bound
+        self.forced_upper_bound = forced_upper_bound
 
     def __hash__(self):
         data = {
@@ -56,8 +63,15 @@ class DurationRRule(object):
             for dtime in self.date_producer:
                 yield dtime
         else:
-            self.rrule._dtstart = datetime.combine(date.today(), DAY_START)
-            end_bound_date = date.today() + timedelta(days=365)
+            if self.forced_lower_bound:
+                start_bound_date = self.forced_lower_bound
+            else:
+                start_bound_date = date.today()
+            self.rrule._dtstart = datetime.combine(start_bound_date, DAY_START)
+            if self.forced_upper_bound:
+                end_bound_date = self.forced_upper_bound
+            else:
+                end_bound_date = date.today() + timedelta(days=365)
             end_bound = datetime.combine(end_bound_date, DAY_END)
             for dtime in self.date_producer:
                 if dtime < end_bound:

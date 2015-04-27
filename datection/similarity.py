@@ -32,11 +32,19 @@ def discretise_day_interval(start_datetime, end_datetime, minutes_interval=30):
     return out
 
 
-def discretise_schedule(schedule, grain_level="day", grain_quantity=1):
+def discretise_schedule(
+        schedule,
+        grain_level="day", 
+        grain_quantity=1, 
+        forced_lower_bound=None,
+        forced_upper_bound=None):
     """Discretise the schedule in chunks of 30 minutes"""
     sc_set = set()
     for duration_rrule in schedule:
-        drr = DurationRRule(duration_rrule)
+        drr = DurationRRule(
+            duration_rrule,
+            forced_lower_bound=forced_lower_bound,
+            forced_upper_bound=forced_upper_bound)
         for timepoint in drr:
             if grain_level == "min":
                 discrete_interval = discretise_day_interval(
@@ -51,25 +59,40 @@ def discretise_schedule(schedule, grain_level="day", grain_quantity=1):
                     end_datetime=timepoint + timedelta(
                         minutes=drr.duration), minutes_interval=60*grain_quantity)
                 for d_timepoint in discrete_interval:
-                    d_timepoint.replace(minute=0)
+                    d_timepoint.replace(minute=0, second=0)
                     sc_set.add(d_timepoint)
             elif grain_level == "day":
-                timepoint = timepoint.replace(hour=0,minute=0)
+                timepoint = timepoint.replace(hour=0,minute=0, second=0)
                 sc_set.add(timepoint)
             elif grain_level == "month":
-                timepoint = timepoint.replace(day=1,hour=0,minute=0)
+                timepoint = timepoint.replace(day=1,hour=0,minute=0, second=0)
                 sc_set.add(timepoint)
             elif grain_level == "year":
-                timepoint = timepoint.replace(month=1,day=1,hour=0,minute=0)
+                timepoint = timepoint.replace(
+                        month=1,day=1,hour=0,minute=0, second=0)
                 sc_set.add(timepoint)
     return sc_set
 
 
-def similarity(schedule1, schedule2, grain_level="day", grain_quantity=1):
+def similarity(
+        schedule1,
+        schedule2,
+        grain_level="day",
+        grain_quantity=1,
+        forced_lower_bound=None,
+        forced_upper_bound=None):
     """Returns the jaccard similarity distance bewteen the schedules"""
-    discrete_schedule1 = discretise_schedule(schedule1, grain_level=grain_level, grain_quantity=grain_quantity)
-    discrete_schedule2 = discretise_schedule(schedule2, grain_level=grain_level, grain_quantity=grain_quantity)
-    return jaccard_distance(discrete_schedule1, discrete_schedule2)
+
+    def discretise(sched):
+        """ use given default for similarity analysis """
+        return discretise_schedule(
+            sched,
+            grain_level=grain_level,
+            grain_quantity=grain_quantity,
+            forced_lower_bound=forced_lower_bound,
+            forced_upper_bound=forced_upper_bound)
+
+    return jaccard_distance(discretise(schedule1), discretise(schedule2))
 
 
 def min_distance(drrules1, drrules2):
