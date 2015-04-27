@@ -28,7 +28,12 @@ class DurationRRule(object):
 
     """
 
-    def __init__(self, duration_rrule, apply_exclusion=True, forced_lower_bound=None, forced_upper_bound=None):
+    def __init__(
+            self,
+            duration_rrule,
+            apply_exclusion=True,
+            forced_lower_bound=None,
+            forced_upper_bound=None):
         self.duration_rrule = duration_rrule
         self.apply_exclusion = apply_exclusion
         self.forced_lower_bound = forced_lower_bound
