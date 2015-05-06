@@ -255,7 +255,7 @@ WEEKDAY_LIST = (
     optional_oneof_ci([u"le", u"les", u"tous les", u"ouvert tous les"]) +
     OneOrMore(
         WEEKDAY +
-        Optional(OneOrMore(oneOf([u',', u'et', u'le', u'&', u'/'])))
+        Optional(OneOrMore(oneOf([u';', u',', u'et', u'le', u'&', u'/'])))
     )
 ).setParseAction(as_weekday_list)('weekdays')
 
@@ -263,9 +263,9 @@ WEEKDAY_LIST = (
 WEEKDAY_INTERVAL = (
     optional_ci(u"ouvert") +
     optional_ci(u"du") +
+    WEEKDAY +
+    oneof_ci([u'au', u'-']) +
     WEEKDAY
-    + oneof_ci([u'au', u'-'])
-    + WEEKDAY
 ).setParseAction(as_weekday_interval)('weekdays')
 
 # Any weekday related pattern

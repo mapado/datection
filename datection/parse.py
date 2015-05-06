@@ -46,6 +46,7 @@ def parse(text, lang, valid=True, reference=None):
 
     # Remove timepoints already defined by others, thus removing
     # duplicate content
+    # Avoid fix/recurrent propositions
     timepoints = TimepointCoherencyFilter(timepoints).apply_coherency_rules()
 
     if valid:  # only return valid Timepoints
