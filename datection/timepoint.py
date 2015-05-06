@@ -720,7 +720,10 @@ class DatetimeInterval(AbstractDateInterval):
             and self.time_interval == other.time_interval)
 
     def __repr__(self):
-        return object.__repr__(self)
+        return u'<%s (%s) (%s)>' % (
+            unicode(self.__class__.__name__),
+            unicode(self.date_interval),
+            unicode(self.time_interval))
 
     def __iter__(self):
         current = self.date_interval.start_date.to_python()

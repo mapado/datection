@@ -39,6 +39,7 @@ class YearTransmitter(object):
         """
         if not isinstance(yearless_timepoint, AbstractDate):
             return
+
         for candidate in self.year_defined_timepoints:
             if isinstance(candidate, AbstractDateInterval):
                 dts = candidate.to_python()
