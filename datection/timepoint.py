@@ -331,6 +331,10 @@ class TimeInterval(Timepoint):
     def valid(self):
         return self.start_time.valid and self.end_time.valid
 
+    @property
+    def undefined(self):
+        return self == TimeInterval.make_all_day()
+
     def is_single_time(self):
         return self.start_time == self.end_time
 

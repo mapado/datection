@@ -105,14 +105,15 @@ class TimepointCoherencyFilter(object):
             for tp_dr in tp_date_ranges:
                 for tp_inf in tp_infinites[:]:
                     if isinstance(tp_dr, DateInterval):
-                        if 'UNTIL' not in tp_inf.date_interval.rrulestr:
+                        if tp_inf.date_interval.undefined:
                             tp_inf.date_interval = tp_dr
                     else:
-                        if tp_inf.time_interval.start_time.hour == 0:
+                        if tp_inf.time_interval.undefined:
                             tp_inf.time_interval = tp_dr.time_interval
 
-                        if 'UNTIL' not in tp_inf.date_interval.rrulestr:
+                        if tp_inf.date_interval.undefined:
                             tp_inf.date_interval = tp_dr.date_interval
+
                     timepoints.append(tp_inf)
             self.timepoints = timepoints + tp_not_concerned
 
