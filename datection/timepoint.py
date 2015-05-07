@@ -8,6 +8,7 @@ from datetime import time
 from datetime import date
 from dateutil.rrule import rrule
 from dateutil.rrule import WEEKLY
+from operator import attrgetter
 
 from datection.utils import get_current_date
 from datection.utils import makerrulestr
@@ -462,9 +463,12 @@ class DateInterval(AbstractDateInterval):
             current += timedelta(days=1)
 
     def __unicode__(self):
-        return u'%s - %s' % (
+        return u'%s - %s%s' % (
             unicode(self.start_date),
-            unicode(self.end_date))
+            unicode(self.end_date),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}")
+        )
 
     @classmethod
     def make_undefined(cls):
@@ -724,10 +728,13 @@ class DatetimeInterval(AbstractDateInterval):
             and self.time_interval == other.time_interval)
 
     def __repr__(self):
-        return u'<%s (%s) (%s)>' % (
+        return u'<%s (%s) (%s)%s>' % (
             unicode(self.__class__.__name__),
             unicode(self.date_interval),
-            unicode(self.time_interval))
+            unicode(self.time_interval),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}"),
+        )
 
     def __iter__(self):
         current = self.date_interval.start_date.to_python()
@@ -918,11 +925,14 @@ class WeeklyRecurrence(Timepoint):
             self.weekdays == other.weekdays)
 
     def __repr__(self):
-        return u'<%s - (%s) (%s) (%s)>' % (
+        return u'<%s - (%s) (%s) (%s)%s>' % (
             self.__class__.__name__,
             unicode(self.date_interval),
             unicode(self.weekdays),
-            unicode(self.time_interval))
+            unicode(self.time_interval),
+            unicode("" if not self.excluded
+                    else " { EXCLUDED: " + str(self.excluded) + "}"),
+        )
 
     @property
     def rrulestr(self):
@@ -964,4 +974,7 @@ class WeeklyRecurrence(Timepoint):
             export['unlimited'] = True
         if self.excluded:
             export['excluded'] = self.excluded
+
+        self.weekdays = sorted(self.weekdays, key=attrgetter('weekday'))
+
         return export
