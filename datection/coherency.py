@@ -11,6 +11,8 @@ from datetime import datetime
 
 from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
+from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import DateInterval
 
 
 class TimepointCoherencyFilter(object):
@@ -68,8 +70,56 @@ class TimepointCoherencyFilter(object):
                 timepoints.remove(interval)
         self.timepoints = timepoints
 
+    def inherit_date_lapse(self):
+        """ Intersect datetime range timepoint with infinite patterns
+
+        Example:
+        >>> timepoints = [
+            <DatetimeInterval (2014/10/02 - 2014/10/11) (0:00 - 23:59)>,
+            <WeeklyRecurrence -
+                (0001/01/01 - 9999/12/31) ([TH, FR, SA]) (0:00 - 23:59)>]
+        >>> cf = CoherencyFilter(timepoints)
+        >>> cf.intersect_weeklyreccurence_and_datetimeinterval()
+        >>> cf.timepoints
+            [<WeeklyRecurrence -
+                (2014/10/02 - 2014/10/11) ([TH, FR, SA]) (19:00 - 23:00)>]]
+        """
+        tp_infinites = []
+        tp_date_ranges = []
+        tp_not_concerned = []
+
+        for tp in self.timepoints[:]:
+            if isinstance(tp, WeeklyRecurrence):
+                if 'UNTIL' not in tp.date_interval.rrulestr:
+                    tp_infinites.append(tp)
+                else:
+                    tp_date_ranges.append(tp)
+            elif isinstance(tp, AbstractDateInterval):
+                tp_date_ranges.append(tp)
+            else:
+                tp_not_concerned.append(tp)
+
+        if tp_date_ranges and tp_infinites:
+            # pattern identified now intersect
+            timepoints = []
+            for tp_dr in tp_date_ranges:
+                for tp_inf in tp_infinites[:]:
+                    if isinstance(tp_dr, DateInterval):
+                        if tp_inf.date_interval.undefined:
+                            tp_inf.date_interval = tp_dr
+                    else:
+                        if tp_inf.time_interval.undefined:
+                            tp_inf.time_interval = tp_dr.time_interval
+
+                        if tp_inf.date_interval.undefined:
+                            tp_inf.date_interval = tp_dr.date_interval
+
+                    timepoints.append(tp_inf)
+            self.timepoints = timepoints + tp_not_concerned
+
     def apply_coherency_rules(self):
         """Call every coherency rules."""
+        self.inherit_date_lapse()
         self.deduplicate_date_interval_and_dates()
         return self.timepoints
 

@@ -1,12 +1,11 @@
 from entities.mongo.activity import Activity
 import requests
-import ipdb
 import frogress
 from multiprocessing import Pool
 from random import random
 
 # place = Activity.objects(slug = "tulle/les-sept-collines-theatre-de-tulle").first()
-# acts = Activity.objects(place = str(place.id)) 
+# acts = Activity.objects(place = str(place.id))
 
 errors = 0
 
@@ -25,7 +24,7 @@ def cb_job_done(result):
     global f
     # if not ret.ok:
     #     errors+=1
-    f.write(result)   
+    f.write(result)
     f.flush()
     progress.next()
 
@@ -36,9 +35,9 @@ last_id = "53196f794d57c22d870c9e02"
 #last_id =""
 query_args = {
     #'slug' : 'paris/smoking-sofa',
-    #'place': '52de7f5a4d57c235cc6e5e37', 
-    'merged_to_ref': None, 
-    'activity_type': None 
+    #'place': '52de7f5a4d57c235cc6e5e37',
+    'merged_to_ref': None,
+    'activity_type': None
 }
 if not last_id:
     last_id = Activity.objects(**query_args).order_by('_id').first().id
