@@ -64,16 +64,16 @@ def as_4digit_year(text, start_index, match):
 
 def as_date(text, start_index, matches):
     """Return a Date object from a match of the DATE pattern."""
-    year = matches.get('year') if matches.get('year') else None
-    month = matches.get('month') if matches.get('month') else None
-    day = matches.get('day') if matches.get('day') else None
+    year = matches.get('year')
+    month = matches.get('month')
+    day = matches.get('day')
     return Date(year, month, day)
 
 
 def as_time(text, start_index, matches):
     """Return a Time object from a match of the TIME pattern."""
     hour = matches['hour']
-    minute = matches.get('minute') if matches.get('minute') else 0
+    minute = matches.get('minute', 0)
     return Time(hour, minute)
 
 
@@ -191,10 +191,8 @@ def as_weekly_recurrence(text, start_index, matches):
     days = []
     for wkday in wkdays:
         days.extend(wkday.days)
-    if matches.get('date_interval'):
-        date_interval = matches['date_interval']
-    else:
-        date_interval = DateInterval.make_undefined()
+
+    date_interval = matches.get('date_interval', DateInterval.make_undefined())
     if not time_intervals:
         time_intervals = [TimeInterval.make_all_day()]
     return [WeeklyRecurrence(date_interval, ti, days) for ti in time_intervals]
