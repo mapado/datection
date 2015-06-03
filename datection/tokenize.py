@@ -259,21 +259,87 @@ class Tokenizer(object):
         from the input textual context.
 
         """
+        dmatches = {}
         matches = []
         ctx = unicode(context)
         ctx = self.clean_context(ctx)
+
+        # replacement expression
         for expression, translation in self.language_expressions.iteritems():
             ctx = re.sub(expression, translation, ctx, flags=re.I)
-        for pname, pattern in self.timepoint_patterns:
-            try:
-                for pattern_matches, start, end in pattern.scanString(ctx):
-                    start, end = self.trim_text(ctx[start:end], start, end)
-                    for pattern_match in pattern_matches:
-                        match = Match(pattern_match, pname, start, end)
-                        matches.append((match, context))
-            except NormalizationError:
-                pass
+
+        # if no weekday avoid weekday more complex pattern
+        probe_kinds = self._update_probe_kinds(context.probe_kind, ctx)
+        timepoints = self.timepoint_patterns
+        if 'weekday' not in probe_kinds:
+            timepoints = [tp for tp in timepoints if tp[0] != 'weekly_rec']
+
+        for tp in timepoints:
+            mchs = self._search_matches_timepoint(tp, context, ctx)
+            if mchs:
+                dmatches[tp[0]] = mchs
+
+        # Validate simple pattern before matching related more complex ones
+        for tp in self._get_valid_timepoints(dmatches, timepoints):
+            if len(tp) == 3:
+                for sp in tp[2]:
+                    dmatches[sp[0]] = self._search_matches_timepoint(
+                        sp, context, ctx)
+
+        matches = [t for mt in dmatches.values() for t in mt]
         return matches
+
+    def _update_probe_kinds(self, found_probe_kinds, new_text):
+        """ Catch probe that was not found before replace"""
+        probes = __import__(
+            'datection.grammar.' + self.lang, fromlist=['grammar']).PROBES
+        not_yet_found_probes = (prob for prob in probes if not any(
+            pk == prob.resultsName for pk in found_probe_kinds))
+
+        probe_kinds = found_probe_kinds
+        for tp_probe in not_yet_found_probes:
+            for match, _, _ in tp_probe.scanString(new_text, maxMatches=1):
+                probe_kinds = probe_kinds.union(match.keys())
+        return probe_kinds
+
+    def _get_valid_timepoints(self, dmatches, timepoints):
+        """If all date matches in datetime matches skip date more complex """
+        validated_tp = []
+        contain_datetime_and_date = True
+        if 'date' in dmatches and 'datetime' in dmatches:
+            datetime_spans = (dm[0].span for dm in dmatches['datetime'])
+            date_spans = (dm[0].span for dm in dmatches['date'])
+
+            contain_datetime_and_date = any(
+                not any(
+                    dts[0] <= ds[0] and dts[1] >= ds[1]
+                    for dts in datetime_spans
+                ) for ds in date_spans
+            )
+
+        if contain_datetime_and_date:
+            validated_tp = (tp for tp in timepoints if tp[0] in dmatches.keys())
+        else:
+            validated_tp = (tp for tp in timepoints if tp[0] == 'datetime')
+
+        return validated_tp
+
+    def _search_matches_timepoint(self, tp, context, ctx):
+        """ Try to match regex of this timepoint in given context """
+        pname = tp[0]
+        pattern = tp[1]
+        local_matches = []
+
+        try:
+            for pattern_matches, start, end in pattern.scanString(ctx):
+                start, end = self.trim_text(ctx[start:end], start, end)
+                for pattern_match in pattern_matches:
+                    match = Match(pattern_match, pname, start, end)
+                    local_matches.append((match, context))
+        except NormalizationError:
+            pass
+
+        return local_matches
 
     # pragma: no cover
     def create_token(self, tag, text=None, match=None, span=None):
