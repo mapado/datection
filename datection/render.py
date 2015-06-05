@@ -984,7 +984,7 @@ class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
         out = []
         for day in xrange(7):
             openings = [rec for rec in self.opening_hours
-                        if day in rec.weekday_indexes]
+                        if rec.weekday_indexes and day in rec.weekday_indexes]
             if openings:
                 out.append(self.format_openings(openings, day))
         return '\n'.join([line for line in out])
