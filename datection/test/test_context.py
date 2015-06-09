@@ -28,9 +28,11 @@ Dates et horaires
 Du 6 octobre 2012 au 13 juillet 2013."""
         self.lang = 'fr'
         self.c1 = Context(
-            match_start=60, match_end=100, text=' ' * 200, size=50)
+            match_start=60, match_end=100, text=' ' * 200,
+            probe_kind=[], size=50)
         self.c2 = Context(
-            match_start=70, match_end=115, text=' ' * 200, size=50)
+            match_start=70, match_end=115, text=' ' * 200,
+            probe_kind=[], size=50)
 
     def test_context_init(self):
         assert self.c1.start == 10  # 60 - 50

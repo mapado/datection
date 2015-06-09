@@ -126,7 +126,8 @@ class TestTokenizer(unittest.TestCase):
         self.assertFalse(Tokenizer.is_separator(u"horaires d'ouverture"))
 
     def test_search_context(self):
-        ctx = Context(0, len(self.tok.text), self.tok.text)
+        ctx = Context(0, len(self.tok.text), self.tok.text,
+                      probe_kind=['day','year', 'weekday'])
         result = self.tok.search_context(ctx)
         families = [r[0].timepoint_type for r in result]
         self.assertItemsEqual(

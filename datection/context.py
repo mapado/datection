@@ -29,7 +29,7 @@ class Context(object):
 
     """
 
-    def __init__(self, match_start, match_end, text, size=30):
+    def __init__(self, match_start, match_end, text, probe_kind, size=30):
         # deduce Context start and end index from match start/end index
         # and context size
         if match_start - size > 0:
@@ -40,6 +40,7 @@ class Context(object):
         self.end = match_end + size
         self.text = text  # the input text
         self.size = size  # the number of characters of context
+        self.probe_kind = set(probe_kind) # kind of probe found in context
 
     def __add__(self, item):
         """ The result of the addition of two Contexts is a Context which
@@ -54,6 +55,7 @@ class Context(object):
             match_end=max((self.end, item.end)) - self.size,
             text=self.text,
             size=self.size,
+            probe_kind=self.probe_kind.union(item.probe_kind)
         )
 
     def __getitem__(self, slice):
@@ -100,8 +102,8 @@ def probe(text, lang):
     probes = __import__(
         'datection.grammar.' + lang, fromlist=['grammar']).PROBES
     for tp_probe in probes:
-        for _, start, end in tp_probe.scanString(text):
-            matches.append(Context(start, end, text))
+        for match, start, end in tp_probe.scanString(text):
+            matches.append(Context(start, end, text, match.keys()))
 
     out = list(set(matches))  # remove redundant matches
     # sort return list by order of apperance in the text

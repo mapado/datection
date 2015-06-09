@@ -65,7 +65,7 @@ WEEKDAY = (
     ) |
     # short weekday not followed by another alphanum char
     oneof_ci(SHORT_WEEKDAYS.keys()) + Regex(r'\.?(?!\w)').leaveWhitespace()
-).setParseAction(set_weekday)
+).setParseAction(set_weekday)('weekday')
 
 # A month name can be in its full form or an abbreviated form.
 # When matched, a month name will be transformed to the corresponding
@@ -312,13 +312,18 @@ EXCLUSION = oneof_ci([u'sauf', u'relâche', u'fermé'])
 TIMEPOINTS = [
     ('weekly_rec', WEEKLY_RECURRENCE),
     ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
-    ('date', DATE_PATTERN),
-    ('date_list', DATE_LIST),
-    ('date_interval', DATE_INTERVAL),
-    ('datetime', DATETIME_PATTERN),
-    ('datetime_list', DATETIME_LIST),
-    ('datetime_interval', DATETIME_INTERVAL),
-    ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
+
+    ('datetime', DATETIME_PATTERN, [
+        ('datetime_list', DATETIME_LIST),
+        ('datetime_interval', DATETIME_INTERVAL),
+        ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
+    ]),
+
+    ('date', DATE_PATTERN, [
+        ('date_list', DATE_LIST),
+        ('date_interval', DATE_INTERVAL),
+    ]),
+
     ('exclusion', EXCLUSION),
 ]
 
