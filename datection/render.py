@@ -526,6 +526,9 @@ class DateIntervalFormatter(BaseFormatter):
         """
         return self.start_date.year == self.end_date.year
 
+    def has_two_consecutive_days(self):
+        return self.start_date + datetime.timedelta(days=1) == self.end_date
+
     def format_same_month(self, *args, **kwargs):
         """Formats the date interval when both dates have the same month."""
         template = self.get_template()
@@ -549,6 +552,10 @@ class DateIntervalFormatter(BaseFormatter):
         end_date_fmt = DateFormatter(self.end_date).display(*args, **kwargs)
         return template.format(start_date=start_date_fmt, end_date=end_date_fmt)
 
+    def format_two_consecutive_days(self, *args, **kwargs):
+        return DateListFormatter([
+            self.start_date, self.end_date]).display(*args, **kwargs)
+
     @postprocess()
     def display(self, abbrev_reference=False, *args, **kwargs):
         """Format the date interval using the current locale.
@@ -564,7 +571,9 @@ class DateIntervalFormatter(BaseFormatter):
             kwargs['prefix'] = True
             return DateFormatter(self.start_date).display(
                 abbrev_reference=abbrev_reference, *args, **kwargs)
-        elif self.same_month_interval():
+        elif self.has_two_consecutive_days():
+            return self.format_two_consecutive_days()
+        elif self.same_month_interval(*args, **kwargs):
             return self.format_same_month(*args, **kwargs)
         elif self.same_year_interval():
             return self.format_same_year(*args, **kwargs)

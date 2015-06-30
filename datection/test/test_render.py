@@ -278,6 +278,13 @@ class TestDateIntervalFormatterfr_FR(GetCurrentDayMocker):
         self.assertTrue(self.difmt.same_month_interval())
         self.assertEqual(self.difmt.display(), u'du 15 au 17 novembre')
 
+    def test_display_two_consecutive_days(self):
+        self.difmt.end_date = datetime.date(2013, 11, 16)
+        self.assertTrue(self.difmt.has_two_consecutive_days())
+        self.assertEqual(
+            self.difmt.display(force_year=True),
+            u'les 15 et 16 novembre 2013')
+
     def test_display_same_month_in_less_than_6_months_force_year(self):
         self.set_current_date(datetime.date(2013, 8, 1))
         self.difmt.end_date = datetime.date(2013, 11, 17)
