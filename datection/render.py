@@ -1210,6 +1210,28 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(fmt)
         return out
 
+    def group_by_common_pattern_except_time(self):
+        """ Will be in use with """
+        common_pattern_dict = defaultdict(list)
+        same_patterns_with_different_times = []
+        others = []
+
+        hash_helper = lambda tp: "{} {}".format(
+            tp['start'].date(), tp['end'].date())
+
+        for time_grp, conseq_grps in zip(self.time_groups, self.conseq_groups):
+            hash_key = "|".join([hash_helper(tp) for tp in time_grp])
+            common_pattern_dict[hash_key].append((time_grp, conseq_grps))
+
+        for time_conseq_grp_tup_list in common_pattern_dict.values():
+            if len(time_conseq_grp_tup_list) == 1:
+                others.extend(time_conseq_grp_tup_list)
+            else:
+                same_patterns_with_different_times.append(
+                    time_conseq_grp_tup_list)
+
+        return (same_patterns_with_different_times, others)
+
     @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
     def display(self, *args, **kwargs):
         """Return a human readable string describing self.schedule as shortly
@@ -1225,6 +1247,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(ExclusionFormatter(exc).display(*args, **kwargs))
 
         # format recurring rrules
+        # TODO
         for rec in self.recurring:
             out.append(
                 WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
@@ -1235,8 +1258,43 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             out.append(ContinuousDatetimeIntervalFormatter(start, end).
                        display(*args, **kwargs))
 
+        same_patterns_with_different_dates, others = \
+            self.group_by_common_pattern_except_time()
+
+        for time_conseq_grp_tup_list in same_patterns_with_different_dates:
+            time_group, conseq_groups = time_conseq_grp_tup_list[0]
+            date_list = self.format_date_list(time_group, *args, **kwargs)
+            list_fmt = ', '.join(date_list)
+            if len(date_list) > 1:
+                list_fmt += ','
+
+            date_conseq = self.format_single_dates_and_interval(
+                conseq_groups, *args, **kwargs)
+            conseq_fmt = ', '.join(date_conseq)
+            if len(date_conseq) > 1:
+                conseq_fmt += ','
+
+            # pick shortest render
+            date_fmt = get_shortest(list_fmt, conseq_fmt)
+
+            # concatenate dates and time
+            time_fmt_list = []
+            for time_group, _ in time_conseq_grp_tup_list:
+                start_time, end_time = time_group[0].values()
+                template = self.get_template()
+                time_fmt_list.append(TimeIntervalFormatter(
+                    start_time, end_time).display(prefix=True))
+
+            time_fmt = ', '.join(time_fmt_list)
+
+            if time_fmt:
+                fmt = template.format(dates=date_fmt, time=time_fmt)
+                out.append(fmt)
+            else:
+                out.append(date_fmt)
+
         # format non recurring rrules
-        for time_group, conseq_groups in zip(self.time_groups, self.conseq_groups):
+        for time_group, conseq_groups in others:
             date_list = self.format_date_list(time_group, *args, **kwargs)
             list_fmt = ', '.join(date_list)
             if len(date_list) > 1:

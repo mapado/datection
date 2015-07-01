@@ -182,3 +182,23 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertEqual(
             display(sch, self.locale),
             u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
+
+    def test_display_grouped_time(self):
+        sch = [{
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                        'COUNT=1;BYMINUTE=30;BYHOUR=10'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                        'COUNT=1;BYMINUTE=30;BYHOUR=13'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                        'COUNT=1;BYMINUTE=30;BYHOUR=12'),
+            'duration': '30'
+        }]
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            u'Le 3 mars 2014 de 10 h 30 à 11 h,'
+            u' de 12 h 30 à 13 h, de 13 h 30 à 14 h'
+        )
