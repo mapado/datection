@@ -200,5 +200,28 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertEqual(
             datection.display(sch, 'fr'),
             u'Le 3 mars 2014 de 10 h 30 à 11 h,'
-            u' de 12 h 30 à 13 h, de 13 h 30 à 14 h'
+            u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
+        )
+
+    def test_display_grouped_time_with_dateinterval(self):
+        sch = [{
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=10'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=13'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=12'),
+            'duration': '30'
+        }]
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            u'Du 3 au 5 mars 2014 de 10 h 30 à 11 h,'
+            u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
         )

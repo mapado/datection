@@ -52,6 +52,18 @@ def all_day(start, end):
             and end_time == datetime.time(23, 59))
 
 
+def hash_same_date_pattern(time_group):
+    """ Get hash with unique string for pattern with same date
+
+        :time_group: [{'start': datetime(), 'end': datetime()},]
+        :return: unique string for pattern with same date
+    """
+    return "|".join(["{} {}".format(
+        tp['start'].date(),
+        tp['end'].date()
+    ) for tp in time_group])
+
+
 def postprocess(strip=True, trim_whitespaces=True, lstrip_pattern=None,
                 capitalize=False, rstrip_pattern=None):
     """Post processing text formatter decorator."""
@@ -208,6 +220,13 @@ class BaseFormatter(object):
     def _(self, key):
         """Return the translation of the key in the instance language."""
         return self.translations[self.language_code][key]
+
+    def prevert_list(self, list_to_fmt):
+        """ String list of item concat with simple quote
+            then final 'and' before last item
+        """
+        return '%s %s %s' % (
+            ', '.join(list_to_fmt[:-1]),  self._('and'), list_to_fmt[-1])
 
     def get_template(self, key=None):
         """Return the template corresponding to the instance language
@@ -1216,11 +1235,9 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         same_patterns_with_different_times = []
         others = []
 
-        hash_helper = lambda tp: "{} {}".format(
-            tp['start'].date(), tp['end'].date())
 
         for time_grp, conseq_grps in zip(self.time_groups, self.conseq_groups):
-            hash_key = "|".join([hash_helper(tp) for tp in time_grp])
+            hash_key = hash_same_date_pattern(time_grp)
             common_pattern_dict[hash_key].append((time_grp, conseq_grps))
 
         for time_conseq_grp_tup_list in common_pattern_dict.values():
@@ -1231,6 +1248,38 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                     time_conseq_grp_tup_list)
 
         return (same_patterns_with_different_times, others)
+
+    def _helper_date_fmt(self, time_group, conseq_groups, *args, **kwargs):
+        """ Get human readable date given list of datetime group
+
+        :time_group: [{'start': datetime(), 'end': datetime()},]
+        :conseq_groups: [{'start': datetime(), 'end': datetime()},]
+
+        :return: date format string
+        """
+        date_list = self.format_date_list(time_group, *args, **kwargs)
+        list_fmt = ', '.join(date_list)
+        if len(date_list) > 1:
+            list_fmt += ','
+
+        date_conseq = self.format_single_dates_and_interval(
+            conseq_groups, *args, **kwargs)
+        conseq_fmt = ', '.join(date_conseq)
+        if len(date_conseq) > 1:
+            conseq_fmt += ','
+
+        # pick shortest render
+        return get_shortest(list_fmt, conseq_fmt)
+
+    def _helper_time_fmt(self, time_group):
+        """ Get human readable time given list of datetime group
+
+        :time_group: [{'start': datetime(), 'end': datetime()},]
+
+        :return: time format string
+        """
+        start_time, end_time = time_group[0].values()
+        return TimeIntervalFormatter(start_time, end_time).display(prefix=True)
 
     @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
     def display(self, *args, **kwargs):
@@ -1247,7 +1296,6 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(ExclusionFormatter(exc).display(*args, **kwargs))
 
         # format recurring rrules
-        # TODO
         for rec in self.recurring:
             out.append(
                 WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
@@ -1261,31 +1309,23 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         same_patterns_with_different_dates, others = \
             self.group_by_common_pattern_except_time()
 
+        template = self.get_template()
+        # format non recurring rrules on grouped patterns with different dates
         for time_conseq_grp_tup_list in same_patterns_with_different_dates:
             time_group, conseq_groups = time_conseq_grp_tup_list[0]
-            date_list = self.format_date_list(time_group, *args, **kwargs)
-            list_fmt = ', '.join(date_list)
-            if len(date_list) > 1:
-                list_fmt += ','
-
-            date_conseq = self.format_single_dates_and_interval(
-                conseq_groups, *args, **kwargs)
-            conseq_fmt = ', '.join(date_conseq)
-            if len(date_conseq) > 1:
-                conseq_fmt += ','
-
-            # pick shortest render
-            date_fmt = get_shortest(list_fmt, conseq_fmt)
+            date_fmt = self._helper_date_fmt(
+                time_group,
+                conseq_groups,
+                *args,
+                **kwargs
+            )
 
             # concatenate dates and time
             time_fmt_list = []
             for time_group, _ in time_conseq_grp_tup_list:
-                start_time, end_time = time_group[0].values()
-                template = self.get_template()
-                time_fmt_list.append(TimeIntervalFormatter(
-                    start_time, end_time).display(prefix=True))
+                time_fmt_list.append(self._helper_time_fmt(time_group))
 
-            time_fmt = ', '.join(time_fmt_list)
+            time_fmt = self.prevert_list(time_fmt_list)
 
             if time_fmt:
                 fmt = template.format(dates=date_fmt, time=time_fmt)
@@ -1293,27 +1333,17 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             else:
                 out.append(date_fmt)
 
-        # format non recurring rrules
+        # format non recurring rrules on grouped patterns with different dates
         for time_group, conseq_groups in others:
-            date_list = self.format_date_list(time_group, *args, **kwargs)
-            list_fmt = ', '.join(date_list)
-            if len(date_list) > 1:
-                list_fmt += ','
+            date_fmt = self._helper_date_fmt(
+                time_group,
+                conseq_groups,
+                *args,
+                **kwargs
+            )
 
-            date_conseq = self.format_single_dates_and_interval(
-                conseq_groups, *args, **kwargs)
-            conseq_fmt = ', '.join(date_conseq)
-            if len(date_conseq) > 1:
-                conseq_fmt += ','
+            time_fmt = self._helper_time_fmt(time_group)
 
-            # pick shortest render
-            date_fmt = get_shortest(list_fmt, conseq_fmt)
-
-            # concatenate dates and time
-            start_time, end_time = time_group[0].values()
-            template = self.get_template()
-            time_fmt = TimeIntervalFormatter(
-                start_time, end_time).display(prefix=True)
             if time_fmt:
                 fmt = template.format(dates=date_fmt, time=time_fmt)
                 out.append(fmt)
