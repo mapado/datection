@@ -573,7 +573,7 @@ class DateIntervalFormatter(BaseFormatter):
                 abbrev_reference=abbrev_reference, *args, **kwargs)
         elif self.has_two_consecutive_days():
             return self.format_two_consecutive_days()
-        elif self.same_month_interval(*args, **kwargs):
+        elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
         elif self.same_year_interval():
             return self.format_same_year(*args, **kwargs)

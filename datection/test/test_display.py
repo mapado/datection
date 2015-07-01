@@ -80,7 +80,7 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertGreater(len(short), len(default))
         self.assertEqual(shortest_fmt, default)
         self.assertEqual(short,   u'Ce dimanche + autres dates')
-        self.assertEqual(default, u'Du 15 au 16 déc. 2013')
+        self.assertEqual(default, u'Les 15 et 16 déc. 2013')
 
     def test_display_recurrence(self):
         schedule = [
@@ -146,7 +146,7 @@ class TestDisplay(GetCurrentDayMocker):
     def test_display_date_interval(self):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Du 15 au 16 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les 15 et 16 mars 2013')
 
     def test_display_date_list(self):
         sch = datection.export(
