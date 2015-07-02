@@ -186,15 +186,15 @@ class TestDisplay(GetCurrentDayMocker):
     def test_display_grouped_time(self):
         sch = [{
             'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
-                        'COUNT=1;BYMINUTE=30;BYHOUR=10'),
+                      'COUNT=1;BYMINUTE=30;BYHOUR=10'),
             'duration': '30'
         }, {
             'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
-                        'COUNT=1;BYMINUTE=30;BYHOUR=13'),
+                      'COUNT=1;BYMINUTE=30;BYHOUR=13'),
             'duration': '30'
         }, {
             'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
-                        'COUNT=1;BYMINUTE=30;BYHOUR=12'),
+                      'COUNT=1;BYMINUTE=30;BYHOUR=12'),
             'duration': '30'
         }]
         self.assertEqual(
@@ -224,4 +224,17 @@ class TestDisplay(GetCurrentDayMocker):
             datection.display(sch, 'fr'),
             u'Du 3 au 5 mars 2014 de 10 h 30 à 11 h,'
             u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
+        )
+
+    def test_avoid_display_day_plus_precise_date(self):
+        sch = [{
+            'duration': 0,
+            'rrule': ('DTSTART:20150703\nRRULE:FREQ=DAILY;'
+                      'COUNT=1;INTERVAL=1;BYMINUTE=30;'
+                      'BYHOUR=19;BYDAY=FR;WKST=MO')
+        }]
+        date_fmt = datection.display(sch, 'fr')
+        self.assertEqual(
+            date_fmt,
+            u'Le 3 juillet 2015 à 19 h 30'
         )

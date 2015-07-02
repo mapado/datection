@@ -235,6 +235,8 @@ class DurationRRule(object):
             # similar to "from DT_START to DT_END", hence it is not a
             # recurrence!
             return False
+        if 'COUNT=1' in self.duration_rrule['rrule']:
+            return False
         return True
 
     @property
