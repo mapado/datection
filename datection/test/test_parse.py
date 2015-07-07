@@ -44,6 +44,8 @@ class TestParse(unittest.TestCase):
     def test_numeric_datetime(self):
         self.assert_generates(
             u"03/12/2013 18:30", [datetime(2013, 12, 3, 18, 30)])
+        self.assert_generates(
+            u"06.03.2016 15h00", [datetime(2016, 3, 6, 15, 0)])
 
     def test_datetime_with_time_interval(self):
         self.assert_generates(
