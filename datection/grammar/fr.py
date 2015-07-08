@@ -89,7 +89,7 @@ DATE = (
 
 # A numeric date is a day, month and a year separated by a one-char
 # token. Example: 05/10/2012, 05/03, 2014/5/12
-date_sep = oneOf([u'/', u'-'])
+date_sep = oneOf([u'/', u'-', u'.'])
 FR_NUMERIC_DATE = (
     DAY_NUMBER +
     date_sep +
