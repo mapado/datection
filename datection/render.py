@@ -1031,7 +1031,13 @@ class ExclusionFormatter(BaseFormatter):
                 'weekdays': u'le {weekdays} et {last_weekday}',
                 'weekday_interval': u'du {start_weekday} au {end_weekday}',
                 'date': u'le {date}',
-            }
+            },
+            'en_US': {
+                'weekday': u'{weekday}',
+                'weekdays': u'{weekdays} and {last_weekday}',
+                'weekday_interval': u'from {start_weekday} to {end_weekday}',
+                'date': u'{date}',
+            },
         }
 
     def display_exclusion(self, excluded):
