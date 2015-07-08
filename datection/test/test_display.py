@@ -80,7 +80,7 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertGreater(len(short), len(default))
         self.assertEqual(shortest_fmt, default)
         self.assertEqual(short,   u'Ce dimanche + autres dates')
-        self.assertEqual(default, u'Du 15 au 16 déc. 2013')
+        self.assertEqual(default, u'Les 15 et 16 déc. 2013')
 
     def test_display_recurrence(self):
         schedule = [
@@ -146,7 +146,7 @@ class TestDisplay(GetCurrentDayMocker):
     def test_display_date_interval(self):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Du 15 au 16 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les 15 et 16 mars 2013')
 
     def test_display_date_list(self):
         sch = datection.export(
@@ -182,3 +182,59 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertEqual(
             display(sch, self.locale),
             u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
+
+    def test_display_grouped_time(self):
+        sch = [{
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'COUNT=1;BYMINUTE=30;BYHOUR=10'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'COUNT=1;BYMINUTE=30;BYHOUR=13'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'COUNT=1;BYMINUTE=30;BYHOUR=12'),
+            'duration': '30'
+        }]
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            u'Le 3 mars 2014 de 10 h 30 à 11 h,'
+            u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
+        )
+
+    def test_display_grouped_time_with_dateinterval(self):
+        sch = [{
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=10'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=13'),
+            'duration': '30'
+        }, {
+            'rrule': ('DTSTART:20140303\nRRULE:FREQ=DAILY;'
+                      'UNTIL=20140305T235959;INTERVAL=1;'
+                      'BYMINUTE=30;BYHOUR=12'),
+            'duration': '30'
+        }]
+        self.assertEqual(
+            datection.display(sch, 'fr'),
+            u'Du 3 au 5 mars 2014 de 10 h 30 à 11 h,'
+            u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
+        )
+
+    def test_avoid_display_day_plus_precise_date(self):
+        sch = [{
+            'duration': 0,
+            'rrule': ('DTSTART:20150703\nRRULE:FREQ=DAILY;'
+                      'COUNT=1;INTERVAL=1;BYMINUTE=30;'
+                      'BYHOUR=19;BYDAY=FR;WKST=MO')
+        }]
+        date_fmt = datection.display(sch, 'fr')
+        self.assertEqual(
+            date_fmt,
+            u'Le 3 juillet 2015 à 19 h 30'
+        )
