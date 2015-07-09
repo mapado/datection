@@ -430,6 +430,11 @@ class TestTimeIntervalfr_FR(unittest.TestCase):
         self.tifmt.end_time = datetime.time(0, 0)
         self.assertEqual(self.tifmt.display(), u'de 12 h 15 à minuit')
 
+    def test_display_end_time_after_midnight(self):
+        self.tifmt.start_time = datetime.time(22, 30)
+        self.tifmt.end_time = datetime.time(2, 0)
+        self.assertEqual(self.tifmt.display(), u'de 22 h 30 à 2 h')
+
     def test_display_equal_bounds(self):
         self.tifmt.end_time = self.tifmt.start_time
         self.assertEqual(self.tifmt.display(), u'12 h 15')
@@ -953,6 +958,42 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         ]
         fmt = LongFormatter(schedule)
         self.assertEqual(fmt.display(), u'Le dimanche, de 10 h à 18 h')
+
+    def test_display_end_after_midnight_day_enumeration(self):
+        schedule = [
+            {
+                "duration" : 360, 
+                "rrule" : ('DTSTART:20150709\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
+                           'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        display = fmt.display()
+        self.assertEqual(display, u'Les 9 et 10 juillet 2015 de 22 h à 4 h')
+
+    def test_display_end_after_midnight_day_interval(self):
+        schedule = [
+            {
+                "duration" : 360, 
+                "rrule" : ('DTSTART:20150705\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
+                           'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        display = fmt.display()
+        self.assertEqual(display, u'Du 5 au 10 juillet 2015 de 22 h à 4 h')
+
+    def test_display_end_after_midnight_same_day(self):
+        schedule = [
+            {
+                "duration" : 120, 
+                "rrule" : ('DTSTART:20150710\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
+                           'INTERVAL=1;BYMINUTE=00;BYHOUR=2;BYDAY=MO,TU,WE,TH,FR,SA,SU')
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        display = fmt.display()
+        self.assertEqual(display, u'Le 10 juillet 2015 de 2 h à 4 h')
 
     def test_display_excluded_weekday(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi
