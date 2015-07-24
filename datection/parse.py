@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from datection.lang import detect_language
 from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 from datection.year_inheritance import YearTransmitter
@@ -19,6 +20,8 @@ def parse(text, lang, valid=True, reference=None):
     if isinstance(text, str):
         text = text.decode('utf-8')
     text = text.lower()
+
+    lang = detect_language(text, lang)
 
     schedule = Schedule()
     token_groups = Tokenizer(text, lang).tokenize()

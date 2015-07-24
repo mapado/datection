@@ -259,6 +259,13 @@ class TestParse(unittest.TestCase):
     def test_accented_uppercase_date(self):
         self.assert_generates(u"sam 21 FÉVRIER 2015 20H00", [datetime(2015, 2, 21, 20, 0)])
 
+    def test_yesgolive_tricky_date(self):
+        text = u'Mar 28, 2014 8:00 PM \u2013 9:55 PM'
+        self.assert_generates(
+            text,
+            [datetime(2014, 3, 28, 20, 0)]
+        )
+
 
 class TestYearLessExpressions(unittest.TestCase):
 
