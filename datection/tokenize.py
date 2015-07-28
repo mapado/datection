@@ -11,6 +11,32 @@ from datection.context import probe
 from datection.utils import cached_property
 
 
+def get_repetitions(txt):
+    """ Detect list of repetions in a text with statistics
+
+        for pattern based on numbers
+    """
+    r = re.compile(r"(.{6,}?)\1+")
+    tok_txt = re.sub(r"\d", 'X', txt).replace('\n', '')
+
+    repetitions = []
+    for match in r.finditer(tok_txt):
+        idx_start = match.start()
+        pattern = match.group(1)
+        idx_end = match.end()
+        real_case = txt[idx_start + 1: len(pattern) + idx_start + 1]
+        qte = len(match.group(0))/len(pattern)
+
+        repetitions.append({
+            'sample': real_case,
+            'start': idx_start,
+            'end': idx_end,
+            'qte': qte,
+            'coverage': float(len(pattern) * qte) / len(txt)
+        })
+    return repetitions
+
+
 class Match(object):
 
     """A pattern match found in a text."""
@@ -259,7 +285,6 @@ class Tokenizer(object):
         from the input textual context.
 
         """
-        dmatches = {}
         matches = []
         ctx = unicode(context)
         ctx = self.clean_context(ctx)
@@ -274,20 +299,50 @@ class Tokenizer(object):
         if 'weekday' not in probe_kinds:
             timepoints = [tp for tp in timepoints if tp[0] != 'weekly_rec']
 
+        n_timepoints = None
+        analyse_subpattern = True
+        if len(ctx) > 200:
+            # if pattern is always same pattern repetion desactive other
+            # timepoints
+            n_timepoints = self._extract_timepoint_from_patterns(ctx, timepoints)
+            if n_timepoints:
+                timepoints = n_timepoints
+                analyse_subpattern = False
+
+        dmatches = self._search_matches_timepoints(
+            timepoints, context, ctx, analyse_subpattern
+        )
+        matches = [t for mt in dmatches.values() for t in mt]
+        return matches
+
+    def _extract_timepoint_from_patterns(self, ctx, timepoints):
+        """Get useful timepoints from identified patterns with high coverage"""
+        pattern_repetitions = get_repetitions(ctx)
+        if len(pattern_repetitions) == 1:
+            pat = pattern_repetitions[0]
+            if pat['coverage'] > 0.9:
+                dt_matches = self._search_matches_timepoints(
+                    timepoints, pat['sample'], pat['sample'])
+                return list(self._get_valid_timepoints(dt_matches, timepoints))
+
+    def _search_matches_timepoints(
+            self, timepoints, context, ctx, analyse_subpattern=True):
+        """ Find all matches given a list of timepoint parse rules """
+        dmatches = {}
         for tp in timepoints:
             mchs = self._search_matches_timepoint(tp, context, ctx)
             if mchs:
                 dmatches[tp[0]] = mchs
 
         # Validate simple pattern before matching related more complex ones
-        for tp in self._get_valid_timepoints(dmatches, timepoints):
-            if len(tp) == 3:
-                for sp in tp[2]:
-                    dmatches[sp[0]] = self._search_matches_timepoint(
-                        sp, context, ctx)
-
-        matches = [t for mt in dmatches.values() for t in mt]
-        return matches
+        if analyse_subpattern:
+            for tp in self._get_valid_timepoints(dmatches, timepoints):
+                if len(tp) == 3:
+                    for sp in tp[2]:
+                        mchs = self._search_matches_timepoint(sp, context, ctx)
+                        if mchs:
+                            dmatches[sp[0]] = mchs
+        return dmatches
 
     def _update_probe_kinds(self, found_probe_kinds, new_text):
         """ Catch probe that was not found before replace"""
@@ -307,21 +362,41 @@ class Tokenizer(object):
         validated_tp = []
         contain_datetime_and_date = True
         if 'date' in dmatches and 'datetime' in dmatches:
-            datetime_spans = (dm[0].span for dm in dmatches['datetime'])
-            date_spans = (dm[0].span for dm in dmatches['date'])
+                datetime_spans = (dm[0].span for dm in dmatches['datetime'])
+                date_spans = (dm[0].span for dm in dmatches['date'])
 
-            contain_datetime_and_date = any(
-                not any(
-                    dts[0] <= ds[0] and dts[1] >= ds[1]
-                    for dts in datetime_spans
-                ) for ds in date_spans
-            )
+                contain_datetime_and_date = any(
+                    not any(
+                        dts[0] <= ds[0] and dts[1] >= ds[1]
+                        for dts in datetime_spans
+                    ) for ds in date_spans
+                )
 
         if contain_datetime_and_date:
-            validated_tp = (tp for tp in timepoints if tp[0] in dmatches.keys())
+            validated_tp = (
+                tp for tp in timepoints if tp[0] in dmatches.keys())
         else:
-            validated_tp = (tp for tp in timepoints if tp[0] == 'datetime')
+            sub_pattern = [
+                tp for tp in timepoints if tp[0] == 'datetime'
+                if tp[0] in dmatches.keys()
+            ]
+            # if only one subpattern and subpattern
+            if len(sub_pattern) == 1:
 
+                datetime_spans = (dm[0].span for dm in dmatches['datetime'])
+                sub_pattern_spans = (
+                    dm[0].span for dm in dmatches[sub_pattern[0][0]]
+                )
+
+                contain_both_pattern_and_subpattern = any(
+                    not any(
+                        sps[0] <= ds[0] and sps[1] >= ds[1]
+                        for sps in sub_pattern_spans
+                    ) for ds in datetime_spans
+                )
+
+                if not contain_both_pattern_and_subpattern:
+                    validated_tp = sub_pattern
         return validated_tp
 
     def _search_matches_timepoint(self, tp, context, ctx):
