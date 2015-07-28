@@ -12,7 +12,10 @@ from datection.utils import cached_property
 
 
 def get_repetitions(txt):
-    """ TODO """
+    """ Detect list of repetions in a text with statistics
+
+        for pattern based on numbers
+    """
     r = re.compile(r"(.{6,}?)\1+")
     tok_txt = re.sub(r"\d", 'X', txt).replace('\n', '')
 
@@ -313,7 +316,7 @@ class Tokenizer(object):
         return matches
 
     def _extract_timepoint_from_patterns(self, ctx, timepoints):
-        """ TODO """
+        """Get useful timepoints from identified patterns with high coverage"""
         pattern_repetitions = get_repetitions(ctx)
         if len(pattern_repetitions) == 1:
             pat = pattern_repetitions[0]
@@ -324,7 +327,7 @@ class Tokenizer(object):
 
     def _search_matches_timepoints(
             self, timepoints, context, ctx, analyse_subpattern=True):
-        """ TODO """
+        """ Find all matches given a list of timepoint parse rules """
         dmatches = {}
         for tp in timepoints:
             mchs = self._search_matches_timepoint(tp, context, ctx)
@@ -370,10 +373,30 @@ class Tokenizer(object):
                 )
 
         if contain_datetime_and_date:
-            validated_tp = (tp for tp in timepoints if tp[0] in dmatches.keys())
+            validated_tp = (
+                tp for tp in timepoints if tp[0] in dmatches.keys())
         else:
-            validated_tp = (tp for tp in timepoints if tp[0] == 'datetime')
+            sub_pattern = [
+                tp for tp in timepoints if tp[0] == 'datetime'
+                if tp[0] in dmatches.keys()
+            ]
+            # if only one subpattern and subpattern
+            if len(sub_pattern) == 1:
 
+                datetime_spans = (dm[0].span for dm in dmatches['datetime'])
+                sub_pattern_spans = (
+                    dm[0].span for dm in dmatches[sub_pattern[0][0]]
+                )
+
+                contain_both_pattern_and_subpattern = any(
+                    not any(
+                        sps[0] <= ds[0] and sps[1] >= ds[1]
+                        for sps in sub_pattern_spans
+                    ) for ds in datetime_spans
+                )
+
+                if not contain_both_pattern_and_subpattern:
+                    validated_tp = sub_pattern
         return validated_tp
 
     def _search_matches_timepoint(self, tp, context, ctx):
