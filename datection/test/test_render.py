@@ -21,7 +21,6 @@ from datection.render import TimeFormatter
 from datection.render import TimeIntervalFormatter
 from datection.render import WeekdayReccurenceFormatter
 from datection.render import NextOccurenceFormatter
-from datection.render import OpeningHoursFormatter
 from datection.render import LongFormatter
 from datection.render import SeoFormatter
 from datection.render import NextChangesMixin
@@ -830,87 +829,6 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
             u'12 novembre + autres dates')
 
 
-class TestOpeningHoursFormatterfr_FR(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
-
-    def setUp(self):
-        schedule = [
-            {
-                'duration': 120,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                          'BYHOUR=10;BYMINUTE=0')
-            },
-            {
-                'duration': 240,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
-                          'BYHOUR=14;BYMINUTE=0')
-            },
-            {
-                'duration': 480,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
-                          'BYHOUR=10;BYMINUTE=0')
-            },
-            {
-                'duration': 480,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=TH;'
-                          'BYHOUR=10;BYMINUTE=0')
-            },
-            {
-                'duration': 450,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=FR;'
-                          'BYHOUR=10;BYMINUTE=30')
-            },
-            {
-                'duration': 480,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SA;'
-                          'BYHOUR=10;BYMINUTE=0')
-            },
-            {
-                'duration': 480,
-                'rrule': ('DTSTART:20140117\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
-                          'BYHOUR=10;BYMINUTE=0')
-            }]
-        self.ohfmt = OpeningHoursFormatter(schedule)
-
-    def test_display_openings(self):
-        fmt = self.ohfmt.format_openings(self.ohfmt.opening_hours[:2], day=0)
-        expected = u"""Lundi de 10 h à 12 h et de 14 h à 18 h"""
-        self.assertEqual(fmt, expected)
-
-    def test_display(self):
-        fmt = self.ohfmt.display()
-        expected = u"""Lundi de 10 h à 12 h et de 14 h à 18 h
-Mercredi de 10 h à 18 h
-Jeudi de 10 h à 18 h
-Vendredi de 10 h 30 à 18 h
-Samedi de 10 h à 18 h
-Dimanche de 10 h à 18 h"""
-        self.assertEqual(fmt, expected)
-
-    def test_display_with_a_single_rrule(self):
-        schedule = [
-            {
-                u'duration': 600,
-                u'rrule': (u'DTSTART:20140218\nRRULE:FREQ=WEEKLY;BYDAY='
-                           'MO,TU,WE,TH,FR,SA,SU;BYHOUR=9;BYMINUTE=0;'
-                           'UNTIL=20150218T235959')
-            }
-        ]
-        ohfmt = OpeningHoursFormatter(schedule)
-        fmt = ohfmt.display()
-        expected = u"""Lundi de 9 h à 19 h
-Mardi de 9 h à 19 h
-Mercredi de 9 h à 19 h
-Jeudi de 9 h à 19 h
-Vendredi de 9 h à 19 h
-Samedi de 9 h à 19 h
-Dimanche de 9 h à 19 h"""
-        self.assertEqual(fmt, expected)
-
-
 class TestLongFormatter_fr_FR(GetCurrentDayMocker):
 
     @classmethod
@@ -962,7 +880,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
     def test_display_end_after_midnight_day_enumeration(self):
         schedule = [
             {
-                "duration" : 360, 
+                "duration" : 360,
                 "rrule" : ('DTSTART:20150709\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }
@@ -974,7 +892,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
     def test_display_end_after_midnight_day_interval(self):
         schedule = [
             {
-                "duration" : 360, 
+                "duration" : 360,
                 "rrule" : ('DTSTART:20150705\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }
@@ -986,7 +904,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
     def test_display_end_after_midnight_same_day(self):
         schedule = [
             {
-                "duration" : 120, 
+                "duration" : 120,
                 "rrule" : ('DTSTART:20150710\nRRULE:FREQ=DAILY;UNTIL=20150710T235959;'
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=2;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }

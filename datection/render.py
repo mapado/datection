@@ -961,70 +961,6 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             return date_fmt
 
 
-class OpeningHoursFormatter(BaseFormatter, NextChangesMixin):
-
-    """Formats opening hours into a human - readable format using the
-    current locale.
-
-    """
-
-    def __init__(self, opening_hours):
-        super(OpeningHoursFormatter, self).__init__()
-        self._opening_hours = opening_hours
-        self.opening_hours = [DurationRRule(drr) for drr in opening_hours]
-        self.opening_hours = self.deduplicate(self.opening_hours)
-        self.templates = {
-            'fr_FR': {
-                'one_opening': u'{weekday} {time_interval}',
-                'several_openings': u'{opening} {time_list} et {last_time}'
-            },
-            'en_US': {
-                'one_opening': u'{weekday} {time_interval}',
-                'several_openings': u'{opening} {time_list} and {last_time}'
-            }
-        }
-
-    def format_opening(self, opening, day):
-        """Format an opening, for a single day."""
-        template = self.get_template('one_opening')
-        weekday = self.day_name(day)
-        start_time, end_time = opening.time_interval
-        time_interval = TimeIntervalFormatter(start_time, end_time).display()
-        fmt = template.format(weekday=weekday, time_interval=time_interval)
-        return fmt
-
-    @postprocess(capitalize=True)
-    def format_openings(self, openings, day):
-        """Format opening hours for a single day."""
-        parts = []
-        fmt = self.format_opening(openings[0], day)
-        if len(openings) == 1:
-            return fmt
-        else:
-            template = self.get_template('several_openings')
-            parts.append(fmt)
-            for opening in openings[1:]:
-                start_time, end_time = opening.time_interval
-                time_fmt = TimeIntervalFormatter(
-                    start_time, end_time).display()
-                parts.append(time_fmt)
-        fmt = template.format(
-            opening=parts[0],
-            time_list=parts[1:-1] if parts[1:-1] else '',
-            last_time=parts[-1])
-        return fmt
-
-    def display(self):
-        """Format a list of opening hours for every day of the week."""
-        out = []
-        for day in xrange(7):
-            openings = [rec for rec in self.opening_hours
-                        if rec.weekday_indexes and day in rec.weekday_indexes]
-            if openings:
-                out.append(self.format_openings(openings, day))
-        return '\n'.join([line for line in out])
-
-
 class ExclusionFormatter(BaseFormatter):
 
     """Render exclusion rrules into a human readabled format."""
@@ -1522,7 +1458,7 @@ class DisplaySchedule(object):
 
 def get_display_schedule(
     schedule, loc, short=False, seo=False, bounds=(None, None),
-        place=False, reference=get_current_date()):
+        reference=get_current_date()):
     """ get a DisplaySchedule object according to the better ouput
     """
     # make fr_FR.UTF8 the default locale
@@ -1531,11 +1467,7 @@ def get_display_schedule(
         locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
 
     display_schedule = DisplaySchedule()
-    if place:
-        fmt_tuple = FormatterTuple(OpeningHoursFormatter(schedule), {})
-        display_schedule.formatter_tuples.append(fmt_tuple)
-        return display_schedule
-    elif seo:
+    if seo:
         fmt_tuple = FormatterTuple(SeoFormatter(schedule), {})
         display_schedule.formatter_tuples.append(fmt_tuple)
         return display_schedule
@@ -1566,7 +1498,7 @@ def get_display_schedule(
 
 
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
-            place=False, reference=get_current_date()):
+            reference=get_current_date()):
     """Format a schedule into the shortest human readable sentence possible
 
     args:
@@ -1580,8 +1512,6 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
         bounds:
             limit start / end datetimes beyond which the dates will
             not even be considered
-        place(bool):
-            if True, an OpeningHoursFormatter will be used.
         seo(bool):
             if True, an SeoFormatter will be used
 
@@ -1592,5 +1522,4 @@ def display(schedule, loc, short=False, seo=False, bounds=(None, None),
         short=short,
         seo=seo,
         bounds=bounds,
-        place=place,
         reference=reference).display()
