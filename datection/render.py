@@ -1260,17 +1260,16 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         same_patterns_with_different_dates, others = \
             self.group_by_common_pattern_except_time()
 
+        # get nb of days ouput, if <2 display dayname
         nbdates = 0
         for dates in others:
             timespanlist = groupby_consecutive_dates(dates[0])
             for timespan in timespanlist:
-                if (len(timespan) > 1):
+                if len(timespan) > 1:
                     nbdates += 2
                 else:
                     nbdates += 1
-
-        if len(same_patterns_with_different_dates) > 0:
-            nbdates += len(same_patterns_with_different_dates)
+        nbdates += len(same_patterns_with_different_dates)
         if nbdates < 3:
             kwargs['include_dayname'] = True
 
