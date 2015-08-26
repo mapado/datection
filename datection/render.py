@@ -598,8 +598,7 @@ class DateIntervalFormatter(BaseFormatter):
             return DateFormatter(self.start_date).display(
                 abbrev_reference=abbrev_reference, *args, **kwargs)
         elif self.has_two_consecutive_days():
-            pkwargs = {}
-            pkwargs['include_dayname'] = kwargs.get('include_dayname')
+            pkwargs = {'include_dayname': kwargs.get('include_dayname') }
             return self.format_two_consecutive_days(**pkwargs)
         elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
