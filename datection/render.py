@@ -598,6 +598,11 @@ class DateIntervalFormatter(BaseFormatter):
             return DateFormatter(self.start_date).display(
                 abbrev_reference=abbrev_reference, *args, **kwargs)
         elif self.has_two_consecutive_days():
+            if kwargs.has_key('include_dayname') and kwargs.get('include_dayname'):
+                pkwargs = kwargs.copy()
+                pkwargs.clear()
+                pkwargs['include_dayname'] = kwargs.get('include_dayname')
+                return self.format_two_consecutive_days(**pkwargs)
             return self.format_two_consecutive_days()
         elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
@@ -633,9 +638,12 @@ class DateListFormatter(BaseFormatter):
         if len(self.date_list) == 1:
             kwargs['prefix'] = True
             return DateFormatter(self.date_list[0]).display(*args, **kwargs)
+        include_dayname = False
+        if kwargs.has_key('include_dayname') and kwargs.get('include_dayname'):
+            include_dayname = True
         template = self.get_template()
         date_list = ', '.join([DateFormatter(d).display(
-            include_month=False, include_year=False)
+            include_month=False, include_year=False, include_dayname=include_dayname)
             for d in self.date_list[:-1]])
         last_date = DateFormatter(self.date_list[-1]).display(*args, **kwargs)
         fmt = template.format(date_list=date_list, last_date=last_date)
@@ -1257,6 +1265,22 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
         same_patterns_with_different_dates, others = \
             self.group_by_common_pattern_except_time()
+
+        nbdates = 0;
+        if len(others) > 0:
+            for dates in others:
+                timespanlist = groupby_consecutive_dates(dates[0])
+                for timespan in timespanlist:
+                    if (len(timespan) > 1):
+                        nbdates += 2
+                    else:
+                        nbdates += 1
+
+        if len(same_patterns_with_different_dates) > 0:
+            nbdates += len(same_patterns_with_different_dates)
+        if nbdates < 3:
+            kwargs['include_dayname'] = True
+
 
         template = self.get_template()
         # format non recurring rrules on grouped patterns with different dates

@@ -865,6 +865,58 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             self.fmt.display(),
             u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
 
+    def test_display_day_with_one_date(self):
+        # Le vendredi 25 septembre 2015 à 20 h
+
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20150925\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=20'
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Le vendredi 25 septembre 2015 à 20 h")
+
+    def test_display_day_with_two_date(self):
+        # Le vendredi 25 septembre 2015 à 20, le samedi 10 octobre 2015 à 18 h
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20150925\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=20'
+            },
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20151010\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=18'
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Le vendredi 25 septembre 2015 à 20 h\nLe samedi 10 octobre 2015 à 18 h")
+
+    def test_display_day_with_three_date(self):
+        # Le 25 septembre 2015, le 10 octobre 2015 et le 11 novembre 2015 à 21 h
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20150925\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=21'
+            },
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20151010\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=21'
+            },
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20151111\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=21'
+            }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Le 25 septembre 2015, le 10 octobre 2015, le 11 novembre 2015, à 21 h")
+
     def test_display_weekday_reccurence(self):
         schedule = [
             {
@@ -887,7 +939,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         ]
         fmt = LongFormatter(schedule)
         display = fmt.display()
-        self.assertEqual(display, u'Les 9 et 10 juillet 2015 de 22 h à 4 h')
+        self.assertEqual(display, u'Les jeudi 9 et vendredi 10 juillet 2015 de 22 h à 4 h')
 
     def test_display_end_after_midnight_day_interval(self):
         schedule = [
@@ -899,7 +951,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         ]
         fmt = LongFormatter(schedule)
         display = fmt.display()
-        self.assertEqual(display, u'Du 5 au 10 juillet 2015 de 22 h à 4 h')
+        self.assertEqual(display, u'Du dimanche 5 au vendredi 10 juillet 2015 de 22 h à 4 h')
 
     def test_display_end_after_midnight_same_day(self):
         schedule = [
@@ -911,7 +963,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         ]
         fmt = LongFormatter(schedule)
         display = fmt.display()
-        self.assertEqual(display, u'Le 10 juillet 2015 de 2 h à 4 h')
+        self.assertEqual(display, u'Le vendredi 10 juillet 2015 de 2 h à 4 h')
 
     def test_display_excluded_weekday(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi
@@ -928,7 +980,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         fmt = LongFormatter(schedule)
         self.assertEqual(
             fmt.display(),
-            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le lundi")
+            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le lundi")
 
     def test_display_excluded_weekday_interval(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et mercredi
@@ -945,7 +997,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         fmt = LongFormatter(schedule)
         self.assertEqual(
             fmt.display(),
-            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
+            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
 
     def test_display_excluded_weekday_list(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et jeudi
@@ -962,7 +1014,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         fmt = LongFormatter(schedule)
         self.assertEqual(
             fmt.display(),
-            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le lundi, mardi et jeudi")
+            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le lundi, mardi et jeudi")
 
     def test_display_excluded_datetime(self):
          #"Du 5 au 28 mars 2015 de 8h à 9h, sauf le 17 mars"
@@ -979,7 +1031,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         fmt = LongFormatter(schedule)
         self.assertEqual(
             fmt.display(),
-            u"Du 5 au 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
+            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
 
 
 class TestSeoFormatter_fr_FR(GetCurrentDayMocker):

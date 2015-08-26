@@ -33,12 +33,12 @@ class TestDisplay(GetCurrentDayMocker):
 
     def test_past_date(self):
         self.assertDisplayEqual(
-            u'12/06/2013 Période Ouverture 2013', u'Le 12 juin 2013')
+            u'12/06/2013 Période Ouverture 2013', u'Le mercredi 12 juin 2013')
 
     def test_past_date_interval(self):
         self.assertDisplayEqual(
             u"Du 01/01/2013 au 31/12/2013 Périodes d'ouvertures 2013",
-            u'Du 1er janvier au 31 décembre 2013')
+            u'Du mardi 1er janvier au mardi 31 décembre 2013')
 
     def test_ignore_duplicates(self):
         sch = [
@@ -77,10 +77,10 @@ class TestDisplay(GetCurrentDayMocker):
             seo=False,
             bounds=(start, end),
             reference=reference)
-        self.assertGreater(len(short), len(default))
-        self.assertEqual(shortest_fmt, default)
+        self.assertGreater(len(default), len(short))
+        self.assertEqual(shortest_fmt, short)
         self.assertEqual(short,   u'Ce dimanche + autres dates')
-        self.assertEqual(default, u'Les 15 et 16 déc. 2013')
+        self.assertEqual(default, u'Les dimanche 15 et lundi 16 déc. 2013')
 
     def test_display_recurrence(self):
         schedule = [
@@ -141,17 +141,17 @@ class TestDisplay(GetCurrentDayMocker):
 
     def test_display_date(self):
         sch = datection.export(u"Le 15 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Le 15 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Le vendredi 15 mars 2013')
 
     def test_display_date_interval(self):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Les 15 et 16 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les vendredi 15 et samedi 16 mars 2013')
 
     def test_display_date_list(self):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 18 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Les 15 et 18 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les vendredi 15 et lundi 18 mars 2013')
         sch = datection.export(
             u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
             "fr", only_future=False)
@@ -162,26 +162,26 @@ class TestDisplay(GetCurrentDayMocker):
         sch = datection.export(
             u"Le 15 mars 2013 à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, self.locale), u'Le 15 mars 2013 à 18 h 30')
+            display(sch, self.locale), u'Le vendredi 15 mars 2013 à 18 h 30')
 
     def test_display_datetime_interval(self):
         sch = datection.export(
             u"Le 15 mars 2013 de 16 h à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, self.locale), u'Le 15 mars 2013 de 16 h à 18 h 30')
+            display(sch, self.locale), u'Le vendredi 15 mars 2013 de 16 h à 18 h 30')
 
     def test_display_datetime_list(self):
         sch = datection.export(
             u"Le 15 et 18 mars 2013 à 18h30", "fr", only_future=False)
         self.assertEqual(
-            display(sch, self.locale), u'Les 15 et 18 mars 2013 à 18 h 30')
+            display(sch, self.locale), u'Les vendredi 15 et lundi 18 mars 2013 à 18 h 30')
 
     def test_display_datetime_list_time_interval(self):
         sch = datection.export(
             u"Le 15 & 18 mars 2013 de 16 h à 18h30", "fr", only_future=False)
         self.assertEqual(
             display(sch, self.locale),
-            u'Les 15 et 18 mars 2013 de 16 h à 18 h 30')
+            u'Les vendredi 15 et lundi 18 mars 2013 de 16 h à 18 h 30')
 
     def test_display_grouped_time(self):
         sch = [{
@@ -199,7 +199,7 @@ class TestDisplay(GetCurrentDayMocker):
         }]
         self.assertEqual(
             datection.display(sch, 'fr'),
-            u'Le 3 mars 2014 de 10 h 30 à 11 h,'
+            u'Le lundi 3 mars 2014 de 10 h 30 à 11 h,'
             u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
         )
 
@@ -222,7 +222,7 @@ class TestDisplay(GetCurrentDayMocker):
         }]
         self.assertEqual(
             datection.display(sch, 'fr'),
-            u'Du 3 au 5 mars 2014 de 10 h 30 à 11 h,'
+            u'Du lundi 3 au mercredi 5 mars 2014 de 10 h 30 à 11 h,'
             u' de 12 h 30 à 13 h et de 13 h 30 à 14 h'
         )
 
@@ -236,5 +236,5 @@ class TestDisplay(GetCurrentDayMocker):
         date_fmt = datection.display(sch, 'fr')
         self.assertEqual(
             date_fmt,
-            u'Le 3 juillet 2015 à 19 h 30'
+            u'Le vendredi 3 juillet 2015 à 19 h 30'
         )
