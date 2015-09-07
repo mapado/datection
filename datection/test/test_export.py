@@ -3,6 +3,7 @@
 import unittest
 
 from datetime import datetime
+from datetime import timedelta
 from datection.models import DurationRRule
 from datection.export import export_continuous_schedule
 from datection.export import export_non_continuous_schedule
@@ -180,8 +181,9 @@ class ExportScheduleToSQLTest(unittest.TestCase):
         self.assertEqual(dates, expected)
 
     def test_schedule_first_date(self):
-        self.assertEqual(schedule_first_date(None), None)
-        self.assertEqual(schedule_first_date([]), None)
+        created_at = datetime.now()
+        self.assertEqual(schedule_first_date(None, created_at), None)
+        self.assertEqual(schedule_first_date([], created_at), None)
 
         schedule = [
             {
@@ -198,13 +200,26 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             }
         ]
 
-        first_date = schedule_first_date(schedule)
+        schedule_out_of_bound = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:10141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=29141209T235959'),
+            },
+        ]
+
+        first_date = schedule_first_date(schedule, created_at)
+        first_date_out_of_bound = schedule_first_date(
+            schedule_out_of_bound, created_at)
 
         self.assertEqual(first_date, datetime(2014, 11, 4, 8, 0, 0))
+        self.assertEqual(first_date_out_of_bound, created_at)
 
     def test_schedule_last_date(self):
-        self.assertEqual(schedule_last_date(None), None)
-        self.assertEqual(schedule_last_date([]), None)
+        created_at = datetime.now()
+        self.assertEqual(schedule_last_date(None, created_at), None)
+        self.assertEqual(schedule_last_date([], created_at), None)
 
         schedule = [
             {
@@ -221,9 +236,21 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             }
         ]
 
-        last_date = schedule_last_date(schedule)
+        schedule_out_of_bound = [
+            {
+                'continuous': True,
+                'duration': 4890,
+                'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=29141209T235959'),
+            },
+        ]
+
+        last_date = schedule_last_date(schedule, created_at)
+
+        last_date_out_of_bound = schedule_last_date(schedule_out_of_bound, created_at)
 
         self.assertEqual(last_date, datetime(2014, 12, 9, 17, 30, 0))
+        self.assertEqual(last_date_out_of_bound, created_at + timedelta(days=365))
 
     def test_discretised_days_to_scheduletags(self):
         self.assertEqual(discretised_days_to_scheduletags([]), ['no_schedule'])

@@ -8,6 +8,10 @@ from datection.parse import parse
 from datection.models import DurationRRule
 from datection.coherency import RRuleCoherencyFilter
 
+# timepoint
+MINIMAL_DT_BOUND = datetime(1950, 1, 1, 0, 0)
+MAXIMAL_DT_BOUND = datetime(2080, 1, 1, 0, 0)
+
 
 def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     """Extract and normalize time-related expressions from the text.
@@ -197,7 +201,7 @@ def schedule_to_discretised_days(schedule):
     return sorted(discretised_days)
 
 
-def schedule_first_date(schedule):
+def schedule_first_date(schedule, created_at):
     """ Export the first date of a duration rrule list
     """
     curmin = None
@@ -205,13 +209,15 @@ def schedule_first_date(schedule):
         for drr in schedule:
             drr = DurationRRule(drr)
             sdt = drr.start_datetime
+            if sdt < MINIMAL_DT_BOUND or sdt >= MAXIMAL_DT_BOUND:
+                sdt = created_at
             if not curmin or curmin > sdt:
                 curmin = sdt
 
     return curmin
 
 
-def schedule_last_date(schedule):
+def schedule_last_date(schedule, created_at):
     """ Export the last date of a duration rrule list
     """
     curmax = None
@@ -219,6 +225,8 @@ def schedule_last_date(schedule):
         for drr in schedule:
             drr = DurationRRule(drr)
             edt = drr.end_datetime
+            if edt < MINIMAL_DT_BOUND or edt >= MAXIMAL_DT_BOUND:
+                edt = created_at + timedelta(days=365)
             if not curmax or curmax < edt:
                 curmax = edt
 
