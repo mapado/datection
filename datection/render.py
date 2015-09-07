@@ -16,6 +16,7 @@ from functools import wraps
 from collections import defaultdict
 from collections import namedtuple
 
+import datection
 from datection.models import DurationRRule
 from datection.utils import cached_property
 from datection.utils import get_current_date
@@ -458,7 +459,7 @@ class DateFormatter(BaseFormatter):
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
                 abbrev_year=False, reference=None, abbrev_reference=False,
-                prefix=False, force_year=False):
+                prefix=False, force_year=False, ):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -607,10 +608,10 @@ class DateIntervalFormatter(BaseFormatter):
         else:
             template = self.get_template()
             kwargs['force_year'] = True
-            start_date_fmt = DateFormatter(self.start_date).\
-                display(abbrev_reference, *args, **kwargs)
-            end_date_fmt = DateFormatter(self.end_date).\
-                display(abbrev_reference, *args, **kwargs)
+
+            kwargs['abbrev_reference'] = abbrev_reference
+            start_date_fmt = DateFormatter(self.start_date).display(*args, **kwargs)
+            end_date_fmt = DateFormatter(self.end_date).display(*args, **kwargs)
             fmt = template.format(
                 start_date=start_date_fmt, end_date=end_date_fmt)
             return fmt
