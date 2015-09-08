@@ -459,7 +459,7 @@ class DateFormatter(BaseFormatter):
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
                 abbrev_year=False, reference=None, abbrev_reference=False,
-                prefix=False, force_year=False, ):
+                prefix=False, force_year=False):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
