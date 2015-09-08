@@ -1378,3 +1378,19 @@ class TestNextDateMixin(GetCurrentDayMocker):
 
         self.assertEqual(
             next_change.next_changes(), datetime.datetime(2013, 8, 7, 0, 0, 0))
+
+
+    def test_short_sched_kwargs_include_days(self):
+        schedule = [{
+            u'duration': 1439,
+            u'rrule': u'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYHOUR=0;BYMINUTE=0',
+            u'span': [48, 68],
+            u'unlimited': True
+        }]
+        datection.get_display_schedule(
+            schedule,
+            'fr',
+            short=True,
+            bounds=(datetime.datetime(2015, 9, 7, 2, 0), None),
+            reference=datetime.datetime.now()
+        ).display()
