@@ -114,6 +114,12 @@ class DurationRRule(object):
             rrule._dtstart   = UNLIMITED_DATETIME_START
             rrule._until     = UNLIMITED_DATETIME_END
 
+        if self.forced_lower_bound:
+            rrule._dtstart   = self.forced_lower_bound
+
+        if self.forced_upper_bound:
+            rrule._until   = self.forced_upper_bound
+
         return rrule
 
     @property

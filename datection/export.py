@@ -197,13 +197,17 @@ def schedule_to_discretised_days(schedule):
     return sorted(discretised_days)
 
 
-def schedule_first_date(schedule):
+def schedule_first_date(schedule, forced_lower_bound=None, forced_upper_bound=None):
     """ Export the first date of a duration rrule list
     """
     curmin = None
     if schedule:
         for drr in schedule:
-            drr = DurationRRule(drr)
+            drr = DurationRRule(
+                drr,
+                forced_lower_bound=forced_lower_bound,
+                forced_upper_bound=forced_upper_bound
+            )
             sdt = drr.start_datetime
             if not curmin or curmin > sdt:
                 curmin = sdt
@@ -211,13 +215,17 @@ def schedule_first_date(schedule):
     return curmin
 
 
-def schedule_last_date(schedule):
+def schedule_last_date(schedule, forced_lower_bound=None, forced_upper_bound=None):
     """ Export the last date of a duration rrule list
     """
     curmax = None
     if schedule:
         for drr in schedule:
-            drr = DurationRRule(drr)
+            drr = DurationRRule(
+                drr,
+                forced_lower_bound=forced_lower_bound,
+                forced_upper_bound=forced_upper_bound
+            )
             edt = drr.end_datetime
             if not curmax or curmax < edt:
                 curmax = edt
