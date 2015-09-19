@@ -184,7 +184,7 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
             # Patch the after midnight case only if start_date is on another
             # day, and only if the date if before 5:00 am.
             # Concrete case : "Du 1 au 2 de 22h à 4h"
-            if end.hour <= 5:
+            if end.hour <= 7:
                 end += datetime.timedelta(days=-1)
 
             # convert the bounds to datetime if dates were given
