@@ -1112,8 +1112,6 @@ class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
         sch = datection.export(
             u"Le lundi du 5 mars au 25 mai 2015", "fr", only_future=False)
         formatter = SeoFormatter(sch)
-
-
         self.assertEqual(formatter.display(), u'')
 
     def test_format_unbounded_weekday_recurrence(self):
