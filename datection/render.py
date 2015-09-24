@@ -321,7 +321,7 @@ class NextChangesMixin(object):
         if current_delta < datetime.timedelta(0):  # past
             return None
         elif current_delta < datetime.timedelta(1):  # today
-            return start
+            delta = datetime.timedelta(days=-1)
         elif current_delta < datetime.timedelta(2):  # tomorrow
             delta = datetime.timedelta(days=0)
         elif current_delta < datetime.timedelta(7):  # this week
