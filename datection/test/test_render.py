@@ -1351,7 +1351,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
         next_occur = {'start': datetime.datetime(2013, 8, 8, 20, 30, 0)}
         next_change.next_occurence = mock.MagicMock(return_value=next_occur)
 
-        self.assertEqual(next_change.next_changes(), next_occur['start'])
+        self.assertEqual(next_change.next_changes(), datetime.datetime(2013, 8, 9, 0, 0, 0))
 
     def test_next_date_tomorrow(self):
         self.set_current_date(datetime.date(2013, 8, 7))
