@@ -238,3 +238,15 @@ class TestDisplay(GetCurrentDayMocker):
             date_fmt,
             u'Le vendredi 3 juillet 2015 à 19 h 30'
         )
+
+    def test_short_absolute_date(self):
+        sch = [{
+            u'duration': 0,
+            u'rrule': u'DTSTART:20140227'
+                '\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=21',
+        }]
+        date_fmt = datection.display(sch, 'fr', short=True, reference=None)
+        self.assertEqual(
+            date_fmt,
+            u'Le 27 févr. 2014 à 21 h'
+        )

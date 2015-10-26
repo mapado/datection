@@ -1493,7 +1493,12 @@ def get_display_schedule(
         display_schedule.formatter_tuples.append(fmt_tuple)
         return display_schedule
     else:
-        start, end = bounds
+        if not reference:
+            start, end = (datetime.datetime.min, datetime.datetime.max)
+            if reference is None:
+                reference = datetime.datetime.min
+        else:
+            start, end = bounds
         short_fmt = NextOccurenceFormatter(schedule, start, end)
         default_fmt = LongFormatter(schedule)
 
