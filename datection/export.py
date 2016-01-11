@@ -185,13 +185,15 @@ def schedule_to_start_end_list(schedule, start=None, end=None):
     return out
 
 
-def schedule_to_discretised_days(schedule):
+def schedule_to_discretised_days(schedule, forced_lower_bound=None,
+            forced_upper_bound=None):
     """Export the schedule to a list of datetime (one datetime for .
     each day)
     """
     discretised_days = set()
     for drr in schedule:
-        drr = DurationRRule(drr)
+        drr = DurationRRule(drr, forced_lower_bound = forced_lower_bound,
+            forced_upper_bound = forced_upper_bound)
         for dt in drr:
             discretised_days.add(dt)
     return sorted(discretised_days)
