@@ -66,7 +66,7 @@ class UtilsTest(unittest.TestCase):
     def test_serialize_2digit_year(self):
         self.assertEqual(normalize_2digit_year(12), 2012)
         self.assertEqual(normalize_2digit_year(20), 2020)
-        self.assertEqual(normalize_2digit_year(30), 1930)
+        self.assertEqual(normalize_2digit_year(40), 1940)
         self.assertEqual(normalize_2digit_year(80), 1980)
 
     def test_duration_time(self):
