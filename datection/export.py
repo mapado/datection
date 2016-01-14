@@ -227,6 +227,19 @@ def schedule_last_date(schedule):
     return curmax
 
 
+def schedule_next_date(schedule):
+    """ Export the next date of a duration rrule list
+    """
+    curnext = None
+    if schedule:
+        for drr in schedule:
+            drr = DurationRRule(drr)
+            ndt = drr.__iter__().next()
+            if (not curnext or curnext > ndt) and ndt > datetime.now():
+                curnext = ndt
+
+    return curnext
+
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
     Elasticsearch filtering
