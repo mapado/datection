@@ -67,7 +67,10 @@ class DurationRRule(object):
                 start_bound_date = self.forced_lower_bound
             else:
                 start_bound_date = date.today()
-            self.rrule._dtstart = datetime.combine(start_bound_date, DAY_START)
+            if type(start_bound_date) == datetime:
+                self.rrule._dtstart = start_bound_date
+            else:
+                self.rrule._dtstart = datetime.combine(start_bound_date, DAY_START)
             if self.forced_upper_bound:
                 end_bound_date = self.forced_upper_bound
             else:
