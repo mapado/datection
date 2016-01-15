@@ -232,10 +232,11 @@ def schedule_next_date(schedule):
     """
     curnext = None
     if schedule:
+        nowdate = datetime.now()
         for drr in schedule:
-            drr = DurationRRule(drr)
+            drr = DurationRRule(drr, forced_lower_bound = nowdate)
             ndt = drr.__iter__().next()
-            if (not curnext or curnext > ndt) and ndt > datetime.now():
+            if (not curnext or curnext > ndt) and ndt > nowdate:
                 curnext = ndt
 
     return curnext
