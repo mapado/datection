@@ -1493,9 +1493,9 @@ def get_display_schedule(
         display_schedule.formatter_tuples.append(fmt_tuple)
         return display_schedule
     else:
-        if not reference:
+        if not reference and not bounds:
             start, end = (datetime.datetime.min, datetime.datetime.max)
-            if reference is None:
+            if not isinstance(datetime.datetime, reference):
                 reference = datetime.datetime.min
         else:
             start, end = bounds
