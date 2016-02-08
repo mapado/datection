@@ -1495,10 +1495,12 @@ def get_display_schedule(
     else:
         if not reference and not bounds:
             start, end = (datetime.datetime.min, datetime.datetime.max)
-            if not isinstance(datetime.datetime, reference):
-                reference = datetime.datetime.min
         else:
             start, end = bounds
+
+        if not isinstance(reference, datetime.datetime):
+            reference = datetime.datetime.min
+
         short_fmt = NextOccurenceFormatter(schedule, start, end)
         default_fmt = LongFormatter(schedule)
 
