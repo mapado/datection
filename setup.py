@@ -12,6 +12,6 @@ setup(
         # private packages
         'python-dateutil==2.1.1',
         # public packages
-        'pyparsing'
+        'pyparsing==2.0.3'
     ],
 )
