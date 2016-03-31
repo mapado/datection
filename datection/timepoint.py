@@ -8,6 +8,7 @@ from datetime import time
 from datetime import date
 from dateutil.rrule import rrule
 from dateutil.rrule import WEEKLY
+from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 from operator import attrgetter
 
 from datection.utils import get_current_date
@@ -21,6 +22,7 @@ MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
 MIN_YEAR = 1
+ORDERED_DAYS = [MO, TU, WE, TH, FR, SA, SU]
 
 
 class NormalizationError(Exception):
@@ -881,7 +883,10 @@ class ContinuousDatetimeInterval(Timepoint):
 class Weekdays(Timepoint):
 
     def __init__(self, days, *args, **kwargs):
-        self.days = list(set(days))
+        self.days = sorted(
+            list(set(days)),
+            key=lambda d: ORDERED_DAYS.index(d)
+        )
 
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
@@ -913,7 +918,10 @@ class WeeklyRecurrence(Timepoint):
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval
         self.time_interval = time_interval
-        self.weekdays = sorted(list(set(weekdays)))
+        self.weekdays = sorted(
+            list(set(weekdays)),
+            key=lambda d: ORDERED_DAYS.index(d)
+        )
         self.excluded = []
 
     def __eq__(self, other):
