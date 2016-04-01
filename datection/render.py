@@ -595,7 +595,8 @@ class DateIntervalFormatter(BaseFormatter):
 
         """
         if self.same_day_interval():
-            kwargs['prefix'] = True
+            if not 'prefix' in kwargs:
+                kwargs['prefix'] = True
             return DateFormatter(self.start_date).display(
                 abbrev_reference=abbrev_reference, *args, **kwargs)
         elif self.has_two_consecutive_days():
@@ -633,7 +634,8 @@ class DateListFormatter(BaseFormatter):
     def display(self, *args, **kwargs):
         """Format a date list using the current locale."""
         if len(self.date_list) == 1:
-            kwargs['prefix'] = True
+            if not 'prefix' in kwargs:
+                kwargs['prefix'] = True
             return DateFormatter(self.date_list[0]).display(*args, **kwargs)
         include_dayname = kwargs.get('include_dayname')
         template = self.get_template()
@@ -740,7 +742,8 @@ class DatetimeFormatter(BaseFormatter):
 
         """
         template = self.get_template()
-        kwargs['prefix'] = True
+        if not 'prefix' in kwargs:
+            kwargs['prefix'] = True
         date_fmt = DateFormatter(self.datetime).display(*args, **kwargs)
         time_fmt = TimeFormatter(self.datetime).display()
         fmt = template.format(date=date_fmt, time=time_fmt)
@@ -1509,8 +1512,9 @@ def get_display_schedule(
             {
                 "reference": reference,
                 "summarize": True,
-                "prefix": True,
-                "abbrev_monthname": True
+                "prefix": False,
+                "abbrev_monthname": True,
+                "abbrev_dayname": True
             })
         display_schedule.formatter_tuples.append(short_fmt_tuple)
 
