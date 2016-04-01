@@ -291,7 +291,7 @@ class NextDateMixin(object):
             return self.regrouped_dates[0][0]
 
     def other_occurences(self):
-        """Return all dates (bu the next), as a start/end datetime dict."""
+        """Return all dates (but the next), as a start/end datetime dict."""
         return len(self.regrouped_dates) > 1
 
 
@@ -459,7 +459,7 @@ class DateFormatter(BaseFormatter):
     def display(self, include_dayname=False, abbrev_dayname=False,
                 include_month=True, abbrev_monthname=False, include_year=True,
                 abbrev_year=False, reference=None, abbrev_reference=False,
-                prefix=False, force_year=False):
+                prefix=False, force_year=False, **kwargs):
         """Format the date using the current locale.
 
         If dayname is True, the dayname will be included.
@@ -599,9 +599,12 @@ class DateIntervalFormatter(BaseFormatter):
                 kwargs['prefix'] = True
             return DateFormatter(self.start_date).display(
                 abbrev_reference=abbrev_reference, *args, **kwargs)
-        elif self.has_two_consecutive_days():
-            pkwargs = {'include_dayname': kwargs.get('include_dayname') }
-            return self.format_two_consecutive_days(**pkwargs)
+
+        if kwargs.get('summarize'):
+            kwargs['include_dayname'] = False
+
+        if self.has_two_consecutive_days():
+            return self.format_two_consecutive_days(**kwargs)
         elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
         elif self.same_year_interval():
@@ -638,6 +641,9 @@ class DateListFormatter(BaseFormatter):
                 kwargs['prefix'] = True
             return DateFormatter(self.date_list[0]).display(*args, **kwargs)
         include_dayname = kwargs.get('include_dayname')
+
+        if not kwargs.get('prefix', True):
+            self.templates['fr_FR'] = u'{date_list} et {last_date}'
         template = self.get_template()
         date_list = ', '.join([DateFormatter(d).display(
             include_month=False, include_year=False, include_dayname=include_dayname)
@@ -1274,7 +1280,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 else:
                     nbdates += 1
         nbdates += len(same_patterns_with_different_dates)
-        if nbdates < 3:
+        if nbdates < 3 and not 'include_dayname' in kwargs:
             kwargs['include_dayname'] = True
 
 
@@ -1506,7 +1512,6 @@ def get_display_schedule(
 
         short_fmt = NextOccurenceFormatter(schedule, start, end)
         default_fmt = LongFormatter(schedule)
-
         short_fmt_tuple = FormatterTuple(
             short_fmt,
             {
@@ -1519,7 +1524,11 @@ def get_display_schedule(
         display_schedule.formatter_tuples.append(short_fmt_tuple)
 
         default_fmt_tuple = FormatterTuple(
-            default_fmt, {"abbrev_monthname": True})
+            default_fmt, {
+                "prefix": False,
+                "abbrev_monthname": True,
+                "summarize": True
+            })
         display_schedule.formatter_tuples.append(default_fmt_tuple)
 
         return display_schedule

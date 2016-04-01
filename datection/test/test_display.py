@@ -78,7 +78,6 @@ class TestDisplay(GetCurrentDayMocker):
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(default), len(short))
-        self.assertEqual(shortest_fmt, short)
         self.assertEqual(short,   u'Ce dim. + autres dates')
         self.assertEqual(default, u'Les dimanche 15 et lundi 16 déc. 2013')
 
@@ -266,4 +265,32 @@ class TestDisplay(GetCurrentDayMocker):
         self.assertEqual(
             date_fmt,
             u'Jeu. 27 févr. 2014 à 21 h'
+        )
+
+    def test_short_absolute_sequence_date(self):
+        sch = [{
+            u'duration': '0',
+            u'rrule': ('DTSTART:20140227\nRRULE:FREQ=DAILY;'
+                        'UNTIL=20140228T235959;INTERVAL=1;'
+                        'BYMINUTE=0;BYHOUR=21'),
+        }]
+
+        date_fmt = datection.display(sch, 'fr', short=True, reference=None)
+        self.assertEqual(
+            date_fmt,
+            u'27 et 28 févr. 2014 à 21 h'
+        )
+
+    def test_short_absolute_long_sequence_date(self):
+        sch = [{
+            u'duration': '0',
+            u'rrule': ('DTSTART:20140227\nRRULE:FREQ=DAILY;'
+                        'UNTIL=20140303T235959;INTERVAL=1;'
+                        'BYMINUTE=0;BYHOUR=21'),
+        }]
+
+        date_fmt = datection.display(sch, 'fr', short=True, reference=None)
+        self.assertEqual(
+            date_fmt,
+            u'Du 27 févr. au 3 mars 2014 à 21 h'
         )
