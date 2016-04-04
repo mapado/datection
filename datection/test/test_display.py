@@ -68,7 +68,7 @@ class TestDisplay(GetCurrentDayMocker):
         end = datetime.datetime(2013, 12, 17)
         reference = start
         short = NextOccurenceFormatter(schedule, start, end).display(
-            reference, summarize=True)
+            reference, summarize=True, abbrev_dayname=True)
         default = LongFormatter(schedule).display(abbrev_monthname=True)
         shortest_fmt = display(
             schedule,
@@ -78,8 +78,7 @@ class TestDisplay(GetCurrentDayMocker):
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(default), len(short))
-        self.assertEqual(shortest_fmt, short)
-        self.assertEqual(short,   u'Ce dimanche + autres dates')
+        self.assertEqual(short,   u'Ce dim. + autres dates')
         self.assertEqual(default, u'Les dimanche 15 et lundi 16 déc. 2013')
 
     def test_display_recurrence(self):
@@ -102,11 +101,28 @@ class TestDisplay(GetCurrentDayMocker):
             bounds=(start, end),
             reference=reference)
         self.assertGreater(len(default), len(short))
-        self.assertEqual(shortest_fmt, short)
         self.assertEqual(
-            default,      u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
+            default, u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
         self.assertEqual(
-            shortest_fmt, u'Le 10 mars 2015 de 8 h à 9 h + autres dates')
+            shortest_fmt, u'Le mardi, du 5 au 26 mars 2015, de 8 h à 9 h')
+
+    def test_display_long_recurrence(self):
+        schedule = [
+            {'duration': 60,
+             'rrule': ('DTSTART:20150301\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
+                       'BYHOUR=8;BYMINUTE=0;UNTIL=20150330T235959'),
+             'span': (0, 48)}]
+        start = datetime.datetime(2015, 3, 1)
+        end = datetime.datetime(2015, 8, 17)
+        shortest_fmt = display(
+            schedule,
+            self.locale,
+            short=True,
+            seo=False,
+            bounds=(start, end),
+            reference=None)
+        self.assertEqual(
+            shortest_fmt, u'Lun. 2 mars 2015 de 8 h à 9 h + autres dates')
 
     def test_display_weekday_recurrence(self):
         sch = datection.export(u"Le samedi", "fr")
@@ -248,5 +264,33 @@ class TestDisplay(GetCurrentDayMocker):
         date_fmt = datection.display(sch, 'fr', short=True, reference=None)
         self.assertEqual(
             date_fmt,
-            u'Le 27 févr. 2014 à 21 h'
+            u'Jeu. 27 févr. 2014 à 21 h'
+        )
+
+    def test_short_absolute_sequence_date(self):
+        sch = [{
+            u'duration': '0',
+            u'rrule': ('DTSTART:20140227\nRRULE:FREQ=DAILY;'
+                        'UNTIL=20140228T235959;INTERVAL=1;'
+                        'BYMINUTE=0;BYHOUR=21'),
+        }]
+
+        date_fmt = datection.display(sch, 'fr', short=True, reference=None)
+        self.assertEqual(
+            date_fmt,
+            u'27 et 28 févr. 2014 à 21 h'
+        )
+
+    def test_short_absolute_long_sequence_date(self):
+        sch = [{
+            u'duration': '0',
+            u'rrule': ('DTSTART:20140227\nRRULE:FREQ=DAILY;'
+                        'UNTIL=20140303T235959;INTERVAL=1;'
+                        'BYMINUTE=0;BYHOUR=21'),
+        }]
+
+        date_fmt = datection.display(sch, 'fr', short=True, reference=None)
+        self.assertEqual(
+            date_fmt,
+            u'Du 27 févr. au 3 mars 2014 à 21 h'
         )
