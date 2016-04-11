@@ -24,7 +24,7 @@ def detect_language(text, lang):
     if re.search(r' (am|pm) ', text):
         return 'en'
 
-    if lang not in DEFAULT_LOCALES:
+    if not (lang in DEFAULT_LOCALES and len(Tokenizer(text, lang).tokenize())):
         tok_len_lang, proposed_lang = max(
             (len(Tokenizer(text, key).tokenize()), key)
             for key in DEFAULT_LOCALES.keys()
