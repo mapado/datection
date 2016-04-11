@@ -266,6 +266,12 @@ class TestParse(unittest.TestCase):
             [datetime(2014, 3, 28, 20, 0)]
         )
 
+    def test_long_text(self):
+        text = u'Short text 12.03.2016'
+        self.assertEqual(parse(text, 'fr')[0].span, (11, 21))
+
+        text = u'Long text is looooooooooooooooooooooooooooooooooooooooooong 12.04.2016'
+        self.assertEqual(parse(text, 'fr')[0].span, (60, 70))
 
 class TestYearLessExpressions(unittest.TestCase):
 
