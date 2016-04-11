@@ -312,6 +312,7 @@ class Tokenizer(object):
         dmatches = self._search_matches_timepoints(
             timepoints, context, ctx, analyse_subpattern
         )
+
         matches = [t for mt in dmatches.values() for t in mt]
         return matches
 
@@ -407,9 +408,15 @@ class Tokenizer(object):
 
         try:
             for pattern_matches, start, end in pattern.scanString(ctx):
+                idx_offset = context.start
                 start, end = self.trim_text(ctx[start:end], start, end)
                 for pattern_match in pattern_matches:
-                    match = Match(pattern_match, pname, start, end)
+                    match = Match(
+                        pattern_match,
+                        pname,
+                        idx_offset + start,
+                        idx_offset + end
+                    )
                     local_matches.append((match, context))
         except NormalizationError:
             pass
