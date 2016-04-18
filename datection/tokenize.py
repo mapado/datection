@@ -7,7 +7,7 @@ import unicodedata
 
 from collections import Counter
 from datection.timepoint import NormalizationError
-from datection.context import probe
+from datection.context import probe, Context
 from datection.utils import cached_property
 
 
@@ -15,6 +15,15 @@ def get_repetitions(txt):
     """ Detect list of repetions in a text with statistics
 
         for pattern based on numbers
+
+        return list of dict
+          {
+           'coverage': float,
+            'start': int,
+            'end': int,
+            'qte': int,
+            'context': Context,
+          }
     """
     r = re.compile(r"(.{6,}?)\1+")
     tok_txt = re.sub(r"\d", 'X', txt).replace('\n', '')
@@ -24,11 +33,12 @@ def get_repetitions(txt):
         idx_start = match.start()
         pattern = match.group(1)
         idx_end = match.end()
-        real_case = txt[idx_start + 1: len(pattern) + idx_start + 1]
+        real_case = txt[idx_start: len(pattern) + idx_start]
         qte = len(match.group(0))/len(pattern)
 
+        context = Context(idx_start, idx_end, real_case, [])
         repetitions.append({
-            'sample': real_case,
+            'context': context,
             'start': idx_start,
             'end': idx_end,
             'qte': qte,
@@ -323,8 +333,9 @@ class Tokenizer(object):
             pat = pattern_repetitions[0]
             if pat['coverage'] > 0.9:
                 dt_matches = self._search_matches_timepoints(
-                    timepoints, pat['sample'], pat['sample'])
-                return list(self._get_valid_timepoints(dt_matches, timepoints))
+                    timepoints, pat['context'], pat['context'])
+                tps = list(self._get_valid_timepoints(dt_matches, timepoints))
+                return tps
 
     def _search_matches_timepoints(
             self, timepoints, context, ctx, analyse_subpattern=True):
@@ -407,8 +418,8 @@ class Tokenizer(object):
         local_matches = []
 
         try:
+            idx_offset = context.start
             for pattern_matches, start, end in pattern.scanString(ctx):
-                idx_offset = context.start
                 start, end = self.trim_text(ctx[start:end], start, end)
                 for pattern_match in pattern_matches:
                     match = Match(
