@@ -74,3 +74,22 @@ TRANSLATIONS = {
         'except': u'sauf',
     },
 }
+
+########################################################
+# Patterns and keywords only used for language detection
+# (note: some could be used for date parsing)
+########################################################
+DATE_PATTERNS = {
+    u'XX/XX/XXXX',
+    u'XX-XX-XXXX',
+    u'XX.XX.XXXX',
+}
+
+ADDITIONAL_KEYWORDS = {
+    u'matin',
+    u'journée',
+    u'soirée',
+    u'de',
+    u'du',
+    u'entre',
+}

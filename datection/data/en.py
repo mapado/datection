@@ -66,3 +66,23 @@ TRANSLATIONS = {
         'except': u'except',
     }
 }
+
+########################################################
+# Patterns and keywords only used for language detection
+# (note: some could be used for date parsing)
+########################################################
+DATE_PATTERNS = {
+    u'XX/XX/XXXX',  # uk
+    u'XX-XX-XXXX',  # uk
+    u'XXXX/XX/XX',  # us
+    u'XXXX-XX-XX',  # us
+}
+
+ADDITIONAL_KEYWORDS = {
+    u'from',
+    u'between',
+    u'closed',
+    u'or',
+    u'am',
+    u'pm',
+}
