@@ -199,7 +199,7 @@ DATE_INTERVAL = (
     optional_oneof_ci([',', '-']) +
     optional_ci(u"du") +
     PARTIAL_DATE('start_date') +
-    oneof_ci([u'au', u'-']) +
+    oneof_ci([u'au', u'-', u'jusqu\'au']) +
     DATE_PATTERN('end_date') +
     optional_oneof_ci([',', '-'])
 ).setParseAction(as_date_interval)
@@ -269,7 +269,7 @@ WEEKDAY_INTERVAL = (
     optional_ci(u"ouvert") +
     optional_ci(u"du") +
     WEEKDAY +
-    oneof_ci([u'au', u'-']) +
+    oneof_ci([u'au', u'-', u'jusqu\'au']) +
     WEEKDAY
 ).setParseAction(as_weekday_interval)('weekdays')
 
@@ -341,5 +341,6 @@ EXPRESSIONS = {
     ur'tous les jours': u'du lundi au dimanche',
     ur"toute l'année": u'Du 1er janvier au 31 décembre',
     ur"jusqu'à": u"à",
+    ur"jusqu'au": u"au",
     ur'(à|a) partir de': u'de',
 }

@@ -103,6 +103,15 @@ class TestParse(unittest.TestCase):
                 datetime(2013, 12, 9, 0, 0),
             ])
 
+        self.assert_generates(
+            u"du 16 janvier jusqu'au 19 janvier 2015",
+            [
+                datetime(2015, 1, 16, 0, 0),
+                datetime(2015, 1, 17, 0, 0),
+                datetime(2015, 1, 18, 0, 0),
+                datetime(2015, 1, 19, 0, 0),
+            ])
+
     def test_date_interval_with_date_exception(self):
         self.assert_generates(
             u"Du 6 au 9 décembre 2013, sauf le 8 décembre",
