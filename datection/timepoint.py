@@ -170,6 +170,10 @@ class Timepoint(object):
     def __repr__(self):
         return u'<%s %s>' % (self.__class__.__name__, unicode(self))
 
+    @property
+    def duration(self):
+        return 0
+
 
 class AbstractDateInterval(Timepoint):
 
@@ -233,6 +237,10 @@ class Date(AbstractDate):
     def valid(self):
         return self.to_python() is not None
 
+    @property
+    def duration(self):
+        return ALL_DAY
+
     def to_python(self):
         """Convert a Date object to a datetime.object"""
         try:
@@ -253,7 +261,7 @@ class Date(AbstractDate):
         """
         return {
             'rrule': self.rrulestr,
-            'duration': ALL_DAY,
+            'duration': self.duration,
         }
 
     def future(self, reference=None):
@@ -450,6 +458,7 @@ class DateInterval(AbstractDateInterval):
         self.start_date = start_date
         self.end_date = end_date
         self.excluded = []
+        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(DateInterval, self).__eq__(other):
@@ -526,6 +535,10 @@ class DateInterval(AbstractDateInterval):
         end = self.end_date.to_python()
         return makerrulestr(start, end, interval=1, byhour=0, byminute=0)
 
+    @property
+    def duration(self):
+        return ALL_DAY
+
     def to_python(self):
         return [_date for _date in self]
 
@@ -537,10 +550,12 @@ class DateInterval(AbstractDateInterval):
         """
         export = {
             'rrule': self.rrulestr,
-            'duration': ALL_DAY,
+            'duration': self.duration,
         }
         if self.excluded:
             export['excluded'] = self.excluded
+        if self.excluded_duration:
+            export['excluded_duration'] = self.excluded_duration
         return export
 
     def future(self, reference=None):
@@ -612,6 +627,11 @@ class Datetime(AbstractDate):
             byhour=self.start_time.hour,
             byminute=self.start_time.minute)
 
+    @property
+    def duration(self):
+        return duration(start=self.start_time,
+                        end=self.end_time)
+
     @add_span
     def export(self):
         """ Return a dict containing the recurrence rule and the duration
@@ -620,9 +640,7 @@ class Datetime(AbstractDate):
         """
         return {
             'rrule': self.rrulestr,
-            'duration': duration(
-                start=self.start_time,
-                end=self.end_time),
+            'duration': self.duration,
         }
 
     def future(self, reference=None):
@@ -721,6 +739,7 @@ class DatetimeInterval(AbstractDateInterval):
         self.date_interval = date_interval
         self.time_interval = time_interval
         self.excluded = []
+        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(DatetimeInterval, self).__eq__(other):
@@ -761,16 +780,21 @@ class DatetimeInterval(AbstractDateInterval):
             byhour=start_time.hour,
             byminute=start_time.minute)
 
+    @property
+    def duration(self):
+        return duration(start=self.time_interval.start_time,
+                        end=self.time_interval.end_time)
+
     @add_span
     def export(self):
         export = {
             'rrule': self.rrulestr,
-            'duration': duration(
-                start=self.time_interval.start_time,
-                end=self.time_interval.end_time),
+            'duration': self.duration,
         }
         if self.excluded:
             export['excluded'] = self.excluded
+        if self.excluded_duration:
+            export['excluded_duration'] = self.excluded_duration
         return export
 
     def future(self, reference=None):
@@ -866,16 +890,21 @@ class ContinuousDatetimeInterval(Timepoint):
             byhour=self.start_time.hour,
             byminute=self.start_time.minute)
 
-    @add_span
-    def export(self):
-        """Export the ContinuousDatetimeInterval to a database-ready format."""
+    @property
+    def duration(self):
         start_datetime = datetime.combine(
             self.start_date.to_python(), self.start_time.to_python())
         end_datetime = datetime.combine(
             self.end_date.to_python(), self.end_time.to_python())
+        return duration(start=start_datetime,
+                        end=end_datetime)
+
+    @add_span
+    def export(self):
+        """Export the ContinuousDatetimeInterval to a database-ready format."""
         return {
             'rrule': self.rrulestr,
-            'duration': duration(start=start_datetime, end=end_datetime),
+            'duration': self.duration,
             'continuous': True,
         }
 
@@ -923,6 +952,7 @@ class WeeklyRecurrence(Timepoint):
             key=lambda d: ORDERED_DAYS.index(d)
         )
         self.excluded = []
+        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(WeeklyRecurrence, self).__eq__(other):
@@ -970,6 +1000,11 @@ class WeeklyRecurrence(Timepoint):
             byhour=self.time_interval.start_time.hour,
             byminute=self.time_interval.start_time.minute)
 
+    @property
+    def duration(self):
+        return duration(start=self.time_interval.start_time,
+                        end=self.time_interval.end_time)
+
     @add_span
     def export(self):
         export = {
@@ -982,6 +1017,8 @@ class WeeklyRecurrence(Timepoint):
             export['unlimited'] = True
         if self.excluded:
             export['excluded'] = self.excluded
+        if self.excluded_duration:
+            export['excluded_duration'] = self.excluded_duration
 
         self.weekdays = sorted(self.weekdays, key=attrgetter('weekday'))
 
