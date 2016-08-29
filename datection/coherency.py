@@ -286,7 +286,6 @@ class RRuleCoherencyFilter(object):
         self.apply_single_date_number_coherency_heuristics()
         self.apply_small_date_interval_number_coherency_heuristics()
         self.apply_long_date_interval_number_coherency_heuristics()
-        self.apply_unlimited_date_interval_number_coherency_heuristics()
 
     def apply_rrule_day_level_coherency_heuristics(self):
         """Apply coherency heuristics based on the day level of the
