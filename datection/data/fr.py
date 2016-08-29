@@ -17,6 +17,7 @@ SHORT_WEEKDAYS = {
     u'mar': 1,
     u'mer': 2,
     u'merc': 2,
+    u'mercr': 2,
     u'jeu': 3,
     u'ven': 4,
     u'sam': 5,
