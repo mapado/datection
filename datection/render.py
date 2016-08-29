@@ -149,6 +149,19 @@ def groupby_date(dt_intervals):
         for group in dates.values()]
 
 
+def group_recurring_by_day(recurrings):
+    """
+    Groups the given WeeklyRecurences by weekay index
+
+    @param recurrings: list(WeeklyRecurences)
+    """
+    out = defaultdict(list)
+    for rec in recurrings:
+        key = "_".join([str(i) for i in rec.weekday_indexes])
+        out[key].append(rec)
+    return out.values()
+
+
 def consecutives(date1, date2):
     """ If two dates are consecutive, return True, else False"""
     date1 = date1['start'].date()
@@ -729,6 +742,42 @@ class TimeIntervalFormatter(BaseFormatter):
         return fmt
 
 
+class TimeIntervalListFormatter(BaseFormatter):
+    """
+    Formats list of time intervals
+    """
+
+    def __init__(self, interval_list):
+        super(TimeIntervalListFormatter, self).__init__()
+        self.interval_list = interval_list
+        self.templates = {
+            'fr_FR': u'{time} + autres horaires',
+            'en_US': u'{time} + more schedules',
+        }
+
+    def display(self, prefix=False):
+        if len(self.interval_list) == 1:
+            time_inter = self.interval_list[0]
+            return TimeIntervalFormatter(time_inter[0],
+                                         time_inter[1]).display(prefix)
+        elif len(self.interval_list) == 2:
+            time1 = self.interval_list[0]
+            time1_fmt = TimeIntervalFormatter(time1[0],
+                                              time1[1]).display(prefix)
+            time2 = self.interval_list[1]
+            time2_fmt = TimeIntervalFormatter(time2[0],
+                                              time2[1]).display(False)
+            fmt = '%s %s %s' % (time1_fmt, self._('and'), time2_fmt)
+            return fmt
+        else:
+            template = self.get_template()
+            time_inter = self.interval_list[0]
+            time_fmt = TimeIntervalFormatter(time_inter[0],
+                                             time_inter[1]).display(prefix)
+            fmt = template.format(time=time_fmt)
+            return fmt
+
+
 class DatetimeFormatter(BaseFormatter):
 
     """Formats a datetime using the current locale."""
@@ -850,9 +899,10 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     """Formats a weekday recurrence using the current locale."""
 
-    def __init__(self, drr):
+    def __init__(self, drr_list):
         super(WeekdayReccurenceFormatter, self).__init__()
-        self.drr = get_drr(drr)
+        self.drr_list = [get_drr(drr) for drr in drr_list]
+        self.drr = self.drr_list[0]
         self.templates = {
             'fr_FR': {
                 'one_day': u'le {weekday}',
@@ -912,8 +962,9 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     def format_time_interval(self):
         """Format the rrule time interval using the current locale."""
-        formatter = TimeIntervalFormatter(
-            self.drr.start_datetime, self.drr.end_datetime)
+        time_intervals = [(drr.start_datetime, drr.end_datetime)
+                          for drr in self.drr_list]
+        formatter = TimeIntervalListFormatter(time_intervals)
         return formatter.display(prefix=True)
 
     @postprocess(lstrip_pattern=',')
@@ -1002,14 +1053,29 @@ class ExclusionFormatter(BaseFormatter):
 
         """
         excluded_rrule = excluded.exclusion_rrules[0]
+        excluded_duration = excluded.exclusion_duration[0]
+        result = ""
         # excluded recurrent weekdays
         if excluded_rrule.byweekday:
-            return self.display_excluded_weekdays(excluded_rrule)
+            result = self.display_excluded_weekdays(excluded_rrule)
         # excluded date(time)
         else:
-            return self.display_excluded_date(
+            result = self.display_excluded_date(
                 rrule=excluded.duration_rrule['excluded'][0],
                 duration=excluded.duration)
+
+        # if the exclusion has a different timing, it means that it
+        # is an alteration of the main schedule. The timings have to
+        # be displayed then.
+        if (excluded_rrule.byhour != excluded.rrule.byhour) or (
+                excluded_duration and excluded_duration != excluded.duration):
+            drr = DurationRRule({'rrule': str(excluded_rrule),
+                                 'duration': excluded_duration})
+            time_fmt = TimeIntervalFormatter(start_time=drr.start_datetime,
+                                             end_time=drr.end_datetime)
+            result += " " + time_fmt.display()
+
+        return result
 
     def display_excluded_date(self, rrule, duration):
         """Render the excluded date into a human readable format.
@@ -1257,9 +1323,9 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(ExclusionFormatter(exc).display(*args, **kwargs))
 
         # format recurring rrules
-        for rec in self.recurring:
+        for rec_group in group_recurring_by_day(self.recurring):
             out.append(
-                WeekdayReccurenceFormatter(rec).display(*args, **kwargs))
+                WeekdayReccurenceFormatter(rec_group).display(*args, **kwargs))
 
         # format continuous rrules
         for con in self.continuous:
