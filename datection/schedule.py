@@ -209,26 +209,29 @@ class Schedule(object):
         self.date_intervals = []
         self._timepoints = []  # TEMPORARY
 
-    def add(self, timepoint, excluded=None):
+    def add(self, timepoint, excluded_tps=None):
         """Add the timepoint to the one of the schedule internal lists,
         if its class is found in the schedule router.
 
         """
         if type(timepoint) in self.router:
-            if not excluded:
+            if not excluded_tps:
                 # Get the timepoint transformation method
                 container_name, constructor = self.router[type(timepoint)]
             else:
                 # perform the exclusion bewteen the 'timepoint' and 'excluded'
                 # Timepoints
-                excluder = TimepointExcluder(timepoint, excluded)
-                excluded = excluder.exclude()
-                if excluded is not None:
-                    timepoint.excluded.append(excluded)
+                for excluded in excluded_tps:
+                    duration = excluded.duration
+                    excluder = TimepointExcluder(timepoint, excluded)
+                    excluded = excluder.exclude()
+                    if excluded is not None:
+                        timepoint.excluded.append(excluded)
+                        timepoint.excluded_duration.append(duration)
 
                 # Get the timepoint transformation method
                 container_name, constructor = self.router[
-                    type(excluder.timepoint)]
+                    type(timepoint)]
 
             # add timepoint to the schedule
             getattr(self, container_name).append(constructor(timepoint))
