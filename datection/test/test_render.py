@@ -639,7 +639,7 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
             'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU,SU;'
                       'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
         }
-        self.wkfmt = WeekdayReccurenceFormatter(drr)
+        self.wkfmt = WeekdayReccurenceFormatter([drr])
 
         drr = {
             'duration': 60,
@@ -647,7 +647,7 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
                       'BYDAY=MO,TU,WE,TH,FR,SA,SU;'
                       'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
         }
-        self.wkfmt_alldays = WeekdayReccurenceFormatter(drr)
+        self.wkfmt_alldays = WeekdayReccurenceFormatter([drr])
 
         drr = {
             'duration': 60,
@@ -655,7 +655,22 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
                       'BYDAY=MO,TU,WE;'
                       'BYHOUR=22;BYMINUTE=30;UNTIL=20130831T235959')
         }
-        self.wkfmt_continuous = WeekdayReccurenceFormatter(drr)
+        self.wkfmt_continuous = WeekdayReccurenceFormatter([drr])
+
+        drr1 = {
+            'duration': 60,
+            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;'
+                      'BYDAY=MO,TU,WE;'
+                      'BYHOUR=19;BYMINUTE=30;UNTIL=20130831T235959')
+        }
+
+        drr2 = {
+            'duration': 90,
+            'rrule': ('DTSTART:20130807\nRRULE:FREQ=WEEKLY;'
+                      'BYDAY=MO,TU,WE;'
+                      'BYHOUR=21;BYMINUTE=30;UNTIL=20130831T235959')
+        }
+        self.wkfmt_multitime = WeekdayReccurenceFormatter([drr1, drr2])
         super(TestWeekdayReccurenceFormatter_fr_FR, self).setUp()
 
     def test_day_name(self):
@@ -700,6 +715,10 @@ class TestWeekdayReccurenceFormatter_fr_FR(GetCurrentDayMocker):
         self.assertEqual(
             self.wkfmt_continuous.display(),
             u'du lundi au mercredi, du 7 au 31 août 2013, de 22 h 30 à 23 h 30')
+
+        self.assertEqual(
+            self.wkfmt_multitime.display(),
+            u'du lundi au mercredi, du 7 au 31 août 2013, de 19 h 30 à 20 h 30 et de 21 h 30 à 23 h')
 
     def test_display_in_less_than_6_months(self):
         self.set_current_date(datetime.date(2013, 4, 1))
@@ -998,6 +1017,24 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
+
+    def test_display_excluded_weekday_different_interval(self):
+        # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et mercredi
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO,TU,WE;BYHOUR=8;'
+                  'BYMINUTE=0;UNTIL=20150328T235959')
+             ],
+             'excluded_duration': [120],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi de 8 h à 10 h")
 
     def test_display_excluded_weekday_list(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et jeudi

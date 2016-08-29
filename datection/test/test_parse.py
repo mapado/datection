@@ -73,6 +73,14 @@ class TestParse(unittest.TestCase):
                 datetime(2014, 8, 11, 0, 0),
             ])
 
+    def test_multi_datetime(self):
+        self.assert_generates(
+            u"Le 25 septembre 2015 à 20 h et 11 novembre 2015 à 21 h",
+            [
+                datetime(2015, 9, 25, 20, 0),
+                datetime(2015, 11, 11, 21, 0),
+            ])
+
     def test_datetime_list(self):
         self.assert_generates(
             u"Les 5, 6, 7 et 11 août 2014 à 15h30",
@@ -97,9 +105,9 @@ class TestParse(unittest.TestCase):
         self.assert_generates(
             u"Du 6 au 9 décembre 2013",
             [
-                datetime(2013, 12, 6,  0, 0),
-                datetime(2013, 12, 7,  0, 0),
-                datetime(2013, 12, 8,  0, 0),
+                datetime(2013, 12, 6, 0, 0),
+                datetime(2013, 12, 7, 0, 0),
+                datetime(2013, 12, 8, 0, 0),
                 datetime(2013, 12, 9, 0, 0),
             ])
 
@@ -111,6 +119,16 @@ class TestParse(unittest.TestCase):
                 datetime(2015, 1, 18, 0, 0),
                 datetime(2015, 1, 19, 0, 0),
             ])
+
+        self.assert_generates(
+            u"de mercredi 16 jusqu'à samedi 19 mars 2015",
+            [
+                datetime(2015, 3, 16, 0, 0),
+                datetime(2015, 3, 17, 0, 0),
+                datetime(2015, 3, 18, 0, 0),
+                datetime(2015, 3, 19, 0, 0),
+            ])
+
 
     def test_date_interval_with_date_exception(self):
         self.assert_generates(
@@ -180,6 +198,61 @@ class TestParse(unittest.TestCase):
                 datetime(2014, 12, 15,  23, 0),
             ])
 
+    def test_datetime_interval_with_multiple_weekday_exception(self):
+        self.assert_generates(
+            u"Du 6 au 15 décembre 2014 à 23h, sauf le mardi et le jeudi",
+            [
+                datetime(2014, 12, 6,   23, 0),
+                datetime(2014, 12, 7,   23, 0),
+                datetime(2014, 12, 8,   23, 0),
+                datetime(2014, 12, 10,  23, 0),
+                datetime(2014, 12, 12,  23, 0),
+                datetime(2014, 12, 13,  23, 0),
+                datetime(2014, 12, 14,  23, 0),
+                datetime(2014, 12, 15,  23, 0),
+            ])
+
+    def test_datetime_interval_with_weekday_exception_time(self):
+        self.assert_generates(
+            u"Du 6 au 15 décembre 2014 à 23h, sauf le mardi à 22h",
+            [
+                datetime(2014, 12, 6,   23, 0),
+                datetime(2014, 12, 7,   23, 0),
+                datetime(2014, 12, 8,   23, 0),
+                datetime(2014, 12, 9,   22, 0),
+                datetime(2014, 12, 10,  23, 0),
+                datetime(2014, 12, 11,  23, 0),
+                datetime(2014, 12, 12,  23, 0),
+                datetime(2014, 12, 13,  23, 0),
+                datetime(2014, 12, 14,  23, 0),
+                datetime(2014, 12, 15,  23, 0),
+            ])
+
+    def test_datetime_interval_with_weekday_multiple_exception_time(self):
+        self.assert_generates(
+            u"Du 6 au 12 décembre 2014 à 23h, sauf le mardi à 22h et le jeudi à 21h",
+            [
+                datetime(2014, 12, 6,   23, 0),
+                datetime(2014, 12, 7,   23, 0),
+                datetime(2014, 12, 8,   23, 0),
+                datetime(2014, 12, 9,   22, 0),
+                datetime(2014, 12, 10,  23, 0),
+                datetime(2014, 12, 11,  21, 0),
+                datetime(2014, 12, 12,  23, 0),
+            ])
+
+    def test_datetime_interval_with_weekday_exception_time_transfer(self):
+        self.assert_generates(
+            u"Du lundi au vendredi, du 6 au 15 décembre 2014 sauf le mardi à 23h",
+            [
+                datetime(2014, 12, 8,   23, 0),
+                datetime(2014, 12, 9,   23, 0),
+                datetime(2014, 12, 10,  23, 0),
+                datetime(2014, 12, 11,  23, 0),
+                datetime(2014, 12, 12,  23, 0),
+                datetime(2014, 12, 15,  23, 0),
+            ])
+
     def test_weekly_recurrence(self):
         self.assert_generates(
             u"Du lundi au vendredi, du 5 au 15 décembre 2014, de 8h à 9h",
@@ -191,6 +264,15 @@ class TestParse(unittest.TestCase):
                 datetime(2014, 12, 11,  8, 0),
                 datetime(2014, 12, 12,  8, 0),
                 datetime(2014, 12, 15,  8, 0),
+            ])
+
+        self.assert_generates(
+            u'séance les jeudis et vendredi, du 6 au 15 décembre 2014,à 11h et 12h',
+            [
+                datetime(2014, 12, 11, 11, 0),
+                datetime(2014, 12, 12, 11, 0),
+                datetime(2014, 12, 11, 12, 0),
+                datetime(2014, 12, 12, 12, 0),
             ])
 
     def test_weekly_recurrence_with_date_exception(self):
