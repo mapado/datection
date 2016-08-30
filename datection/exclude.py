@@ -62,6 +62,9 @@ class TimepointExcluder(object):
                 if (self.timepoint.time_interval.undefined and
                    not self.excluded.time_interval.undefined):
                     self.timepoint.time_interval = self.excluded.time_interval
+                if (not self.timepoint.date_interval.undefined and
+                   self.excluded.date_interval.undefined):
+                    self.excluded.date_interval = self.timepoint.date_interval
                 return self.excluded.export()['rrule']
 
     @staticmethod

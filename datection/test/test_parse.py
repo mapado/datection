@@ -246,7 +246,6 @@ class TestParse(unittest.TestCase):
             u"Du lundi au vendredi, du 6 au 15 décembre 2014 sauf le mardi à 23h",
             [
                 datetime(2014, 12, 8,   23, 0),
-                datetime(2014, 12, 9,   23, 0),
                 datetime(2014, 12, 10,  23, 0),
                 datetime(2014, 12, 11,  23, 0),
                 datetime(2014, 12, 12,  23, 0),
