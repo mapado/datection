@@ -22,6 +22,7 @@ from datection.grammar import NUMERIC_YEAR
 from datection.grammar import as_date
 from datection.grammar import as_time
 from datection.grammar import as_datetime
+from datection.grammar import as_datetime_list_multitime
 from datection.grammar import as_datelist
 from datection.grammar import as_date_interval
 from datection.grammar import as_time_interval
@@ -197,9 +198,10 @@ DATE_LIST = (
 # end date
 DATE_INTERVAL = (
     optional_oneof_ci([',', '-']) +
-    optional_ci(u"du") +
+    optional_oneof_ci([u"du", u"de"]) +
     PARTIAL_DATE('start_date') +
-    oneof_ci([u'au', u'-']) +
+    oneof_ci([u'au', u'-', u"à"]) +
+    Optional(WEEKDAY) +
     DATE_PATTERN('end_date') +
     optional_oneof_ci([',', '-'])
 ).setParseAction(as_date_interval)
@@ -231,6 +233,16 @@ DATETIME_LIST = (
     TIME_INTERVAL('time_interval')
 ).setParseAction(as_datetime_list)
 
+# Le vendredi 12 à 14h et le samedi 13 à 15h
+DATETIME_LIST_MULTITIME = (
+    Group(
+        DATETIME +
+        OneOrMore(
+            Optional(oneOf([u',', u'et', u'&', u';', u'-'])) +
+            DATETIME
+        )
+    )('datetime')
+).setParseAction(as_datetime_list_multitime)
 
 # a datetime interval is an interval of dates, and a time interval
 DATETIME_INTERVAL = (
@@ -248,7 +260,7 @@ CONTINUOUS_DATETIME_INTERVAL = (
     DATE_PATTERN("start_date") +
     optional_oneof_ci([u"à", u'a', u"-"]) +
     TIME("start_time") +
-    optional_oneof_ci([u"au", u'-', u'à']) +
+    oneof_ci([u"au", u'-', u'à']) +
     DATE_PATTERN("end_date") +
     optional_oneof_ci([u'a', u"à", u"-"]) +
     TIME("end_time")
@@ -267,9 +279,9 @@ WEEKDAY_LIST = (
 # An interval of weekdays
 WEEKDAY_INTERVAL = (
     optional_ci(u"ouvert") +
-    optional_ci(u"du") +
+    optional_oneof_ci([u"du", u"de"]) +
     WEEKDAY +
-    oneof_ci([u'au', u'-']) +
+    oneof_ci([u'au', u'-', u"à"]) +
     WEEKDAY
 ).setParseAction(as_weekday_interval)('weekdays')
 
@@ -291,7 +303,7 @@ WEEKLY_RECURRENCE = Each(
 # Ex: Du 29/03/11 au 02/04/11 - Mardi, mercredi samedi à 19h, jeudi à
 # 20h30 et vendredi à 15h"
 MULTIPLE_WEEKLY_RECURRENCE = (
-    DATE_INTERVAL('date_interval') +
+    Optional(DATE_INTERVAL('date_interval')) +
     (
         Group(
             WEEKDAY_PATTERN +
@@ -317,6 +329,7 @@ TIMEPOINTS = [
         ('datetime_list', DATETIME_LIST),
         ('datetime_interval', DATETIME_INTERVAL),
         ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
+        ('datetime_list_multitime', DATETIME_LIST_MULTITIME),
     ]),
 
     ('date', DATE_PATTERN, [
@@ -341,5 +354,6 @@ EXPRESSIONS = {
     ur'tous les jours': u'du lundi au dimanche',
     ur"toute l'année": u'Du 1er janvier au 31 décembre',
     ur"jusqu'à": u"à",
+    ur"jusqu'au": u"au",
     ur'(à|a) partir de': u'de',
 }

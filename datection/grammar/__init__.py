@@ -165,6 +165,15 @@ def as_continuous_datetime_interval(text, start_index, matches):
     return ContinuousDatetimeInterval.from_match(sd, st, ed, et)
 
 
+def as_datetime_list_multitime(text, start_index, matches):
+    """
+    Return a DatetimeList containing all the matching Datetimes
+    """
+    items = matches['datetime']
+    datetimes = [d for d in items if isinstance(d, Datetime)]
+    return DatetimeList(datetimes)
+
+
 def as_weekday_list(text, start_index, matches):
     """Return a Weekdays object from a match of the WEEKDAY_LIST pattern."""
     day_matches = [m for m in matches if isinstance(m, weekday)]
@@ -276,7 +285,10 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
 
     """
     out = []
-    date_interval = matches['date_interval']
+    if matches.get('date_interval'):
+        date_interval = matches['date_interval']
+    else:
+        date_interval = DateInterval.make_undefined()
     for group in matches['groups']:
         wk = WeeklyRecurrence(
             date_interval=date_interval,

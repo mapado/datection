@@ -87,6 +87,7 @@ class TestTokenizer(unittest.TestCase):
         def __init__(self, action):
             self.action = action
             self.tag = action.lower()
+            self.content = ''
 
         @property
         def is_match(self):

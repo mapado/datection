@@ -12,6 +12,7 @@ from datetime import time
 from datetime import date
 from dateutil.rrule import rrulestr
 from dateutil.rrule import rruleset
+from dateutil.rrule import rrule
 
 from datection.utils import cached_property
 from datection.utils import UNLIMITED_DATETIME_START
@@ -102,6 +103,15 @@ class DurationRRule(object):
         ]
 
     @cached_property
+    def exclusion_duration(self):
+        """
+        Return the list of exclusion duration (may be filled with
+        Nones in case the container was missing in the serialized string)
+        """
+        exclusion_nb = len(self.duration_rrule.get('excluded', []))
+        return self.duration_rrule.get('excluded_duration', [None] * exclusion_nb)
+
+    @cached_property
     def rrule(self):
         """Instanciate an rrule from the rrule string
 
@@ -131,7 +141,23 @@ class DurationRRule(object):
         rset = rruleset()
         rset.rrule(self.rrule)
         for ex_rrule in self.exclusion_rrules:
-            rset.exrule(ex_rrule)
+            if (self.rrule.byhour != ex_rrule.byhour or
+               self.rrule.byminute != ex_rrule.byminute):
+                rset.rrule(ex_rrule)
+                mask_kwargs = {"interval": ex_rrule._interval,
+                               "count": ex_rrule._count,
+                               "dtstart": ex_rrule._dtstart,
+                               "freq": ex_rrule._freq,
+                               "until": ex_rrule._until,
+                               "wkst": ex_rrule._wkst,
+                               "cache": False if ex_rrule._cache is None else True,
+                               "byweekday": ex_rrule._byweekday}
+                mask_kwargs.update({"byhour": self.rrule.byhour,
+                                    "byminute": self.rrule.byminute})
+                mask_rrule = rrule(**mask_kwargs)
+                rset.exrule(mask_rrule)
+            else:
+                rset.exrule(ex_rrule)
         return rset
 
     @property

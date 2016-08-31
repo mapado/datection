@@ -137,7 +137,7 @@ class TokenGroup(object):
     @property
     def is_exclusion_group(self):
         return (
-            len(self.tokens) == 3
+            len(self.tokens) >= 3
             and self.tokens[0].is_match
             and self.tokens[1].is_exclusion
             and self.tokens[2].is_match
@@ -482,12 +482,19 @@ class Tokenizer(object):
             return [TokenGroup(tok) for tok in tokens]
         out = []
         i = 0
-        while i <= len(tokens) - 1:
+        while i < len(tokens):
             window = tokens[i: i + 3]
             window_sep = [tok.action for tok in window]
             if window_sep == ['MATCH', 'EXCLUDE', 'MATCH']:
-                out.append(TokenGroup(window))
+                token_group = TokenGroup(window)
                 i += 3
+                # the exlcusion potentially concerns multiple matches,
+                # keeps grouping as long as the matches have the same tag
+                excluded_tag = window[-1].tag
+                while (i < len(tokens)) and (tokens[i].tag == excluded_tag):
+                    token_group.tokens.append(tokens[i])
+                    i += 1
+                out.append(token_group)
             else:
                 if tokens[i].is_match:
                     out.append(TokenGroup(tokens[i]))
