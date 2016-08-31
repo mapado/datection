@@ -149,6 +149,18 @@ def groupby_date(dt_intervals):
         for group in dates.values()]
 
 
+def group_recurring_by_date_interval(recurrings):
+    """
+    Groups the given WeeklyRecurences by date interval
+
+    @param recurrings: list(WeeklyRecurences)
+    """
+    out = defaultdict(list)
+    for rec in recurrings:
+        out[rec.date_interval].append(rec)
+    return [value for (key, value) in sorted(out.items())]
+
+
 def group_recurring_by_day(recurrings):
     """
     Groups the given WeeklyRecurences by weekay index
@@ -952,9 +964,9 @@ class WeekdayReccurenceFormatter(BaseFormatter):
                     self._('and'), self.day_name(end_idx))
                 return fmt
 
-    def format_date_interval(self, *args, **kwargs):
+    def format_date_interval(self, no_date=False, *args, **kwargs):
         """Format the rrule date interval using the current locale."""
-        if not self.drr.bounded:
+        if not self.drr.bounded or no_date:
             return u''
         formatter = DateIntervalFormatter(
             self.drr.start_datetime, self.drr.end_datetime)
@@ -968,14 +980,46 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         return formatter.display(prefix=True)
 
     @postprocess(lstrip_pattern=',')
-    def display(self, *args, **kwargs):
+    def display(self, no_date=False, *args, **kwargs):
         """Display a weekday recurrence using the current locale."""
         template = self.get_template('weekday_reccurence')
         weekdays = self.format_weekday_interval()
-        dates = self.format_date_interval()
+        dates = self.format_date_interval(no_date)
         time = self.format_time_interval()
         fmt = template.format(weekdays=weekdays, dates=dates, time=time)
         return fmt
+
+
+class WeekdayReccurenceGroupFormatter(BaseFormatter):
+    """
+    Formats the group of weekday recurrence sharing the same date interval
+    """
+
+    def __init__(self, drr_list):
+        """
+        @param drr_list: list(WeeklyRecurences) sharing the same date interval
+        """
+        super(WeekdayReccurenceGroupFormatter, self).__init__()
+        self.drr_list = [get_drr(drr) for drr in drr_list]
+        self.drr_grouped_by_days = group_recurring_by_day(self.drr_list)
+
+    def display(self, *args, **kwargs):
+        """
+        Formats the group of weekday recurrence sharing the same date interval
+        """
+        if len(self.drr_grouped_by_days) == 1:
+            fmt = WeekdayReccurenceFormatter(self.drr_grouped_by_days[0])
+            return fmt.display()
+        else:
+            start_date = self.drr_list[0].date_interval[0]
+            end_date = self.drr_list[0].date_interval[1]
+            date_fmt = DateIntervalFormatter(start_date, end_date)
+            date_str = date_fmt.display()
+            output = date_str + ":\n"
+            for rec_grp in self.drr_grouped_by_days:
+                fmt = WeekdayReccurenceFormatter(rec_grp)
+                output += "- %s\n" % fmt.display(no_date=True)
+            return output
 
 
 class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
@@ -1159,6 +1203,18 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return [drr for drr in self.schedule if drr.is_recurring]
 
     @cached_property
+    def bounded_recurrings(self):
+        """Select recurring rrules from self.schedule"""
+        return [drr for drr in self.schedule if drr.is_recurring and
+                drr.bounded]
+
+    @cached_property
+    def unlimited_recurrings(self):
+        """Select recurring rrules from self.schedule"""
+        return [drr for drr in self.schedule if drr.is_recurring and
+                drr.unlimited]
+
+    @cached_property
     def non_special(self):
         """Return all the non-continuous, non-recurring, non-excluded
         DurationRRule objects.
@@ -1323,10 +1379,12 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(ExclusionFormatter(exc).display(*args, **kwargs))
 
         # format recurring rrules
-        for rec_group in group_recurring_by_day(self.recurring):
+        for rec_group in group_recurring_by_day(self.unlimited_recurrings):
             out.append(
                 WeekdayReccurenceFormatter(rec_group).display(*args, **kwargs))
-
+        for rec_group in group_recurring_by_date_interval(self.bounded_recurrings):
+            out.append(
+                WeekdayReccurenceGroupFormatter(rec_group).display(*args, **kwargs))
         # format continuous rrules
         for con in self.continuous:
             start, end = con.start_datetime, con.end_datetime

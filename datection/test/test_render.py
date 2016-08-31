@@ -1070,6 +1070,51 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
 
+    def test_regrouping_weekdays_by_interval(self):
+        # Du 30 septembre au 11 octobre 2015:
+        # - du mercredi au samedi, de 20 h à 21 h
+        # - le dimanche, de 17 h à 18 h
+        #
+        # Du 20 au 22 octobre 2015:
+        # - du mardi au samedi, de 20 h à 21 h
+        # - le dimanche, de 17 h à 18 h
+        schedule = [
+            {
+                "duration": 60,
+                "rrule": ("DTSTART:20151020\nRRULE:FREQ=DAILY;"
+                          "UNTIL=20151022T235959;INTERVAL=1;BYMINUTE=00;"
+                          "BYHOUR=20;BYDAY=TU,WE,TH,FR,SA")
+            },
+            {
+                "duration": 60,
+                "rrule": ("DTSTART:20151020\nRRULE:FREQ=DAILY;"
+                          "UNTIL=20151022T235959;INTERVAL=1;BYMINUTE=00;"
+                          "BYHOUR=17;BYDAY=SU")
+            },
+            {
+                "duration": 60,
+                "rrule": ("DTSTART:20150930\nRRULE:FREQ=DAILY;"
+                          "UNTIL=20151011T235959;INTERVAL=1;BYMINUTE=00;"
+                          "BYHOUR=20;BYDAY=WE,TH,FR,SA")
+            },
+            {
+                "duration": 60,
+                "rrule": ("DTSTART:20150930\nRRULE:FREQ=DAILY;"
+                          "UNTIL=20151011T235959;INTERVAL=1;BYMINUTE=00;"
+                          "BYHOUR=17;BYDAY=SU")
+            },
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u'Du 30 septembre au 11 octobre 2015:\n'
+            u'- du mercredi au samedi, de 20 h \xe0 21 h\n'
+            u'- le dimanche, de 17 h \xe0 18 h\n'
+            u'\n'
+            u'Du 20 au 22 octobre 2015:\n'
+            u'- du mardi au samedi, de 20 h \xe0 21 h\n'
+            u'- le dimanche, de 17 h \xe0 18 h\n')
+
 
 class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
 
