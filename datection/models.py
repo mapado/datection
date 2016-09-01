@@ -340,3 +340,9 @@ class DurationRRule(object):
         if not end_date:
             return False
         return (end_date - start_date).days > 8 * 30
+
+    @property
+    def has_timings(self):
+        return (
+            self.duration < ALL_DAY
+        )
