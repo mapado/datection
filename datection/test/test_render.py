@@ -1115,6 +1115,28 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             u'- du mardi au samedi, de 20 h \xe0 21 h\n'
             u'- le dimanche, de 17 h \xe0 18 h\n')
 
+    def test_filter_non_informative(self):
+        # test the filtering of the rrule without time information
+        # in case there is a more precise rule
+        schedule = [
+            {
+                "duration": 0,
+                "rrule": ("DTSTART:20151223\nRRULE:FREQ=DAILY;COUNT=1;"
+                          "INTERVAL=1;BYMINUTE=00;BYHOUR=20;"
+                          "BYDAY=MO,TU,WE,TH,FR,SA,SU")
+            },
+            {
+                "duration": 1439,
+                "rrule": ("DTSTART:20151215\nRRULE:FREQ=DAILY;"
+                          "UNTIL=20151231T235959;INTERVAL=1;BYMINUTE=0;"
+                          "BYHOUR=0;BYDAY=MO,TU,WE,TH,FR,SA,SU")
+            },
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u'Le mercredi 23 décembre 2015 à 20 h')
+
 
 class TestSeoFormatter_fr_FR(GetCurrentDayMocker):
 

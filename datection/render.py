@@ -1191,6 +1191,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.schedule = [
             DurationRRule(drr, apply_exlusion) for drr in schedule]
         self.schedule = self.deduplicate(self.schedule)
+        self.schedule = self.filter_non_informative(self.schedule)
         self.format_exclusion = format_exclusion
         self.templates = {
             'fr_FR': u'{dates} {time}',
@@ -1259,6 +1260,22 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return [date for date in dates
                 if date['start'].year == year
                 if date['start'].month == month]
+
+    def filter_non_informative(self, schedules):
+        """
+        Removes schedules which do not add any information to the
+        schedule list. (e.g: more vague than the others).
+
+        @param schedules: list(DurationRRule)
+        """
+        output = schedules
+        has_time_lvl_schedule = any([sched for sched in output if
+                                     sched.has_timings])
+
+        if has_time_lvl_schedule:
+            output = [sched for sched in output if sched.has_timings]
+
+        return output
 
     def format_single_dates_and_interval(self, conseq_groups, *args, **kwargs):
         """ First formatting technique, using dates interval
