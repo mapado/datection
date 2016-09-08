@@ -306,8 +306,9 @@ class TestParse(unittest.TestCase):
             "Du 05-02-2015 au 06-02-2015 - jeu. à 19h | ven. à 20h30",
             "fr")
         self.assertEqual(len(wks), 2)
-        self.assertEqual(wks[1].weekdays, [FR])
-        self.assertEqual(wks[0].weekdays, [TH])
+        self.assertNotEqual(wks[0].weekdays, wks[1].weekdays)
+        self.assertIn(wks[1].weekdays[0], [TH, FR])
+        self.assertIn(wks[0].weekdays[0], [TH, FR])
 
     def test_datetime_pattern(self):
         self.assert_generates(
@@ -377,6 +378,30 @@ class TestParse(unittest.TestCase):
         res = parse(text, 'fr')
         self.assertEqual(len(res), 2)
         self.assertIsInstance(res[0], Date)
+
+    def test_timing_alone(self):
+        text = u"ouvert de 10h à 18h."
+        res = parse(text, "fr")
+        self.assertEqual(len(res), 1)
+        self.assertTrue(isinstance(res[0], WeeklyRecurrence))
+        self.assertEqual(len(res[0].weekdays), 7)
+        self.assertEqual(res[0].time_interval.start_time, Time(10,00))
+
+    def test_timing_with_exclusion(self):
+        text = u"ouvert de 10h à 18h. Fermé le dimanche"
+        res = parse(text, "fr")
+        self.assertEqual(len(res), 1)
+        self.assertTrue(isinstance(res[0], WeeklyRecurrence))
+        self.assertEqual(res[0].time_interval.start_time, Time(10,00))
+        self.assertEqual(len(res[0].excluded), 1)
+
+    def test_timing_away_from_date(self):
+        text = u"Tous les jours.Blablablablablabla. De 9h45 à 13h."
+        res = parse(text, "fr")[0]
+        self.assertTrue(isinstance(res, WeeklyRecurrence))
+        self.assertEqual(len(res.weekdays), 7)
+        self.assertEqual(res.time_interval.start_time, Time(9,45))
+        self.assertEqual(res.time_interval.end_time, Time(13,00))
 
 
 class TestYearLessExpressions(unittest.TestCase):

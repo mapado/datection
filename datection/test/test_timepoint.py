@@ -20,6 +20,7 @@ from datection.timepoint import DatetimeList
 from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import enrich_with_timings
 
 
 class CurrentDayMock(unittest.TestCase):
@@ -111,6 +112,15 @@ class TestDate(CurrentDayMock):
         self.assertFalse(self.d.future())
         self.assertTrue(self.d.future(reference=date(2014, 11, 12)))
 
+    def test_add_timings(self):
+        time_interval = TimeInterval(Time(12, 00), Time(20, 00))
+        date = Date(2015, 10, 12)
+        result = enrich_with_timings(date, time_interval)
+        self.assertTrue(isinstance(result, Datetime))
+        self.assertEqual(date, result.date)
+        self.assertEqual(time_interval.start_time, result.start_time)
+        self.assertEqual(time_interval.end_time, result.end_time)
+
 
 class TestDateList(CurrentDayMock):
 
@@ -155,6 +165,14 @@ class TestDateList(CurrentDayMock):
 
         self.set_current_date(date(2013, 11, 12))  # today: in between
         self.assertTrue(self.dl.future())
+
+    def test_add_timings(self):
+        time_interval = TimeInterval(Time(12, 00), Time(20, 00))
+        dl = DateList([Date(2013, 11, 12), Date(2013, 11, 13)])
+        result = enrich_with_timings(dl, time_interval)
+        self.assertTrue(isinstance(result, DatetimeList))
+        self.assertEqual(len(result.datetimes), 2)
+        self.assertEqual(result.datetimes[1].start_time, time_interval.start_time)
 
 
 class TestDateInterval(CurrentDayMock):
@@ -203,6 +221,11 @@ class TestDateInterval(CurrentDayMock):
         self.set_current_date(date(2013, 3, 14))  # today: in between
         self.assertTrue(self.di.future())
 
+    def test_add_timings(self):
+        time_interval = TimeInterval(Time(12, 00), Time(20, 00))
+        result = enrich_with_timings(self.di, time_interval)
+        self.assertTrue(isinstance(result, DatetimeInterval))
+        self.assertEqual(result.time_interval, time_interval)
 
 class TestDatetime(CurrentDayMock):
 
