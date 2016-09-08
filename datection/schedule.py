@@ -12,6 +12,8 @@ from datection.timepoint import DatetimeList
 from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import has_no_timings
+from datection.timepoint import enrich_with_timings
 from datection.exclude import TimepointExcluder
 
 
@@ -208,6 +210,23 @@ class Schedule(object):
         self.date_lists = []
         self.date_intervals = []
         self._timepoints = []  # TEMPORARY
+        self.unassigned_timings = []
+
+    def add_exclusion(self, timepoint, excluded_tps):
+        """
+        Adds the excluded timepoints to the given timepoint
+
+        @param timepoint(Timepoint)
+        @param excluded_tps(list(Timepoint) or None)
+        """
+        if excluded_tps is not None:
+            for excluded in excluded_tps:
+                duration = excluded.duration
+                excluder = TimepointExcluder(timepoint, excluded)
+                excluded = excluder.exclude()
+                if excluded is not None:
+                    timepoint.excluded.append(excluded)
+                    timepoint.excluded_duration.append(duration)
 
     def add(self, timepoint, excluded_tps=None):
         """Add the timepoint to the one of the schedule internal lists,
@@ -215,25 +234,43 @@ class Schedule(object):
 
         """
         if type(timepoint) in self.router:
-            if not excluded_tps:
-                # Get the timepoint transformation method
-                container_name, constructor = self.router[type(timepoint)]
-            else:
-                # perform the exclusion bewteen the 'timepoint' and 'excluded'
-                # Timepoints
-                for excluded in excluded_tps:
-                    duration = excluded.duration
-                    excluder = TimepointExcluder(timepoint, excluded)
-                    excluded = excluder.exclude()
-                    if excluded is not None:
-                        timepoint.excluded.append(excluded)
-                        timepoint.excluded_duration.append(duration)
+            # perform the exclusion bewteen the 'timepoint' and 'excluded'
+            # Timepoints
+            self.add_exclusion(timepoint, excluded_tps)
 
-                # Get the timepoint transformation method
-                container_name, constructor = self.router[
-                    type(timepoint)]
+            # Get the timepoint transformation method
+            container_name, constructor = self.router[type(timepoint)]
 
             # add timepoint to the schedule
             getattr(self, container_name).append(constructor(timepoint))
             if timepoint not in self._timepoints:
                 self._timepoints.append(timepoint)  # TEMPORARY
+
+        elif type(timepoint) in [Time, TimeInterval]:
+            self.unassigned_timings.append((timepoint, excluded_tps))
+
+    def complete_timings(self):
+        """
+        Hanldes the unassigned timings by either merging them
+        to existing timepoi or by creating new timepoints
+        """
+        if len(self.unassigned_timings) > 0:
+
+            # Create new timepoints from the timings
+            if len(self._timepoints) == 0:
+                for timing in self.unassigned_timings:
+                    new_tp = WeeklyRecurrence.make_undefined(timing[0])
+                    self.add_exclusion(new_tp, timing[1])
+                    self._timepoints.append(new_tp)
+
+            # Complete dates without timings with the unassigned timings
+            elif any([tp for tp in self._timepoints if has_no_timings(tp)]):
+                no_timings = [tp for tp in self._timepoints if has_no_timings(tp)]
+                with_timings = [tp for tp in self._timepoints if not has_no_timings(tp)]
+                self._timepoints = with_timings
+
+                for tp in no_timings:
+                    for timing in self.unassigned_timings:
+                        new_tp = enrich_with_timings(tp, timing[0])
+                        self.add_exclusion(new_tp, timing[1])
+                        self._timepoints.append(new_tp)

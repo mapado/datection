@@ -337,6 +337,8 @@ TIMEPOINTS = [
         ('date_interval', DATE_INTERVAL),
     ]),
 
+    ('time_pattern', TIME_PATTERN),
+
     ('exclusion', EXCLUSION),
 ]
 

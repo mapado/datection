@@ -10,6 +10,7 @@ from dateutil.rrule import rrule
 from dateutil.rrule import WEEKLY
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 from operator import attrgetter
+from copy import deepcopy
 
 from datection.utils import get_current_date
 from datection.utils import makerrulestr
@@ -56,6 +57,55 @@ def transmit_span(f):
                 item['span'] = instance.span
         return export
     return wrapper
+
+
+def has_no_timings(tp):
+    """
+    Function that checks if the given timepoint has some timings
+    defined
+
+    @param tp(Timepoint)
+
+    @return: True if the timepoints no timings
+    """
+    if isinstance(tp, (Date, DateList, DateInterval)):
+        return True
+
+    if isinstance(tp, Datetime):
+        return tp.duration == ALL_DAY
+
+    if isinstance(tp, (DatetimeList, DatetimeInterval, WeeklyRecurrence)):
+        return tp.time_interval.undefined
+
+    return False
+
+
+def enrich_with_timings(tp, timing):
+    """
+    Returns a new timepoint based on the given one and
+    adds the given timing.
+
+    @param tp(Timepoint)
+    @param timing(TimeInterval)
+
+    @return: new Timepoint with timings
+    """
+    if isinstance(tp, Date):
+        return Datetime.from_match(tp, timing)
+
+    elif isinstance(tp, DateList):
+        return DatetimeList.from_match(tp, timing)
+
+    elif isinstance(tp, DateInterval):
+        return DatetimeInterval.from_match(tp, timing)
+
+    elif isinstance(tp, (Datetime, DatetimeList,
+                         DatetimeInterval, WeeklyRecurrence)):
+        new_tp = deepcopy(tp)
+        new_tp.set_time_interval(timing)
+        return new_tp
+
+    return tp
 
 
 class YearDescriptor(object):
@@ -608,6 +658,21 @@ class Datetime(AbstractDate):
                 str(self.end_time.minute).zfill(2)
             ) if self.start_time != self.end_time else '')
 
+    def set_time_interval(self, time_interval):
+        """ Sets the time interval """
+        self.start_time = time_interval.start_time
+        if not time_interval.end_time:
+            self.end_time = self.start_time
+        else:
+            self.end_time = time_interval.end_time
+
+    @classmethod
+    def from_match(cls, date, timing):
+        """
+        Creates a Datetime from a Date and a TimeInterval
+        """
+        return cls(date, timing.start_time, timing.end_time)
+
     @classmethod
     def combine(cls, date, start_time, end_time=None):
         return Datetime(date, start_time, end_time)
@@ -695,6 +760,11 @@ class DatetimeList(Timepoint):
     def __repr__(self):
         return object.__repr__(self)
 
+    def set_time_interval(self, time_interval):
+        """ Sets the time interval """
+        for datetime in self.datetimes:
+            datetime.set_time_interval(time_interval)
+
     @classmethod
     # pragma: no cover
     def from_match(cls, dates, time_interval, *args, **kwargs):
@@ -762,6 +832,20 @@ class DatetimeInterval(AbstractDateInterval):
         while current <= self.date_interval.end_date.to_python():
             yield current
             current += timedelta(days=1)
+
+    def set_time_interval(self, time_interval):
+        """ Sets the time interval """
+        self.time_interval = time_interval
+
+    @classmethod
+    def from_match(cls, date_interval, time_interval):
+        """
+        Creates a DatetimeInterval from a DateInterval and a TimeInterval
+        """
+        datetime_interval = cls(date_interval, time_interval)
+        datetime_interval.excluded = date_interval.excluded
+        datetime_interval.excluded_duration = date_interval.excluded_duration
+        return datetime_interval
 
     @property
     def valid(self):
@@ -971,6 +1055,20 @@ class WeeklyRecurrence(Timepoint):
             unicode("" if not self.excluded
                     else " { EXCLUDED: " + str(self.excluded) + "}"),
         )
+
+    @classmethod
+    def make_undefined(cls, time_interval):
+        """
+        Creates a unbounded, every day, WeeklyRecurrence based
+        on the given TimeInterval
+        """
+        date_interval = DateInterval.make_undefined()
+        weekdays = ORDERED_DAYS
+        return cls(date_interval, time_interval, weekdays)
+
+    def set_time_interval(self, time_interval):
+        """ Sets the time interval """
+        self.time_interval = time_interval
 
     @property
     def rrulestr(self):
