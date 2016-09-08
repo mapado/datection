@@ -126,6 +126,7 @@ class TimepointExcluder(object):
         if (not excluded_weekdays.time_interval.undefined and
            excluded_weekdays.time_interval.is_single_time):
             excluded_rrule._byhour = [excluded_weekdays.time_interval.start_time.hour]
+            excluded_rrule._byminute = [excluded_weekdays.time_interval.start_time.minute]
         return makerrulestr(
             start=excluded_rrule.dtstart.date(),
             end=excluded_rrule.until,
