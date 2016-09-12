@@ -4,6 +4,8 @@
 
 from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
+from datection.timepoint import get_extreme_months
+from datection.timepoint import is_activity_ongoing
 
 
 class YearTransmitter(object):
@@ -66,8 +68,31 @@ class YearTransmitter(object):
         # After the first round of transmission, if there are some
         # yearless timepoints left, give them the reference year,
         # if defined
+        delta = 3
         if self.reference:
             for yearless_timepoint in self.year_undefined_timepoints:
-                yearless_timepoint.year = self.reference.year
+                ref_month = self.reference.month
+                start_month, end_month = get_extreme_months(yearless_timepoint)
+                is_ongoing = is_activity_ongoing(yearless_timepoint, self.reference)
+                is_upcomming = ((ref_month - start_month) % 12) > delta
+
+                if is_ongoing or is_upcomming:
+                    # ref: 15/05/2016 | tp: 15/09/???? -> 2016
+                    if ref_month <= end_month:
+                        yearless_timepoint.year = self.reference.year
+
+                    # ref: 15/10/2016 | tp: 15/01/???? -> 2017
+                    else:
+                        yearless_timepoint.year = self.reference.year + 1
+
+                # the activity is passed
+                else:
+                    # ref: 15/05/2016 | tp: 15/04/???? -> 2016
+                    if ref_month >= end_month:
+                        yearless_timepoint.year = self.reference.year
+
+                    # ref: 15/01/2016 | tp: 15/12/???? -> 2015
+                    else:
+                        yearless_timepoint.year = self.reference.year - 1
 
         return self.timepoints

@@ -108,6 +108,80 @@ def enrich_with_timings(tp, timing):
     return tp
 
 
+def is_date_inbetween(s_month, s_day, e_month, e_day, month, day):
+    """
+    Checks if a given date (day, month) is between a start (day, month)
+    and an end (day, month)
+
+    @param s_month(int): start month
+    @param s_day(int): start day
+    @param e_month(int): end month
+    @param e_day(int): end day
+    @param month(int): month of the date to check
+    @param day(int): day of the date to check
+    """
+    if s_month <= e_month:
+        return (
+            (s_month < month or (s_month == month and s_day <= day)) and
+            (month < e_month or (month == e_month and day <= e_day))
+        )
+    else:
+        return (
+            (month < e_month or (month == e_month and day <= e_day)) or
+            (month > s_month or (month == s_month and s_day <= day))
+        )
+
+
+def is_activity_ongoing(tp, ref):
+    """
+    Checks if the given reference is between the beggining and the
+    end of the timepoint. The logic is only based on days and months
+
+    @param tp(Timepoint)
+    @param ref(dateutil.date)
+    """
+    if isinstance(tp, Date):
+        return is_date_inbetween(tp.month, tp.day, tp.month, tp.day,
+                                 ref.month, ref.day)
+
+    elif isinstance(tp, (DateList, DatetimeList)):
+        return is_date_inbetween(tp.dates[0].month, tp.dates[0].day,
+                                 tp.dates[-1].month, tp.dates[-1].day,
+                                 ref.month, ref.day)
+
+    elif isinstance(tp, (DateInterval, ContinuousDatetimeInterval)):
+        return is_date_inbetween(tp.start_date.month, tp.start_date.day,
+                                 tp.end_date.month, tp.end_date.day,
+                                 ref.month, ref.day)
+
+    elif isinstance(tp, Datetime):
+        return is_date_inbetween(tp.date.month, tp.date.day, tp.date.month,
+                                 tp.date.day, ref.month, ref.day)
+
+    elif isinstance(tp, (DatetimeInterval, WeeklyRecurrence)):
+        dt = tp.date_interval
+        return is_date_inbetween(dt.start_date.month, dt.start_date.day,
+                                 dt.end_date.month, dt.end_date.day,
+                                 ref.month, ref.day)
+    return False
+
+
+def get_extreme_months(timepoint):
+    """
+    Returns the first and last months of the given timepoint
+    """
+    if isinstance(timepoint, Date):
+        return timepoint.month, timepoint.month
+    elif isinstance(timepoint, (DateList, DatetimeList)):
+        return timepoint.dates[0].month, timepoint.dates[-1].month
+    elif isinstance(timepoint, (DateInterval, ContinuousDatetimeInterval)):
+        return timepoint.start_date.month, timepoint.end_date.month
+    elif isinstance(timepoint, Datetime):
+        return get_extreme_months(timepoint.date)
+    elif isinstance(timepoint, (DatetimeInterval, WeeklyRecurrence)):
+        return get_extreme_months(timepoint.date_interval)
+
+
 class YearDescriptor(object):
 
     """A descriptor of the year of a timepoint, whatever its class."""

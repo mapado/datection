@@ -21,6 +21,8 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import enrich_with_timings
+from datection.timepoint import is_date_inbetween
+from datection.timepoint import get_extreme_months
 
 
 class CurrentDayMock(unittest.TestCase):
@@ -477,3 +479,67 @@ class TestWeeklyRecurrence(CurrentDayMock):
                       "BYHOUR=10;BYMINUTE=0;UNTIL=20150625T235959")
         }
         self.assertDictEqual(self.wkr.export(), expected)
+
+
+class TestOngoingActivityChecks(unittest.TestCase):
+
+    def test_date_inbewteen(self):
+        # start month before end month
+        self.assertTrue(is_date_inbetween(5, 15, 7, 15, 6, 15))
+        self.assertTrue(is_date_inbetween(5, 15, 7, 15, 5, 15))
+        self.assertTrue(is_date_inbetween(5, 15, 7, 15, 7, 15))
+        self.assertTrue(is_date_inbetween(7, 15, 7, 15, 7, 15))
+        self.assertFalse(is_date_inbetween(5, 15, 7, 15, 5, 14))
+        self.assertFalse(is_date_inbetween(5, 15, 7, 15, 7, 16))
+        self.assertFalse(is_date_inbetween(5, 15, 7, 15, 9, 15))
+        self.assertFalse(is_date_inbetween(5, 15, 7, 15, 1, 15))
+
+        # end month before start month
+        self.assertTrue(is_date_inbetween(11, 10, 2, 10, 12, 10))
+        self.assertTrue(is_date_inbetween(11, 10, 2, 10,  1, 10))
+        self.assertTrue(is_date_inbetween(11, 10, 2, 10,  2, 10))
+        self.assertTrue(is_date_inbetween(11, 10, 2, 10,  11, 10))
+        self.assertFalse(is_date_inbetween(11, 10, 2, 10,  11, 9))
+        self.assertFalse(is_date_inbetween(11, 10, 2, 10,  2, 11))
+        self.assertFalse(is_date_inbetween(11, 10, 2, 10,  3, 20))
+        self.assertFalse(is_date_inbetween(11, 10, 2, 10,  9, 20))
+
+    def test_get_extreme_months(self):
+        timepoint = Date(2015, 8, 20)
+        self.assertEqual(get_extreme_months(timepoint), (8, 8))
+
+        timepoint = Datetime(Date(2015, 8, 20), Time(10, 8))
+        self.assertEqual(get_extreme_months(timepoint), (8, 8))
+
+        timepoint = DateList([Date(2015, 8, 20), Date(2015, 10, 20)])
+        self.assertEqual(get_extreme_months(timepoint), (8, 10))
+
+        timepoint = DatetimeList([
+                        Datetime(Date(2015, 8, 20), Time(10, 8)),
+                        Datetime(Date(2015, 11, 20), Time(10, 8)),
+                    ])
+        self.assertEqual(get_extreme_months(timepoint), (8, 11))
+
+        timepoint = DateInterval(Date(2013, 1, 12), Date(2013, 3, 19))
+        self.assertEqual(get_extreme_months(timepoint), (1, 3))
+
+        timepoint = ContinuousDatetimeInterval(
+                        Date(2015, 4, 8),
+                        Time(18, 30),
+                        Date(2015, 12, 9),
+                        Time(5, 0)
+                    )
+        self.assertEqual(get_extreme_months(timepoint), (4, 12))
+
+        timepoint = DatetimeInterval(
+                        DateInterval(Date(2015, 4, 12), Date(2015, 6, 14)),
+                        TimeInterval(Time(18, 0), Time(19, 0)),
+                    )
+        self.assertEqual(get_extreme_months(timepoint), (4, 6))
+
+        timepoint = WeeklyRecurrence(
+                        DateInterval(Date(2015, 4, 5), Date(2015, 6, 25)),
+                        TimeInterval(Time(10, 0), Time(18, 30)),
+                        [MO, TU, WE, TH]
+                    )
+        self.assertEqual(get_extreme_months(timepoint), (4, 6))

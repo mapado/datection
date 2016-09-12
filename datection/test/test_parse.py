@@ -430,8 +430,8 @@ class TestYearLessExpressions(unittest.TestCase):
         text = u"Du 5 mars au 9 février"
         timepoints = parse(text, self.lang, reference=date(2015, 5, 1))
         dt = timepoints[0]
-        self.assertEqual(dt.start_date.year, 2014)
-        self.assertEqual(dt.end_date.year, 2015)
+        self.assertEqual(dt.start_date.year, 2015)
+        self.assertEqual(dt.end_date.year, 2016)
 
     def test_parse_yearless_date_list(self):
         text = u"Le 5 et 12 février"
