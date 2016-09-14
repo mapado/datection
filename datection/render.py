@@ -1090,14 +1090,14 @@ class ExclusionFormatter(BaseFormatter):
             },
         }
 
-    def display_exclusion(self, excluded):
+    def display_exclusion(self, excluded, exclusion_nb):
         """Render the exclusion rrule into a human-readable format.
 
         The rrule can either define weekdays or a single date(time).
 
         """
-        excluded_rrule = excluded.exclusion_rrules[0]
-        excluded_duration = excluded.exclusion_duration[0]
+        excluded_rrule = excluded.exclusion_rrules[exclusion_nb]
+        excluded_duration = excluded.exclusion_duration[exclusion_nb]
         result = ""
         # excluded recurrent weekdays
         if excluded_rrule.byweekday:
@@ -1105,20 +1105,33 @@ class ExclusionFormatter(BaseFormatter):
         # excluded date(time)
         else:
             result = self.display_excluded_date(
-                rrule=excluded.duration_rrule['excluded'][0],
-                duration=excluded.duration)
+                rrule=excluded.duration_rrule['excluded'][exclusion_nb],
+                duration=excluded_duration)
 
         # if the exclusion has a different timing, it means that it
         # is an alteration of the main schedule. The timings have to
         # be displayed then.
         if (excluded_rrule.byhour != excluded.rrule.byhour) or (
+            excluded_rrule.byminute != excluded.rrule.byminute) or (
                 excluded_duration and excluded_duration != excluded.duration):
             drr = DurationRRule({'rrule': str(excluded_rrule),
                                  'duration': excluded_duration})
             time_fmt = TimeIntervalFormatter(start_time=drr.start_datetime,
                                              end_time=drr.end_datetime)
-            result += " " + time_fmt.display()
+            result += " " + time_fmt.display(prefix=True)
 
+        return result
+
+    def display_exclusions(self, rrule):
+        """
+        Renders the list of exclusions of the given rule
+        """
+        nb_exclusions = len(rrule.exclusion_rrules)
+        result =  self.display_exclusion(rrule, 0)
+        if nb_exclusions > 1:
+            for i in xrange(1, nb_exclusions - 1):
+                result += ", " + self.display_exclusion(rrule, i)
+            result += u" {} {}".format(self._('and'), self.display_exclusion(rrule, nb_exclusions - 1))
         return result
 
     def display_excluded_date(self, rrule, duration):
@@ -1170,7 +1183,7 @@ class ExclusionFormatter(BaseFormatter):
             format_exclusion=False)
         constructive = fmt.display(*args, **kwargs)
         # format the excluded pattern
-        excluded = self.display_exclusion(self.excluded)
+        excluded = self.display_exclusions(self.excluded)
         # join the both of them
         return u"{constructive}, {_except} {excluded}".format(
             constructive=constructive,

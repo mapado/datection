@@ -1070,6 +1070,67 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
 
+    def test_display_alteration(self):
+        # Du vendredi 17 au mardi 21 janvier 2014 à 20 h 30, sauf le dimanche à 17 h
+        schedule = [
+            {'duration': 0,
+             'excluded_duration': [0],
+             'span': (0, 54),
+             'rrule': ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                       'BYMINUTE=30;INTERVAL=1;UNTIL=20140121T235959'),
+             'excluded': [
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=SU;BYHOUR=17;'
+                 'BYMINUTE=0;UNTIL=20140121T235959')
+             ]
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du vendredi 17 au mardi 21 janvier 2014 à 20 h 30, sauf le dimanche à 17 h")
+
+        schedule = [
+            {'duration': 0,
+             'excluded_duration': [0, 0],
+             'span': (0, 54),
+             'rrule': ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                       'BYMINUTE=30;INTERVAL=1;UNTIL=20140121T235959'),
+             'excluded': [
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=MO;BYHOUR=18;'
+                 'BYMINUTE=0;UNTIL=20140121T235959'),
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=SU;BYHOUR=17;'
+                 'BYMINUTE=0;UNTIL=20140121T235959')
+             ]
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du vendredi 17 au mardi 21 janvier 2014 à 20 h 30, sauf"
+            u" le lundi à 18 h et le dimanche à 17 h")
+
+        schedule = [
+            {'duration': 0,
+             'excluded_duration': [0, 0, 0],
+             'span': (0, 54),
+             'rrule': ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYHOUR=20;'
+                       'BYMINUTE=30;INTERVAL=1;UNTIL=20140121T235959'),
+             'excluded': [
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=MO;BYHOUR=18;'
+                 'BYMINUTE=0;UNTIL=20140121T235959'),
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=TU;BYHOUR=20;'
+                 'BYMINUTE=0;UNTIL=20140121T235959'),
+                ('DTSTART:20140117\nRRULE:FREQ=DAILY;BYDAY=SU;BYHOUR=17;'
+                 'BYMINUTE=0;UNTIL=20140121T235959')
+             ]
+             }
+        ]
+        fmt = LongFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Du vendredi 17 au mardi 21 janvier 2014 à 20 h 30, sauf "
+            u"le lundi à 18 h, le mardi à 20 h et le dimanche à 17 h")
+
     def test_regrouping_weekdays_by_interval(self):
         # Du 30 septembre au 11 octobre 2015:
         # - du mercredi au samedi, de 20 h à 21 h
