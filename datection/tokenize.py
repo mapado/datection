@@ -269,7 +269,7 @@ class Tokenizer(object):
             ctx)
         ctx = re.sub(r'\(', ' ', ctx)
         ctx = re.sub(r'\)', ' ', ctx)
-        ctx = re.sub(r'\.\n', '  ', ctx)
+        ctx = re.sub(r'\.\n', '. ', ctx)
         return ctx
 
     @staticmethod

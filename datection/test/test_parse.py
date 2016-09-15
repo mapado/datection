@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
+    # -*- coding: utf-8 -*-
 
 """Functional tests on the output of the datection.parse high level function."""
 
 import unittest
 
 from datetime import datetime, date
-from dateutil.rrule import TU, WE
+from dateutil.rrule import TU, WE, TH, FR
 
 from datection import parse
 from datection.models import DurationRRule
@@ -300,6 +300,14 @@ class TestParse(unittest.TestCase):
         self.assertEqual(len(wks), 1)
         wk = wks[0]
         self.assertEqual(wk.weekdays, [TU, WE])
+
+    def test_date_interval_multi_weekdays(self):
+        wks = parse(
+            "Du 05-02-2015 au 06-02-2015 - jeu. à 19h | ven. à 20h30",
+            "fr")
+        self.assertEqual(len(wks), 2)
+        self.assertEqual(wks[1].weekdays, [FR])
+        self.assertEqual(wks[0].weekdays, [TH])
 
     def test_datetime_pattern(self):
         self.assert_generates(
