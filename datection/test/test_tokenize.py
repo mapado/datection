@@ -137,6 +137,7 @@ class TestTokenizer(unittest.TestCase):
              'date_interval',  # du 5 au 29 mars 2015
              'exclusion',  # sauf
              'weekly_rec',  # les lundis
+             'time_pattern',
              ])
 
     def assertTokenGroupEquals(self, tokens, expected_token_groups):
