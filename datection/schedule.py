@@ -272,5 +272,7 @@ class Schedule(object):
                 for tp in no_timings:
                     for timing in self.unassigned_timings:
                         new_tp = enrich_with_timings(tp, timing[0])
+                        if tp.span:
+                            new_tp.span = tp.span
                         self.add_exclusion(new_tp, timing[1])
                         self._timepoints.append(new_tp)
