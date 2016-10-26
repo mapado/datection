@@ -63,8 +63,8 @@ class TestPack(unittest.TestCase):
         self.assertNotPack([cont, single_date])        
 
         single_hour = {'duration': 30,
-                       'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
-                                 'COUNT=1;BYMINUTE=0;BYHOUR=3')}
+                       'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
+                                 'COUNT=1;BYMINUTE=0;BYHOUR=5')}
         self.assertNotPack([cont, single_hour])
 
         single_minu = {'duration': 30,
