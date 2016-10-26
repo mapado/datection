@@ -161,9 +161,10 @@ class DurationRRule(object):
         """
         Adds an end date (UNTIL) to the rrule
         """
-        end_str = ";UNTIL=" + end_date.strftime('%Y%m%d') + "T235959"
+        end_datetime = datetime.combine(end_date, DAY_END)
+        end_str = ";UNTIL=" + end_datetime.strftime('%Y%m%dT%H%M%S')
         self.duration_rrule['rrule'] += end_str
-        self.rrule._until = end_date
+        self.rrule._until = end_datetime
 
     @cached_property
     def exclusion_rrules(self):

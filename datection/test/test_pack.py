@@ -496,3 +496,27 @@ class TestPack(unittest.TestCase):
                 'duration': 60,
                 'continuous': True}
         self.assertRrulesEqual(new_cont, cont)
+
+    def test_merge_two_weekly(self):
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161013\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_4 = {'duration': 60,
+                  'rrule': ('DTSTART:20161020\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_5 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_6 = {'duration': 60,
+                  'rrule': ('DTSTART:20161027\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        weekly = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20161027T235959')}
+        self.assertPackEqual([sing_1, sing_2, sing_3, sing_4, sing_5, sing_6], weekly)
