@@ -3,6 +3,7 @@
 """
 Module in charge of transforming packing a list of rrule together
 """
+from datection.models import DurationRRule
 from datetime import timedelta
 from dateutil.rrule import weekdays
 
@@ -237,12 +238,27 @@ def merge_wrec(wrec1, wrec2):
     wrec1.set_weekdays([weekdays[d] for d in days])
 
 
+def break_seq(sing1, sing2, seq_freq):
+    """
+    Checks if the two given single dates could belong to a sequence.
+    seq_freq handles the sequence frequency, e.g seq_freq=1 is for
+    continuous sequence and seq_freq=7 is for weekly recurrence
+    """
+    return (
+        not have_same_timings(sing1, sing2) or
+        sing1.start_datetime + timedelta(days=seq_freq) != sing2.start_datetime
+    )
+
+
 class RrulePacker(object):
 
     def __init__(self, input_drrs):
-        """"""
+        """
+        input_drrs : list(DurationRRule)
+        """
         self._input_drrs = input_drrs
         self._single_dates = self.get_single_dates_container()
+        self._single_dates = sorted(self._single_dates, key= lambda s:s.start_datetime.date())
         self._continuous = self.get_continuous_container()
         self._weekly_rec = self.get_weekly_rec_container()
         self._others = self.get_other_drrs()
@@ -260,17 +276,130 @@ class RrulePacker(object):
         return [drr for drr in self._input_drrs if drr.is_recurring]
 
     def get_other_drrs(self):
-        """ Gets all other drrs"""
+        """ Gets all other drrs """
         return [drr for drr in self._input_drrs if not (drr.is_recurring or
                 drr.is_continuous or drr.single_date)]
 
-    def pack_sing_sing_into_cont(self):
-        """"""
-        pass
+    def create_cont_from_sings(self, sing_list):
+        """
+        Creates a continuous rule based on a list of single dates.
+        """
+        new_continuous = DurationRRule(sing_list[0].duration_rrule)
+        new_continuous.remove_count()
+        new_continuous.add_interval_ind()
+        new_continuous.add_enddate(sing_list[-1].start_datetime.date())
+        new_continuous.duration_rrule['continuous'] = True
+        return new_continuous
 
-    def pack_sing_sing_into_wrec(self):
-        """"""
-        pass
+    def create_week_from_sings(self, sing_list):
+        """
+        Creates a weekly recurrence based on a list of single dates.
+        """
+        new_weekly = DurationRRule(sing_list[0].duration_rrule)
+        new_weekly.remove_count()
+        new_weekly.add_enddate(sing_list[-1].start_datetime.date())
+        new_weekly.set_frequency('WEEKLY')
+        new_weekly.add_weekdays([weekdays[sing_list[0].start_datetime.date().weekday()]])
+        return new_weekly
+
+    def merge_sing_dates(self, type_merge, ids):
+        """
+        Delegates the merge of single dates
+        """
+        sings_to_merge = [s for i, s in enumerate(self._single_dates) if i in ids]
+
+        if type_merge == 'week':
+            new_weekly = self.create_week_from_sings(sings_to_merge)
+            self._weekly_rec.append(new_weekly)
+
+        elif type_merge == 'cont':
+            new_continuous = self.create_cont_from_sings(sings_to_merge)
+            self._continuous.append(new_continuous)
+
+        self._single_dates = [s for i, s in enumerate(self._single_dates) if i not in ids]
+
+    def probe_continuous(self, probe_list):
+        """
+        Looks for group of single dates that can be merged into continuous rules.
+
+        Returns a dict {type: 'cont', 'ids': [list of mergeable single dates indexes]}
+        """
+        consecutives = []
+        for idx, sing in enumerate(self._single_dates):
+            if (len(consecutives) > 0) and break_seq(self._single_dates[idx-1], sing, seq_freq=1):
+                probe_list.append({'type': 'cont',
+                                   'ids': consecutives,
+                                   'count': len(consecutives)})
+                consecutives = []
+            consecutives.append(idx)
+
+        if len(consecutives) > 0:
+            probe_list.append({'type': 'cont',
+                               'ids': consecutives,
+                               'count': len(consecutives)})
+
+    def probe_weekly(self, probe_list):
+        """
+        Looks for group of single dates that can be merged into weekly
+        recurrences.
+
+        Returns a dict {type: 'week', 'ids': [list of mergeable single dates indexes]}
+        """
+        for day in xrange(7):
+            single_dates = [(i, sing) for i, sing in enumerate(self._single_dates) if
+                            sing.start_datetime.date().weekday() == day]
+
+            if len(single_dates) == 0:
+                continue
+
+            consecutives = []
+            last_idx = single_dates[0][0]
+            for idx, sing in single_dates:
+                if (len(consecutives) > 0) and break_seq(self._single_dates[last_idx], sing, seq_freq=7):
+                    probe_list.append({'type': 'week',
+                                       'ids': consecutives,
+                                       'count': len(consecutives)})
+                    consecutives = []
+                consecutives.append(idx)
+                last_idx = idx
+
+            if len(consecutives) > 0:
+                probe_list.append({'type': 'week',
+                                   'ids': consecutives,
+                                   'count': len(consecutives)})
+                consecutives = []
+
+    def pack_single_dates(self):
+        """
+        Packs single dates into continuous or weekly rules depending on
+        what merge is the best.
+        """
+        def select_best_probe(probe_list):
+            """ Returns the best probe (in term of merge efficiency) """
+            max_probe = max(probe_list, key=lambda x:x['count'])
+            max_match = max_probe['count']
+            filtered_probes = [p for p in probe_list if p['count'] == max_match]
+            filtered_cont = [p for p in filtered_probes if p['type'] == 'cont']
+            filtered_week = [p for p in filtered_probes if p['type'] == 'week']
+
+            # preference on weekly recurrence over continuous
+            if max_match >= 2:
+                if len(filtered_week) > 0 and max_match >= 3:
+                    return filtered_week[0]
+                elif len(filtered_cont) > 0:
+                    return filtered_cont[0]
+            return None
+
+        attemptPacking = True
+        while attemptPacking and len(self._single_dates) > 0:
+            attemptPacking = False
+            probe_list = []
+            self.probe_continuous(probe_list)
+            self.probe_weekly(probe_list)
+            best_probe = select_best_probe(probe_list)
+            if best_probe:
+                self.merge_sing_dates(best_probe['type'], best_probe['ids'])
+                attemptPacking = True
 
     def include_sing_in_cont(self):
         """
@@ -478,8 +607,7 @@ class RrulePacker(object):
     def pack_rrules(self):
         """
         """
-        self.pack_sing_sing_into_cont()
-        self.pack_sing_sing_into_wrec()
+        self.pack_single_dates()
         self.include_sing_in_cont()
         self.include_sing_in_wrec()
         self.extend_cont_with_sing()

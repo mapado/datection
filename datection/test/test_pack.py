@@ -10,13 +10,27 @@ from datection import pack
 
 class TestPack(unittest.TestCase):
 
+    def assertRrulesEqual(self, rrule1, rrule2):
+        self.assertItemsEqual(rrule1.keys(), rrule2.keys())
+        for k in rrule2.keys():
+            if k == 'rrule':
+                new_rrule_lines = rrule1[k].splitlines()
+                result_lines = rrule2[k].splitlines()
+                self.assertEqual(new_rrule_lines[0], result_lines[0])
+                new_details = new_rrule_lines[1].split(":")[1].split(";")
+                res_details = result_lines[1].split(":")[1].split(";")
+                self.assertItemsEqual(new_details, res_details)
+            else:
+                self.assertEqual(rrule1[k], rrule2[k])
+
     def assertPackEqual(self, rrules, result):
         drrs = [DurationRRule(rrule) for rrule in rrules]
         result_drr = DurationRRule(result)
         packer = pack.RrulePacker(drrs)
         packed = packer.pack_rrules()
         self.assertEqual(len(packed), 1)
-        self.assertEqual(packed[0], result_drr)
+        new_rrule = packed[0].duration_rrule
+        self.assertRrulesEqual(new_rrule, result)
 
     def assertNotPack(self, rrules):
         drrs = [DurationRRule(rrule) for rrule in rrules]
@@ -41,23 +55,23 @@ class TestPack(unittest.TestCase):
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
                 'duration': 30,
-                  'continuous': True}
-        
+                'continuous': True}
+
         single_date = {'duration': 30,
                        'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
                                  'COUNT=1;BYMINUTE=0;BYHOUR=3')}
         self.assertNotPack([cont, single_date])        
-        
+
         single_hour = {'duration': 30,
                        'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
                                  'COUNT=1;BYMINUTE=0;BYHOUR=3')}
         self.assertNotPack([cont, single_hour])
-        
+
         single_minu = {'duration': 30,
                        'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
                                  'COUNT=1;BYMINUTE=8;BYHOUR=3')}
         self.assertNotPack([cont, single_minu])
-        
+
         single_dura = {'duration': 5,
                        'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
                                  'COUNT=1;BYMINUTE=0;BYHOUR=3')}
@@ -67,12 +81,12 @@ class TestPack(unittest.TestCase):
         single = {'duration': 60,
                   'rrule': ('DTSTART:20150317\nRRULE:FREQ=DAILY;'
                             'COUNT=1;BYMINUTE=0;BYHOUR=8')}
-        
+
         weekly = {'duration': 60,
                   'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
         self.assertPackEqual([single, weekly], weekly)
-        
+
         weekly_2 = {'duration': 60,
                     'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=MO,TU;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
@@ -111,17 +125,18 @@ class TestPack(unittest.TestCase):
         single_after = {'duration': 30,
                         'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                                   'COUNT=1;BYMINUTE=0;BYHOUR=3')}
-        
+
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
                 'duration': 30,
                 'continuous': True}
-        
+
         result = {'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161024T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30}
+                 'duration': 30,
+                'continuous': True}
         self.assertPackEqual([single_before, cont, single_after], result)
 
     def test_not_extend_cont(self): 
@@ -169,14 +184,14 @@ class TestPack(unittest.TestCase):
         result = {'duration': 60,
                   'rrule': ('DTSTART:20150303\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20150331T235959')}
-        
+
         self.assertPackEqual([weekly, sing_before, sing_after], result)
 
     def test_not_extend_wrec(self):
         weekly = {'duration': 60,
                   'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
-        
+
         sing_too_soon = {'duration': 60,
                          'rrule': ('DTSTART:20150217\nRRULE:FREQ=DAILY;'
                                    'COUNT=1;BYMINUTE=0;BYHOUR=8')}    
@@ -379,3 +394,105 @@ class TestPack(unittest.TestCase):
                    'rrule': ('DTSTART:20161003\nRRULE:FREQ=WEEKLY;BYDAY=MO;'
                              'BYHOUR=8;BYMINUTE=0;UNTIL=20161018T235959')}
         self.assertNotPack([weekly1, weekly2])
+
+    def test_merge_sing_into_cont(self):
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161028\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161027\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        cont = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161028T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=8'),
+                'duration': 60,
+                'continuous': True}
+        self.assertPackEqual([sing_3, sing_1, sing_2], cont)
+
+    def test_merge_sing_into_wrec(self):
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        weekly = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20161026T235959')}
+        self.assertPackEqual([sing_3, sing_1, sing_2], weekly)
+
+    def test_many_sing_merge_week(self):
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_4 = {'duration': 60,
+                  'rrule': ('DTSTART:20161020\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_5 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_6 = {'duration': 60,
+                  'rrule': ('DTSTART:20161102\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+
+        sing_list = [sing_1, sing_2, sing_3, sing_4, sing_5, sing_6]
+        drrs = [DurationRRule(s) for s in sing_list]
+        packer = pack.RrulePacker(drrs)
+        packed = packer.pack_rrules()
+        self.assertEqual(len(packed), 3)
+        self.assertEqual(len(packer._single_dates), 2)
+        self.assertEqual(len(packer._weekly_rec), 1)
+
+        new_week = packer._weekly_rec[0].duration_rrule
+        weekly = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=WEEKLY;BYDAY=WE;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20161102T235959')}
+        self.assertRrulesEqual(new_week, weekly)
+
+    def test_many_sing_merge_cont(self):
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161012\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_4 = {'duration': 60,
+                  'rrule': ('DTSTART:20161020\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_5 = {'duration': 60,
+                  'rrule': ('DTSTART:20161021\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_6 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+
+        sing_list = [sing_1, sing_2, sing_3, sing_4, sing_5, sing_6]
+        drrs = [DurationRRule(s) for s in sing_list]
+        packer = pack.RrulePacker(drrs)
+        packed = packer.pack_rrules()
+        self.assertEqual(len(packed), 3)
+        self.assertEqual(len(packer._single_dates), 2)
+        self.assertEqual(len(packer._continuous), 1)
+
+        new_cont = packer._continuous[0].duration_rrule
+        cont = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161021T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=8'),
+                'duration': 60,
+                'continuous': True}
+        self.assertRrulesEqual(new_cont, cont)
