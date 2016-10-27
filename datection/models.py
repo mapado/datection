@@ -94,6 +94,33 @@ class DurationRRule(object):
             self.duration_rrule['rrule'])
         self.rrule._byweekday = [w.weekday for w in weekdays]
 
+    def set_startdate(self, start_date):
+        """
+        Update the rrule start date property and the underlying dstart.
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r'(?<=DTSTART:)[^\n]+',
+            start_date.strftime('%Y%m%d'),
+            self.duration_rrule['rrule'])
+        self.rrule.dstart = start_date
+
+    def set_enddate(self, end_date):
+        """
+        Update the rrule end date property and the underlying _until.
+        """
+        if end_date is not None:
+            self.duration_rrule['rrule'] = re.sub(
+                r'(?<=UNTIL=)[^T]+',
+                end_date.strftime('%Y%m%d'),
+                self.duration_rrule['rrule'])
+        else:
+            self.duration_rrule['rrule'] = re.sub(
+                r'(?<=UNTIL=)[^T]+',
+                '',
+                self.duration_rrule['rrule'])
+
+        self.rrule._until = end_date
+
     @cached_property
     def exclusion_rrules(self):
         """Return the list of exclusion rrules."""
