@@ -8,10 +8,13 @@ from datetime import timedelta
 from dateutil.rrule import weekdays
 
 
-def have_same_timings(drr1, drr2):
+def have_same_timings(drr1, drr2, light_match=False):
     """
     Checks if the given drrs have the same timing and duration
     """
+    if light_match and not drr1.has_timings:
+        return True
+
     return (
         drr1.duration == drr2.duration and
         drr1.rrule.byhour == drr2.rrule.byhour and
@@ -253,10 +256,11 @@ def break_seq(sing1, sing2, seq_freq):
 
 class RrulePacker(object):
 
-    def __init__(self, input_drrs):
+    def __init__(self, input_drrs, pack_no_timings=False):
         """
         input_drrs : list(DurationRRule)
         """
+        self._pack_no_timings = pack_no_timings
         self._input_drrs = input_drrs
         self._single_dates = self.get_single_dates_container()
         self._single_dates = sorted(self._single_dates, key= lambda s:s.start_datetime.date())
@@ -414,7 +418,7 @@ class RrulePacker(object):
             """ Returns True if the single date is in the continuous rule """
             return (
                 has_date_inbetween(sing, cont) and
-                have_same_timings(sing, cont)
+                have_same_timings(sing, cont, light_match=self._pack_no_timings)
             )
 
         idxs_to_remove = set()
@@ -438,7 +442,7 @@ class RrulePacker(object):
             """ Returns True if the single date is in the weekly recurrence """
             return (
                 has_date_inbetween(sing, weekly) and
-                have_same_timings(sing, weekly) and
+                have_same_timings(sing, weekly, light_match=self._pack_no_timings) and
                 has_weekday_included(sing, weekly)
             )
 
@@ -459,7 +463,7 @@ class RrulePacker(object):
             """ Returns True if the single rrule can extend the continuous rrule """
             return (
                 not cont.unlimited and
-                have_same_timings(single, cont) and
+                have_same_timings(single, cont, light_match=self._pack_no_timings) and
                 (is_a_day_before(single, cont) or
                  is_a_day_after(single, cont))
             )
@@ -478,7 +482,7 @@ class RrulePacker(object):
         def match_weekly(single, weekly):
             """ Returns True if the single rrule can extend the recurrent rrule """
             return (
-                have_same_timings(single, weekly) and
+                have_same_timings(single, weekly, light_match=self._pack_no_timings) and
                 has_weekday_included(single, weekly) and
                 (is_a_week_before(single, weekly) or
                  is_a_week_after(single, weekly))
