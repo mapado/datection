@@ -13,6 +13,7 @@ from datetime import date
 from dateutil.rrule import rrulestr
 from dateutil.rrule import rruleset
 from dateutil.rrule import rrule
+from dateutil.rrule import FREQNAMES
 
 from datection.utils import cached_property
 from datection.utils import UNLIMITED_DATETIME_START
@@ -94,6 +95,41 @@ class DurationRRule(object):
             self.duration_rrule['rrule'])
         self.rrule._byweekday = [w.weekday for w in weekdays]
 
+    def add_weekdays(self, weekdays):
+        """
+        Adds the days of the week to the rrule
+        """
+        weekdays_str = ";BYDAY=" + ','.join(str(w) for w in weekdays)
+        self.duration_rrule['rrule'] += weekdays_str
+        self.rrule._byweekday = [w.weekday for w in weekdays]
+
+    def set_frequency(self, freq):
+        """
+        Sets the frequency type of the rrule (DAILY/WEAKLY/...)
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r'(?<=FREQ=)[^;]+',
+            freq,
+            self.duration_rrule['rrule'])
+        self.rrule._freq = FREQNAMES.index(freq)
+
+    def add_interval_ind(self):
+        """
+        Adds the interval indicator to the rrule
+        """
+        self.duration_rrule['rrule'] += ';INTERVAL=1'
+        self.rrule._interval = 1
+
+    def remove_count(self):
+        """
+        Removes the COUNT attribute of the rrule
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r';?COUNT=[^;]+',
+            '',
+            self.duration_rrule['rrule'])
+        self.rrule._count = 0
+
     def set_startdate(self, start_date):
         """
         Update the rrule start date property and the underlying dstart.
@@ -120,6 +156,15 @@ class DurationRRule(object):
                 self.duration_rrule['rrule'])
 
         self.rrule._until = end_date
+
+    def add_enddate(self, end_date):
+        """
+        Adds an end date (UNTIL) to the rrule
+        """
+        end_datetime = datetime.combine(end_date, DAY_END)
+        end_str = ";UNTIL=" + end_datetime.strftime('%Y%m%dT%H%M%S')
+        self.duration_rrule['rrule'] += end_str
+        self.rrule._until = end_datetime
 
     @cached_property
     def exclusion_rrules(self):
