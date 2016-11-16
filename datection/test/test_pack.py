@@ -4,6 +4,7 @@
 
 import unittest
 
+from datection.timepoint import ALL_DAY
 from datection.models import DurationRRule
 from datection import pack
 
@@ -23,17 +24,17 @@ class TestPack(unittest.TestCase):
             else:
                 self.assertEqual(rrule1[k], rrule2[k])
 
-    def assertPackEqual(self, rrules, result):
+    def assertPackEqual(self, rrules, result, pack_no_timings=False):
         drrs = [DurationRRule(rrule) for rrule in rrules]
-        packer = pack.RrulePacker(drrs)
+        packer = pack.RrulePacker(drrs, pack_no_timings=pack_no_timings)
         packed = packer.pack_rrules()
         self.assertEqual(len(packed), 1)
         new_rrule = packed[0].duration_rrule
         self.assertRrulesEqual(new_rrule, result)
 
-    def assertNotPack(self, rrules):
+    def assertNotPack(self, rrules, pack_no_timings=False):
         drrs = [DurationRRule(rrule) for rrule in rrules]
-        packer = pack.RrulePacker(drrs)
+        packer = pack.RrulePacker(drrs, pack_no_timings=pack_no_timings)
         packed = packer.pack_rrules()
         self.assertItemsEqual(drrs, packed)
 
@@ -519,3 +520,60 @@ class TestPack(unittest.TestCase):
                   'rrule': ('DTSTART:20161012\nRRULE:FREQ=WEEKLY;BYDAY=WE,TH;'
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20161027T235959')}
         self.assertPackEqual([sing_1, sing_2, sing_3, sing_4, sing_5, sing_6], weekly)
+
+    def test_no_timing_matching_cont_include(self):
+        single = {'duration': ALL_DAY,
+                  'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=3')}
+
+        cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161023T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=3'),
+                'duration': 30,
+                'continuous': True}
+        self.assertNotPack([single, cont], pack_no_timings=False)
+        self.assertPackEqual([single, cont], cont, pack_no_timings=True)
+
+    def test_no_timing_matching_cont_extend(self):
+        single_before = {'duration': ALL_DAY,
+                         'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
+                                   'COUNT=1;BYMINUTE=0;BYHOUR=3')}
+
+        cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161023T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=3'),
+                'duration': 30,
+                'continuous': True}
+
+        result = {'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
+                            'UNTIL=20161023T235959;INTERVAL=1;'
+                            'BYMINUTE=0;BYHOUR=3'),
+                  'duration': 30,
+                  'continuous': True}
+        self.assertNotPack([single_before, cont], pack_no_timings=False)
+        self.assertPackEqual([single_before, cont], result, pack_no_timings=True)
+
+    def test_no_timing_matching_week_include(self):
+        single = {'duration': ALL_DAY,
+                  'rrule': ('DTSTART:20150317\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+
+        weekly = {'duration': 60,
+                  'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
+        self.assertNotPack([single, weekly], pack_no_timings=False)
+        self.assertPackEqual([single, weekly], weekly, pack_no_timings=True)
+
+    def test_no_timing_matching_week_extend(self):
+        weekly = {'duration': 60,
+                  'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
+        sing_before = {'duration': ALL_DAY,
+                       'rrule': ('DTSTART:20150303\nRRULE:FREQ=DAILY;'
+                                 'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        result = {'duration': 60,
+                  'rrule': ('DTSTART:20150303\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
+
+        self.assertNotPack([weekly, sing_before], pack_no_timings=False)
+        self.assertPackEqual([weekly, sing_before], result, pack_no_timings=True)
