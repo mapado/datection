@@ -524,7 +524,7 @@ class TestPack(unittest.TestCase):
     def test_no_timing_matching_cont_include(self):
         single = {'duration': ALL_DAY,
                   'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
-                            'COUNT=1;BYMINUTE=0;BYHOUR=3')}
+                            'COUNT=1;BYMINUTE=0;BYHOUR=0')}
 
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
@@ -537,7 +537,7 @@ class TestPack(unittest.TestCase):
     def test_no_timing_matching_cont_extend(self):
         single_before = {'duration': ALL_DAY,
                          'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
-                                   'COUNT=1;BYMINUTE=0;BYHOUR=3')}
+                                   'COUNT=1;BYMINUTE=0;BYHOUR=0')}
 
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
@@ -556,7 +556,7 @@ class TestPack(unittest.TestCase):
     def test_no_timing_matching_week_include(self):
         single = {'duration': ALL_DAY,
                   'rrule': ('DTSTART:20150317\nRRULE:FREQ=DAILY;'
-                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+                            'COUNT=1;BYMINUTE=0;BYHOUR=0')}
 
         weekly = {'duration': 60,
                   'rrule': ('DTSTART:20150305\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
@@ -570,7 +570,7 @@ class TestPack(unittest.TestCase):
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
         sing_before = {'duration': ALL_DAY,
                        'rrule': ('DTSTART:20150303\nRRULE:FREQ=DAILY;'
-                                 'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+                                 'COUNT=1;BYMINUTE=0;BYHOUR=0')}
         result = {'duration': 60,
                   'rrule': ('DTSTART:20150303\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
                             'BYHOUR=8;BYMINUTE=0;UNTIL=20150326T235959')}
