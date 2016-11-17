@@ -7,10 +7,14 @@ from datection.models import DurationRRule
 from datetime import timedelta
 from dateutil.rrule import weekdays
 
-def have_same_timings(drr1, drr2):
-    """ 
+
+def have_same_timings(drr1, drr2, light_match=False):
+    """
     Checks if the given drrs have the same timing and duration
     """
+    if light_match and not drr1.has_timings:
+        return True
+
     return (
         drr1.duration == drr2.duration and
         drr1.rrule.byhour == drr2.rrule.byhour and
@@ -20,7 +24,7 @@ def have_same_timings(drr1, drr2):
 
 def has_date_inbetween(drr1, drr2):
     """
-    Checks if drr1 starts between the beginning and the end 
+    Checks if drr1 starts between the beginning and the end
     of drr2.
     """
     return (
@@ -31,7 +35,7 @@ def has_date_inbetween(drr1, drr2):
 
 def has_weekday_included(single, weekly):
     """
-    Checks if the single date is a day of the week 
+    Checks if the single date is a day of the week
     contained in the weekly recurrence.
     """
     sing_day = single.start_datetime.weekday()
@@ -43,7 +47,7 @@ def has_weekday_included(single, weekly):
 
 def is_a_day_before(single, cont):
     """
-    Checks if the given single rrule starts one day before 
+    Checks if the given single rrule starts one day before
     the beginning of the continuous rrule.
     """
     sing_date = single.start_datetime.date()
@@ -53,7 +57,7 @@ def is_a_day_before(single, cont):
 
 def is_a_day_after(single, cont):
     """
-    Checks if the given single rrule starts one day after 
+    Checks if the given single rrule starts one day after
     the end of the continuous rrule.
     """
     if cont.bounded:
@@ -90,14 +94,14 @@ def is_a_week_after(single, weekly):
 
 def are_overlapping(cont1, cont2):
     """
-    Checks if the two continuous rrules are overlapping 
+    Checks if the two continuous rrules are overlapping
     """
     if cont1.unlimited and cont2.unlimited:
         return True
 
     if cont1.unlimited:
         return (cont1.start_datetime <= cont2.end_datetime)
-    
+
     if cont2.unlimited:
         return (cont2.start_datetime <= cont1.end_datetime)
 
@@ -165,7 +169,7 @@ def get_last_of_weekly(wrec):
 
 def are_close(wrec1, wrec2):
     """
-    Checks if one of the weekly recurrences is the 
+    Checks if one of the weekly recurrences is the
     continuity of the other
     """
     if wrec1.bounded:
@@ -177,15 +181,15 @@ def are_close(wrec1, wrec2):
         end_wrec2 = get_last_of_weekly(wrec2)
         start_wrec1 = get_first_of_weekly(wrec1)
         return (end_wrec2 + timedelta(days=7) == start_wrec1)
-    
+
     return False
 
 
 def have_compatible_bounds(wrec1, wrec2):
     """
-    Checks if the two weekly recurrences have compatible 
-    bounds, i.e that their first and last occurences occur 
-    respectively in a 7 days range. 
+    Checks if the two weekly recurrences have compatible
+    bounds, i.e that their first and last occurences occur
+    respectively in a 7 days range.
     """
     first1 = get_first_of_weekly(wrec1)
     first2 = get_first_of_weekly(wrec2)
@@ -203,7 +207,7 @@ def have_compatible_bounds(wrec1, wrec2):
 
 def have_same_days(wrec1, wrec2):
     """
-    Checks if the two weekly recurrences have the same 
+    Checks if the two weekly recurrences have the same
     days of week
     """
     days1 = set(wrec1.weekday_indexes)
@@ -252,10 +256,11 @@ def break_seq(sing1, sing2, seq_freq):
 
 class RrulePacker(object):
 
-    def __init__(self, input_drrs):
+    def __init__(self, input_drrs, pack_no_timings=False):
         """
         input_drrs : list(DurationRRule)
         """
+        self._pack_no_timings = pack_no_timings
         self._input_drrs = input_drrs
         self._single_dates = self.get_single_dates_container()
         self._single_dates = sorted(self._single_dates, key= lambda s:s.start_datetime.date())
@@ -376,7 +381,7 @@ class RrulePacker(object):
         """
         def select_best_probe(probe_list):
             """ Returns the best probe (in term of merge efficiency) """
-            max_probe = max(probe_list, key=lambda x:x['count'])
+            max_probe = max(probe_list, key=lambda x: x['count'])
             max_match = max_probe['count']
             filtered_probes = [p for p in probe_list if p['count'] == max_match]
             filtered_cont = [p for p in filtered_probes if p['type'] == 'cont']
@@ -413,7 +418,7 @@ class RrulePacker(object):
             """ Returns True if the single date is in the continuous rule """
             return (
                 has_date_inbetween(sing, cont) and
-                have_same_timings(sing, cont)
+                have_same_timings(sing, cont, light_match=self._pack_no_timings)
             )
 
         idxs_to_remove = set()
@@ -437,7 +442,7 @@ class RrulePacker(object):
             """ Returns True if the single date is in the weekly recurrence """
             return (
                 has_date_inbetween(sing, weekly) and
-                have_same_timings(sing, weekly) and
+                have_same_timings(sing, weekly, light_match=self._pack_no_timings) and
                 has_weekday_included(sing, weekly)
             )
 
@@ -458,11 +463,11 @@ class RrulePacker(object):
             """ Returns True if the single rrule can extend the continuous rrule """
             return (
                 not cont.unlimited and
-                have_same_timings(single, cont) and
+                have_same_timings(single, cont, light_match=self._pack_no_timings) and
                 (is_a_day_before(single, cont) or
                  is_a_day_after(single, cont))
             )
-        
+
         for cont in self._continuous:
             if match_cont(single, cont):
                 extend_cont(single, cont)
@@ -477,7 +482,7 @@ class RrulePacker(object):
         def match_weekly(single, weekly):
             """ Returns True if the single rrule can extend the recurrent rrule """
             return (
-                have_same_timings(single, weekly) and
+                have_same_timings(single, weekly, light_match=self._pack_no_timings) and
                 has_weekday_included(single, weekly) and
                 (is_a_week_before(single, weekly) or
                  is_a_week_after(single, weekly))
@@ -507,7 +512,7 @@ class RrulePacker(object):
                 if find_and_extend_func(single):
                     idx_to_remove = idx
                     break
-            
+
             if idx_to_remove is not None:
                 self._single_dates.pop(idx_to_remove)
                 attemptPacking = True
@@ -541,7 +546,7 @@ class RrulePacker(object):
             return (
                 have_same_timings(cont, cont2) and
                 (are_overlapping(cont, cont2) or
-                are_contiguous(cont, cont2))
+                 are_contiguous(cont, cont2))
             )
 
         for idx, cont in enumerate(self._continuous):
@@ -615,7 +620,7 @@ class RrulePacker(object):
         self.fusion_cont_cont()
         self.fusion_wrec_wrec()
 
-        return (self._single_dates + 
+        return (self._single_dates +
                 self._continuous +
                 self._weekly_rec +
                 self._others)
