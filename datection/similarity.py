@@ -21,6 +21,18 @@ def jaccard_distance(set1, set2):
     return len(set1.intersection(set2)) / len(set1.union(set2))
 
 
+def overlap_coefficient(set1, set2):
+    """
+    Compute the overlapping coefficient between set1 and set2
+    (Szymkiewicz-Simpson coefficient)
+    """
+    intersect = len(set1.intersection(set2))
+    if intersect == 0:
+        return 0
+    else:
+        return intersect / min(len(set1), len(set2))
+
+
 def discretise_day_interval(start_datetime, end_datetime, minutes_interval=30):
     """Discretise the day interval of duration_rrule by 30 minutes slots
     """
@@ -81,7 +93,7 @@ def similarity(
         grain_quantity=1,
         forced_lower_bound=None,
         forced_upper_bound=None):
-    """Returns the jaccard similarity distance bewteen the schedules"""
+    """Returns the overlapping coefficient bewteen the schedules"""
 
     def discretise(sched):
         """ use given default for similarity analysis """
@@ -92,7 +104,7 @@ def similarity(
             forced_lower_bound=forced_lower_bound,
             forced_upper_bound=forced_upper_bound)
 
-    return jaccard_distance(discretise(schedule1), discretise(schedule2))
+    return overlap_coefficient(discretise(schedule1), discretise(schedule2))
 
 
 def min_distance(drrules1, drrules2):

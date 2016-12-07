@@ -101,7 +101,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
         ]
         self.assertEqual(similarity(schedule1, schedule2), 0)
 
-    def test_similarity_some_overlap(self):
+    def test_similarity_inclusion(self):
         schedule1 = [
             {
                 'rrule': ('DTSTART:20140205\nRRULE:FREQ=DAILY;COUNT=1;'
@@ -113,6 +113,23 @@ class ScheduleSimilarityTest(unittest.TestCase):
             {
                 'rrule': ('DTSTART:20140205\nRRULE:FREQ=DAILY;COUNT=1;'
                           'BYMINUTE=0;BYHOUR=8'),
+                'duration': 120,
+            }
+        ]
+        self.assertEqual(similarity(schedule1, schedule2, grain_level="min", grain_quantity=30), 1.0)
+
+    def test_similarity_some_overlap(self):
+        schedule1 = [
+            {
+                'rrule': ('DTSTART:20140205\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=8'),
+                'duration': 120,
+            }
+        ]
+        schedule2 = [
+            {
+                'rrule': ('DTSTART:20140205\nRRULE:FREQ=DAILY;COUNT=1;'
+                          'BYMINUTE=0;BYHOUR=9'),
                 'duration': 120,
             }
         ]
