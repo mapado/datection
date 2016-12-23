@@ -204,22 +204,22 @@ class RRuleCoherencyFilter(object):
     def apply_long_date_interval_number_coherency_heuristics(self):
         """Keep only the 2 long date interval rrules per weekday."""
         def authorized_weekday(w):
-            return (kept_long_date_intervals[w.weekday] <
+            return (kept_long_date_intervals[w] <
                     self.MAX_LONG_DATE_INTERVAL_RRULES)
 
         out = []
         kept_long_date_intervals = Counter()
         for drr in self.drrs:
             if drr.long_date_interval:
-                if all([authorized_weekday(w) for w in drr.rrule.byweekday]):
-                    for w in drr.rrule.byweekday:
-                        kept_long_date_intervals[w.weekday] += 1
+                if all([authorized_weekday(w) for w in drr.rrule._byweekday]):
+                    for w in drr.rrule._byweekday:
+                        kept_long_date_intervals[w] += 1
                     _drr = deepcopy(drr)
                     out.append(drr)
                 else:
-                    for w in drr.rrule.byweekday:
+                    for w in drr.rrule._byweekday:
                         if authorized_weekday(w):
-                            kept_long_date_intervals[w.weekday] += 1
+                            kept_long_date_intervals[w] += 1
                             _drr = deepcopy(drr)
                             _drr.set_weekdays((w, ))
                             out.append(_drr)
@@ -231,22 +231,22 @@ class RRuleCoherencyFilter(object):
         """Keep only the 1 unlimited date interval rrules per weekday."""
 
         def authorized_weekday(w):
-            return (kept_unlimited_date_intervals[w.weekday] <
+            return (kept_unlimited_date_intervals[w] <
                     self.MAX_UNLIMITED_DATE_INTERVAL_RRULES)
 
         out = []
         kept_unlimited_date_intervals = Counter()
         for drr in self.drrs:
             if drr.unlimited_date_interval:
-                if all([authorized_weekday(w) for w in drr.rrule.byweekday]):
-                    for w in drr.rrule.byweekday:
-                        kept_unlimited_date_intervals[w.weekday] += 1
+                if all([authorized_weekday(w) for w in drr.rrule._byweekday]):
+                    for w in drr.rrule._byweekday:
+                        kept_unlimited_date_intervals[w] += 1
                     _drr = deepcopy(drr)
                     out.append(drr)
                 else:
-                    for w in drr.rrule.byweekday:
+                    for w in drr.rrule._byweekday:
                         if authorized_weekday(w):
-                            kept_unlimited_date_intervals[w.weekday] += 1
+                            kept_unlimited_date_intervals[w] += 1
                             _drr = deepcopy(drr)
                             _drr.set_weekdays((w, ))
                             out.append(_drr)

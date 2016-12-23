@@ -16,6 +16,7 @@ from dateutil.rrule import rrule
 from dateutil.rrule import FREQNAMES
 
 from datection.utils import cached_property
+from datection.utils import cleanup_rrule_string
 from datection.utils import UNLIMITED_DATETIME_START
 from datection.utils import UNLIMITED_DATETIME_END
 from datection.timepoint import DAY_START
@@ -138,7 +139,7 @@ class DurationRRule(object):
             r'(?<=DTSTART:)[^\n]+',
             start_date.strftime('%Y%m%d'),
             self.duration_rrule['rrule'])
-        self.rrule.dstart = start_date
+        self.rrule._dstart = start_date
 
     def set_enddate(self, end_date):
         """
@@ -170,7 +171,7 @@ class DurationRRule(object):
     def exclusion_rrules(self):
         """Return the list of exclusion rrules."""
         return [
-            rrulestr(exc_rrule)
+            rrulestr(cleanup_rrule_string(exc_rrule))
             for exc_rrule in self.duration_rrule.get('excluded', [])
         ]
 
@@ -191,7 +192,8 @@ class DurationRRule(object):
         is only performed the first time.
 
         """
-        rrule = rrulestr(self.duration_rrule['rrule'])
+        rrule_str = cleanup_rrule_string(self.duration_rrule['rrule'])
+        rrule = rrulestr(rrule_str)
 
         # when we are in unlimited mode, datection need to
         # have DTSTART=01-01-0001 & UNTIL=31-12-9999
@@ -213,8 +215,8 @@ class DurationRRule(object):
         rset = rruleset()
         rset.rrule(self.rrule)
         for ex_rrule in self.exclusion_rrules:
-            if (self.rrule.byhour != ex_rrule.byhour or
-               self.rrule.byminute != ex_rrule.byminute):
+            if (self.rrule._byhour != ex_rrule._byhour or
+               self.rrule._byminute != ex_rrule._byminute):
                 rset.rrule(ex_rrule)
                 mask_kwargs = {"interval": ex_rrule._interval,
                                "count": ex_rrule._count,
@@ -224,8 +226,8 @@ class DurationRRule(object):
                                "wkst": ex_rrule._wkst,
                                "cache": False if ex_rrule._cache is None else True,
                                "byweekday": ex_rrule._byweekday}
-                mask_kwargs.update({"byhour": self.rrule.byhour,
-                                    "byminute": self.rrule.byminute})
+                mask_kwargs.update({"byhour": self.rrule._byhour,
+                                    "byminute": self.rrule._byminute})
                 mask_rrule = rrule(**mask_kwargs)
                 rset.exrule(mask_rrule)
             else:
@@ -244,7 +246,7 @@ class DurationRRule(object):
 
         """
         start_time = self.time_interval[0]
-        return datetime.combine(self.rrule.dtstart, start_time)
+        return datetime.combine(self.rrule._dtstart, start_time)
 
     @property
     def end_datetime(self):
@@ -253,9 +255,9 @@ class DurationRRule(object):
         the dtstart date, added with the rrule duration (in minutes).
 
         """
-        if self.rrule.until or self.rrule.count:
-            if self.rrule.until:
-                end_date = self.rrule.until
+        if self.rrule._until or self.rrule._count:
+            if self.rrule._until:
+                end_date = self.rrule._until
             else:
                 for dtime in self:
                     pass  # ugly hack
@@ -272,7 +274,7 @@ class DurationRRule(object):
                     return date
         else:
             date = datetime.combine(
-                self.rrule.dtstart.date(),
+                self.rrule._dtstart.date(),
                 self.time_interval[0]
             )
             try:
@@ -289,9 +291,9 @@ class DurationRRule(object):
         return a tuple of 2 elements: the the dtstart date and None.
 
         """
-        if self.rrule.until:
-            return (self.rrule.dtstart.date(), self.rrule.until.date())
-        return (self.rrule.dtstart.date(), None)
+        if self.rrule._until:
+            return (self.rrule._dtstart.date(), self.rrule._until.date())
+        return (self.rrule._dtstart.date(), None)
 
     @property
     def time_interval(self):
@@ -302,9 +304,10 @@ class DurationRRule(object):
         Otherwise, return the default value: (time(0, 0, 0), time(23, 59))
 
         """
-        if (self.rrule.byminute is not None
-                and self.rrule.byhour is not None):
-            start_time = time(self.rrule.byhour[0], self.rrule.byminute[0])
+        if (self.rrule._byminute and self.rrule._byhour and not self.duration == ALL_DAY):
+            first_hour = sorted(list(self.rrule._byhour))[0]
+            first_minute = sorted(list(self.rrule._byminute))[0]
+            start_time = time(first_hour, first_minute)
             end_dt = datetime.combine(datetime.today(), start_time)
             end_time = (end_dt + timedelta(minutes=self.duration)).time()
             return (start_time, end_time)
@@ -314,15 +317,15 @@ class DurationRRule(object):
     @property
     def weekday_indexes(self):
         """The list of index of recurrent weekdays."""
-        if self.rrule.byweekday:
-            return [wk.weekday for wk in self.rrule.byweekday]
+        if self.rrule._byweekday:
+            return sorted(list(self.rrule._byweekday))
 
     @property
     def weekday_interval(self):
         """The index interval bewteen the first and last recurrent weekdays
 
         """
-        if self.rrule.byweekday:
+        if self.rrule._byweekday:
             start_idx = self.weekday_indexes[0]
             end_idx = self.weekday_indexes[-1]
             return range(start_idx, end_idx + 1)
@@ -331,7 +334,7 @@ class DurationRRule(object):
     def is_recurring(self):
         if not 'BYDAY' in self.duration_rrule['rrule']:
             return False
-        if len(self.rrule.byweekday) == 7 and not self.is_all_year_recurrence:
+        if len(self.rrule._byweekday) == 7 and not self.is_all_year_recurrence:
             # if a rrule says "every day from DT_START to DT_END", it is
             # similar to "from DT_START to DT_END", hence it is not a
             # recurrence!
@@ -344,7 +347,7 @@ class DurationRRule(object):
     def is_all_year_recurrence(self):
         if not 'BYDAY' in self.duration_rrule['rrule']:
             return False
-        return self.rrule.dtstart + timedelta(days=365) == self.rrule.until
+        return self.rrule._dtstart + timedelta(days=365) == self.rrule._until
 
     # Properties describing the RRule typology
 
@@ -376,7 +379,7 @@ class DurationRRule(object):
     def single_date(self):
         """Return True if the RRule describes a single date(time)."""
         return (
-            self.rrule.count == 1 and
+            self.rrule._count == 1 and
             self.duration <= ALL_DAY
         )
 

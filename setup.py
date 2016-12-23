@@ -10,8 +10,8 @@ setup(
     include_package_data=True,
     install_requires=[
         # private packages
-        'python-dateutil==2.1.1',
         # public packages
+        'python-dateutil',
         'pyparsing==2.0.3'
     ],
 )

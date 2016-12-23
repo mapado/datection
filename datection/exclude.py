@@ -9,6 +9,7 @@ from another one.
 from dateutil.rrule import rrulestr
 
 from datection.utils import makerrulestr
+from datection.utils import stringify_rrule
 from datection.timepoint import Datetime
 from datection.timepoint import DatetimeInterval
 from datection.timepoint import DateInterval
@@ -121,13 +122,15 @@ class TimepointExcluder(object):
 
         """
         excluded_rrule = rrulestr(timepoint.export()['rrule'])
-        excluded_rrule._byweekday = [
-            d.weekday for d in excluded_weekdays.weekdays]
+        excluded_rrule._original_rule['byweekday'] = [
+            d for d in excluded_weekdays.weekdays]
         if (not excluded_weekdays.time_interval.undefined and
            excluded_weekdays.time_interval.is_single_time):
-            excluded_rrule._byhour = [excluded_weekdays.time_interval.start_time.hour]
-            excluded_rrule._byminute = [excluded_weekdays.time_interval.start_time.minute]
+            excluded_rrule._original_rule['byhour'] = [
+                excluded_weekdays.time_interval.start_time.hour]
+            excluded_rrule._original_rule['byminute'] = [
+                excluded_weekdays.time_interval.start_time.minute]
         return makerrulestr(
-            start=excluded_rrule.dtstart.date(),
-            end=excluded_rrule.until,
-            rule=str(excluded_rrule))
+            start=excluded_rrule._dtstart.date(),
+            end=excluded_rrule._until,
+            rule=stringify_rrule(excluded_rrule))
