@@ -17,8 +17,8 @@ def have_same_timings(drr1, drr2, light_match=False):
 
     return (
         drr1.duration == drr2.duration and
-        drr1.rrule.byhour == drr2.rrule.byhour and
-        drr1.rrule.byminute == drr2.rrule.byminute
+        drr1.rrule._byhour == drr2.rrule._byhour and
+        drr1.rrule._byminute == drr2.rrule._byminute
     )
 
 

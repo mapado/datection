@@ -996,10 +996,7 @@ class ContinuousDatetimeInterval(Timepoint):
 class Weekdays(Timepoint):
 
     def __init__(self, days, *args, **kwargs):
-        self.days = sorted(
-            list(set(days)),
-            key=lambda d: ORDERED_DAYS.index(d)
-        )
+        self.days = [d for d in ORDERED_DAYS if d in days]
 
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
@@ -1031,10 +1028,7 @@ class WeeklyRecurrence(Timepoint):
     def __init__(self, date_interval, time_interval, weekdays):
         self.date_interval = date_interval
         self.time_interval = time_interval
-        self.weekdays = sorted(
-            list(set(weekdays)),
-            key=lambda d: ORDERED_DAYS.index(d)
-        )
+        self.weekdays = [d for d in ORDERED_DAYS if d in weekdays]
         self.excluded = []
         self.excluded_duration = []
 

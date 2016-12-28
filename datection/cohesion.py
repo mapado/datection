@@ -131,7 +131,7 @@ class DurationRRuleAnalyser(DurationRRule):
         """ Check if given duration rrule has weekdays occurences. """
         return ((self.rrule.freq == WEEKLY
                 and self.rrule._byweekday != (MO, TU, WE, TH, FR, SA, SU)
-                 ) or len(self.rrule.byweekday) > 0)
+                 ) or len(self.rrule._byweekday) > 0)
 
     @property
     def has_time(self):
@@ -189,7 +189,7 @@ class DurationRRuleAnalyser(DurationRRule):
                 and (self.rrule._freq == DAILY
                      or (
                          self.rrule._freq == WEEKLY and
-                         self.rrule.byweekday == (MO, TU, WE, TH, FR, SA, SU)
+                         self.rrule._byweekday == (MO, TU, WE, TH, FR, SA, SU)
                      ))
                 )
 
@@ -369,7 +369,7 @@ class DurationRRuleAnalyser(DurationRRule):
             if self.is_sublapse_of(drrule):
                 # case 2 time_repr: <rr2- <rr1- -rr1> -rr2>
                 self.rrule._count = None
-                self.rrule._dtstart = drrule.rrule.dtstart
+                self.rrule._dtstart = drrule.rrule._dtstart
                 self.rrule._until = drrule.end_datetime
                 more_cohesion = True
 
@@ -377,7 +377,7 @@ class DurationRRuleAnalyser(DurationRRule):
                 # case 3 time_repr: <rr1- -rr1><rr2- -rr2> with same time
                 # precision
                 self.rrule._count = None
-                if not drrule.rrule.until:
+                if not drrule.rrule._until:
                     self.rrule._until = drrule.start_datetime
                 else:
                     self.rrule._until = drrule.rrule._until
@@ -627,9 +627,9 @@ class CohesiveDurationRRuleLinter(object):
             if (drr.duration == 0 and not drr.has_time):
                 drr.duration_rrule['duration'] = ALL_DAY
 
-            if len(drr.rrule.byweekday) > 0:
+            if len(drr.rrule._byweekday) > 0:
                 drr.rrule._freq = WEEKLY
-            if drr.rrule.byweekday == (MO, TU, WE, TH, FR, SA, SU):
+            if drr.rrule._byweekday == (MO, TU, WE, TH, FR, SA, SU):
                 drr.rrule._freq = DAILY
                 drr.rrule._byweekday = ()
 

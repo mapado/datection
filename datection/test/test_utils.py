@@ -37,7 +37,7 @@ class UtilsTest(unittest.TestCase):
         wrapper = DurationRRule(duration_rrule)
         self.assertEqual(wrapper.duration, 60)
         self.assertEqual(
-            str(wrapper.rrule), 'FREQ=WEEKLY;BYWEEKDAY=MO;BYHOUR=8;BYMINUTE=0')
+            str(wrapper.rrule), 'DTSTART:20140405T000000\nFREQ=WEEKLY;UNTIL=20140430T000000;BYDAY=MO;BYHOUR=8;BYMINUTE=0')
         self.assertTrue(wrapper.is_recurring)
         self.assertFalse(wrapper.is_all_year_recurrence)
 

@@ -16,6 +16,7 @@ UNLIMITED_DATE_END          = date(9999, 12, 31)
 UNLIMITED_DATETIME_START    = datetime(0001, 01, 01)
 UNLIMITED_DATETIME_END      = datetime(9999, 12, 31, 23, 59, 59)
 
+
 def get_current_date():
     """Return the current date.
 
@@ -43,6 +44,7 @@ def isoformat_concat(datetime):
     concat = re.sub(r'[\.:-]', '', isoformat)
     return concat
 
+
 def is_unlimited_start(start):
     """ Check is "start" match the date 01-01-0001
     """
@@ -52,6 +54,7 @@ def is_unlimited_start(start):
 
     return start == UNLIMITED_DATE_START
 
+
 def is_unlimited_end(end):
     """ Check is "end" match the date 12-31-9999
     """
@@ -60,6 +63,26 @@ def is_unlimited_end(end):
         end = end.date()
 
     return end == UNLIMITED_DATE_END
+
+
+def stringify_rrule(rrule):
+    """
+    Method to handle the different str() of python-dateutil.rrule
+    No implementation of this library is really compliant with RFC 2445
+    """
+    lines = str(rrule).splitlines(True)
+    lines = [line for line in lines if not line.startswith("DTSTART")]
+    return "".join(lines)
+
+
+def cleanup_rrule_string(rrule_str):
+    """
+    Function to be called before dateutil.rrule.rrulestr for
+    compatibility purpose with the non RFC form "DTSTART:\n" 
+    """
+    cleaned_str = rrule_str.replace("DTSTART:\n", "")
+    return cleaned_str
+
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
     """ Returns an RFC standard RRULE string
@@ -81,7 +104,7 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         until = "UNTIL=%s" % isoformat_concat(end)
 
     if rule:
-        rulestr = "RRULE:" + str(rule) + ";"
+        rulestr = "RRULE:" + stringify_rrule(rule) + ";"
         rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')
     else:
         rulestr = "RRULE:FREQ=%s;" % (freq)
