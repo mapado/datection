@@ -51,6 +51,29 @@ class ScheduleSimilarityTest(unittest.TestCase):
         ]
         self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
+    def test_discretise_exception(self):
+        schedule = [
+            {
+                u'duration': 0,
+                u'excluded_duration': [1439],
+                u'rrule': u"DTSTART:20170101\nRRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=18;BYMINUTE=0;UNTIL=20170131T235959",
+                u'excluded': [
+                    u'RRULE:FREQ=WEEKLY;BYDAY=SA;BYHOUR=18;BYMINUTE=0'
+                ]
+            }
+        ]
+
+        expected = [
+            datetime(2017, 1, 1, 0, 0),
+            datetime(2017, 1, 8, 0, 0),
+            datetime(2017, 1, 15, 0, 0),
+            datetime(2017, 1, 22, 0, 0),
+            datetime(2017, 1, 29, 0, 0)
+        ]
+
+        self.assertItemsEqual(discretise_schedule(schedule), expected)
+
+
     def test_discretise_several_schedules(self):
         schedule = [
             {

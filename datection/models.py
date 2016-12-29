@@ -170,6 +170,20 @@ class DurationRRule(object):
     @cached_property
     def exclusion_rrules(self):
         """Return the list of exclusion rrules."""
+
+        # input exclusions strings might be incomplete regarding
+        # the start and the end of the exclusions
+        ex_rrules = self.duration_rrule.get('excluded', [])
+        for idx in xrange(len(ex_rrules)):
+            if ex_rrules[idx].find("DTSTART") == -1:
+                rrule_start = self.rrule._dtstart
+                start = "DTSTART:%s\n" % rrule_start.strftime('%Y%m%dT%H%M%S')
+                ex_rrules[idx] = start + ex_rrules[idx]
+            if ex_rrules[idx].find("UNTIL") == -1:
+                rrule_until = self.rrule._until
+                rrule_end = ";UNTIL=" + rrule_until.strftime('%Y%m%dT%H%M%S')
+                ex_rrules[idx] = ex_rrules[idx] + rrule_end
+
         return [
             rrulestr(cleanup_rrule_string(exc_rrule))
             for exc_rrule in self.duration_rrule.get('excluded', [])
