@@ -67,6 +67,20 @@ TRANSLATIONS = {
     }
 }
 
+ORDINAL_APPENDIX = [u'st', u'nd', u'rd', u'th']
+TIME_PREPOSITIONS = [u'at']
+TIME_CONJUNCTIONS = [u',', u'and', u'&', u'or', u';', u'/']
+TIME_INTERVAL_START = [u'from', u'bewteen']
+TIME_INTERVAL_MIDDLE = [u'-', u'to', u'and']
+DATE_PREPOSITION = [u"on"]
+DATE_CONJUNCTIONS = [u'and']
+DATE_INTERVAL_START = [u"from", u'bewteen']
+DATE_INTERVAL_MIDDLE = [u'to']
+DATE_TIME_LINKS = [u',', u'-', u':', u'at']
+WEEKLY_LIST_START = [u"on", u"every", u"open on"]
+WEEKLY_LIST_MIDDLE = [u';', u',', u'and', u'on', u'&', u'/']
+OPEN = u"open"
+
 ########################################################
 # Patterns and keywords only used for language detection
 # (note: some could be used for date parsing)
