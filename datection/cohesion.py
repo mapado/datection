@@ -129,9 +129,9 @@ class DurationRRuleAnalyser(DurationRRule):
     @property
     def has_day(self):
         """ Check if given duration rrule has weekdays occurences. """
-        return ((self.rrule.freq == WEEKLY
-                and self.rrule._byweekday != (MO, TU, WE, TH, FR, SA, SU)
-                 ) or len(self.rrule._byweekday) > 0)
+        return ((self.rrule.freq == WEEKLY and
+            self.rrule._byweekday != (MO, TU, WE, TH, FR, SA, SU)) or
+            (self.rrule._byweekday and len(self.rrule._byweekday) > 0))
 
     @property
     def has_time(self):
@@ -627,7 +627,7 @@ class CohesiveDurationRRuleLinter(object):
             if (drr.duration == 0 and not drr.has_time):
                 drr.duration_rrule['duration'] = ALL_DAY
 
-            if len(drr.rrule._byweekday) > 0:
+            if drr.rrule._byweekday and len(drr.rrule._byweekday) > 0:
                 drr.rrule._freq = WEEKLY
             if drr.rrule._byweekday == (MO, TU, WE, TH, FR, SA, SU):
                 drr.rrule._freq = DAILY
