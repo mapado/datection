@@ -334,7 +334,7 @@ class DurationRRule(object):
     def is_recurring(self):
         if not 'BYDAY' in self.duration_rrule['rrule']:
             return False
-        if (self.rrule._byweekday and len(self.rrule._byweekday) == 7 and
+        if ((self.rrule._byweekday is not None) and len(self.rrule._byweekday) == 7 and
             not self.is_all_year_recurrence):
             # if a rrule says "every day from DT_START to DT_END", it is
             # similar to "from DT_START to DT_END", hence it is not a

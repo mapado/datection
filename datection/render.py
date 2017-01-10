@@ -1144,7 +1144,7 @@ class ExclusionFormatter(BaseFormatter):
 
         """
         # single excluded recurrent weekday
-        if excluded._byweekday and len(excluded._byweekday) == 1:
+        if (excluded._byweekday is not None) and len(excluded._byweekday) == 1:
             return self.get_template('weekday').format(
                 weekday=self.day_name(excluded._byweekday[0]))
         else:
