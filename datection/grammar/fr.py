@@ -1,323 +1,54 @@
 # -*- coding: utf-8 -*-
-
 """
 Definition of French specific grammar, related to temoral expressions.
-
 """
-
 from pyparsing import Optional
-from pyparsing import oneOf
-from pyparsing import OneOrMore
-from pyparsing import Group
-from pyparsing import Regex
-from pyparsing import Each
-from dateutil.rrule import weekdays
 
-from datection.grammar import DAY_NUMBER
 from datection.grammar import YEAR
-from datection.grammar import HOUR
-from datection.grammar import MINUTE
-from datection.grammar import NUMERIC_MONTH
-from datection.grammar import NUMERIC_YEAR
-from datection.grammar import as_date
-from datection.grammar import as_time
-from datection.grammar import as_datetime
-from datection.grammar import as_datetime_list_multitime
-from datection.grammar import as_datelist
-from datection.grammar import as_date_interval
-from datection.grammar import as_time_interval
-from datection.grammar import as_datetime_list
-from datection.grammar import develop_datetime_interval_patterns
-from datection.grammar import as_continuous_datetime_interval
-from datection.grammar import as_weekday_list
-from datection.grammar import as_weekday_interval
-from datection.grammar import as_weekly_recurrence
-from datection.grammar import complete_partial_date
-from datection.grammar import extract_time_patterns
-from datection.grammar import develop_datetime_patterns
-from datection.grammar import develop_weekly_recurrence_patterns
-from datection.grammar import optional_ci
-from datection.grammar import optional_oneof_ci
 from datection.grammar import oneof_ci
-from datection.data.fr import WEEKDAYS
-from datection.data.fr import SHORT_WEEKDAYS
-from datection.data.fr import MONTHS
-from datection.data.fr import SHORT_MONTHS
 
+from grammar_factory import GrammarFactory
 
-def set_month_number(text, start_index, match):
-    """Return the month number from the month name."""
-    return MONTHS.get(match[0].lower()) or SHORT_MONTHS.get(match[0].lower())
+grm_gen = GrammarFactory('datection.data.fr')
 
+# base patterns
+WEEKDAY = grm_gen.weekday_grm()
+MONTH = grm_gen.month_grm()
+DAY_NUMBER = grm_gen.daynumber_grm()
 
-def set_weekday(text, start_index, match):
-    """Return the month number from the month name."""
-    idx = WEEKDAYS.get(match[0].lower())
-    if idx is None:
-        idx = SHORT_WEEKDAYS.get(match[0].lower())
-    return weekdays[idx]
+# date basic patterns
+DATE = grm_gen.french_date_grm(DAY_NUMBER, MONTH)
+END_LITTERAL_DATE = grm_gen.end_litteral_date_grm(MONTH)
+END_NUMERIC_DATE = grm_gen.end_numeric_date_grm()
+FR_NUMERIC_DATE = grm_gen.french_numeric_date_grm()
+US_NUMERIC_DATE = grm_gen.american_numeric_date_grm()
+NUMERIC_DATE = ((FR_NUMERIC_DATE | US_NUMERIC_DATE) + Optional(u','))
 
+# date more complex patterns
+DATE_PATTERN = grm_gen.date_pattern_grm(WEEKDAY, DATE, NUMERIC_DATE)
+REPEATABLE_DATE = grm_gen.repeatable_date_grm(WEEKDAY, DAY_NUMBER, MONTH)
+DATE_LIST = grm_gen.date_list_grm(REPEATABLE_DATE)
+DATE_INTERVAL = grm_gen.date_interval_grm(WEEKDAY, REPEATABLE_DATE, DATE_PATTERN)
 
-# A weekday name can be in its full form or abbreviated form
-WEEKDAY = (
-    (
-        # weekday with optional s at the end
-        oneof_ci(WEEKDAYS.keys()) + Optional(Regex(r'(?<!\s)s?'))
-    ) |
-    # short weekday not followed by another alphanum char
-    oneof_ci(SHORT_WEEKDAYS.keys()) + Regex(r'\.?(?!\w)').leaveWhitespace()
-).setParseAction(set_weekday)('weekday')
+# time basic patterns
+TIME = grm_gen.time_24_grm()
+TIME_INTERVAL = grm_gen.time_interval_grm(TIME)
+TIME_PATTERN = grm_gen.time_pattern_grm(TIME_INTERVAL)
 
-# A month name can be in its full form or an abbreviated form.
-# When matched, a month name will be transformed to the corresponding
-# month index.
-MONTH = oneof_ci(
-    MONTHS.keys()
-    + SHORT_MONTHS.keys(),
-).setParseAction(set_month_number)('month')
+# date-time patterns
+DATETIME = grm_gen.date_timeinterval_grm(DATE_PATTERN, TIME_INTERVAL)
+DATETIME_PATTERN = grm_gen.datetime_pattern_grm(DATE_PATTERN, TIME_PATTERN)
+DATELIST_TIMEINTERVAL = grm_gen.datelist_timeinterval_grm(REPEATABLE_DATE, TIME_INTERVAL)
+DATETIME_LIST_MULTITIME = grm_gen.datetime_list_grm(DATETIME)
+DATETINTERVAL_TIME = grm_gen.dateinterval_time_grm(DATE_INTERVAL, TIME_PATTERN)
+CONTINUOUS_DATETIME_INTERVAL = grm_gen.continuous_datetime_interval_grm(DATE_PATTERN, TIME)
 
-DAY_NUMBER = DAY_NUMBER + optional_ci(u'er')
-
-# A date is composed of a day number, an optional 'er' (for '1er') that
-# we do not care about, a month and an optional year.
-# Abbreviated months can also have a dot at their end, that will be ignored.
-DATE = (
-    DAY_NUMBER
-    + MONTH
-    + Optional(u'.')  # for abbreviated months
-    + Optional(YEAR)
-)
-
-# A numeric date is a day, month and a year separated by a one-char
-# token. Example: 05/10/2012, 05/03, 2014/5/12
-date_sep = oneOf([u'/', u'-', u'.'])
-FR_NUMERIC_DATE = (
-    DAY_NUMBER +
-    date_sep +
-    NUMERIC_MONTH +
-    Optional(
-        date_sep +
-        NUMERIC_YEAR
-    )
-)
-US_NUMERIC_DATE = (
-    NUMERIC_YEAR +
-    date_sep +
-    NUMERIC_MONTH +
-    date_sep +
-    DAY_NUMBER
-)
-NUMERIC_DATE = (
-    (FR_NUMERIC_DATE | US_NUMERIC_DATE) +
-    Optional(u',')
-)
-
-DATE_PATTERN = (
-    optional_ci(u"le") +
-    Optional(WEEKDAY) +
-    (DATE | NUMERIC_DATE)
-).addParseAction(as_date)
-
-# A time is an hour, a separator and a time
-TIME = (
-    optional_oneof_ci([u'à', u'a']) +
-    HOUR +
-    oneof_ci([u'h', u':']) +
-    Optional(MINUTE)
-).setParseAction(as_time)
-
-P_START_TIME = (
-    HOUR +
-    optional_oneof_ci([u'h', u':']) +
-    Optional(MINUTE)
-).setParseAction(as_time)
-
-
-# A time interval is composed of a start time, an optional separator and
-# an optional end time.
-# 15h30 is a time interval bewteen 15h30 and 15h30
-# 15h30 - 17h speaks for itself
-TIME_INTERVAL = (
-    optional_oneof_ci(
-        [
-            u'de', u'entre', u'à', u':', u'a', u'et de', u'et à'
-        ]
-    ) +
-    P_START_TIME('start_time') +
-    optional_oneof_ci([u'-', u'à', u'a']) +
-    Optional(TIME('end_time'))
-).setParseAction(as_time_interval)
-
-
-# Meta pattern catching a list of time patterns (time or time interval)
-TIME_PATTERN = (
-    OneOrMore(
-        TIME_INTERVAL +
-        Optional(OneOrMore(oneOf([u',', u'et', u'&', u'ou', u';', u'/'])))
-    )('patterns')
-).setParseAction(extract_time_patterns)
-
-# A partial litteral date is both optional month and year.
-PARTIAL_LITTERAL_DATE = (
-    MONTH +
-    Optional(YEAR)
-).setParseAction(as_date)
-
-# A partial litteral date is both optional numeric month and year.
-PARTIAL_NUMERIC_DATE = (
-    NUMERIC_MONTH +
-    Optional(
-        date_sep +
-        NUMERIC_YEAR
-    )
-).setParseAction(as_date)
-
-# A partial date is a mandatory day number, and optional litteral/numeric
-# month and year, and optional separator
-PARTIAL_DATE = (
-    Optional(WEEKDAY) +
-    DAY_NUMBER('day') +
-    Optional(date_sep) +
-    Optional(
-        PARTIAL_LITTERAL_DATE('partial_date') |
-        PARTIAL_NUMERIC_DATE('partial_date')
-    )
-    + Optional(OneOrMore(oneOf([u',', u'et', u'&', u'le'])))
-).setParseAction(complete_partial_date)
-
-# A date list is a list of partial dates
-DATE_LIST = (
-    optional_oneof_ci([u"le", u"les"]) +
-    Group(
-        PARTIAL_DATE +
-        OneOrMore(PARTIAL_DATE)
-    )('dates')
-).setParseAction(as_datelist)
-
-# A date interval is composed of a start (possibly partial) date and an
-# end date
-DATE_INTERVAL = (
-    optional_oneof_ci([',', '-']) +
-    optional_oneof_ci([u"du", u"de"]) +
-    PARTIAL_DATE('start_date') +
-    oneof_ci([u'au', u'-', u"à"]) +
-    Optional(WEEKDAY) +
-    DATE_PATTERN('end_date') +
-    optional_oneof_ci([',', '-'])
-).setParseAction(as_date_interval)
-
-# A datetime is a date, a separator and a time interval (either a single)
-# time, or a start time and an end time
-DATETIME = (
-    DATE_PATTERN('date') +
-    optional_oneof_ci([u',', u'-', u':']) +
-    Optional('.') +
-    TIME_INTERVAL('time_interval')
-
-).setParseAction(as_datetime)
-
-DATETIME_PATTERN = (
-    DATE_PATTERN('date') +
-    optional_oneof_ci([u',', u'-', u':']) +
-    Optional('.') +
-    TIME_PATTERN('time_pattern')
-
-).setParseAction(develop_datetime_patterns)
-
-# A datetime list is a list of dates, along with a time interval
-DATETIME_LIST = (
-    optional_oneof_ci([u"les", u"le"]) +
-    OneOrMore(PARTIAL_DATE)('dates') +
-    Optional(u',') +
-    optional_oneof_ci([u'a', u'à', u'-']) +
-    TIME_INTERVAL('time_interval')
-).setParseAction(as_datetime_list)
-
-# Le vendredi 12 à 14h et le samedi 13 à 15h
-DATETIME_LIST_MULTITIME = (
-    Group(
-        DATETIME +
-        OneOrMore(
-            Optional(oneOf([u',', u'et', u'&', u';', u'-'])) +
-            DATETIME
-        )
-    )('datetime')
-).setParseAction(as_datetime_list_multitime)
-
-# a datetime interval is an interval of dates, and a time interval
-DATETIME_INTERVAL = (
-    optional_oneof_ci([',', '-']) +
-    DATE_INTERVAL('date_interval') +
-    Optional(u',') +
-    TIME_PATTERN('time_patterns') +
-    optional_oneof_ci([',', '-'])
-).setParseAction(develop_datetime_interval_patterns)
-
-
-# Example: du 5 mars 2015 à 13h au 7 mars 2015 à 7h
-CONTINUOUS_DATETIME_INTERVAL = (
-    optional_ci(u'du') +
-    DATE_PATTERN("start_date") +
-    optional_oneof_ci([u"à", u'a', u"-"]) +
-    TIME("start_time") +
-    oneof_ci([u"au", u'-', u'à']) +
-    DATE_PATTERN("end_date") +
-    optional_oneof_ci([u'a', u"à", u"-"]) +
-    TIME("end_time")
-).setParseAction(as_continuous_datetime_interval)
-
-
-# A list of several weekdays
-WEEKDAY_LIST = (
-    optional_oneof_ci([u"le", u"les", u"tous les", u"ouvert tous les"]) +
-    OneOrMore(
-        WEEKDAY +
-        Optional(OneOrMore(oneOf([u';', u',', u'et', u'le', u'&', u'/'])))
-    )
-).setParseAction(as_weekday_list)('weekdays')
-
-# An interval of weekdays
-WEEKDAY_INTERVAL = (
-    optional_ci(u"ouvert") +
-    optional_oneof_ci([u"du", u"de"]) +
-    WEEKDAY +
-    oneof_ci([u'au', u'-', u"à"]) +
-    WEEKDAY
-).setParseAction(as_weekday_interval)('weekdays')
-
-# Any weekday related pattern
-WEEKDAY_PATTERN = (
-    optional_oneof_ci([',', '-']) +
-    (WEEKDAY_INTERVAL | WEEKDAY_LIST) +
-    optional_oneof_ci([',', '-'])
-)
-
-WEEKLY_RECURRENCE = Each(
-    [
-        WEEKDAY_PATTERN('weekdays'),
-        Optional(TIME_PATTERN('time_interval')),
-        Optional(DATE_INTERVAL('date_interval')),
-    ]
-).setParseAction(as_weekly_recurrence)
-
-# Ex: Du 29/03/11 au 02/04/11 - Mardi, mercredi samedi à 19h, jeudi à
-# 20h30 et vendredi à 15h"
-MULTIPLE_WEEKLY_RECURRENCE = (
-    Optional(DATE_INTERVAL('date_interval')) +
-    (
-        Group(
-            WEEKDAY_PATTERN +
-            TIME_PATTERN
-        ) +
-        OneOrMore(
-            Optional(u'et') +
-            Group(
-                WEEKDAY_PATTERN +
-                TIME_PATTERN
-            )
-        )
-    )('groups')
-).setParseAction(develop_weekly_recurrence_patterns)
+# weekdays patterns
+WEEKDAY_LIST = grm_gen.weekday_list_grm(WEEKDAY)
+WEEKDAY_INTERVAL = grm_gen.weekday_interval_grm(WEEKDAY)
+WEEKDAY_PATTERN = grm_gen.weekday_pattern_grm(WEEKDAY_INTERVAL, WEEKDAY_LIST)
+WEEKLY_RECURRENCE = grm_gen.weekly_recurrence(WEEKDAY_PATTERN, TIME_PATTERN, DATE_INTERVAL)
+MULTIPLE_WEEKLY_RECURRENCE = grm_gen.multiple_weekly_recurrence_grm(WEEKDAY_PATTERN, TIME_PATTERN, DATE_INTERVAL)
 
 EXCLUSION = oneof_ci([u'sauf', u'relâche', u'fermé'])
 
@@ -326,8 +57,8 @@ TIMEPOINTS = [
     ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
 
     ('datetime', DATETIME_PATTERN, [
-        ('datetime_list', DATETIME_LIST),
-        ('datetime_interval', DATETIME_INTERVAL),
+        ('datetime_list', DATELIST_TIMEINTERVAL),
+        ('datetime_interval', DATETINTERVAL_TIME),
         ('continuous_datetime_interval', CONTINUOUS_DATETIME_INTERVAL),
         ('datetime_list_multitime', DATETIME_LIST_MULTITIME),
     ]),

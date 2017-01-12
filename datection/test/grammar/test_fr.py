@@ -9,14 +9,14 @@ from datection.grammar.fr import TIME
 from datection.grammar.fr import TIME_INTERVAL
 from datection.grammar.fr import TIME_PATTERN
 from datection.grammar.fr import DATETIME
-from datection.grammar.fr import PARTIAL_NUMERIC_DATE
-from datection.grammar.fr import PARTIAL_LITTERAL_DATE
-from datection.grammar.fr import PARTIAL_DATE
+from datection.grammar.fr import END_NUMERIC_DATE
+from datection.grammar.fr import END_LITTERAL_DATE
+from datection.grammar.fr import REPEATABLE_DATE
 from datection.grammar.fr import DATE_LIST
 from datection.grammar.fr import DATE_INTERVAL
-from datection.grammar.fr import DATETIME_LIST
+from datection.grammar.fr import DATELIST_TIMEINTERVAL
 from datection.grammar.fr import DATETIME_PATTERN
-from datection.grammar.fr import DATETIME_INTERVAL
+from datection.grammar.fr import DATETINTERVAL_TIME
 from datection.grammar.fr import CONTINUOUS_DATETIME_INTERVAL
 from datection.grammar.fr import WEEKDAY
 from datection.grammar.fr import WEEKDAY_LIST
@@ -127,28 +127,28 @@ class TestTimePattern(TestGrammar):
 
 class TestPartialDate(TestGrammar):
 
-    pattern = PARTIAL_DATE
+    pattern = REPEATABLE_DATE
 
-    @set_pattern(PARTIAL_LITTERAL_DATE)
+    @set_pattern(END_LITTERAL_DATE)
     def test_parse_partial_litteral_date_formats(self):
         self.assert_parse(u'mars 2012')
         self.assert_parse(u'avril')
 
-    @set_pattern(PARTIAL_LITTERAL_DATE)
+    @set_pattern(END_LITTERAL_DATE)
     def test_parse_partial_litteral_date_full(self):
         self.assert_parse_equal(u'mars 2015', Date(2015, 3, None))
 
-    @set_pattern(PARTIAL_LITTERAL_DATE)
+    @set_pattern(END_LITTERAL_DATE)
     def test_parse_partial_litteral_date_missing_year(self):
         self.assert_parse_equal(u'mars', Date(None, 3, None))
 
-    @set_pattern(PARTIAL_NUMERIC_DATE)
+    @set_pattern(END_NUMERIC_DATE)
     def test_parse_partial_numeric_date_formats(self):
         self.assert_parse(u'02/2014')
         self.assert_parse(u'02/04')
         self.assert_parse(u'02/04/2014')
 
-    @set_pattern(PARTIAL_NUMERIC_DATE)
+    @set_pattern(END_NUMERIC_DATE)
     def test_parse_partial_numeric_date(self):
         self.assert_parse_equal(u'2/12', Date(2012, 2, None))
         self.assert_parse_equal(u'12/2012', Date(2012, 12, None))
@@ -293,7 +293,7 @@ class TestDatetimePattern(TestGrammar):
 
 class TestDatetimeList(TestGrammar):
 
-    pattern = DATETIME_LIST
+    pattern = DATELIST_TIMEINTERVAL
 
     def test_parse_datetime_list_formats(self):
         self.assert_parse(u"les 5, 6, 7 septembre 2014, à 15h20")
@@ -376,7 +376,7 @@ class TestDatetimeList(TestGrammar):
 
 class TestDatetimeInterval(TestGrammar):
 
-    pattern = DATETIME_INTERVAL
+    pattern = DATETINTERVAL_TIME
 
     def test_parse_datetime_interval_formats(self):
         self.assert_parse(u"Du 5 au 28 avril 2015 à 18h")
