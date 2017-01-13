@@ -1151,7 +1151,7 @@ class ExclusionFormatter(BaseFormatter):
             indices = set([bywk.weekday() for bywk in excluded])
             indices = sorted(list(indices))
             # excluded day range
-            if indices == range(indices[0], indices[-1] + 1):
+            if indices and indices == range(indices[0], indices[-1] + 1):
                 return self.get_template('weekday_interval').format(
                     start_weekday=self.day_name(indices[0]),
                     end_weekday=self.day_name(indices[-1]))
