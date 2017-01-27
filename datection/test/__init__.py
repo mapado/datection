@@ -8,7 +8,7 @@ class GetCurrentDayMocker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.get_current_date_patch = mock.patch(
-            'datection.render.get_current_date')
+            'datection.rendering.utils.get_current_date')
         cls.get_current_date_mock = cls.get_current_date_patch.start()
 
     @classmethod

@@ -8,7 +8,7 @@ import locale
 
 from datection.render import display
 from datection.render import NextOccurenceFormatter
-from datection.render import LongFormatter
+from datection.render import FullFormatter
 from datection.test import GetCurrentDayMocker
 
 
@@ -69,7 +69,7 @@ class TestDisplay(GetCurrentDayMocker):
         reference = start
         short = NextOccurenceFormatter(schedule, start, end).display(
             reference, summarize=True, abbrev_dayname=True)
-        default = LongFormatter(schedule).display(abbrev_monthname=True)
+        default = FullFormatter(schedule).display(abbrev_monthname=True)
         shortest_fmt = display(
             schedule,
             self.locale,
@@ -92,7 +92,7 @@ class TestDisplay(GetCurrentDayMocker):
         reference = datetime.datetime(2015, 3, 1)
         short = NextOccurenceFormatter(schedule, start, end).display(
             reference, summarize=True)
-        default = LongFormatter(schedule).display(abbrev_monthname=True)
+        default = FullFormatter(schedule).display(abbrev_monthname=True)
         shortest_fmt = display(
             schedule,
             self.locale,

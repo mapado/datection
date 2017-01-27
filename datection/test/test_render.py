@@ -9,27 +9,27 @@ import mock
 import datection
 
 from datection.test import GetCurrentDayMocker
-from datection.render import ContinuousDatetimeIntervalFormatter
-from datection.render import DateFormatter
-from datection.render import DateIntervalFormatter
-from datection.render import DateListFormatter
-from datection.render import DatetimeFormatter
-from datection.render import DatetimeIntervalFormatter
+from datection.rendering.date_time import ContinuousDatetimeIntervalFormatter
+from datection.rendering.date import DateFormatter
+from datection.rendering.date import DateIntervalFormatter
+from datection.rendering.date import DateListFormatter
+from datection.rendering.date_time import DatetimeFormatter
+from datection.rendering.date_time import DatetimeIntervalFormatter
 from datection.render import DisplaySchedule
 from datection.render import FormatterTuple
-from datection.render import TimeFormatter
-from datection.render import TimeIntervalFormatter
-from datection.render import WeekdayReccurenceFormatter
-from datection.render import NextOccurenceFormatter
-from datection.render import LongFormatter
-from datection.render import SeoFormatter
-from datection.render import NextChangesMixin
-from datection.render import NoFutureOccurence
-from datection.render import groupby_consecutive_dates
-from datection.render import groupby_date
-from datection.render import groupby_time
-from datection.render import consecutives
-from datection.render import to_start_end_datetimes
+from datection.rendering.time import TimeFormatter
+from datection.rendering.time import TimeIntervalFormatter
+from datection.rendering.weekday_reccurence import WeekdayReccurenceFormatter
+from datection.rendering.next_occurence import NextOccurenceFormatter
+from datection.rendering.full import FullFormatter
+from datection.rendering.seo import SeoFormatter
+from datection.rendering.base import NextChangesMixin
+from datection.rendering.exceptions import NoFutureOccurence
+from datection.rendering.utils import groupby_consecutive_dates
+from datection.rendering.utils import groupby_date
+from datection.rendering.utils import groupby_time
+from datection.rendering.utils import consecutives
+from datection.rendering.utils import to_start_end_datetimes
 from datection.models import DurationRRule
 
 
@@ -848,12 +848,12 @@ class TestNextOccurrenceFormatterfr_FR(GetCurrentDayMocker):
             u'12 novembre + autres dates')
 
 
-class TestLongFormatter_fr_FR(GetCurrentDayMocker):
+class TestFullFormatter_fr_FR(GetCurrentDayMocker):
 
     @classmethod
     def setUpClass(cls):
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF8')
-        super(TestLongFormatter_fr_FR, cls).setUpClass()
+        super(TestFullFormatter_fr_FR, cls).setUpClass()
 
     def setUp(self):
         schedule = [
@@ -870,8 +870,8 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                        'BYMINUTE=0;BYHOUR=9'),
              }
         ]
-        self.fmt = LongFormatter(schedule)
-        super(TestLongFormatter_fr_FR, self).setUp()
+        self.fmt = FullFormatter(schedule)
+        super(TestFullFormatter_fr_FR, self).setUp()
 
     def test_display(self):
         self.assertEqual(
@@ -893,7 +893,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                 'rrule': 'DTSTART:20150925\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=20'
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Le vendredi 25 septembre 2015 à 20 h")
@@ -910,7 +910,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                 'rrule': 'DTSTART:20151010\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=18'
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Le vendredi 25 septembre 2015 à 20 h\nLe samedi 10 octobre 2015 à 18 h")
@@ -931,7 +931,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                 'rrule': 'DTSTART:20151111\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=21'
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Le 25 septembre 2015, le 10 octobre 2015, le 11 novembre 2015, à 21 h")
@@ -945,7 +945,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                 'unlimited': True,
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(fmt.display(), u'Le dimanche, de 10 h à 18 h')
 
     def test_display_end_after_midnight_day_enumeration(self):
@@ -956,7 +956,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         display = fmt.display()
         self.assertEqual(display, u'Les jeudi 9 et vendredi 10 juillet 2015 de 22 h à 4 h')
 
@@ -968,7 +968,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         display = fmt.display()
         self.assertEqual(display, u'Du dimanche 5 au vendredi 10 juillet 2015 de 22 h à 4 h')
 
@@ -980,7 +980,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                            'INTERVAL=1;BYMINUTE=00;BYHOUR=2;BYDAY=MO,TU,WE,TH,FR,SA,SU')
             }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         display = fmt.display()
         self.assertEqual(display, u'Le vendredi 10 juillet 2015 de 2 h à 4 h')
 
@@ -996,7 +996,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
              }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le lundi")
@@ -1013,7 +1013,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
              }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
@@ -1031,7 +1031,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
              }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi de 8 h à 10 h")
@@ -1048,7 +1048,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
              }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le lundi, mardi et jeudi")
@@ -1065,7 +1065,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
              }
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf le 17 mars 2015")
@@ -1104,7 +1104,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           "BYHOUR=17;BYDAY=SU")
             },
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u'Du 30 septembre au 11 octobre 2015:\n'
@@ -1132,7 +1132,7 @@ class TestLongFormatter_fr_FR(GetCurrentDayMocker):
                           "BYHOUR=0;BYDAY=MO,TU,WE,TH,FR,SA,SU")
             },
         ]
-        fmt = LongFormatter(schedule)
+        fmt = FullFormatter(schedule)
         self.assertEqual(
             fmt.display(),
             u'Le mercredi 23 décembre 2015 à 20 h')
@@ -1445,7 +1445,7 @@ class TestNextDateMixin(GetCurrentDayMocker):
         self.set_current_date(datetime.date(2014, 8, 27))
         sch = datection.export(
             u"Le 14 septembre 2014 à 18h", "fr", only_future=False)
-        formatter = LongFormatter(sch)
+        formatter = FullFormatter(sch)
 
         self.assertIsNone(formatter.next_changes())
 
