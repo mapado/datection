@@ -5,6 +5,7 @@ Module in charge of transforming packing a list of rrule together
 """
 from datection.models import DurationRRule
 from datetime import timedelta
+from datetime import datetime
 from dateutil.rrule import weekdays
 
 
@@ -132,7 +133,7 @@ def extend_cont(single, cont):
     if is_a_day_before(single, cont):
         cont.set_startdate(single.start_datetime.date())
     elif is_a_day_after(single, cont):
-        cont.set_enddate(single.end_datetime.date())
+        cont.set_enddate(single.end_datetime)
 
 
 def merge_cont(cont1, cont2):
@@ -145,7 +146,7 @@ def merge_cont(cont1, cont2):
         cont1.set_enddate(None)
     else:
         last_date = max(cont1.end_datetime, cont2.end_datetime)
-        cont1.set_enddate(last_date.date())
+        cont1.set_enddate(last_date)
 
 
 def get_first_of_weekly(wrec):
@@ -225,7 +226,7 @@ def extend_wrec(single, wrec):
     if sing_date < wrec_begin:
         wrec.set_startdate(sing_date)
     elif sing_date > wrec_end:
-        wrec.set_enddate(sing_date)
+        wrec.set_enddate(single.start_datetime)
 
 
 def merge_wrec(wrec1, wrec2):
@@ -238,7 +239,8 @@ def merge_wrec(wrec1, wrec2):
     wrec2_days = set(wrec2.weekday_indexes)
     days = sorted(wrec1_days.union(wrec2_days))
     wrec1.set_startdate(first_date)
-    wrec1.set_enddate(last_date)
+    last_datetime = datetime.combine(last_date, wrec1.end_datetime.time())
+    wrec1.set_enddate(last_datetime)
     wrec1.set_weekdays([weekdays[d] for d in days])
 
 
