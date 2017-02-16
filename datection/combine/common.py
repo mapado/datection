@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module in charge of ???
+Module regrouping common functions for combining rrules
 """
 from datetime import timedelta
 
@@ -24,6 +24,7 @@ def get_first_of_weekly(wrec):
 
 
 def real_last_date(drr):
+    """ Returns the first day of the DurationRRule """
     if drr.is_recurring:
         return get_last_of_weekly(drr)
     else:
@@ -31,6 +32,7 @@ def real_last_date(drr):
 
 
 def real_first_date(drr):
+    """ Returns the last day of the DurationRRule """
     if drr.is_recurring:
         return get_first_of_weekly(drr)
     else:
@@ -109,7 +111,7 @@ def has_weekday_included(single, weekly):
 
 
 def are_wrecs_overlapping(wrec1, wrec2):
-    """"""
+    """ Checks if two weekly recurrences are overlapping """
     wrec1_days = set(wrec1.weekday_indexes)
     wrec2_days = set(wrec2.weekday_indexes)
     if len(wrec1_days.intersection(wrec2_days)) == 0:
@@ -134,7 +136,9 @@ def are_wrecs_overlapping(wrec1, wrec2):
 
 
 def are_cont_and_wrec_overlapping(cont, wrec):
-    """"""
+    """
+    Checks if a continuous rrule and a weekly recurrence are overlapping
+    """
     return (
         have_same_timings(cont, wrec) and
         are_overlapping(cont, wrec)
@@ -142,7 +146,7 @@ def are_cont_and_wrec_overlapping(cont, wrec):
 
 
 def is_sing_in_wrec(sing, wrec):
-    """"""
+    """ Checks if a single date is in a weekly recurrences """
     return (
         have_same_timings(sing, wrec) and
         has_weekday_included(sing, wrec) and
@@ -151,7 +155,9 @@ def is_sing_in_wrec(sing, wrec):
 
 
 def is_wrec_inside_cont(wrec, cont):
-    """"""
+    """
+    Checks if a weekly recurrence is inside a continuous rrule.
+    """
     return (
         have_same_timings(wrec, cont) and
         has_date_inbetween(wrec, cont)
@@ -159,7 +165,7 @@ def is_wrec_inside_cont(wrec, cont):
 
 
 def are_conts_overlapping(cont1, cont2):
-    """"""
+    """ Checks if two continuous rrules are overlapping """
     return (
         have_same_timings(cont1, cont2) and
         are_overlapping(cont1, cont2)
@@ -167,7 +173,9 @@ def are_conts_overlapping(cont1, cont2):
 
 
 def is_cont_inside_cont(cont1, cont2):
-    """"""
+    """
+    Checks if a continuous rrule is included in another continuous rrule
+    """
     return (
         have_same_timings(cont1, cont2) and
         has_date_inbetween(cont1, cont2)
@@ -175,7 +183,7 @@ def is_cont_inside_cont(cont1, cont2):
 
 
 def is_sing_in_cont(sing, cont):
-    """"""
+    """ Checks if a single date is in a continuous rrule """
     return (
         has_date_inbetween(sing, cont) and
         have_same_timings(sing, cont)
@@ -183,7 +191,7 @@ def is_sing_in_cont(sing, cont):
 
 
 def is_same_sing(sing1, sing2):
-    """"""
+    """ Checks if two single dates are equals """
     return (
         have_same_timings(sing1, sing2) and
         sing1.start_datetime == sing2.start_datetime

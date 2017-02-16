@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-
 """
-Module in charge of ???
+Module in charge of removing rrules from other rrules
 """
 import datection.combine.common as common
 from datetime import timedelta
@@ -70,7 +69,11 @@ def remove_sing_from_wrec(wrec, sing_to_remove):
 
 def remove_cont_from_cont(cont, cont_to_remove):
     """
-    Pre-requisite: cont and cont_to_remove are overlapping (?)
+    Removes a continuous rrule from another continuous rrule.
+    Returns either:
+        - a shortened continuous rrule
+        - two continuous rrules resulting from the split of
+          the given continuous rrule
     """
     if common.has_date_inbetween(cont_to_remove, cont):
         remaining_cont = deepcopy(cont)
@@ -95,12 +98,27 @@ def remove_cont_from_cont(cont, cont_to_remove):
 
 def remove_cont_from_wrec(wrec, cont_to_remove):
     """
+    Removes a weekly recurrence from another weekly recurrence.
+    Returns either:
+        - a shortened weekly recurrence
+        - two cweekly recurrences resulting from the split of
+          the given weekly recurrence
     """
     return remove_cont_from_cont(wrec, cont_to_remove)
 
 
 def remove_wrec_from_wrec_begin(wrec, mask_end, remaining_weekdays):
     """
+    Removes a weekly recurrence from the beginning of another
+    weekly recurrence.
+
+    @param wrec: weekly recurrence to crop
+    @param mask_end: end of the weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns two weekly recurrences:
+        - one un-touched
+        - one with only the remaining weekdays
     """
     remaining_wrec = deepcopy(wrec)
     remaining_wrec.set_enddate(mask_end)
@@ -109,8 +127,21 @@ def remove_wrec_from_wrec_begin(wrec, mask_end, remaining_weekdays):
     return [wrec, remaining_wrec]
 
 
-def remove_wrec_from_wrec_middle(wrec, mask_start, mask_end, remaining_weekdays):
+def remove_wrec_from_wrec_middle(wrec, mask_start, mask_end,
+                                 remaining_weekdays):
     """
+    Removes a weekly recurrence from the middle of another weekly
+    recurrence
+
+    @param wrec: weekly recurrence to crop
+    @param mask_start: start of weekly recurrence to remove
+    @param mask_end: end of weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns three rrules:
+        - one un-touched weekly recurrence(beginning of the original)
+        - a weekly recurrence with the remaining weekdays
+        - one un-touched weekly recurrence (end of the original)
     """
     remaining_wrec_masked = deepcopy(wrec)
     remaining_wrec_masked.set_startdate(mask_start)
@@ -124,6 +155,16 @@ def remove_wrec_from_wrec_middle(wrec, mask_start, mask_end, remaining_weekdays)
 
 def remove_wrec_from_wrec_end(wrec, mask_start, remaining_weekdays):
     """
+    Removes a weekly recurrence from the end of another
+    weekly recurrence.
+
+    @param wrec: weekly recurrence to crop
+    @param mask_start: start of the weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns two weekly recurrences:
+        - one un-touched
+        - one with only the remaining weekdays
     """
     remaining_wrec = deepcopy(wrec)
     remaining_wrec.set_startdate(mask_start)
@@ -134,22 +175,23 @@ def remove_wrec_from_wrec_end(wrec, mask_start, remaining_weekdays):
 
 def remove_wrec_from_wrec(wrec, wrec_to_remove):
     """
+    Removes a weekly recurrence from another weekly recurrence
     """
-    # compute what exactly is to remove
     exact_mask_wrec = deepcopy(wrec_to_remove)
     wrec_weekdays = set(wrec.weekday_indexes)
     wrec_to_remove_weekdays = set(wrec_to_remove.weekday_indexes)
     days = wrec_weekdays.intersection(wrec_to_remove_weekdays)
-
-    # if all weekdays are to remove, it is like removing a continuous rrule
     remaining_weekdays = sorted(wrec_weekdays.difference(days))
     remaining_weekdays = [weekdays[d] for d in remaining_weekdays]
     days = [weekdays[d] for d in sorted(days)]
     exact_mask_wrec.set_weekdays(days)
+
     mask_start = common.get_first_of_weekly(exact_mask_wrec)
     mask_end = common.get_last_of_weekly(exact_mask_wrec)
     wrec_start = common.get_first_of_weekly(wrec)
     wrec_end = common.get_last_of_weekly(wrec)
+
+    # case where there is no weekday left
     if len(remaining_weekdays) == 0:
         if (common.get_first_of_weekly(wrec_to_remove) <= wrec_start and
                 wrec_end <= common.get_last_of_weekly(wrec_to_remove)):
@@ -172,50 +214,118 @@ def remove_wrec_from_wrec(wrec, wrec_to_remove):
         return [wrec]
 
 
-def remove_wrec_from_cont(cont, wrec_to_remove):
+def remove_wrec_from_cont_begin(cont, wrec_to_remove, remaining_weekdays):
     """
+    Removes a weekly recurrence from the beginning of a continuous rrule
+
+    @param cont: continuous rrule to crop
+    @param wrec_to_remove: weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns two rrules:
+        - one un-touched continuous rrule
+        - a weekly recurrence with the remaining weekdays
     """
+    remaining_wrec = deepcopy(wrec_to_remove)
+    remaining_wrec.set_startdate(cont.start_datetime.date())
+    mask_end = common.get_last_of_weekly(wrec_to_remove)
+    remaining_wrec.set_enddate(mask_end)
+    remaining_wrec.set_weekdays(remaining_weekdays)
+    cont.set_startdate(mask_end + ONE_DAY)
+    return [cont, remaining_wrec]
+
+
+def remove_wrec_from_cont_middle(cont, wrec_to_remove, remaining_weekdays):
+    """
+    Removes a weekly recurrence from the middle of a continuous rrule
+
+    @param cont: continuous rrule to crop
+    @param wrec_to_remove: weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns three rrules:
+        - one un-touched continuous rrule (beginning of the original)
+        - a weekly recurrence with the remaining weekdays
+        - one un-touched continuous rrule (end of the original)
+    """
+    remaining_wrec = deepcopy(wrec_to_remove)
+    remaining_wrec.set_weekdays(remaining_weekdays)
     mask_start = common.get_first_of_weekly(wrec_to_remove)
     mask_end = common.get_last_of_weekly(wrec_to_remove)
-    cont_start = cont.start_datetime.date()
-    cont_end = cont.end_datetime.date()
+    remaining_wrec.set_startdate(mask_start)
+    remaining_wrec.set_enddate(mask_end)
+    remaining_cont = deepcopy(cont)
+    remaining_cont.set_startdate(mask_end + ONE_DAY)
+    cont.set_enddate(mask_start - ONE_DAY)
+    return [cont, remaining_wrec, remaining_cont]
 
+
+def remove_wrec_from_cont_end(cont, wrec_to_remove, remaining_weekdays):
+    """
+    Removes a weekly recurrence from the end of a continuous rrule
+
+    @param cont: continuous rrule to crop
+    @param wrec_to_remove: weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns two rrules:
+        - one un-touched continuous rrule
+        - a weekly recurrence with the remaining weekdays
+    """
+    remaining_wrec = deepcopy(wrec_to_remove)
+    mask_start = common.get_first_of_weekly(wrec_to_remove)
+    remaining_wrec.set_startdate(mask_start)
+    remaining_wrec.set_enddate(cont.end_datetime.date())
+    remaining_wrec.set_weekdays(remaining_weekdays)
+    cont.set_enddate(mask_start - ONE_DAY)
+    return [cont, remaining_wrec]
+
+
+def remove_wrec_from_cont_full(cont, wrec_to_remove, remaining_weekdays):
+    """
+    Removes weekdays from a continuous rrule
+
+    @param cont: continuous rrule to crop
+    @param wrec_to_remove: weekly recurrence to remove
+    @param remaining_weekdays: list of weekdays left after the removal
+
+    Returns a weekly recurrence with remaining weekdays
+    """
+    wrec = deepcopy(wrec_to_remove)
+    wrec.set_startdate(cont.start_datetime.date())
+    wrec.set_enddate(cont.end_datetime.date())
+    wrec.set_weekdays(remaining_weekdays)
+    return [wrec]
+
+
+def remove_wrec_from_cont(cont, wrec_to_remove):
+    """
+    Removes a weekly recurrence from a continuous rrule
+    """
     days = set(range(7))
     wrec_weekdays = set(wrec_to_remove.weekday_indexes)
     days = sorted(days.difference(wrec_weekdays))
     remaining_weekdays = [weekdays[d] for d in days]
 
+    mask_start = common.get_first_of_weekly(wrec_to_remove)
+    mask_end = common.get_last_of_weekly(wrec_to_remove)
+    cont_start = cont.start_datetime.date()
+    cont_end = cont.end_datetime.date()
+
     if cont_start <= mask_start <= cont_end:
         if cont_start <= mask_end <= cont_end:
-            remaining_wrec = deepcopy(wrec_to_remove)
-            remaining_wrec.set_weekdays(remaining_weekdays)
-            remaining_wrec.set_startdate(mask_start)
-            remaining_wrec.set_enddate(mask_end)
-            remaining_cont = deepcopy(cont)
-            remaining_cont.set_startdate(mask_end + ONE_DAY)
-            cont.set_enddate(mask_start - ONE_DAY)
-            return [cont, remaining_wrec, remaining_cont]
+            return remove_wrec_from_cont_middle(cont, wrec_to_remove,
+                                                remaining_weekdays)
         else:
-            remaining_wrec = deepcopy(wrec_to_remove)
-            remaining_wrec.set_startdate(mask_start)
-            remaining_wrec.set_enddate(cont_end)
-            remaining_wrec.set_weekdays(remaining_weekdays)
-            cont.set_enddate(mask_start - ONE_DAY)
-            return [cont, remaining_wrec]
+            return remove_wrec_from_cont_end(cont, wrec_to_remove,
+                                             remaining_weekdays)
     elif cont_start <= mask_end <= cont_end:
-        remaining_wrec = deepcopy(wrec_to_remove)
-        remaining_wrec.set_startdate(cont_start)
-        remaining_wrec.set_enddate(mask_end)
-        remaining_wrec.set_weekdays(remaining_weekdays)
-        cont.set_startdate(mask_end + ONE_DAY)
-        return [cont, remaining_wrec]
+        return remove_wrec_from_cont_begin(cont, wrec_to_remove,
+                                           remaining_weekdays)
     else:
         if mask_start <= cont_start and cont_end <= mask_end:
-            wrec = deepcopy(wrec_to_remove)
-            wrec.set_startdate(cont_start)
-            wrec.set_enddate(cont_end)
-            wrec.set_weekdays(remaining_weekdays)
-            return [wrec]
+            return remove_wrec_from_cont_full(cont, wrec_to_remove,
+                                              remaining_weekdays)
         return [cont]
 
 
@@ -249,6 +359,8 @@ class RruleRemover(object):
 
     def add_drrs(self, drr_list):
         """
+        Dispatch de DurationRRules from drr_list to
+        the correct container.
         """
         for drr in drr_list:
             if drr.single_date:
@@ -262,6 +374,14 @@ class RruleRemover(object):
 
     def _generic_remove(self, container_name, handle_remove, drr_to_remove):
         """
+        Generic method to remove a DurationRRule from a DurationRRules
+        container.
+
+        @param container_name: name of the container to go through
+        @param drrs_to_remove: DurationRRule to remove
+        @param handle_remove: function that returns true if a rrule
+                              matches the rrule to remove and the result
+                              of the removal.
         """
         idxs_to_remove = set()
         drrs_to_add = []
