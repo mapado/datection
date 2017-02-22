@@ -139,7 +139,10 @@ class DurationRRule(object):
             r'(?<=DTSTART:)[^\n]+',
             start_date.strftime('%Y%m%d'),
             self.duration_rrule['rrule'])
-        self.rrule._dtstart = start_date
+        if type(start_date) == datetime:
+            self.rrule._dtstart = start_date
+        else:
+            self.rrule._dtstart = datetime.combine(start_date, DAY_START)
 
     def set_enddate(self, end_date):
         """
