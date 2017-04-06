@@ -7,6 +7,7 @@ from datection.models import DurationRRule
 from datetime import timedelta
 from datetime import datetime
 from dateutil.rrule import weekdays
+from copy import deepcopy
 
 
 def have_same_timings(drr1, drr2, light_match=False):
@@ -611,6 +612,13 @@ class RrulePacker(object):
                 self._weekly_rec.pop(idx2)
                 attemptPacking = True
 
+    def get_rrules(self):
+        """ Returns all DurationRRules """
+        return (self._single_dates +
+                self._continuous +
+                self._weekly_rec +
+                self._others)
+
     def pack_rrules(self):
         """
         """
@@ -622,7 +630,152 @@ class RrulePacker(object):
         self.fusion_cont_cont()
         self.fusion_wrec_wrec()
 
-        return (self._single_dates +
-                self._continuous +
-                self._weekly_rec +
-                self._others)
+        return self.get_rrules()
+
+
+def is_gap_small(drr1, drr2, ratio=0.3):
+    """
+    Checks that the gap between two DurationRRule is small, i.e that
+    the ratio (length(gap) / length(full date range)) is below the
+    given ratio.
+
+    Assumes there are no overlap between drr1 and drr2 as
+    they would have been packed before.
+    """
+    limits = [drr1.start_datetime, drr1.end_datetime,
+              drr2.start_datetime, drr2.end_datetime]
+    limits = sorted(limits)
+    gap = float((limits[2] - limits[1]).days)
+    total = float((limits[3] - limits[0]).days)
+    return (gap / total) <= ratio
+
+
+def cont_gap(cont1, cont2):
+    """
+    Returns a DurationRRule corresponding to the gap between
+    cont1 and cont2. Can be a continuous rrule or a single date
+
+    Assumes there are no overlap between cont1 and cont2 as
+    they would have been packed before.
+    """
+    limits = [cont1.start_datetime, cont1.end_datetime,
+              cont2.start_datetime, cont2.end_datetime]
+    limits = sorted(limits)
+    gap = deepcopy(cont1)
+    gap.set_startdate(limits[1].date() + timedelta(days=1))
+    gap.set_enddate(limits[2].date() - timedelta(days=1))
+    if gap.start_datetime.date() == gap.end_datetime.date():
+        gap.set_enddate(None)
+        gap.remove_interval_ind()
+        gap.add_count()
+    return gap
+
+
+def wrec_gap(wrec1, wrec2):
+    """
+    Returns a DurationRRule corresponding to the gap between
+    wrec1 and wrec2.
+
+    Assumes there are no overlap between wrec1 and wrec2 as
+    they would have been packed before.
+    """
+    limits = [wrec1.start_datetime, wrec1.end_datetime,
+              wrec2.start_datetime, wrec2.end_datetime]
+    limits = sorted(limits)
+    gap = deepcopy(wrec1)
+    gap.add_interval_ind()
+    gap.set_frequency('DAILY')
+    gap.remove_weekdays()
+    gap.set_startdate(limits[1].date() + timedelta(days=1))
+    gap.set_enddate(limits[2].date() - timedelta(days=1))
+    return gap
+
+
+class RrulePackerWithGaps(RrulePacker):
+
+    def __init__(self, drrs):
+        RrulePacker.__init__(self, drrs)
+
+    def find_mergeable_cont_with_gaps(self):
+        """
+        Checks if there are 2 continuous rules that are mergeable. Returns
+        their indices if found.
+        """
+
+        def are_cont_mergeable(cont, cont2):
+            """ Returns True if the two given continuous rrules are mergeable """
+            return (
+                have_same_timings(cont, cont2) and
+                is_gap_small(cont, cont2)
+            )
+
+        for idx, cont in enumerate(self._continuous):
+            for idx2, cont2 in enumerate(self._continuous[idx + 1:]):
+                if are_cont_mergeable(cont, cont2):
+                    return idx, idx+1+idx2
+        return None, None
+
+    def fusion_cont_cont_with_gaps(self):
+        """
+        Fusions mergeable continuous rules
+
+        e.g: (from 10/02 to 15/03) + (from 25/03 to 10/04)
+             => (from 10/02 to 10/04 except from 16/03 to 24/03)
+        """
+        attemptPacking = True
+        while attemptPacking:
+            attemptPacking = False
+            idx, idx2 = self.find_mergeable_cont_with_gaps()
+            if (idx is not None) and (idx2 is not None):
+                gap = cont_gap(self._continuous[idx], self._continuous[idx2])
+                merge_cont(self._continuous[idx], self._continuous[idx2])
+                self._continuous[idx].add_exclusion_rrule(gap)
+                self._continuous.pop(idx2)
+                attemptPacking = True
+
+    def find_mergeable_wrec_with_gaps(self):
+        """
+        Checks if there are 2 weekly recurrences that are mergeable. Returns
+        their indices if found.
+        """
+
+        def are_wrec_mergeable(wrec, wrec2):
+            """ Returns True if the two given recurrent rrules are mergeable """
+            return (
+                have_same_timings(wrec, wrec2) and
+                have_same_days(wrec, wrec2) and
+                is_gap_small(wrec, wrec2)
+            )
+
+        for idx, wrec in enumerate(self._weekly_rec):
+            for idx2, wrec2 in enumerate(self._weekly_rec[idx + 1:]):
+                if are_wrec_mergeable(wrec, wrec2):
+                    return idx, idx+1+idx2
+        return None, None
+
+    def fusion_wrec_wrec_with_gaps(self):
+        """
+        Fusions mergeable weekly recurrences
+
+        e.g: (Every Mo. from 10/02 to 15/03) + (Every Fr. from 25/03 to 10/04)
+             => (Every Monday and Friday from 10/02 to 10/04 except from 16/03 to 24/03)
+        """
+        attemptPacking = True
+
+        while attemptPacking:
+            attemptPacking = False
+            idx, idx2 = self.find_mergeable_wrec_with_gaps()
+            if idx is not None and idx2 is not None:
+                gap = wrec_gap(self._weekly_rec[idx], self._weekly_rec[idx2])
+                merge_wrec(self._weekly_rec[idx], self._weekly_rec[idx2])
+                self._weekly_rec[idx].add_exclusion_rrule(gap)
+                self._weekly_rec.pop(idx2)
+                attemptPacking = True
+
+    def pack_with_gaps(self):
+        """"""
+        self.pack_rrules()
+        self.fusion_cont_cont_with_gaps()
+        self.fusion_wrec_wrec_with_gaps()
+
+        return self.get_rrules()
