@@ -650,18 +650,21 @@ def is_gap_small(drr1, drr2, ratio=0.3):
     return (gap / total) <= ratio
 
 
-def cont_gap(cont1, cont2):
+def continuous_gap(continuous1, continuous2):
     """
     Returns a DurationRRule corresponding to the gap between
-    cont1 and cont2. Can be a continuous rrule or a single date
+    continuous1 and continuous2.
+    Can be a continuous rrule or a single date
 
     Assumes there are no overlap between cont1 and cont2 as
     they would have been packed before.
     """
-    limits = [cont1.start_datetime, cont1.end_datetime,
-              cont2.start_datetime, cont2.end_datetime]
+    limits = [continuous1.start_datetime,
+              continuous1.end_datetime,
+              continuous2.start_datetime,
+              continuous2.end_datetime]
     limits = sorted(limits)
-    gap = deepcopy(cont1)
+    gap = deepcopy(continuous1)
     gap.set_startdate(limits[1].date() + timedelta(days=1))
     gap.set_enddate(limits[2].date() - timedelta(days=1))
     if gap.start_datetime.date() == gap.end_datetime.date():
@@ -671,18 +674,20 @@ def cont_gap(cont1, cont2):
     return gap
 
 
-def wrec_gap(wrec1, wrec2):
+def weekly_recurrence_gap(weekly_recurrence1, weekly_recurrence2):
     """
     Returns a DurationRRule corresponding to the gap between
-    wrec1 and wrec2.
+    weekly_recurrence1 and wrec2.
 
     Assumes there are no overlap between wrec1 and wrec2 as
     they would have been packed before.
     """
-    limits = [wrec1.start_datetime, wrec1.end_datetime,
-              wrec2.start_datetime, wrec2.end_datetime]
+    limits = [weekly_recurrence1.start_datetime,
+              weekly_recurrence1.end_datetime,
+              weekly_recurrence2.start_datetime,
+              weekly_recurrence2.end_datetime]
     limits = sorted(limits)
-    gap = deepcopy(wrec1)
+    gap = deepcopy(weekly_recurrence1)
     gap.add_interval_ind()
     gap.set_frequency('DAILY')
     gap.remove_weekdays()
@@ -727,7 +732,9 @@ class RrulePackerWithGaps(RrulePacker):
             attemptPacking = False
             idx, idx2 = self.find_mergeable_cont_with_gaps()
             if (idx is not None) and (idx2 is not None):
-                gap = cont_gap(self._continuous[idx], self._continuous[idx2])
+                gap = continuous_gap(
+                    self._continuous[idx],
+                    self._continuous[idx2])
                 merge_cont(self._continuous[idx], self._continuous[idx2])
                 self._continuous[idx].add_exclusion_rrule(gap)
                 self._continuous.pop(idx2)
@@ -766,7 +773,9 @@ class RrulePackerWithGaps(RrulePacker):
             attemptPacking = False
             idx, idx2 = self.find_mergeable_wrec_with_gaps()
             if idx is not None and idx2 is not None:
-                gap = wrec_gap(self._weekly_rec[idx], self._weekly_rec[idx2])
+                gap = weekly_recurrence_gap(
+                    self._weekly_rec[idx],
+                    self._weekly_rec[idx2])
                 merge_wrec(self._weekly_rec[idx], self._weekly_rec[idx2])
                 self._weekly_rec[idx].add_exclusion_rrule(gap)
                 self._weekly_rec.pop(idx2)
