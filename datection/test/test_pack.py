@@ -11,16 +11,26 @@ from datection import pack
 
 class TestPack(unittest.TestCase):
 
+    def assertRruleStrEqual(self, rrule_str1, rrule_str2):
+        new_rrule_lines = rrule_str1.splitlines()
+        result_lines = rrule_str2.splitlines()
+        self.assertEqual(new_rrule_lines[0], result_lines[0])
+        new_details = new_rrule_lines[1].split(":")[1].split(";")
+        res_details = result_lines[1].split(":")[1].split(";")
+        self.assertItemsEqual(new_details, res_details)
+
     def assertRrulesEqual(self, rrule1, rrule2):
         self.assertItemsEqual(rrule1.keys(), rrule2.keys())
         for k in rrule2.keys():
             if k == 'rrule':
-                new_rrule_lines = rrule1[k].splitlines()
-                result_lines = rrule2[k].splitlines()
-                self.assertEqual(new_rrule_lines[0], result_lines[0])
-                new_details = new_rrule_lines[1].split(":")[1].split(";")
-                res_details = result_lines[1].split(":")[1].split(";")
-                self.assertItemsEqual(new_details, res_details)
+                self.assertRruleStrEqual(rrule1[k], rrule2[k])
+            elif k == 'excluded':
+                self.assertEqual(len(rrule1[k]), len(rrule2[k]))
+                if len(rrule1[k]) > 0:
+                    rrule1_exs = sorted(rrule1[k])
+                    rrule2_exs = sorted(rrule2[k])
+                    for rrule1_ex, rrule2_ex in zip(rrule1_exs, rrule2_exs):
+                        self.assertRruleStrEqual(rrule1_ex, rrule2_ex)
             else:
                 self.assertEqual(rrule1[k], rrule2[k])
 
@@ -32,9 +42,23 @@ class TestPack(unittest.TestCase):
         new_rrule = packed[0].duration_rrule
         self.assertRrulesEqual(new_rrule, result)
 
+    def assertPackWithGapsEqual(self, rrules, result):
+        drrs = [DurationRRule(rrule) for rrule in rrules]
+        packer = pack.RrulePackerWithGaps(drrs)
+        packed = packer.pack_with_gaps()
+        self.assertEqual(len(packed), 1)
+        new_rrule = packed[0].duration_rrule
+        self.assertRrulesEqual(new_rrule, result)
+
     def assertNotPack(self, rrules, pack_no_timings=False):
         drrs = [DurationRRule(rrule) for rrule in rrules]
         packer = pack.RrulePacker(drrs, pack_no_timings=pack_no_timings)
+        packed = packer.pack_rrules()
+        self.assertItemsEqual(drrs, packed)
+
+    def assertNotPackWithGaps(self, rrules):
+        drrs = [DurationRRule(rrule) for rrule in rrules]
+        packer = pack.RrulePackerWithGaps(drrs)
         packed = packer.pack_rrules()
         self.assertItemsEqual(drrs, packed)
 
@@ -577,3 +601,83 @@ class TestPack(unittest.TestCase):
 
         self.assertNotPack([weekly, sing_before], pack_no_timings=False)
         self.assertPackEqual([weekly, sing_before], result, pack_no_timings=True)
+
+    def test_pack_conts_with_gaps(self):
+        # exception is a continuous single date
+        cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161022T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161030T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        result = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
+                            'UNTIL=20161030T235959;INTERVAL=1;'
+                            'BYMINUTE=0;BYHOUR=3'),
+                  'excluded': [
+                      ('DTSTART:20161023\nRRULE:FREQ=DAILY;BYHOUR=3;'
+                       'BYMINUTE=0;COUNT=1')],
+                  'duration': 30,
+                  'continuous': True}
+        self.assertPackWithGapsEqual([cont1, cont2], result)
+
+        # exception is a continuous rrule
+        cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161021T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161030T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        result = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
+                            'UNTIL=20161030T235959;INTERVAL=1;'
+                            'BYMINUTE=0;BYHOUR=3'),
+                  'excluded': [
+                      ('DTSTART:20161022\nRRULE:FREQ=DAILY;BYHOUR=3;'
+                       'BYMINUTE=0;INTERVAL=1;UNTIL=20161023T235959')],
+                  'duration': 30,
+                  'continuous': True}
+        self.assertPackWithGapsEqual([cont1, cont2], result)
+
+    def test_no_pack_conts_with_gaps(self):
+        cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161009T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
+                           'UNTIL=20161030T235959;INTERVAL=1;'
+                           'BYMINUTE=0;BYHOUR=3'),
+                 'duration': 30,
+                 'continuous': True}
+        self.assertNotPackWithGaps([cont1, cont2])
+
+    def test_pack_wrecs_with_gaps(self):
+        weekly1 = {'duration': 60,
+                   'rrule': ('DTSTART:20170307\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                             'BYHOUR=8;BYMINUTE=0;UNTIL=20170401T235959')}
+        weekly2 = {'duration': 60,
+                   'rrule': ('DTSTART:20170411\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                             'BYHOUR=8;BYMINUTE=0;UNTIL=20170516T235959')}
+        result = {'duration': 60,
+                  'rrule': ('DTSTART:20170307\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                            'BYHOUR=8;BYMINUTE=0;UNTIL=20170516T235959'),
+                  'excluded': [
+                      ('DTSTART:20170402\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                       'BYMINUTE=0;INTERVAL=1;UNTIL=20170410T235959')]}
+        self.assertPackWithGapsEqual([weekly1, weekly2], result)
+
+    def test_no_pack_wrecs_with_gaps(self):
+        weekly1 = {'duration': 60,
+                   'rrule': ('DTSTART:20170321\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                             'BYHOUR=8;BYMINUTE=0;UNTIL=20170401T235959')}
+        weekly2 = {'duration': 60,
+                   'rrule': ('DTSTART:20170420\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
+                             'BYHOUR=8;BYMINUTE=0;UNTIL=20170503T235959')}
+        self.assertNotPackWithGaps([weekly1, weekly2])

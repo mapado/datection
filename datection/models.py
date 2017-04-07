@@ -104,6 +104,16 @@ class DurationRRule(object):
         self.duration_rrule['rrule'] += weekdays_str
         self.rrule._byweekday = [w.weekday for w in weekdays]
 
+    def remove_weekdays(self):
+        """
+        Removes the BYDAY attribute of the rrule
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r';?BYDAY=[^;]+',
+            '',
+            self.duration_rrule['rrule'])
+        self.rrule._byweekday = None
+
     def set_frequency(self, freq):
         """
         Sets the frequency type of the rrule (DAILY/WEAKLY/...)
@@ -120,6 +130,23 @@ class DurationRRule(object):
         """
         self.duration_rrule['rrule'] += ';INTERVAL=1'
         self.rrule._interval = 1
+
+    def remove_interval_ind(self):
+        """
+        Removes the INTERVAL attribute of the rrule
+        """
+        self.duration_rrule['rrule'] = re.sub(
+            r';?INTERVAL=[^;]+',
+            '',
+            self.duration_rrule['rrule'])
+        self.rrule._interval = 0
+
+    def add_count(self):
+        """
+        Adds the COUNT indicator to the rrule
+        """
+        self.duration_rrule['rrule'] += ';COUNT=1'
+        self.rrule._count = 1
 
     def remove_count(self):
         """
@@ -155,7 +182,7 @@ class DurationRRule(object):
                 self.duration_rrule['rrule'])
         else:
             self.duration_rrule['rrule'] = re.sub(
-                r'(?<=UNTIL=)[^T]+',
+                r';?UNTIL=[^;]+',
                 '',
                 self.duration_rrule['rrule'])
 
@@ -191,6 +218,20 @@ class DurationRRule(object):
             rrulestr(cleanup_rrule_string(exc_rrule))
             for exc_rrule in self.duration_rrule.get('excluded', [])
         ]
+
+    def add_exclusion_rrule(self, ex_rrule):
+        """
+        Adds the given exclusion rrule to the DurationRRule
+        """
+        ex_rrule_str = ex_rrule.duration_rrule['rrule']
+
+        if 'excluded' not in self.duration_rrule.keys():
+            self.duration_rrule['excluded'] = []
+        self.duration_rrule['excluded'].append(ex_rrule_str)
+
+        if not hasattr(self, '_exclusion_rrules'):
+            self._exclusion_rrules = []
+        self._exclusion_rrules.append(ex_rrule)
 
     @cached_property
     def exclusion_duration(self):
