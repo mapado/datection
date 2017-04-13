@@ -209,7 +209,7 @@ class DurationRRule(object):
                 rrule_start = self.rrule._dtstart
                 start = "DTSTART:%s\n" % rrule_start.strftime('%Y%m%dT%H%M%S')
                 ex_rrules[idx] = start + ex_rrules[idx]
-            if ex_rrules[idx].find("UNTIL") == -1:
+            if ex_rrules[idx].find("UNTIL") == -1 and ex_rrules[idx].find("COUNT") == -1:
                 rrule_until = self.rrule._until
                 rrule_end = ";UNTIL=" + rrule_until.strftime('%Y%m%dT%H%M%S')
                 ex_rrules[idx] = ex_rrules[idx] + rrule_end
@@ -218,6 +218,13 @@ class DurationRRule(object):
             rrulestr(cleanup_rrule_string(exc_rrule))
             for exc_rrule in self.duration_rrule.get('excluded', [])
         ]
+
+    def remove_exclusions(self):
+        """
+        Removes the exclusion rrules
+        """
+        self.duration_rrule.pop('excluded', None)
+        self._exclusion_rrules = []
 
     def add_exclusion_rrule(self, ex_rrule):
         """
