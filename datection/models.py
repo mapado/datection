@@ -63,8 +63,13 @@ class DurationRRule(object):
 
         """
         if self.bounded:
-            for dtime in self.date_producer:
-                yield dtime
+            if self.forced_lower_bound and type(self.forced_lower_bound) == datetime:
+                for dtime in self.date_producer:
+                    if self.forced_lower_bound <= dtime:
+                        yield dtime
+            else:
+                for dtime in self.date_producer:
+                    yield dtime
         else:
             if self.forced_lower_bound:
                 start_bound_date = self.forced_lower_bound
