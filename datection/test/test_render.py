@@ -1018,24 +1018,6 @@ class TestFullFormatter_fr_FR(GetCurrentDayMocker):
             fmt.display(),
             u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi")
 
-    def test_display_excluded_weekday_different_interval(self):
-        # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et mercredi
-        schedule = [
-            {'duration': 60,
-             'excluded': [
-                 ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYDAY=MO,TU,WE;BYHOUR=8;'
-                  'BYMINUTE=0;UNTIL=20150328T235959')
-             ],
-             'excluded_duration': [120],
-                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
-                          'BYMINUTE=0;INTERVAL=1;UNTIL=20150328T235959')
-             }
-        ]
-        fmt = FullFormatter(schedule)
-        self.assertEqual(
-            fmt.display(),
-            u"Du jeudi 5 au samedi 28 mars 2015 de 8 h à 9 h, sauf du lundi au mercredi de 8 h à 10 h")
-
     def test_display_excluded_weekday_list(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi, mardi et jeudi
         schedule = [

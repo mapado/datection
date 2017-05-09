@@ -246,15 +246,6 @@ class DurationRRule(object):
         self._exclusion_rrules.append(ex_rrule)
 
     @cached_property
-    def exclusion_duration(self):
-        """
-        Return the list of exclusion duration (may be filled with
-        Nones in case the container was missing in the serialized string)
-        """
-        exclusion_nb = len(self.duration_rrule.get('excluded', []))
-        return self.duration_rrule.get('excluded_duration', [None] * exclusion_nb)
-
-    @cached_property
     def rrule(self):
         """Instanciate an rrule from the rrule string
 
