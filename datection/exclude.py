@@ -124,12 +124,7 @@ class TimepointExcluder(object):
         excluded_rrule = rrulestr(timepoint.export()['rrule'])
         excluded_rrule._original_rule['byweekday'] = [
             d for d in excluded_weekdays.weekdays]
-        if (not excluded_weekdays.time_interval.undefined and
-           excluded_weekdays.time_interval.is_single_time):
-            excluded_rrule._original_rule['byhour'] = [
-                excluded_weekdays.time_interval.start_time.hour]
-            excluded_rrule._original_rule['byminute'] = [
-                excluded_weekdays.time_interval.start_time.minute]
+
         return makerrulestr(
             start=excluded_rrule._dtstart.date(),
             end=excluded_rrule._until,

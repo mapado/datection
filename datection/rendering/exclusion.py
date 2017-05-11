@@ -35,7 +35,6 @@ class ExclusionFormatter(BaseFormatter):
         The rrule can either define weekdays or a single date(time).
         """
         excluded_rrule = excluded.exclusion_rrules[0]
-        excluded_duration = excluded.exclusion_duration[0]
         result = ""
         # excluded recurrent weekdays
         if excluded_rrule._byweekday:
@@ -45,18 +44,6 @@ class ExclusionFormatter(BaseFormatter):
             result = self.display_excluded_date(
                 rrule=excluded.duration_rrule['excluded'][0],
                 duration=excluded.duration)
-
-        # if the exclusion has a different timing, it means that it
-        # is an alteration of the main schedule. The timings have to
-        # be displayed then.
-        if (excluded_rrule._byhour != excluded.rrule._byhour) or (
-                excluded_duration and excluded_duration != excluded.duration):
-            drr = DurationRRule({'rrule': str(excluded_rrule),
-                                 'duration': excluded_duration})
-            time_fmt = TimeIntervalFormatter(start_time=drr.start_datetime,
-                                             end_time=drr.end_datetime,
-                                             locale=self.locale)
-            result += " " + time_fmt.display()
 
         return result
 

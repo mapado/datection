@@ -80,6 +80,18 @@ def has_no_timings(tp):
     return False
 
 
+def has_timings(tp):
+    """
+    Function that checks if the given timepoint has some timings
+    defined
+
+    @param tp(Timepoint)
+
+    @return: True if the timepoints has timings
+    """
+    return not has_no_timings(tp)
+
+
 def enrich_with_timings(tp, timing):
     """
     Returns a new timepoint based on the given one and
@@ -508,7 +520,6 @@ class DateInterval(AbstractDateInterval):
         self.start_date = start_date
         self.end_date = end_date
         self.excluded = []
-        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(DateInterval, self).__eq__(other):
@@ -604,8 +615,6 @@ class DateInterval(AbstractDateInterval):
         }
         if self.excluded:
             export['excluded'] = self.excluded
-        if self.excluded_duration:
-            export['excluded_duration'] = self.excluded_duration
         return export
 
     def future(self, reference=None):
@@ -809,7 +818,6 @@ class DatetimeInterval(AbstractDateInterval):
         self.date_interval = date_interval
         self.time_interval = time_interval
         self.excluded = []
-        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(DatetimeInterval, self).__eq__(other):
@@ -844,7 +852,6 @@ class DatetimeInterval(AbstractDateInterval):
         """
         datetime_interval = cls(date_interval, time_interval)
         datetime_interval.excluded = date_interval.excluded
-        datetime_interval.excluded_duration = date_interval.excluded_duration
         return datetime_interval
 
     @property
@@ -877,8 +884,6 @@ class DatetimeInterval(AbstractDateInterval):
         }
         if self.excluded:
             export['excluded'] = self.excluded
-        if self.excluded_duration:
-            export['excluded_duration'] = self.excluded_duration
         return export
 
     def future(self, reference=None):
@@ -1030,7 +1035,6 @@ class WeeklyRecurrence(Timepoint):
         self.time_interval = time_interval
         self.weekdays = [d for d in ORDERED_DAYS if d in weekdays]
         self.excluded = []
-        self.excluded_duration = []
 
     def __eq__(self, other):
         if not super(WeeklyRecurrence, self).__eq__(other):
@@ -1109,8 +1113,6 @@ class WeeklyRecurrence(Timepoint):
             export['unlimited'] = True
         if self.excluded:
             export['excluded'] = self.excluded
-        if self.excluded_duration:
-            export['excluded_duration'] = self.excluded_duration
 
         self.weekdays = sorted(self.weekdays, key=attrgetter('weekday'))
 

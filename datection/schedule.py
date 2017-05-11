@@ -12,7 +12,9 @@ from datection.timepoint import DatetimeList
 from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import AbstractDateInterval
 from datection.timepoint import has_no_timings
+from datection.timepoint import has_timings
 from datection.timepoint import enrich_with_timings
 from datection.exclude import TimepointExcluder
 
@@ -212,6 +214,21 @@ class Schedule(object):
         self._timepoints = []  # TEMPORARY
         self.unassigned_timings = []
 
+    @staticmethod
+    def transmit_date_interval(timepoint, excluded):
+        """
+        If the given excluded timepoint is a weekly recurrence with no
+        date interval defined, set the date interval of the base timepoint
+        (if it has one).
+        """
+        if (
+            isinstance(excluded, WeeklyRecurrence) and
+            excluded.date_interval == DateInterval.make_undefined() and
+            isinstance(timepoint, (WeeklyRecurrence, AbstractDateInterval))
+        ):
+            excluded.date_interval = timepoint.date_interval
+        return excluded
+
     def add_exclusion(self, timepoint, excluded_tps):
         """
         Adds the excluded timepoints to the given timepoint
@@ -221,17 +238,25 @@ class Schedule(object):
         """
         if excluded_tps is not None:
             for excluded in excluded_tps:
-                duration = excluded.duration
                 excluder = TimepointExcluder(timepoint, excluded)
-                excluded = excluder.exclude()
+                excluded_str = excluder.exclude()
                 if excluded is not None:
-                    timepoint.excluded.append(excluded)
-                    timepoint.excluded_duration.append(duration)
+                    timepoint.excluded.append(excluded_str)
+                    if (
+                        has_timings(timepoint) and
+                        has_timings(excluded) and
+                        (timepoint.time_interval != excluded.time_interval or
+                         timepoint.duration != excluded.duration)
+                    ):
+                        additional_timepoint = excluded
+                        Schedule.transmit_date_interval(
+                            timepoint, additional_timepoint)
+                        self.add(additional_timepoint)
 
     def add(self, timepoint, excluded_tps=None):
-        """Add the timepoint to the one of the schedule internal lists,
+        """
+        Add the timepoint to the one of the schedule internal lists,
         if its class is found in the schedule router.
-
         """
         if type(timepoint) in self.router:
             # perform the exclusion bewteen the 'timepoint' and 'excluded'

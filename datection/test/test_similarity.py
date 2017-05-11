@@ -55,7 +55,6 @@ class ScheduleSimilarityTest(unittest.TestCase):
         schedule = [
             {
                 u'duration': 0,
-                u'excluded_duration': [1439],
                 u'rrule': u"DTSTART:20170101\nRRULE:FREQ=WEEKLY;BYDAY=SA,SU;BYHOUR=18;BYMINUTE=0;UNTIL=20170131T235959",
                 u'excluded': [
                     u'RRULE:FREQ=WEEKLY;BYDAY=SA;BYHOUR=18;BYMINUTE=0'
@@ -72,7 +71,6 @@ class ScheduleSimilarityTest(unittest.TestCase):
         ]
 
         self.assertItemsEqual(discretise_schedule(schedule), expected)
-
 
     def test_discretise_several_schedules(self):
         schedule = [
