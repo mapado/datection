@@ -8,6 +8,8 @@ from datetime import timedelta
 from datetime import datetime
 from dateutil.rrule import weekdays
 from copy import deepcopy
+from collections import defaultdict
+from datetime import time
 
 
 def have_same_timings(drr1, drr2, light_match=False):
@@ -202,7 +204,7 @@ def have_compatible_bounds(wrec1, wrec2):
             return True
         last1 = get_last_of_weekly(wrec1)
         last2 = get_last_of_weekly(wrec2)
-        return (abs((first2 - first1).days) < 7)
+        return (abs((last2 - last1).days) < 7)
 
     return False
 
@@ -266,7 +268,11 @@ class RrulePacker(object):
         self._pack_no_timings = pack_no_timings
         self._input_drrs = input_drrs
         self._single_dates = self.get_single_dates_container()
-        self._single_dates = sorted(self._single_dates, key= lambda s:s.start_datetime.date())
+        self._single_dates = sorted(self._single_dates,
+                                    key=lambda s: s.start_datetime.date())
+        self._single_dates_by_time = defaultdict(list)
+        for (idx, sing) in enumerate(self._single_dates):
+            self._single_dates_by_time[sing.start_datetime.time()].append((idx, sing))
         self._continuous = self.get_continuous_container()
         self._weekly_rec = self.get_weekly_rec_container()
         self._others = self.get_other_drrs()
@@ -310,11 +316,11 @@ class RrulePacker(object):
         new_weekly.add_weekdays([weekdays[sing_list[0].start_datetime.date().weekday()]])
         return new_weekly
 
-    def merge_sing_dates(self, type_merge, ids):
+    def merge_sing_dates(self, type_merge, ids, tim):
         """
         Delegates the merge of single dates
         """
-        sings_to_merge = [s for i, s in enumerate(self._single_dates) if i in ids]
+        sings_to_merge = [s[1] for i, s in enumerate(self._single_dates_by_time[tim]) if i in ids]
 
         if type_merge == 'week':
             new_weekly = self.create_week_from_sings(sings_to_merge)
@@ -324,37 +330,40 @@ class RrulePacker(object):
             new_continuous = self.create_cont_from_sings(sings_to_merge)
             self._continuous.append(new_continuous)
 
-        self._single_dates = [s for i, s in enumerate(self._single_dates) if i not in ids]
+        self._single_dates_by_time[tim] = [s for i, s in enumerate(self._single_dates_by_time[tim]) if i not in ids]
 
-    def probe_continuous(self, probe_list):
+    def probe_continuous(self, probe_list, tim):
         """
         Looks for group of single dates that can be merged into continuous rules.
 
         Returns a dict {type: 'cont', 'ids': [list of mergeable single dates indexes]}
         """
         consecutives = []
-        for idx, sing in enumerate(self._single_dates):
-            if (len(consecutives) > 0) and break_seq(self._single_dates[idx-1], sing, seq_freq=1):
+        sing_dates = self._single_dates_by_time[tim]
+        for idx, (main_idx, sing) in enumerate(sing_dates):
+            if (len(consecutives) > 0) and break_seq(sing_dates[idx-1][1], sing,seq_freq=1):
                 probe_list.append({'type': 'cont',
                                    'ids': consecutives,
                                    'count': len(consecutives)})
                 consecutives = []
-            consecutives.append(idx)
+            consecutives.append((idx, main_idx))
 
         if len(consecutives) > 0:
             probe_list.append({'type': 'cont',
                                'ids': consecutives,
                                'count': len(consecutives)})
 
-    def probe_weekly(self, probe_list):
+    def probe_weekly(self, probe_list, tim):
         """
         Looks for group of single dates that can be merged into weekly
         recurrences.
 
         Returns a dict {type: 'week', 'ids': [list of mergeable single dates indexes]}
         """
+        sing_dates = self._single_dates_by_time[tim]
         for day in xrange(7):
-            single_dates = [(i, sing) for i, sing in enumerate(self._single_dates) if
+            single_dates = [(i, (main_idx, sing))
+                            for i, (main_idx, sing) in enumerate(sing_dates) if
                             sing.start_datetime.date().weekday() == day]
 
             if len(single_dates) == 0:
@@ -362,13 +371,13 @@ class RrulePacker(object):
 
             consecutives = []
             last_idx = single_dates[0][0]
-            for idx, sing in single_dates:
-                if (len(consecutives) > 0) and break_seq(self._single_dates[last_idx], sing, seq_freq=7):
+            for idx, (main_idx, sing) in single_dates:
+                if (len(consecutives) > 0) and break_seq(sing_dates[last_idx][1], sing, seq_freq=7):
                     probe_list.append({'type': 'week',
                                        'ids': consecutives,
                                        'count': len(consecutives)})
                     consecutives = []
-                consecutives.append(idx)
+                consecutives.append((idx, main_idx))
                 last_idx = idx
 
             if len(consecutives) > 0:
@@ -398,16 +407,22 @@ class RrulePacker(object):
                     return filtered_cont[0]
             return None
 
-        attemptPacking = True
-        while attemptPacking and len(self._single_dates) > 0:
-            attemptPacking = False
-            probe_list = []
-            self.probe_continuous(probe_list)
-            self.probe_weekly(probe_list)
-            best_probe = select_best_probe(probe_list)
-            if best_probe:
-                self.merge_sing_dates(best_probe['type'], best_probe['ids'])
-                attemptPacking = True
+        sing_to_remove_idxs = set()
+        for tim in self._single_dates_by_time.keys():
+            attemptPacking = True
+            while attemptPacking and len(self._single_dates_by_time[tim]) > 0:
+                attemptPacking = False
+                probe_list = []
+                self.probe_continuous(probe_list, tim)
+                self.probe_weekly(probe_list, tim)
+                best_probe = select_best_probe(probe_list)
+                if best_probe:
+                    tim_idxs, main_idxs = zip(*best_probe['ids'])
+                    sing_to_remove_idxs.update(main_idxs)
+                    self.merge_sing_dates(best_probe['type'],
+                                          tim_idxs, tim)
+                    attemptPacking = True
+        self._single_dates = [s for i, s in enumerate(self._single_dates) if i not in sing_to_remove_idxs]
 
     def include_sing_in_cont(self):
         """
@@ -585,7 +600,7 @@ class RrulePacker(object):
             if have_same_timings(wrec, wrec2):
                 if have_compatible_bounds(wrec, wrec2):
                     return True
-                elif have_same_days(wrec, wrec2) and are_close(wrec, wrec2):
+                elif have_same_days(wrec, wrec2) and (are_close(wrec, wrec2) or are_overlapping(wrec, wrec2)):
                     return True
             return False
 
