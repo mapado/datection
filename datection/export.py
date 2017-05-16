@@ -7,7 +7,6 @@ from datetime import timedelta
 from datection.parse import parse
 from datection.models import DurationRRule
 from datection.coherency import RRuleCoherencyFilter
-from datection.pack import RrulePacker
 
 
 def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
@@ -93,9 +92,6 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     # Deduplicate the output, keeping the order (thus list(set) is not
     # possible)
     drrs, seen = [DurationRRule(export) for export in exports], []
-
-    # Pack rrules
-    drrs = RrulePacker(drrs).pack_rrules()
 
     # Apply rrule coherency heuristics
     drrs = RRuleCoherencyFilter(drrs).apply_coherency_heuristics()
