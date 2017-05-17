@@ -95,7 +95,6 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
 
     # Apply rrule coherency heuristics
     drrs = RRuleCoherencyFilter(drrs).apply_coherency_heuristics()
-
     for drr in drrs:
         if drr not in seen:
             seen.append(drr)

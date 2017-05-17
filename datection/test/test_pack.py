@@ -42,6 +42,18 @@ class TestPack(unittest.TestCase):
         new_rrule = packed[0].duration_rrule
         self.assertRrulesEqual(new_rrule, result)
 
+    def assertPackEqualMulti(self, rrules, result):
+        drrs = [DurationRRule(rrule) for rrule in rrules]
+        packer = pack.RrulePacker(drrs)
+        packed = packer.pack_rrules()
+        self.assertEqual(len(packed), len(result))
+        sorted_packed = sorted(packed, key=lambda drr: drr.start_datetime)
+        result = [DurationRRule(rrule) for rrule in result]
+        sorted_result = sorted(result, key=lambda drr: drr.start_datetime)
+        for i in xrange(len(result)):
+            self.assertRrulesEqual(sorted_result[i].duration_rrule,
+                                   sorted_packed[i].duration_rrule)
+
     def assertPackWithGapsEqual(self, rrules, result):
         drrs = [DurationRRule(rrule) for rrule in rrules]
         packer = pack.RrulePackerWithGaps(drrs)
@@ -435,6 +447,39 @@ class TestPack(unittest.TestCase):
                 'duration': 60,
                 'continuous': True}
         self.assertPackEqual([sing_3, sing_1, sing_2], cont)
+
+    def test_merge_sing_into_cont_2(self):
+        sing_3 = {'duration': 60,
+                  'rrule': ('DTSTART:20161028\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_3_bis = {'duration': 60,
+                      'rrule': ('DTSTART:20161028\nRRULE:FREQ=DAILY;'
+                                'COUNT=1;BYMINUTE=0;BYHOUR=9')}
+        sing_1 = {'duration': 60,
+                  'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_1_bis = {'duration': 60,
+                      'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                                'COUNT=1;BYMINUTE=0;BYHOUR=9')}
+        sing_2 = {'duration': 60,
+                  'rrule': ('DTSTART:20161027\nRRULE:FREQ=DAILY;'
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
+        sing_2_bis = {'duration': 60,
+                      'rrule': ('DTSTART:20161027\nRRULE:FREQ=DAILY;'
+                                'COUNT=1;BYMINUTE=0;BYHOUR=9')}
+        cont = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161028T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=8'),
+                'duration': 60,
+                'continuous': True}
+        cont_bis = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
+                              'UNTIL=20161028T235959;INTERVAL=1;'
+                              'BYMINUTE=0;BYHOUR=9'),
+                    'duration': 60,
+                    'continuous': True}
+        self.assertPackEqualMulti([sing_3, sing_1, sing_2, sing_1_bis,
+                                   sing_2_bis, sing_3_bis],
+                                  [cont_bis, cont])
 
     def test_merge_sing_into_wrec(self):
         sing_3 = {'duration': 60,
