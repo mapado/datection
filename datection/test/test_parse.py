@@ -13,6 +13,7 @@ from datection.timepoint import Date
 from datection.timepoint import Datetime
 from datection.timepoint import Time
 from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import ContinuousDatetimeInterval
 
 
 class TestParse(unittest.TestCase):
@@ -412,6 +413,15 @@ class TestParse(unittest.TestCase):
         self.assertEqual(len(res.weekdays), 7)
         self.assertEqual(res.time_interval.start_time, Time(9,45))
         self.assertEqual(res.time_interval.end_time, Time(13,00))
+
+    def test_long_text_complex_pattern(self):
+        text = """Du 13/04/2017 à 23:30 au 14/04/2017 à 05:00\nDu 20/04/2017 à 23:30 au 21/04/2017 à 05:00\nDu 27/04/2017 à 23:30 au 28/04/2017 à 05:00\nDu 04/05/2017 à 23:30 au 05/05/2017 à 05:00\nDu 11/05/2017 à 23:30 au 12/05/2017 à 05:00\nDu 18/05/2017 à 23:30 au 19/05/2017 à 05:00\nDu 25/05/2017 à 23:30 au 26/05/2017 à 05:00\nDu 27/04/2017 à 23:30 au 28/04/2017 à 05:00"""
+        result = parse(text, 'fr')
+        self.assertEqual(len(result), 7)
+        for res in result:
+            self.assertTrue(isinstance(res, ContinuousDatetimeInterval))
+            self.assertEqual(res.start_time, Time(23, 30))
+            self.assertEqual(res.end_time, Time(5, 0))
 
 
 class TestYearLessExpressions(unittest.TestCase):
