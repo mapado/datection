@@ -34,7 +34,7 @@ def get_repetitions(txt):
         pattern = match.group(1)
         idx_end = match.end()
         real_case = txt[idx_start: len(pattern) + idx_start]
-        qte = len(match.group(0))/len(pattern)
+        qte = len(match.group(0)) / len(pattern)
 
         context = Context(idx_start, idx_end, real_case, [])
         repetitions.append({
@@ -308,19 +308,20 @@ class Tokenizer(object):
         timepoints = self.timepoint_patterns
         if 'weekday' not in probe_kinds:
             timepoints = [tp for tp in timepoints if tp[0] != 'weekly_rec']
-
         n_timepoints = None
         analyse_subpattern = True
+        pattern_list = None
         if len(ctx) > 200:
             # if pattern is always same pattern repetion desactive other
             # timepoints
-            n_timepoints = self._extract_timepoint_from_patterns(ctx, timepoints)
+            n_timepoints, patterns = self._extract_timepoint_from_patterns(
+                ctx, timepoints)
             if n_timepoints:
                 timepoints = n_timepoints
-                analyse_subpattern = False
+                pattern_list = patterns  # patterns found in the sub-context
 
         dmatches = self._search_matches_timepoints(
-            timepoints, context, ctx, analyse_subpattern
+            timepoints, context, ctx, analyse_subpattern, pattern_list
         )
 
         matches = [t for mt in dmatches.values() for t in mt]
@@ -329,16 +330,18 @@ class Tokenizer(object):
     def _extract_timepoint_from_patterns(self, ctx, timepoints):
         """Get useful timepoints from identified patterns with high coverage"""
         pattern_repetitions = get_repetitions(ctx)
+
         if len(pattern_repetitions) == 1:
             pat = pattern_repetitions[0]
             if pat['coverage'] > 0.9:
                 dt_matches = self._search_matches_timepoints(
                     timepoints, pat['context'], pat['context'])
                 tps = list(self._get_valid_timepoints(dt_matches, timepoints))
-                return tps
+                return tps, dt_matches.keys()
 
     def _search_matches_timepoints(
-            self, timepoints, context, ctx, analyse_subpattern=True):
+            self, timepoints, context, ctx, analyse_subpattern=True,
+            pattern_list=None):
         """ Find all matches given a list of timepoint parse rules """
         dmatches = {}
         for tp in timepoints:
@@ -350,7 +353,13 @@ class Tokenizer(object):
         if analyse_subpattern:
             for tp in self._get_valid_timepoints(dmatches, timepoints):
                 if len(tp) == 3:
-                    for sp in tp[2]:
+                    subpatterns = tp[2]
+                    # filter on a restricted list of complex patterns for
+                    # time efficiency
+                    if pattern_list is not None:
+                        subpatterns = [sp for sp in subpatterns if sp[0] in
+                                       pattern_list]
+                    for sp in subpatterns:
                         mchs = self._search_matches_timepoint(sp, context, ctx)
                         if mchs:
                             dmatches[sp[0]] = mchs
@@ -416,6 +425,7 @@ class Tokenizer(object):
         pname = tp[0]
         pattern = tp[1]
         local_matches = []
+        ctx = unicode(ctx)
 
         try:
             idx_offset = context.start
@@ -429,6 +439,7 @@ class Tokenizer(object):
                         idx_offset + end
                     )
                     local_matches.append((match, context))
+
         except NormalizationError:
             pass
 
