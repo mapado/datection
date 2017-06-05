@@ -338,6 +338,7 @@ class Tokenizer(object):
                     timepoints, pat['context'], pat['context'])
                 tps = list(self._get_valid_timepoints(dt_matches, timepoints))
                 return tps, dt_matches.keys()
+	return None, None
 
     def _search_matches_timepoints(
             self, timepoints, context, ctx, analyse_subpattern=True,
