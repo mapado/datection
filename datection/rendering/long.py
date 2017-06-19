@@ -14,6 +14,8 @@ from datection.rendering.weekday_reccurence import WeekdayReccurenceGroupFormatt
 from datection.rendering.wrappers import cached_property
 from datection.rendering.wrappers import postprocess
 import datection.rendering.utils as utils
+from datection.timepoint import DAY_START
+from datection.timepoint import DAY_END
 
 
 class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
@@ -243,8 +245,12 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         # format continuous rrules
         for con in self.continuous:
             start, end = con.start_datetime, con.end_datetime
-            out.append(ContinuousDatetimeIntervalFormatter(
-                start, end, self.locale).display(*args, **kwargs))
+            if start.time() == DAY_START and end.time() == DAY_END:
+                out.append(DateIntervalFormatter(
+                    start, end, self.locale).display(*args, **kwargs))
+            else:
+                out.append(ContinuousDatetimeIntervalFormatter(
+                    start, end, self.locale).display(*args, **kwargs))
 
         same_patterns_with_different_dates, others = \
             self.group_by_common_pattern_except_time()
