@@ -162,7 +162,7 @@ class TestDisplay(GetCurrentDayMocker):
     def test_display_date_interval(self):
         sch = datection.export(
             u"Le 15 mars 2013 PLOP PLOP 16 mars 2013", "fr", only_future=False)
-        self.assertEqual(display(sch, self.locale), u'Les vendredi 15 et samedi 16 mars 2013')
+        self.assertEqual(display(sch, self.locale), u'Les 15 et 16 mars 2013')
 
     def test_display_date_list(self):
         sch = datection.export(
@@ -172,7 +172,7 @@ class TestDisplay(GetCurrentDayMocker):
             u"15/03/2015 hhhh 16/03/2015 hhh 18/03/2015",
             "fr", only_future=False)
         self.assertEqual(
-            display(sch, self.locale), u'Les 15, 16 et 18 mars 2015')
+            display(sch, self.locale), u'Les 15 et 16 mars 2015\nLe mercredi 18 mars 2015')
 
     def test_display_datetime(self):
         sch = datection.export(
