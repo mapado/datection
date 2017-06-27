@@ -223,6 +223,7 @@ class DurationRRule(object):
         return [
             rrulestr(cleanup_rrule_string(exc_rrule))
             for exc_rrule in self.duration_rrule.get('excluded', [])
+            if exc_rrule is not None
         ]
 
     def remove_exclusions(self):
