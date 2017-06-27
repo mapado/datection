@@ -210,14 +210,15 @@ class DurationRRule(object):
         # the start and the end of the exclusions
         ex_rrules = self.duration_rrule.get('excluded', [])
         for idx in xrange(len(ex_rrules)):
-            if ex_rrules[idx].find("DTSTART") == -1:
-                rrule_start = self.rrule._dtstart
-                start = "DTSTART:%s\n" % rrule_start.strftime('%Y%m%dT%H%M%S')
-                ex_rrules[idx] = start + ex_rrules[idx]
-            if ex_rrules[idx].find("UNTIL") == -1 and ex_rrules[idx].find("COUNT") == -1:
-                rrule_until = self.rrule._until
-                rrule_end = ";UNTIL=" + rrule_until.strftime('%Y%m%dT%H%M%S')
-                ex_rrules[idx] = ex_rrules[idx] + rrule_end
+            if ex_rrules[idx] is not None:
+                if ex_rrules[idx].find("DTSTART") == -1:
+                    rrule_start = self.rrule._dtstart
+                    start = "DTSTART:%s\n" % rrule_start.strftime('%Y%m%dT%H%M%S')
+                    ex_rrules[idx] = start + ex_rrules[idx]
+                if ex_rrules[idx].find("UNTIL") == -1 and ex_rrules[idx].find("COUNT") == -1:
+                    rrule_until = self.rrule._until
+                    rrule_end = ";UNTIL=" + rrule_until.strftime('%Y%m%dT%H%M%S')
+                    ex_rrules[idx] = ex_rrules[idx] + rrule_end
 
         return [
             rrulestr(cleanup_rrule_string(exc_rrule))

@@ -10,11 +10,11 @@ from datetime import date
 from datetime import time
 from dateutil.rrule import weekdays
 
-UNLIMITED_DATE_START        = date(0001, 01, 01)
-UNLIMITED_DATE_END          = date(9999, 12, 31)
+UNLIMITED_DATE_START        = date(2000, 01, 01)
+UNLIMITED_DATE_END          = date(3000, 12, 31)
 
-UNLIMITED_DATETIME_START    = datetime(0001, 01, 01)
-UNLIMITED_DATETIME_END      = datetime(9999, 12, 31, 23, 59, 59)
+UNLIMITED_DATETIME_START    = datetime(2000, 01, 01)
+UNLIMITED_DATETIME_END      = datetime(3000, 12, 31, 23, 59, 59)
 
 
 def get_current_date():
