@@ -15,6 +15,8 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import DateInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import Date
+from datection.timepoint import DateList
+from dateutil.rrule import FREQNAMES
 
 
 class TimepointExcluder(object):
@@ -38,6 +40,14 @@ class TimepointExcluder(object):
             # Exclude date from date interval
             if isinstance(self.excluded, Date):
                 return self.date_interval_exclude_date(
+                    self.timepoint, self.excluded)
+            # Exclude date list from date interval
+            if isinstance(self.excluded, DateList):
+                return self.date_interval_exclude_datelist(
+                    self.timepoint, self.excluded)
+            # Exclude date interval from date interval
+            if isinstance(self.excluded, DateInterval):
+                return self.date_interval_exclude_dateinterval(
                     self.timepoint, self.excluded)
             # Exclude every occurence of weekday(s) from the date interval
             elif isinstance(self.excluded, WeeklyRecurrence):
@@ -82,6 +92,33 @@ class TimepointExcluder(object):
         return excluded_date.export()['rrule']
 
     @staticmethod
+    def date_interval_exclude_datelist(date_interval, excluded_datelist):
+        """Return an exclusion RRule for the excluded date list from the
+        date interval.
+
+        If the excluded date list is missing a year, it will inherit it from
+        the date_interval end_date.
+
+        """
+        if not excluded_datelist.year:
+            excluded_datelist.year = date_interval.end_date.year
+        return [excluded_date['rrule'] for excluded_date in excluded_datelist.export()]
+
+    @staticmethod
+    def date_interval_exclude_dateinterval(
+            date_interval, excluded_dateinterval):
+        """Return an exclusion RRule for the excluded date interval from the
+        date interval.
+
+        If the excluded date interval is missing a year, it will inherit it from
+        the date_interval end_date.
+
+        """
+        if not excluded_dateinterval.year:
+            excluded_dateinterval.year = date_interval.end_date.year
+        return excluded_dateinterval.export()['rrule']
+
+    @staticmethod
     def datetime_interval_exclude_date(datetime_interval, excluded_date):
         """Return an exclusion RRule for the excluded date from the
         datetime interval.
@@ -122,6 +159,7 @@ class TimepointExcluder(object):
 
         """
         excluded_rrule = rrulestr(timepoint.export()['rrule'])
+        excluded_rrule._freq = FREQNAMES.index('WEEKLY')
         excluded_rrule._original_rule['byweekday'] = [
             d for d in excluded_weekdays.weekdays]
 

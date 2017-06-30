@@ -241,7 +241,10 @@ class Schedule(object):
                 excluder = TimepointExcluder(timepoint, excluded)
                 excluded_str = excluder.exclude()
                 if excluded is not None:
-                    timepoint.excluded.append(excluded_str)
+                    if isinstance(excluded_str, list):
+                        timepoint.excluded.extend(excluded_str)
+                    else:
+                        timepoint.excluded.append(excluded_str)
                     if (
                         has_timings(timepoint) and
                         has_timings(excluded) and
