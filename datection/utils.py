@@ -110,6 +110,10 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         rulestr = "RRULE:FREQ=%s;" % (freq)
         for arg, val in kwargs.items():
             rulestr += arg.upper() + '=' + str(val) + ';'
+
+    if until and (rulestr.find('UNTIL') != -1):
+        until = ''
+
     result = '{start}{rule}{end}'.format(
         start=dtstart, rule=rulestr, end=until)
     return result.rstrip(';')

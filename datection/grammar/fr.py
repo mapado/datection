@@ -50,7 +50,7 @@ WEEKDAY_PATTERN = grm_gen.weekday_pattern_grm(WEEKDAY_INTERVAL, WEEKDAY_LIST)
 WEEKLY_RECURRENCE = grm_gen.weekly_recurrence(WEEKDAY_PATTERN, TIME_PATTERN, DATE_INTERVAL)
 MULTIPLE_WEEKLY_RECURRENCE = grm_gen.multiple_weekly_recurrence_grm(WEEKDAY_PATTERN, TIME_PATTERN, DATE_INTERVAL)
 
-EXCLUSION = oneof_ci([u'sauf', u'relâche', u'fermé'])
+EXCLUSION = oneof_ci([u'sauf', u'relâche', u'relache', u'fermé'])
 
 TIMEPOINTS = [
     ('weekly_rec', WEEKLY_RECURRENCE),

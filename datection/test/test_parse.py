@@ -130,14 +130,49 @@ class TestParse(unittest.TestCase):
                 datetime(2015, 3, 19, 0, 0),
             ])
 
-
     def test_date_interval_with_date_exception(self):
         self.assert_generates(
             u"Du 6 au 9 décembre 2013, sauf le 8 décembre",
             [
-                datetime(2013, 12, 6,  0, 0),
-                datetime(2013, 12, 7,  0, 0),
+                datetime(2013, 12, 6, 0, 0),
+                datetime(2013, 12, 7, 0, 0),
                 datetime(2013, 12, 9, 0, 0),
+            ])
+
+    def test_date_interval_with_datelist_exception(self):
+        self.assert_generates(
+            u"Du 6 au 14 décembre 2013, sauf les 8,10,12 décembre",
+            [
+                datetime(2013, 12, 6, 0, 0),
+                datetime(2013, 12, 7, 0, 0),
+                datetime(2013, 12, 9, 0, 0),
+                datetime(2013, 12, 11, 0, 0),
+                datetime(2013, 12, 13, 0, 0),
+                datetime(2013, 12, 14, 0, 0),
+            ])
+        self.assert_generates(
+            u"Du 6 au 14 décembre 2013, sauf les 8,9,11 décembre",
+            [
+                datetime(2013, 12, 6, 0, 0),
+                datetime(2013, 12, 7, 0, 0),
+                datetime(2013, 12, 10, 0, 0),
+                datetime(2013, 12, 12, 0, 0),
+                datetime(2013, 12, 13, 0, 0),
+                datetime(2013, 12, 14, 0, 0),
+            ])
+
+    def test_date_interval_with_recurrence_exception(self):
+        self.assert_generates(
+            u"du 6 au 14 juillet 2017 relache le lundi",
+            [
+                datetime(2017, 7, 6, 0, 0),
+                datetime(2017, 7, 7, 0, 0),
+                datetime(2017, 7, 8, 0, 0),
+                datetime(2017, 7, 9, 0, 0),
+                datetime(2017, 7, 11, 0, 0),
+                datetime(2017, 7, 12, 0, 0),
+                datetime(2017, 7, 13, 0, 0),
+                datetime(2017, 7, 14, 0, 0),
             ])
 
     def test_date_interval_with_weekday_exception(self):
