@@ -156,7 +156,12 @@ def get_first_of_weekly(wrec):
     """
     Returns the first occurence of the weekly rrule
     """
-    return next(d.date() for d in wrec if d.weekday() in wrec.weekday_indexes)
+    start_day = wrec.start_datetime.date()
+    for i in xrange(7):
+        tmp_date = start_day + timedelta(days=i)
+        if tmp_date.weekday() in wrec.weekday_indexes:
+            return tmp_date
+    return start_day
 
 
 def get_last_of_weekly(wrec):
@@ -287,12 +292,14 @@ class RrulePacker(object):
 
     def get_weekly_rec_container(self):
         """ Gets all the drrs corresponding to recurrent dates """
-        return [drr for drr in self._input_drrs if drr.is_recurring]
+        return [drr for drr in self._input_drrs if drr.is_recurring or
+                drr.is_every_day_recurrence]
 
     def get_other_drrs(self):
         """ Gets all other drrs """
         return [drr for drr in self._input_drrs if not (drr.is_recurring or
-                drr.is_continuous or drr.single_date)]
+                drr.is_continuous or drr.single_date or
+                drr.is_every_day_recurrence)]
 
     def create_cont_from_sings(self, sing_list):
         """
