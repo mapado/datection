@@ -18,7 +18,7 @@ from datection.rendering.date_time import DatetimeIntervalFormatter
 from datection.render import DisplaySchedule
 from datection.render import FormatterTuple
 from datection.rendering.time import TimeFormatter
-from datection.rendering.time import TimeIntervalFormatter
+from datection.rendering.time import TimePatternFormatter
 from datection.rendering.weekday_reccurence import WeekdayReccurenceFormatter
 from datection.rendering.next_occurence import NextOccurenceFormatter
 from datection.rendering.full import FullFormatter
@@ -84,93 +84,100 @@ class TestDateFormatterfr_FR(GetCurrentDayMocker):
         self.assertEqual(fmt, u'13')
 
     def test_format_all_parts(self):
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=False,
             abbrev_monthname=False,
             abbrev_year=False,
-            prefix='')
+            prefix=False)
         self.assertEqual(fmt.strip(), u'mardi 1er janvier 2013')
 
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
             abbrev_monthname=False,
             abbrev_year=False,
-            prefix='le')
+            prefix=True)
         self.assertEqual(fmt.strip(), u'le mar. 1er janvier 2013')
 
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
             abbrev_monthname=True,
             abbrev_year=False,
-            prefix='')
+            prefix=False)
         self.assertEqual(fmt.strip(), u'mar. 1er janv. 2013')
 
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
             abbrev_monthname=True,
             abbrev_year=True,
-            prefix='le')
+            prefix=True)
         self.assertEqual(fmt.strip(), u'le mar. 1er janv. 13')
 
     def test_format_all_parts_force_year_in_less_than_6_months(self):
         self.set_current_date(datetime.date(2012, 11, 1))
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=False,
             abbrev_monthname=False,
             abbrev_year=False,
-            prefix='',
+            prefix=False,
             force_year=True)
         self.assertEqual(fmt.strip(), u'mardi 1er janvier 2013')
 
     def test_format_all_parts_in_less_than_6_months(self):
         self.set_current_date(datetime.date(2012, 11, 1))
-        fmt = self.dfmt.format_all_parts(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=False,
             abbrev_monthname=False,
             abbrev_year=False,
-            prefix='',
+            prefix=False,
             force_year=False)
         self.assertEqual(fmt.strip(), u'mardi 1er janvier')
 
     def test_format_no_year(self):
-        fmt = self.dfmt.format_no_year(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=False,
             abbrev_monthname=False,
-            prefix='')
+            prefix=False,
+            include_year=False)
         self.assertEqual(fmt.strip(), u'mardi 1er janvier')
 
-        fmt = self.dfmt.format_no_year(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
             abbrev_monthname=False,
-            prefix='')
+            prefix=False,
+            include_year=False)
         self.assertEqual(fmt.strip(), u'mar. 1er janvier')
 
-        fmt = self.dfmt.format_no_year(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
             abbrev_monthname=True,
-            prefix='le')
+            prefix=True,
+            include_year=False)
         self.assertEqual(fmt.strip(), u'le mar. 1er janv.')
 
     def test_format_no_month_no_year(self):
-        fmt = self.dfmt.format_no_month_no_year(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=False,
-            prefix='le')
+            prefix=True,
+            include_year=False,
+            include_month=False)
         self.assertEqual(fmt.strip(), u'le mardi 1er')
 
-        fmt = self.dfmt.format_no_month_no_year(
+        fmt = self.dfmt.display(
             include_dayname=True,
             abbrev_dayname=True,
-            prefix='')
+            prefix=False,
+            include_year=False,
+            include_month=False)
         self.assertEqual(fmt.strip(), u'mar. 1er')
 
     def test_display_with_reference(self):
@@ -411,7 +418,7 @@ class TestTimeFormatterfr_FR(unittest.TestCase):
 
 class TestTimeIntervalfr_FR(unittest.TestCase):
 
-    """Test suite of the TimeIntervalFormatter using the fr_FR locale."""
+    """Test suite of the TimePatternFormatter using the fr_FR locale."""
 
     @classmethod
     def setUpClass(cls):
@@ -420,7 +427,7 @@ class TestTimeIntervalfr_FR(unittest.TestCase):
     def setUp(self):
         start = datetime.time(12, 15)
         end = datetime.time(13, 0)
-        self.tifmt = TimeIntervalFormatter(start, end)
+        self.tifmt = TimePatternFormatter(start, end)
 
     def test_display(self):
         self.assertEqual(self.tifmt.display(), u'de 12 h 15 à 13 h')
@@ -441,7 +448,7 @@ class TestTimeIntervalfr_FR(unittest.TestCase):
     def test_display_all_day(self):
         start = datetime.time(0, 0)
         end = datetime.time(23, 59)
-        tifmt = TimeIntervalFormatter(start, end)
+        tifmt = TimePatternFormatter(start, end)
         self.assertEqual(tifmt.display(), u'')
 
 

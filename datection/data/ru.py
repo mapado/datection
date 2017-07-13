@@ -47,6 +47,10 @@ TRANSLATIONS = {
         'and': u'и',
         'at': u'в',
         'except': u'кроме',
+        'from_day': u'c',
+        'to_day': u'по',
+        'from_hour': u'c',
+        'to_hour': u'до',
     },
 }
 

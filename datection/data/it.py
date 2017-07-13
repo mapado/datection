@@ -52,6 +52,10 @@ TRANSLATIONS = {
         'and': u'e',
         'at': u'alle',
         'except': u'eccetto',
+        'from_day': u'da',
+        'to_day': u'a',
+        'from_hour': u'dalle',
+        'to_hour': u'alle',
     },
 }
 

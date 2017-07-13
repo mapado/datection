@@ -21,12 +21,8 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.schedule = [DurationRRule(drr) for drr in schedule]
         self.schedule = self.deduplicate(self.schedule)
         self.templates = {
-            'fr_FR': {
-                'two_months': u'{month1} et {month2}',
-                'full': u'{months} {year}'
-            },
-            'en_US': {
-                'two_months': u'{month1} and {month2}',
+            'default': {
+                'two_months': u'{month1} {_and} {month2}',
                 'full': u'{months} {year}'
             }
         }
@@ -74,6 +70,7 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             month_fmt = month_tpl.format(
                 month1=DateFormatter(
                     dates[0], self.locale).format_month().decode('utf-8'),
+                _and=self._('and'),
                 month2=DateFormatter(
                     dates[1], self.locale).format_month().decode('utf-8'))
         year_fmt = DateFormatter(dates[0], self.locale).format_year(force=True)

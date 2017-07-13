@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datection.rendering.base import BaseFormatter
-from datection.rendering.time import TimeIntervalFormatter
 from datection.rendering.date import DateFormatter
 from datection.rendering.long import LongFormatter
 from datection.models import DurationRRule
@@ -14,17 +13,17 @@ class ExclusionFormatter(BaseFormatter):
         super(ExclusionFormatter, self).__init__(locale)
         self.excluded = excluded
         self.templates = {
-            'fr_FR': {
-                'weekday': u'le {weekday}',
-                'weekdays': u'le {weekdays} et {last_weekday}',
-                'weekday_interval': u'du {start_weekday} au {end_weekday}',
-                'date': u'le {date}',
+            'de_DE': {
+                'weekday_interval': u'{start_weekday} - {end_weekday}',
             },
-            'en_US': {
-                'weekday': u'{weekday}',
-                'weekdays': u'{weekdays} and {last_weekday}',
-                'weekday_interval': u'from {start_weekday} to {end_weekday}',
-                'date': u'{date}',
+            'ru_RU': {
+                'weekday_interval': u'{start_weekday} - {end_weekday}',
+            },
+            'default': {
+                'weekday': u'{prefix} {weekday}',
+                'weekdays': u'{prefix} {weekdays} {_and} {last_weekday}',
+                'weekday_interval':
+                u'{_from} {start_weekday} {_to} {end_weekday}',
             },
         }
 
@@ -72,19 +71,24 @@ class ExclusionFormatter(BaseFormatter):
         # single excluded recurrent weekday
         if (excluded._byweekday is not None) and len(excluded._byweekday) == 1:
             return self.get_template('weekday').format(
+                prefix=self._('the'),
                 weekday=self.day_name(excluded._byweekday[0]))
         else:
             indices = sorted(list(excluded._byweekday))
             # excluded day range
             if indices and indices == range(indices[0], indices[-1] + 1):
                 return self.get_template('weekday_interval').format(
+                    _from=self._('from_day'),
                     start_weekday=self.day_name(indices[0]),
+                    _to=self._('to_day'),
                     end_weekday=self.day_name(indices[-1]))
             # excluded day list
             else:
                 weekdays = u', '.join(self.day_name(i) for i in indices[:-1])
                 return self.get_template('weekdays').format(
+                    prefix=self._('the'),
                     weekdays=weekdays,
+                    _and=self._('and'),
                     last_weekday=self.day_name(indices[-1]))
 
     def display(self, *args, **kwargs):

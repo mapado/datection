@@ -64,6 +64,10 @@ TRANSLATIONS = {
         'and': u'and',
         'at': u'et',
         'except': u'except',
+        'from_day': u'from',
+        'to_day': u'to',
+        'from_hour': u'from',
+        'to_hour': u'to',
     }
 }
 

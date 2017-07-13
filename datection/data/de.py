@@ -44,10 +44,14 @@ TRANSLATIONS = {
         'this': u'dies',
         'midnight': u'mitternacht',
         'every day': u'täglich',
-        'the': u'das',
+        'the': u'am',
         'and': u'und',
         'at': u'um',
         'except': u'nur',
+        'from_day': u'von',
+        'to_day': u'bis',
+        'from_hour': u'von',
+        'to_hour': u'bis',
     },
 }
 
