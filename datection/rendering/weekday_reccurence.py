@@ -16,14 +16,15 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         self.drr_list = [get_drr(drr) for drr in drr_list]
         self.drr = self.drr_list[0]
         self.templates = {
-            'fr_FR': {
-                'one_day': u'le {weekday}',
-                'interval': u'du {start_weekday} au {end_weekday}',
-                'weekday_reccurence': u'{weekdays}, {dates}, {time}',
+            'de_DE': {
+                'interval': u'{start_weekday} - {end_weekday}',
             },
-            'en_US': {
-                'one_day': u'the {weekday}',
-                'interval': u'from {start_weekday} to {end_weekday}',
+            'ru_RU': {
+                'interval': u'{start_weekday} - {end_weekday}',
+            },
+            'default': {
+                'one_day': u'{prefix} {weekday}',
+                'interval': u'{_from} {start_weekday} {_to} {end_weekday}',
                 'weekday_reccurence': u'{weekdays}, {dates}, {time}',
             }
         }
@@ -39,7 +40,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
         elif len(self.drr.weekday_indexes) == 1:
             template = self.get_template('one_day')
             weekday = self.day_name(self.drr.weekday_indexes[0])
-            return template.format(weekday=weekday)
+            return template.format(prefix=self._('the'), weekday=weekday)
         else:
             start_idx = self.drr.weekday_indexes[0]
             end_idx = self.drr.weekday_indexes[-1]
@@ -53,7 +54,9 @@ class WeekdayReccurenceFormatter(BaseFormatter):
                 start_weekday = self.day_name(start_idx)
                 end_weekday = self.day_name(end_idx)
                 fmt = template.format(
+                    _from=self._('from_day'),
                     start_weekday=start_weekday,
+                    _to=self._('to_day'),
                     end_weekday=end_weekday)
                 return fmt
             else:

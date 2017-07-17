@@ -3,7 +3,7 @@ from datection.rendering.base import BaseFormatter
 from datection.rendering.date import DateFormatter
 from datection.rendering.date import DateIntervalFormatter
 from datection.rendering.time import TimeFormatter
-from datection.rendering.time import TimeIntervalFormatter
+from datection.rendering.time import TimePatternFormatter
 from datection.rendering.wrappers import postprocess
 
 
@@ -15,8 +15,7 @@ class DatetimeFormatter(BaseFormatter):
         super(DatetimeFormatter, self).__init__(locale)
         self.datetime = _datetime
         self.templates = {
-            'fr_FR': u'{date} à {time}',
-            'en_US': u'{date} at {time}',
+            'default': u'{date} {time}',
         }
 
     def display(self, *args, **kwargs):
@@ -31,7 +30,8 @@ class DatetimeFormatter(BaseFormatter):
 
         date_fmt = DateFormatter(
             self.datetime, self.locale).display(*args, **kwargs)
-        time_fmt = TimeFormatter(self.datetime, self.locale).display()
+        time_fmt = TimeFormatter(
+            self.datetime, self.locale).display(prefix=True)
 
         return template.format(date=date_fmt, time=time_fmt)
 
@@ -45,14 +45,7 @@ class DatetimeIntervalFormatter(BaseFormatter):
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.templates = {
-            'fr_FR': {
-                'single_day': u'le {date} {time_interval}',
-                'single_time': u'{date_interval} à {time}',
-                'date_interval': u'{date_interval} {time_interval}',
-            },
-            'en_US': {
-                'single_day': u'the {date} {time_interval}',
-                'single_time': u'{date_interval} at {time}',
+            'default': {
                 'date_interval': u'{date_interval} {time_interval}',
             }
         }
@@ -74,20 +67,14 @@ class DatetimeIntervalFormatter(BaseFormatter):
             self.start_datetime, self.end_datetime, self.locale)
         date_fmt = date_formatter.display(*args, **kwargs)
 
-        time_fmt = TimeIntervalFormatter(
-            self.start_datetime, self.end_datetime, self.locale).display()
+        time_fmt = TimePatternFormatter(
+            self.start_datetime,
+            self.end_datetime,
+            self.locale).display(prefix=True)
 
-        if not time_fmt:
-            return date_fmt
-
-        if self.same_time():
-            template = self.get_template('single_time')
-            fmt = template.format(
-                date_interval=date_fmt, time=time_fmt)
-        else:
-            template = self.get_template('date_interval')
-            fmt = template.format(
-                date_interval=date_fmt, time_interval=time_fmt)
+        template = self.get_template('date_interval')
+        fmt = template.format(
+            date_interval=date_fmt, time_interval=time_fmt)
 
         return fmt
 
@@ -101,10 +88,12 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         self.start = start
         self.end = end
         self.templates = {
-            'fr_FR':
-            u'du {start_date} à {start_time} au {end_date} à {end_time}',
-            'en_US':
-            u'{start_date} at {start_time} - {end_date} at {end_time}'
+            'de_DE':
+            u'{start_date} {start_time} - {end_date} {end_time}',
+            'ru_RU':
+            u'{start_date} {start_time} - {end_date} {end_time}',
+            'default':
+            u'{_from} {start_date} {start_time} {_to} {end_date} {end_time}'
         }
 
     @postprocess()
@@ -122,11 +111,15 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
             self.start, self.locale).display(*args, **sd_kwargs)
         end_date_fmt = DateFormatter(
             self.end, self.locale).display(*args, **kwargs)
-        start_time_fmt = TimeFormatter(self.start, self.locale).display()
-        end_time_fmt = TimeFormatter(self.end, self.locale).display()
+        start_time_fmt = TimeFormatter(
+            self.start, self.locale).display(prefix=True)
+        end_time_fmt = TimeFormatter(
+            self.end, self.locale).display(prefix=True)
 
         return template.format(
+            _from=self._('from_day'),
             start_date=start_date_fmt,
             start_time=start_time_fmt,
+            _to=self._('to_day'),
             end_date=end_date_fmt,
             end_time=end_time_fmt)

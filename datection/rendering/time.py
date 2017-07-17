@@ -16,7 +16,7 @@ class TimeFormatter(BaseFormatter):
         self.time = get_time(time)
         self.templates = {
             'fr_FR': u'{prefix} {hour} h {minute}',
-            'en_US': u'{prefix} {hour}:{minute}',
+            'default': u'{prefix} {hour}:{minute}',
         }
 
     def format_hour(self):
@@ -48,22 +48,17 @@ class TimeFormatter(BaseFormatter):
         return fmt
 
 
-class TimeIntervalFormatter(BaseFormatter):
+class TimePatternFormatter(BaseFormatter):
 
-    """ Formats a time interval using the current locale. """
+    """ Formats a time pattern using the current locale. """
 
     def __init__(self, start_time, end_time, locale='fr_FR.UTF8'):
-        super(TimeIntervalFormatter, self).__init__(locale)
+        super(TimePatternFormatter, self).__init__(locale)
         self.start_time = get_time(start_time)
         self.end_time = get_time(end_time) if end_time else None
         self.templates = {
-            'fr_FR': {
-                'interval': u'de {start_time} à {end_time}',
-                'single_time': u'à {time}',
-            },
-            'en_US': {
-                'interval': u'{start_time} - {end_time}',
-                'single_time': u'at {time}',
+            'default': {
+                'interval': u'{_from} {start_time} {_to} {end_time}',
             },
         }
 
@@ -71,15 +66,23 @@ class TimeIntervalFormatter(BaseFormatter):
         """
         Format the time using the template associated with the locale
         """
+        # single time
         if self.start_time == self.end_time or self.end_time is None:
             return TimeFormatter(self.start_time, self.locale).display(prefix)
+
+        # all day long
         elif all_day(self.start_time, self.end_time):
             return u''
+
+        # time interval
         template = self.get_template('interval')
         start_time_fmt = TimeFormatter(self.start_time, self.locale).display()
         end_time_fmt = TimeFormatter(self.end_time, self.locale).display()
         fmt = template.format(
-            start_time=start_time_fmt, end_time=end_time_fmt)
+            _from=self._('from_hour'),
+            start_time=start_time_fmt,
+            _to=self._('to_hour'),
+            end_time=end_time_fmt)
         return fmt
 
 
@@ -94,29 +97,40 @@ class TimeIntervalListFormatter(BaseFormatter):
         self.templates = {
             'fr_FR': u'{time} + autres horaires',
             'en_US': u'{time} + more schedules',
+            'de_DE': u'{time} + mehr Zeitpläne',
+            'es_ES': u'{time} + más horarios',
+            'it_IT': u'{time} + più orari',
+            'pt_BR': u'{time} + mais horários',
+            'nl_NL': u"{time} + meer schema's",
+            'ru_RU': u'{time} + больше расписаний',
         }
 
     def display(self, prefix=False):
+        # 'time_interval'
         if len(self.interval_list) == 1:
             time_inter = self.interval_list[0]
-            return TimeIntervalFormatter(time_inter[0],
-                                         time_inter[1],
-                                         self.locale).display(prefix)
+            return TimePatternFormatter(time_inter[0],
+                                        time_inter[1],
+                                        self.locale).display(prefix)
+
+        # 'time_interval_1 and time_interval_2'
         elif len(self.interval_list) == 2:
             time1 = self.interval_list[0]
-            time1_fmt = TimeIntervalFormatter(time1[0],
-                                              time1[1]).display(prefix)
+            time1_fmt = TimePatternFormatter(time1[0],
+                                             time1[1]).display(prefix)
             time2 = self.interval_list[1]
-            time2_fmt = TimeIntervalFormatter(time2[0],
-                                              time2[1],
-                                              self.locale).display(False)
+            time2_fmt = TimePatternFormatter(time2[0],
+                                             time2[1],
+                                             self.locale).display(False)
             fmt = '%s %s %s' % (time1_fmt, self._('and'), time2_fmt)
             return fmt
+
+        # 'time_interval_1 + more schedules'
         else:
             template = self.get_template()
             time_inter = self.interval_list[0]
-            time_fmt = TimeIntervalFormatter(time_inter[0],
-                                             time_inter[1],
-                                             self.locale).display(prefix)
+            time_fmt = TimePatternFormatter(time_inter[0],
+                                            time_inter[1],
+                                            self.locale).display(prefix)
             fmt = template.format(time=time_fmt)
             return fmt

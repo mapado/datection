@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import locale as _locale
-import re
 import datetime
 
 from datection.rendering.base import BaseFormatter
@@ -16,16 +15,18 @@ class DateFormatter(BaseFormatter):
         super(DateFormatter, self).__init__(locale)
         self.date = utils.get_date(date)
         self.templates = {
-            'fr_FR': {
+            'default': {
                 'all': u'{prefix} {dayname} {day} {month} {year}',
-                'no_year': u'{prefix} {dayname} {day} {month}',
-                'no_year_no_month': u'{prefix} {dayname} {day}',
             },
             'en_US': {
                 'all': u'{prefix} {dayname} {day} of {month} {year}',
-                'no_year': u'{prefix} {dayname} {day} of {month}',
-                'no_year_no_month': u'{prefix} {dayname} {day}',
-            }
+            },
+            'es_ES': {
+                'all': u'{prefix} {dayname} {day} de {month} de {year}',
+            },
+            'pt_BR': {
+                'all': u'{prefix} {dayname} {day} de {month} de {year}',
+            },
         }
 
     def format_day(self):
@@ -38,6 +39,12 @@ class DateFormatter(BaseFormatter):
             else:
                 suffix = ['st', 'nd', 'rd'][self.date.day % 10 - 1]
             return u'%d%s' % (self.date.day, suffix)
+        elif self.language_code == 'es_ES':
+            return u'1ero' if self.date.day == 1 else unicode(self.date.day)
+        elif self.language_code == 'de_DE':
+            return u'%s.' % (self.date.day, suffix)
+        else:
+            return unicode(self.date.day)
 
     def format_dayname(self, abbrev=False):
         """ Format the date day using the current locale. """
@@ -65,9 +72,9 @@ class DateFormatter(BaseFormatter):
         be returned (ex: 13 instead of 2013).
         """
         if (
-                force
-                or self.date.year < utils.get_current_date().year
-                or (self.date - utils.get_current_date()).days > 6 * 30
+            force or
+            self.date.year < utils.get_current_date().year or
+            (self.date - utils.get_current_date()).days > 6 * 30
         ):
             with utils.TemporaryLocale(_locale.LC_TIME, self.locale):
                 if abbrev:
@@ -75,57 +82,6 @@ class DateFormatter(BaseFormatter):
                 return self.date.strftime('%Y')
         else:
             return u''
-
-    def format_all_parts(
-        self, include_dayname, abbrev_dayname,
-        abbrev_monthname, abbrev_year, prefix, force_year=False
-    ):
-        """ Formats the date in the current locale. """
-        template = self.get_template('all')
-        if include_dayname or abbrev_dayname:
-            dayname = self.format_dayname(abbrev_dayname)
-        else:
-            dayname = u''
-        day = self.format_day()
-        month = self.format_month(abbrev_monthname).decode('utf-8')
-        if force_year:
-            year = self.format_year(abbrev_year, force=True)
-        else:
-            year = self.format_year(abbrev_year)
-        fmt = template.format(
-            prefix=prefix, dayname=dayname, day=day, month=month, year=year)
-        fmt = re.sub(r'\s+', ' ', fmt)
-        return fmt
-
-    def format_no_year(self, include_dayname, abbrev_dayname, abbrev_monthname,
-                       prefix):
-        """ Formats the date in the current locale, omitting the year. """
-        template = self.get_template('no_year')
-        if include_dayname or abbrev_dayname:
-            dayname = self.format_dayname(abbrev_dayname)
-        else:
-            dayname = u''
-        day = self.format_day()
-        month = self.format_month(abbrev_monthname).decode('utf-8')
-        fmt = template.format(
-            prefix=prefix, dayname=dayname, day=day, month=month)
-        fmt = re.sub(r'\s+', ' ', fmt)
-        return fmt
-
-    def format_no_month_no_year(self, include_dayname, abbrev_dayname, prefix):
-        """
-        Formats the date in the current locale, omitting the month
-        and year.
-        """
-        template = self.get_template('no_year_no_month')
-        if include_dayname or abbrev_dayname:
-            dayname = self.format_dayname(abbrev_dayname)
-        else:
-            dayname = u''
-        day = self.format_day()
-        fmt = template.format(prefix=prefix, dayname=dayname, day=day)
-        fmt = re.sub(r'\s+', ' ', fmt)
-        return fmt
 
     @postprocess()
     def display(self, include_dayname=False, abbrev_dayname=False,
@@ -166,25 +122,25 @@ class DateFormatter(BaseFormatter):
                     self.format_dayname(abbrev_dayname))
 
         prefix = self._('the') if prefix else u''
-        if include_month and include_year:
-            return self.format_all_parts(
-                include_dayname,
-                abbrev_dayname,
-                abbrev_monthname,
-                abbrev_year,
-                prefix,
-                force_year)
-        elif include_month and not include_year:
-            return self.format_no_year(
-                include_dayname,
-                abbrev_dayname,
-                abbrev_monthname,
-                prefix)
-        else:
-            return self.format_no_month_no_year(
-                include_dayname,
-                abbrev_dayname,
-                prefix)
+
+        dayname, month, year = u'', u'', u''
+
+        if include_dayname or abbrev_dayname:
+            dayname = self.format_dayname(abbrev_dayname)
+
+        day = self.format_day()
+
+        if include_month:
+            month = self.format_month(abbrev_monthname).decode('utf-8')
+
+        if include_year:
+            year = self.format_year(abbrev_year, force=force_year)
+
+        template = self.get_template('all')
+        fmt = template.format(
+            prefix=prefix, dayname=dayname, day=day, month=month, year=year)
+
+        return fmt
 
 
 class DateIntervalFormatter(BaseFormatter):
@@ -196,8 +152,9 @@ class DateIntervalFormatter(BaseFormatter):
         self.start_date = utils.get_date(start_date)
         self.end_date = utils.get_date(end_date)
         self.templates = {
-            'fr_FR': u'du {start_date} au {end_date}',
-            'en_US': u'{start_date} - {end_date}',
+            'de_DE': u'{start_date} - {end_date}',
+            'ru_RU': u'{start_date} - {end_date}',
+            'default': u'{_from} {start_date} {_to} {end_date}',
         }
 
     def same_day_interval(self):
@@ -241,7 +198,9 @@ class DateIntervalFormatter(BaseFormatter):
             self.end_date, self.locale).display(*args, **kwargs)
 
         return template.format(
+            _from=self._('from_day'),
             start_date=start_date_fmt,
+            _to=self._('to_day'),
             end_date=end_date_fmt)
 
     def format_same_year(self, *args, **kwargs):
@@ -256,7 +215,9 @@ class DateIntervalFormatter(BaseFormatter):
             self.end_date, self.locale).display(*args, **kwargs)
 
         return template.format(
+            _from=self._('from_day'),
             start_date=start_date_fmt,
+            _to=self._('to_day'),
             end_date=end_date_fmt)
 
     def format_two_consecutive_days(self, *args, **kwargs):
@@ -299,7 +260,10 @@ class DateIntervalFormatter(BaseFormatter):
             end_date_fmt = DateFormatter(
                 self.end_date, self.locale).display(*args, **kwargs)
             fmt = template.format(
-                start_date=start_date_fmt, end_date=end_date_fmt)
+                _from=self._('from_day'),
+                start_date=start_date_fmt,
+                _to=self._('to_day'),
+                end_date=end_date_fmt)
             return fmt
 
 
@@ -311,8 +275,8 @@ class DateListFormatter(BaseFormatter):
         super(DateListFormatter, self).__init__(locale)
         self.date_list = [utils.get_date(d) for d in date_list]
         self.templates = {
-            'fr_FR': u'les {date_list} et {last_date}',
-            'en_US': u'{date_list} and {last_date}',
+            'fr_FR': u'les {date_list} {_and} {last_date}',
+            'default': u'{date_list} {_and} {last_date}',
         }
 
     @postprocess()
@@ -335,5 +299,8 @@ class DateListFormatter(BaseFormatter):
             for d in self.date_list[:-1]])
         last_date = DateFormatter(
             self.date_list[-1], self.locale).display(*args, **kwargs)
-        fmt = template.format(date_list=date_list, last_date=last_date)
+        fmt = template.format(
+            date_list=date_list,
+            _and=self._('and'),
+            last_date=last_date)
         return fmt

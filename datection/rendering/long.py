@@ -7,7 +7,7 @@ from datection.rendering.base import NextDateMixin
 from datection.rendering.base import NextChangesMixin
 from datection.rendering.date import DateIntervalFormatter
 from datection.rendering.date import DateListFormatter
-from datection.rendering.time import TimeIntervalFormatter
+from datection.rendering.time import TimePatternFormatter
 from datection.rendering.date_time import ContinuousDatetimeIntervalFormatter
 from datection.rendering.weekday_reccurence import WeekdayReccurenceFormatter
 from datection.rendering.weekday_reccurence import WeekdayReccurenceGroupFormatter
@@ -222,7 +222,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         :return: time format string
         """
         start_time, end_time = time_group[0].values()
-        return TimeIntervalFormatter(
+        return TimePatternFormatter(
             start_time, end_time, self.locale).display(prefix=True)
 
     @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')

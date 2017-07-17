@@ -45,10 +45,14 @@ TRANSLATIONS = {
         'this': u'este',
         'midnight': u'medianoche',
         'every day': u'todos las dias',
-        'the': u'la',
+        'the': u'el',
         'and': u'y',
         'at': u'a las',
         'except': u'excepto',
+        'from_day': u'de',
+        'to_day': u'a',
+        'from_hour': u'de',
+        'to_hour': u'a',
     },
 }
 

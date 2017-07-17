@@ -25,6 +25,12 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.templates = {
             'fr_FR': u'{date} + autres dates',
             'en_US': u'{date} + more dates',
+            'de_DE': u'{date} + weitere Termine',
+            'es_ES': u'{date} + más fechas',
+            'it_IT': u'{date} + più date',
+            'pt_PT': u'{date} + mais datas',
+            'nl_NL': u'{date} + meer data',
+            'ru_RU': u'{date} + больше дат',
         }
 
     @postprocess(capitalize=True)

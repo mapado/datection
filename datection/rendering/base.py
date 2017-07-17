@@ -41,8 +41,18 @@ class BaseFormatter(object):
         and key.
         """
         if key is None:
-            return self.templates[self.language_code]
-        return self.templates[self.language_code][key]
+            if self.language_code in self.templates:
+                return self.templates[self.language_code]
+            else:
+                return self.templates['default']
+        else:
+            if (
+                self.language_code in self.templates and
+                key in self.templates[self.language_code]
+            ):
+                return self.templates[self.language_code][key]
+            else:
+                return self.templates['default'][key]
 
     # @staticmethod
     def day_name(self, weekday_index):
