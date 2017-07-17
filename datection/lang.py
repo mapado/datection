@@ -16,12 +16,12 @@ DEFAULT_LOCALES = {
 RENDERING_LOCALES = {
     'fr': 'fr_FR.UTF8',
     'en': 'en_US.UTF8',
-    # 'de': 'de_DE.UTF8',
-    # 'es': 'es_ES.UTF8',
-    # 'it': 'it_IT.UTF8',
-    # 'nl': 'nl_NL.UTF8',
-    # 'pt': 'pt_BR.UTF8',
-    # 'ru': 'ru_RU.UTF8',
+    'de': 'de_DE.UTF8',
+    'es': 'es_ES.UTF8',
+    'it': 'it_IT.UTF8',
+    'nl': 'nl_NL.UTF8',
+    'pt': 'pt_BR.UTF8',
+    'ru': 'ru_RU.UTF8',
 }
 
 
