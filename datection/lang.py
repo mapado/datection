@@ -12,6 +12,19 @@ DEFAULT_LOCALES = {
     'en': 'en_US.UTF8',
 }
 
+
+RENDERING_LOCALES = {
+    'fr': 'fr_FR.UTF8',
+    'en': 'en_US.UTF8',
+    'de': 'de_DE.UTF8',
+    'es': 'es_ES.UTF8',
+    'it': 'it_IT.UTF8',
+    'nl': 'nl_NL.UTF8',
+    'pt': 'pt_BR.UTF8',
+    'ru': 'ru_RU.UTF8',
+}
+
+
 WORD_DICTS = ['WEEKDAYS', 'SHORT_WEEKDAYS', 'MONTHS', 'SHORT_MONTHS']
 WORD_LISTS = ['DATE_PATTERNS', 'ADDITIONAL_KEYWORDS']
 
@@ -21,8 +34,8 @@ LANG_KEYWORDS = {}
 
 
 def getlocale(lang):
-    if lang in DEFAULT_LOCALES:
-        return DEFAULT_LOCALES[lang]
+    if lang in RENDERING_LOCALES:
+        return RENDERING_LOCALES[lang]
 
 
 def detect_language(text, lang):
@@ -143,7 +156,9 @@ def light_lang_detection(text):
 
     for token in matching_tokens:
         for lang in lang_keywords[token]:
-            lang_scores[lang] += 1
+            # division by len(lang_keywords[token]) because word shared
+            # by many languages should have a low impact on the score
+            lang_scores[lang] += 1. / len(lang_keywords[token])
 
     # compute proba for the best candidate (no need for softmax (small range))
     best_lang = max(lang_scores.items(), key=operator.itemgetter(1))[0]

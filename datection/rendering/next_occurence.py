@@ -28,7 +28,7 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             'de_DE': u'{date} + weitere Termine',
             'es_ES': u'{date} + más fechas',
             'it_IT': u'{date} + più date',
-            'pt_PT': u'{date} + mais datas',
+            'pt_BR': u'{date} + mais datas',
             'nl_NL': u'{date} + meer data',
             'ru_RU': u'{date} + больше дат',
         }
