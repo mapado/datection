@@ -34,8 +34,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.schedule = self.filter_non_informative(self.schedule)
         self.format_exclusion = format_exclusion
         self.templates = {
-            'fr_FR': u'{dates} {time}',
-            'en_US': u'{dates} {time}',
+            'default': u'{dates} {time}',
         }
 
     @cached_property
