@@ -22,10 +22,10 @@ class DateFormatter(BaseFormatter):
                 'all': u'{prefix} {dayname} {day} of {month} {year}',
             },
             'es_ES': {
-                'all': u'{prefix} {dayname} {day} de {month} de {year}',
+                'all': u'{prefix} {dayname} {day} de {month} {year}',
             },
             'pt_BR': {
-                'all': u'{prefix} {dayname} {day} de {month} de {year}',
+                'all': u'{prefix} {dayname} {day} de {month} {year}',
             },
         }
 
@@ -42,7 +42,7 @@ class DateFormatter(BaseFormatter):
         elif self.language_code == 'es_ES':
             return u'1ero' if self.date.day == 1 else unicode(self.date.day)
         elif self.language_code == 'de_DE':
-            return u'%s.' % (self.date.day, suffix)
+            return u'%s.' % unicode(self.date.day)
         else:
             return unicode(self.date.day)
 
@@ -126,7 +126,7 @@ class DateFormatter(BaseFormatter):
         dayname, month, year = u'', u'', u''
 
         if include_dayname or abbrev_dayname:
-            dayname = self.format_dayname(abbrev_dayname)
+            dayname = self.format_dayname(abbrev_dayname).decode('utf-8')
 
         day = self.format_day()
 
