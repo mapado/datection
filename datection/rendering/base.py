@@ -103,6 +103,13 @@ class NextDateMixin(object):
         """ Return all dates (but the next), as a start/end datetime dict. """
         return len(self.regrouped_dates) > 1
 
+    def other_timings(self):
+        """ Returns true if first date has many timings"""
+        return (
+            self.regrouped_dates and
+            len(self.regrouped_dates[0]) > 1
+        )
+
 
 class NextChangesMixin(object):
     """
