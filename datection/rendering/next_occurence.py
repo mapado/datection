@@ -23,14 +23,22 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         self.schedule = self.deduplicate(self.schedule)
         self.start, self.end = start, end
         self.templates = {
-            'fr_FR': u'{date} + autres dates',
-            'en_US': u'{date} + more dates',
-            'de_DE': u'{date} + weitere Termine',
-            'es_ES': u'{date} + más fechas',
-            'it_IT': u'{date} + più date',
-            'pt_BR': u'{date} + mais datas',
-            'nl_NL': u'{date} + meer data',
-            'ru_RU': u'{date} + больше дат',
+            'fr_FR': {'more_date': u'{date} + autres dates',
+                      'more_timing': u'{date} + autres horaires'},
+            'en_US': {'more_date': u'{date} + more dates',
+                      'more_timing': u'{date} + more schedules'},
+            'de_DE': {'more_date': u'{date} + weitere Termine',
+                      'more_timing': u'{date} + mehr Zeitpläne'},
+            'es_ES': {'more_date': u'{date} + más fechas',
+                      'more_timing': u'{date} + más horarios'},
+            'it_IT': {'more_date': u'{date} + più date',
+                      'more_timing': u'{date} + più orari'},
+            'pt_BR': {'more_date': u'{date} + mais datas',
+                      'more_timing': u'{date} + mais horários'},
+            'nl_NL': {'more_date': u'{date} + meer data',
+                      'more_timing': u"{date} + meer schema's"},
+            'ru_RU': {'more_date': u'{date} + больше дат',
+                      'more_timing': u'{date} + больше расписаний'},
         }
 
     @postprocess(capitalize=True)
@@ -54,7 +62,10 @@ class NextOccurenceFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             abbrev_reference=self.other_occurences() and summarize,
             *args, **kwargs)
         if summarize and self.other_occurences():
-            template = self.get_template()
+            template = self.get_template('more_date')
+            return template.format(date=date_fmt)
+        elif summarize and self.other_timings():
+            template = self.get_template('more_timing')
             return template.format(date=date_fmt)
         else:
             return date_fmt
