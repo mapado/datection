@@ -30,6 +30,7 @@ from datection.rendering.utils import groupby_date
 from datection.rendering.utils import groupby_time
 from datection.rendering.utils import consecutives
 from datection.rendering.utils import to_start_end_datetimes
+from datection.rendering.place_summary import PlaceSummaryFormatter
 from datection.models import DurationRRule
 
 
@@ -1487,3 +1488,107 @@ class TestNextDateMixin(GetCurrentDayMocker):
             bounds=(datetime.datetime(2015, 9, 7, 2, 0), None),
             reference=datetime.datetime.now()
         ).display()
+
+
+class TestPlaceSummaryRender(unittest.TestCase):
+
+    def test_every_day(self):
+        """"""
+        schedule = [
+            {'duration': 60,
+             'excluded': [
+                 ('DTSTART:20150317\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;'
+                  'BYHOUR=8')
+             ],
+                'rrule': ('DTSTART:20150305\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                          'BYMINUTE=0;INTERVAL=1')
+             }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Tous les jours")
+
+    def test_except(self):
+        """"""
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,TH')
+            },
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=FR,SA,SU')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Tous les jours sauf mer.")
+
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,TH')
+            },
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=SA,SU')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Tous les jours sauf mer. et ven.")
+
+    def test_list(self):
+        """"""
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Lun.")
+
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Lun. et mar.")
+
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU,TH')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Lun., mar. et jeu.")
+
+        schedule = [
+            {
+                "duration": 360,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=22;BYDAY=MO,TU')
+            },
+            {
+                "duration": 60,
+                "rrule": ('DTSTART:20150709\nRRULE:FREQ=DAILY;'
+                          'INTERVAL=1;BYMINUTE=00;BYHOUR=23;BYDAY=TH')
+            }
+        ]
+
+        fmt = PlaceSummaryFormatter(schedule)
+        self.assertEqual(fmt.display(), "Lun., mar. et jeu.")

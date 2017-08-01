@@ -55,12 +55,14 @@ class BaseFormatter(object):
                 return self.templates['default'][key]
 
     # @staticmethod
-    def day_name(self, weekday_index):
+    def day_name(self, weekday_index, abbrev=False):
         """
         Return the weekday name associated wih the argument index
         using the current locale.
         """
         with utils.TemporaryLocale(_locale.LC_TIME, self.locale):
+            if abbrev:
+                return calendar.day_abbr[weekday_index].decode('utf-8')
             return calendar.day_name[weekday_index].decode('utf-8')
 
     @staticmethod

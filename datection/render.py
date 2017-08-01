@@ -12,6 +12,7 @@ from datection.rendering.exceptions import NoFutureOccurence
 from datection.rendering.next_occurence import NextOccurenceFormatter
 from datection.rendering.seo import SeoFormatter
 from datection.rendering.full import FullFormatter
+from datection.rendering.place_summary import PlaceSummaryFormatter
 from datection.lang import getlocale
 
 
@@ -114,6 +115,17 @@ def get_display_schedule(
         display_schedule.formatter_tuples.append(default_fmt_tuple)
 
         return display_schedule
+
+
+def get_short_display_place_schedule(schedule, loc):
+    """
+    Gives a short formatting for place schedule
+    """
+    locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
+
+    fmt = PlaceSummaryFormatter(schedule, locale)
+
+    return fmt.display()
 
 
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
