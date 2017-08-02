@@ -74,11 +74,11 @@ class DurationRRule(object):
             if self.forced_lower_bound:
                 start_bound_date = self.forced_lower_bound
             else:
-                start_bound_date = date.today()
-            if type(start_bound_date) == datetime:
-                self.rrule._dtstart = start_bound_date
-            else:
-                self.rrule._dtstart = datetime.combine(start_bound_date, DAY_START)
+                start_bound_date = datetime.combine(date.today(), DAY_START)
+
+            if start_bound_date > self.rrule._dtstart:
+                self.set_startdate(start_bound_date)
+
             if self.forced_upper_bound:
                 end_bound_date = self.forced_upper_bound
             else:
@@ -440,6 +440,14 @@ class DurationRRule(object):
             return True
 
         return self.rrule._until is None and self.rrule._count is None
+
+    @property
+    def has_end(self):
+        """Whether the DurationRRule has an end or not."""
+        if self.duration_rrule.get('unlimited'):
+            return False
+
+        return self.rrule._until is not None or self.rrule._count is not None
 
     @property
     def is_continuous(self):
