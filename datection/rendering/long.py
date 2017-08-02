@@ -46,13 +46,13 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
     def bounded_recurrings(self):
         """Select recurring rrules from self.schedule"""
         return [drr for drr in self.schedule if drr.is_recurring and
-                drr.bounded]
+                drr.has_end]
 
     @cached_property
     def unlimited_recurrings(self):
         """Select recurring rrules from self.schedule"""
         return [drr for drr in self.schedule if drr.is_recurring and
-                drr.unlimited]
+                not drr.has_end]
 
     @cached_property
     def non_special(self):
