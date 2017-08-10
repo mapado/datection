@@ -68,7 +68,9 @@ class PlaceSummaryFormatter(BaseFormatter):
         """
         weekdays = self.get_open_weekdays()
         nb_weekdays = len(weekdays)
-        if nb_weekdays <= 4:
+        if nb_weekdays == 0:
+            return u''
+        elif nb_weekdays <= 4:
             return self.display_list(weekdays)
         elif nb_weekdays < 7:
             return self.display_with_except(weekdays)
