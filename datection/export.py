@@ -154,7 +154,7 @@ def schedule_next_date(schedule):
     if schedule:
         nowdate = datetime.now()
         for drr in schedule:
-            drr = DurationRRule(drr, forced_lower_bound = nowdate)
+            drr = DurationRRule(drr, forced_lower_bound=nowdate)
             try:
                 ndt = drr.__iter__().next()
             except StopIteration:
@@ -163,6 +163,7 @@ def schedule_next_date(schedule):
                 curnext = ndt
 
     return curnext
+
 
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
