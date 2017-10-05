@@ -62,7 +62,7 @@ TRANSLATIONS = {
         'every day': u'every day',
         'the': u'the',
         'and': u'and',
-        'at': u'et',
+        'at': u'at',
         'except': u'except',
         'from_day': u'from',
         'to_day': u'to',

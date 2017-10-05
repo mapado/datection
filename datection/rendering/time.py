@@ -66,13 +66,13 @@ class TimePatternFormatter(BaseFormatter):
         """
         Format the time using the template associated with the locale
         """
-        # single time
-        if self.start_time == self.end_time or self.end_time is None:
-            return TimeFormatter(self.start_time, self.locale).display(prefix)
-
         # all day long
-        elif all_day(self.start_time, self.end_time):
+        if all_day(self.start_time, self.end_time):
             return u''
+
+        # single time
+        elif self.start_time == self.end_time or self.end_time is None:
+            return TimeFormatter(self.start_time, self.locale).display(prefix)
 
         # time interval
         template = self.get_template('interval')
@@ -99,7 +99,7 @@ class TimeIntervalListFormatter(BaseFormatter):
             'en_US': u'{time} + more schedules',
             'de_DE': u'{time} + mehr Zeitpläne',
             'es_ES': u'{time} + más horarios',
-            'it_IT': u'{time} + più orari',
+            'it_IT': u'{time} + altre orari',
             'pt_BR': u'{time} + mais horários',
             'nl_NL': u"{time} + meer schema's",
             'ru_RU': u'{time} + больше расписаний',
