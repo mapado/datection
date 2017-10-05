@@ -29,9 +29,14 @@ def get_time(d):
 
 def all_day(start, end):
     """Return True if the start/end bounds correspond to an entie day."""
-    start_time, end_time = get_time(start), get_time(end)
-    return (start_time == datetime.time(0, 0) and
-            end_time == datetime.time(23, 59))
+    start_time = get_time(start)
+    if start_time == datetime.time(0, 0):
+        if end is None:
+            return True
+        end_time = get_time(end)
+        if (end_time == datetime.time(23, 59) or end_time == datetime.time(0, 0)):
+            return True
+    return False
 
 
 def group_recurring_by_day(recurrings):
@@ -168,7 +173,7 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
             # Patch the after midnight case only if start_date is on another
             # day, and only if the date if before 5:00 am.
             # Concrete case : "Du 1 au 2 de 22h à 4h"
-            if end.hour <= 7:
+            if (end.date() == start.date() + datetime.timedelta(days=1)) and end.hour <= 7:
                 end += datetime.timedelta(days=-1)
 
             # convert the bounds to datetime if dates were given

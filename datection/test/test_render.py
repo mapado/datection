@@ -905,6 +905,20 @@ class TestFullFormatter_fr_FR(GetCurrentDayMocker):
             fmt.display(),
             u"Le vendredi 25 septembre 2015 à 20 h")
 
+    def test_display_day_with_one_date_full_day(self):
+        # Le vendredi 25 septembre 2015 à 20 h
+
+        schedule = [
+            {
+                'duration': 0,
+                'rrule': 'DTSTART:20150925\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;BYHOUR=0'
+            }
+        ]
+        fmt = FullFormatter(schedule)
+        self.assertEqual(
+            fmt.display(),
+            u"Le vendredi 25 septembre 2015")
+
     def test_display_day_with_two_date(self):
         # Le vendredi 25 septembre 2015 à 20, le samedi 10 octobre 2015 à 18 h
         schedule = [
