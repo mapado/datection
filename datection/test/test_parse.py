@@ -367,6 +367,14 @@ class TestParse(unittest.TestCase):
             u'Samedi 1 Juin 2014 de 11h à 13h et de 14h à 17h',
             [datetime(2014, 6, 1, 11, 0), datetime(2014, 6, 1, 14, 0)])
 
+    def test_numeric_datetime_pattern(self):
+        self.assert_generates(
+            u"Le 08/11/2017 : Mercredi de 20:30 à 23:00",
+            [datetime(2017, 11, 8, 20, 30)])
+        self.assert_generates(
+            u"Le 08/11/2017 : Merc. de 20:30 à 23:00",
+            [datetime(2017, 11, 8, 20, 30)])
+
     def test_expression_morning(self):
         dt = [tp for tp in parse(u"Le 5 mars 2015, le matin", "fr")
               if isinstance(tp, Datetime)][0]
