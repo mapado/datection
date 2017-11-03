@@ -206,6 +206,7 @@ class GrammarFactory(object):
         return (
             date_pattern_grm('date') +
             optional_oneof_ci(self._date_time_links) +
+            optional_oneof_ci(self._weekdays.keys() + self._short_weekdays.keys()) +
             Optional('.') +
             time_pattern_grm('time_pattern')
         ).setParseAction(develop_datetime_patterns)
