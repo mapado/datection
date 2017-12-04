@@ -5,6 +5,9 @@ Module in charge of transforming set of rrule + duration object into a
 more cohesive rrule set.
 
 """
+from builtins import str
+from builtins import range
+from builtins import object
 from datetime import timedelta, datetime
 from copy import deepcopy
 
@@ -95,13 +98,13 @@ def drrule_analysers_to_dict_drrules(drrules):
     """ Build clean list of dict rrules from DurationRRuleAnalyser objects."""
     drrules = cleanup_drrule(drrules)
     # ensure uniqueness
-    return {str(drr['duration']) + drr['rrule']: drr for drr in drrules}.values()
+    return list({str(drr['duration']) + drr['rrule']: drr for drr in drrules}.values())
 
 
 def contains(small, big):
     """ Check a list of items is contained in a larger list. """
-    for i in xrange(len(big) - len(small) + 1):
-        for j in xrange(len(small)):
+    for i in range(len(big) - len(small) + 1):
+        for j in range(len(small)):
             if big[i + j] != small[j]:
                 break
         else:
@@ -122,9 +125,8 @@ class DurationRRuleAnalyser(DurationRRule):
         Type are based on main fields existance in duration rrule.
 
         """
-        return u" ".join(map(lambda x: str(int(x)),
-                             [self.has_timelapse, self.has_date,
-                              self.has_day, self.has_time]))
+        return u" ".join([str(int(x)) for x in [self.has_timelapse, self.has_date,
+                              self.has_day, self.has_time]])
 
     @property
     def has_day(self):
@@ -423,10 +425,10 @@ class CohesiveDurationRRuleLinter(object):
     """
 
     def __init__(self, drrules, created_at=None, accept_composition=True):
-        self.drrules = [DurationRRuleAnalyser(rr) for rr in {
+        self.drrules = [DurationRRuleAnalyser(rr) for rr in list({
             str(drr['duration']) + drr['rrule']: drr
             for drr in drrules
-        }.values()]
+        }.values())]
         self.created_at = created_at
         self.accept_composition = accept_composition
 
@@ -468,7 +470,7 @@ class CohesiveDurationRRuleLinter(object):
                     and not rr.has_timelapse
                     and not rr.has_date):
                 drrules['has_days_and_time'].append(rr)
-            sign = unicode(rr)
+            sign = str(rr)
             if not sign in drrules['signature']:
                 drrules['signature'][sign] = []
             drrules['signature'][sign].append(rr)
@@ -477,7 +479,7 @@ class CohesiveDurationRRuleLinter(object):
     def avoid_doubles(self):
         """ Aim to generate a Set of duration rrule. """
         kept_rrules = []
-        for drrules in self.drrules_by['signature'].values():
+        for drrules in list(self.drrules_by['signature'].values()):
             for examinated_drrule in drrules:
                 keep_drrule = True
                 for cur_drrule in drrules:

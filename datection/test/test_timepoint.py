@@ -129,7 +129,7 @@ class TestDateList(CurrentDayMock):
 
     def test_equal(self):
         dl1 = DateList([Date(2013, 11, 12), Date(2013, 11, 13)])
-        dl2 = DateList([Date(2014, 10, 03)])
+        dl2 = DateList([Date(2014, 10, 0o3)])
         self.assertEqual(self.dl, dl1)
         self.assertNotEqual(self.dl, dl2)
 

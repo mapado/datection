@@ -2,6 +2,8 @@
 """
 Module in charge of removing rrules from other rrules
 """
+from builtins import range
+from builtins import object
 import datection.combine.common as common
 from datetime import timedelta
 from dateutil.rrule import weekdays

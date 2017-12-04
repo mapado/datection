@@ -2,12 +2,13 @@
 """
 Definition of French specific grammar, related to temoral expressions.
 """
+from __future__ import absolute_import
 from pyparsing import Optional
 
 from datection.grammar import YEAR
 from datection.grammar import oneof_ci
 
-from grammar_factory import GrammarFactory
+from .grammar_factory import GrammarFactory
 
 grm_gen = GrammarFactory('datection.data.fr')
 
@@ -78,15 +79,15 @@ PROBES = [MONTH, NUMERIC_DATE, TIME_INTERVAL, YEAR, WEEKDAY, DAY_NUMBER]
 # List of expressions associated with their replacement
 # This replacement allows to reduce the complexity of the patterns
 EXPRESSIONS = {
-    ur'midi': u'12h',
-    ur'minuit': u'23h59',
-    ur'(uniquement )?le matin': u'de 8h à 12h',
-    ur'(uniquement )?en journée': u'de 8h à 18h',
-    ur'(uniquement )?en soirée': u'de 18h à 22h',
-    ur"l'après-midi": u'de 14h à 18h',
-    ur'tous les jours': u'du lundi au dimanche',
-    ur"toute l'année": u'Du 1er janvier au 31 décembre',
-    ur"jusqu'à": u"à",
-    ur"jusqu'au": u"au",
-    ur'(à|a) partir de': u'de',
+    u'midi': u'12h',
+    u'minuit': u'23h59',
+    u'(uniquement )?le matin': u'de 8h à 12h',
+    u'(uniquement )?en journée': u'de 8h à 18h',
+    u'(uniquement )?en soirée': u'de 18h à 22h',
+    u"l'après-midi": u'de 14h à 18h',
+    u'tous les jours': u'du lundi au dimanche',
+    u"toute l'année": u'Du 1er janvier au 31 décembre',
+    u"jusqu'à": u"à",
+    u"jusqu'au": u"au",
+    u'(à|a) partir de': u'de',
 }

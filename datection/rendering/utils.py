@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from builtins import str
+from builtins import object
+import sys
+import six
 import datetime
 from collections import defaultdict
 import locale as _locale
@@ -49,7 +53,7 @@ def group_recurring_by_day(recurrings):
     for rec in recurrings:
         key = "_".join([str(i) for i in rec.weekday_indexes])
         out[key].append(rec)
-    return out.values()
+    return list(out.values())
 
 
 def hash_same_date_pattern(time_group):
@@ -107,7 +111,7 @@ def groupby_time(dt_intervals):
         times[grp].append(inter)  # group dates by time
     return [
         sorted(group, key=lambda item: item['start'])
-        for group in times.values()]
+        for group in list(times.values())]
 
 
 def groupby_date(dt_intervals):
@@ -123,7 +127,7 @@ def groupby_date(dt_intervals):
         dates[start_date.isoformat()].append(inter)  # group dates by time
     return [
         sorted(group, key=lambda item: item['start'])
-        for group in dates.values()]
+        for group in list(dates.values())]
 
 
 def group_recurring_by_date_interval(recurrings):
@@ -192,14 +196,16 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
                 out.append({'start': start, 'end': end})
     return out
 
-
 class TemporaryLocale(object):  # pragma: no cover
     """
     Temporarily change the current locale using a context manager.
     """
     def __init__(self, category, locale):
         self.category = category
-        self.locale = locale.encode('utf-8')
+        if not six.PY3:
+            self.locale = locale.encode('utf-8')
+        else:
+            self.locale = locale
         self.oldlocale = _locale.getlocale(category)
 
     def __enter__(self):

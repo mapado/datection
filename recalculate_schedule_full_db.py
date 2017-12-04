@@ -1,3 +1,9 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import next
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from entities.mongo.activity import Activity
 import requests
 import frogress
@@ -26,7 +32,7 @@ def cb_job_done(result):
     #     errors+=1
     f.write(result)
     f.flush()
-    progress.next()
+    next(progress)
 
 
 batch_size=1000
@@ -42,25 +48,25 @@ query_args = {
 if not last_id:
     last_id = Activity.objects(**query_args).order_by('_id').first().id
     # open new log file
-    print "Creating a new log file"
+    print("Creating a new log file")
     f=open("./datefix.err", "w")
 else:
     # append to existing file
-    print "Append to existing log file"
+    print("Append to existing log file")
     f=open("./datefix.err", "a")
 
 num_to_recalculate = Activity.objects(id__gte=last_id, **query_args).count()
 
-print "{} activities to recalculte".format(num_to_recalculate)
+print("{} activities to recalculte".format(num_to_recalculate))
 
 if num_to_recalculate > max_to_recalculate:
     num_to_recalculate=max_to_recalculate
 
-progress = frogress.bar(range(num_to_recalculate))
+progress = frogress.bar(list(range(num_to_recalculate)))
 
 p = Pool(24)
 
-for step in xrange(0, num_to_recalculate/batch_size):
+for step in range(0, old_div(num_to_recalculate,batch_size)):
     acts = Activity.objects(
 		id__gte=last_id,
         **query_args
@@ -79,5 +85,5 @@ for step in xrange(0, num_to_recalculate/batch_size):
 
 
 f.close()
-print errors
-print "Last item ID : {}".format(last_id)
+print(errors)
+print("Last item ID : {}".format(last_id))

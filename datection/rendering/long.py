@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import zip
 from collections import defaultdict
 
 from datection.models import DurationRRule
@@ -180,7 +181,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             hash_key = utils.hash_same_date_pattern(time_grp)
             common_pattern_dict[hash_key].append((time_grp, conseq_grps))
 
-        for time_conseq_grp_tup_list in common_pattern_dict.values():
+        for time_conseq_grp_tup_list in list(common_pattern_dict.values()):
             if len(time_conseq_grp_tup_list) == 1:
                 others.extend(time_conseq_grp_tup_list)
             else:
@@ -220,7 +221,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
         :return: time format string
         """
-        start_time, end_time = time_group[0].values()
+        start_time, end_time = list(time_group[0].values())
         return TimePatternFormatter(
             start_time, end_time, self.locale).display(prefix=True)
 

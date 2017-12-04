@@ -2,6 +2,7 @@
 
 """Datection exporters to database compliant formats."""
 
+from builtins import next
 from datetime import datetime
 from datetime import timedelta
 from datection.parse import parse
@@ -156,7 +157,7 @@ def schedule_next_date(schedule):
         for drr in schedule:
             drr = DurationRRule(drr, forced_lower_bound=nowdate)
             try:
-                ndt = drr.__iter__().next()
+                ndt = next(drr.__iter__())
             except StopIteration:
                 ndt = None
             if ndt and (not curnext or curnext > ndt) and ndt > nowdate:

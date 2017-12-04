@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from builtins import str
 import locale as _locale
 import datetime
+import six
 
 from datection.rendering.base import BaseFormatter
 from datection.rendering.wrappers import postprocess
@@ -32,7 +34,7 @@ class DateFormatter(BaseFormatter):
     def format_day(self):
         """ Format the date day using the current locale. """
         if self.language_code == 'fr_FR':
-            return u'1er' if self.date.day == 1 else unicode(self.date.day)
+            return u'1er' if self.date.day == 1 else str(self.date.day)
         elif self.language_code in ['en_US', 'en_GB']:
             if 4 <= self.date.day <= 20 or 24 <= self.date.day <= 30:
                 suffix = 'th'
@@ -40,11 +42,11 @@ class DateFormatter(BaseFormatter):
                 suffix = ['st', 'nd', 'rd'][self.date.day % 10 - 1]
             return u'%d%s' % (self.date.day, suffix)
         elif self.language_code == 'es_ES':
-            return u'1ero' if self.date.day == 1 else unicode(self.date.day)
+            return u'1ero' if self.date.day == 1 else str(self.date.day)
         elif self.language_code == 'de_DE':
-            return u'%s.' % unicode(self.date.day)
+            return u'%s.' % str(self.date.day)
         else:
-            return unicode(self.date.day)
+            return str(self.date.day)
 
     def format_dayname(self, abbrev=False):
         """ Format the date day using the current locale. """
@@ -126,12 +128,18 @@ class DateFormatter(BaseFormatter):
         dayname, month, year = u'', u'', u''
 
         if include_dayname or abbrev_dayname:
-            dayname = self.format_dayname(abbrev_dayname).decode('utf-8')
+            if not six.PY3:
+                dayname = self.format_dayname(abbrev_dayname).decode('utf-8')
+            else:
+                dayname = self.format_dayname(abbrev_dayname)
 
         day = self.format_day()
 
         if include_month:
-            month = self.format_month(abbrev_monthname).decode('utf-8')
+            if not six.PY3:
+                month = self.format_month(abbrev_monthname).decode('utf-8')
+            else:
+                month = self.format_month(abbrev_monthname)
 
         if include_year:
             year = self.format_year(abbrev_year, force=force_year)

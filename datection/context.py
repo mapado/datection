@@ -13,6 +13,9 @@ it makes sense to use it only when necessary.
 """
 
 
+from builtins import str
+from builtins import range
+from builtins import object
 class Context(object):
 
     """ An object representing the textual context around a temporal reference
@@ -63,7 +66,7 @@ class Context(object):
 
     def __contains__(self, item):
         """Context is in another context if their span overlap."""
-        return item.start in xrange(self.start, self.end)
+        return item.start in range(self.start, self.end)
 
     def __repr__(self):
         return repr(self.text[self.start: self.end])
@@ -72,10 +75,10 @@ class Context(object):
         return self.__dict__ == item.__dict__
 
     def __unicode__(self):
-        return unicode(self.text[self.start: self.end])
+        return str(self.text[self.start: self.end])
 
     def __hash__(self):
-        return hash(unicode(self))
+        return hash(str(self))
 
     def __len__(self):
         return self.end - self.start
@@ -103,7 +106,7 @@ def probe(text, lang):
         'datection.grammar.' + lang, fromlist=['grammar']).PROBES
     for tp_probe in probes:
         for match, start, end in tp_probe.scanString(text):
-            matches.append(Context(start, end, text, match.keys()))
+            matches.append(Context(start, end, text, list(match.keys())))
 
     out = list(set(matches))  # remove redundant matches
     # sort return list by order of apperance in the text

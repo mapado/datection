@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import object
 from dateutil.rrule import weekdays as all_weekdays
 
 from datection.timepoint import Time

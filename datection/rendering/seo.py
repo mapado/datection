@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import next
 from datection.rendering.base import BaseFormatter
 from datection.rendering.base import NextDateMixin
 from datection.rendering.base import NextChangesMixin

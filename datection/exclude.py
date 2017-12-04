@@ -6,6 +6,7 @@ from another one.
 
 """
 
+from builtins import object
 from dateutil.rrule import rrulestr
 
 from datection.utils import makerrulestr

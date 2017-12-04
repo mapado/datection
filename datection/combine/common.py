@@ -3,6 +3,8 @@
 """
 Module regrouping common functions for combining rrules
 """
+from builtins import next
+from builtins import range
 from datetime import timedelta
 
 
@@ -44,7 +46,7 @@ def get_last_of_weekly(wrec):
     Returns the last occurence of the weekly rrule
     """
     end_day = wrec.end_datetime.date()
-    for i in xrange(7):
+    for i in range(7):
         tmp_date = end_day - timedelta(days=i)
         if tmp_date.weekday() in wrec.weekday_indexes:
             return tmp_date

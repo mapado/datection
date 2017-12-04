@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import six
+
 from datection.lang import detect_language
 from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
@@ -17,7 +19,7 @@ def parse(text, lang, valid=True, reference=None):
     If valid is True, only valid Timepoints will be returned.
 
     """
-    if isinstance(text, str):
+    if isinstance(text, six.binary_type):
         text = text.decode('utf-8')
     text = text.lower()
 

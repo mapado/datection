@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import range
 from datection.rendering.base import BaseFormatter
 from datection.rendering.date import DateIntervalFormatter
 from datection.rendering.time import TimeIntervalListFormatter
@@ -31,7 +32,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
 
     def all_weekdays(self):
         """Return True if the RRule describes all weekdays."""
-        return self.drr.weekday_indexes == range(7)
+        return self.drr.weekday_indexes == list(range(7))
 
     def format_weekday_interval(self):
         """Format the rrule weekday interval using the current locale."""
@@ -48,7 +49,7 @@ class WeekdayReccurenceFormatter(BaseFormatter):
             # continuous interval
             # note: to be continuous, the indexes must form a range of
             # more than 2 items, otherwise, we see it as a list
-            if (self.drr.weekday_indexes == range(start_idx, end_idx + 1) and
+            if (self.drr.weekday_indexes == list(range(start_idx, end_idx + 1)) and
                     start_idx != end_idx - 1):
                 template = self.get_template('interval')
                 start_weekday = self.day_name(start_idx)

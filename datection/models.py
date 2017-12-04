@@ -4,6 +4,9 @@
 Utility models for datection.
 """
 
+from builtins import str
+from builtins import range
+from builtins import object
 import re
 
 from datetime import timedelta
@@ -47,7 +50,7 @@ class DurationRRule(object):
             'duration': self.duration_rrule['duration'],
             'rrule': self.duration_rrule['rrule'],
         }
-        return hash(frozenset(data.items()))
+        return hash(frozenset(list(data.items())))
 
     def __eq__(self, other):
         return hash(self) == hash(other)
@@ -209,7 +212,7 @@ class DurationRRule(object):
         # input exclusions strings might be incomplete regarding
         # the start and the end of the exclusions
         ex_rrules = self.duration_rrule.get('excluded', [])
-        for idx in xrange(len(ex_rrules)):
+        for idx in range(len(ex_rrules)):
             if ex_rrules[idx] is not None:
                 if ex_rrules[idx].find("DTSTART") == -1:
                     rrule_start = self.rrule._dtstart
@@ -239,7 +242,7 @@ class DurationRRule(object):
         """
         ex_rrule_str = ex_rrule.duration_rrule['rrule']
 
-        if 'excluded' not in self.duration_rrule.keys():
+        if 'excluded' not in list(self.duration_rrule.keys()):
             self.duration_rrule['excluded'] = []
         self.duration_rrule['excluded'].append(ex_rrule_str)
 
@@ -391,7 +394,7 @@ class DurationRRule(object):
         if self.rrule._byweekday:
             start_idx = self.weekday_indexes[0]
             end_idx = self.weekday_indexes[-1]
-            return range(start_idx, end_idx + 1)
+            return list(range(start_idx, end_idx + 1))
 
     @property
     def is_recurring(self):

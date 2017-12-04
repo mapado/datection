@@ -3,6 +3,11 @@
 """
 Module in charge of transforming packing a list of rrule together
 """
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from datection.models import DurationRRule
 from datetime import timedelta
 from datetime import datetime
@@ -157,7 +162,7 @@ def get_first_of_weekly(wrec):
     Returns the first occurence of the weekly rrule
     """
     start_day = wrec.start_datetime.date()
-    for i in xrange(7):
+    for i in range(7):
         tmp_date = start_day + timedelta(days=i)
         if tmp_date.weekday() in wrec.weekday_indexes:
             return tmp_date
@@ -169,7 +174,7 @@ def get_last_of_weekly(wrec):
     Returns the last occurence of the weekly rrule
     """
     end_day = wrec.end_datetime.date()
-    for i in xrange(7):
+    for i in range(7):
         tmp_date = end_day - timedelta(days=i)
         if tmp_date.weekday() in wrec.weekday_indexes:
             return tmp_date
@@ -368,7 +373,7 @@ class RrulePacker(object):
         Returns a dict {type: 'week', 'ids': [list of mergeable single dates indexes]}
         """
         sing_dates = self._single_dates_by_time[tim]
-        for day in xrange(7):
+        for day in range(7):
             single_dates = [(i, (main_idx, sing))
                             for i, (main_idx, sing) in enumerate(sing_dates) if
                             sing.start_datetime.date().weekday() == day]
@@ -415,7 +420,7 @@ class RrulePacker(object):
             return None
 
         sing_to_remove_idxs = set()
-        for tim in self._single_dates_by_time.keys():
+        for tim in list(self._single_dates_by_time.keys()):
             attemptPacking = True
             while attemptPacking and len(self._single_dates_by_time[tim]) > 0:
                 attemptPacking = False
@@ -424,7 +429,7 @@ class RrulePacker(object):
                 self.probe_weekly(probe_list, tim)
                 best_probe = select_best_probe(probe_list)
                 if best_probe:
-                    tim_idxs, main_idxs = zip(*best_probe['ids'])
+                    tim_idxs, main_idxs = list(zip(*best_probe['ids']))
                     sing_to_remove_idxs.update(main_idxs)
                     self.merge_sing_dates(best_probe['type'],
                                           tim_idxs, tim)
@@ -669,7 +674,7 @@ def is_gap_small(drr1, drr2, ratio=0.3):
     limits = sorted(limits)
     gap = float((limits[2] - limits[1]).days)
     total = float((limits[3] - limits[0]).days)
-    return (gap / total) <= ratio
+    return (old_div(gap, total)) <= ratio
 
 
 def continuous_gap(continuous1, continuous2):

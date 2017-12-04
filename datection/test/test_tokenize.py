@@ -2,6 +2,7 @@
 
 """Test suite of the datection tokenization utilities."""
 
+from builtins import object
 import unittest
 
 from datection.tokenize import Tokenizer

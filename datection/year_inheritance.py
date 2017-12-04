@@ -2,6 +2,7 @@
 
 """Implementation of the year iheritance strategies."""
 
+from builtins import object
 from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
 

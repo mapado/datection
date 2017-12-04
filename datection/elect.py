@@ -12,6 +12,8 @@ schedule with rrules generating the less timepoints of all will be
 chosen.
 
 """
+from __future__ import division
+from past.utils import old_div
 from datection.similarity import discretise_schedule
 
 
@@ -21,7 +23,7 @@ def common_elements(set_list):
 
 
 def similarity_score(discrete_schedule, common):
-    return len(common) / float(len(discrete_schedule))
+    return old_div(len(common), float(len(discrete_schedule)))
 
 
 def best_schedule(schedules):

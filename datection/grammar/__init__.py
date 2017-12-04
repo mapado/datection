@@ -300,42 +300,42 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
 
 # The day number. Ex: lundi *18* juin 2013.
 DAY_NUMBER = Regex(
-    ur'(?<![\dh:])'  # not preceeded by a digit, a 'h' or a ':'
+    r'(?<![\dh:])'  # not preceeded by a digit, a 'h' or a ':'
     # OK: (0)1..(0)9...10...29, 30, 31
-    ur'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
+    r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
     # no number, prices or time tags after
     # to avoid matching (20)13 in a year, (20)€ or (15)h
     # Note that is its possible for a single digit  to be matched
     # that's ok because the DAY_NUMBER regex will be used in combination
     # with others like DAYS, MONTHS, etc
-    ur'( )?(?![\d|€)|h])').\
+    r'( )?(?![\d|€)|h])').\
     setParseAction(as_int).\
     setResultsName('day')
 
 # The year number. A valid year must either start with 1 or 2.
-YEAR = Regex(ur'[12]\d{3}').\
+YEAR = Regex(r'[12]\d{3}').\
     setParseAction(as_int).\
     setResultsName('year')
 
 # hour: between 00 and 24. Can be 2 digit or 1-digit long.
 # The hour it must not be preceded by another digit
 # The minute must not be followed by another digit
-HOUR = Regex(ur'(?<!\d)(0[0-9]|1[0-9]|2[0-4]|[0-9])(?!\d)').\
+HOUR = Regex(r'(?<!\d)(0[0-9]|1[0-9]|2[0-4]|[0-9])(?!\d)').\
     setParseAction(as_int).\
     setResultsName('hour')
 
 # Minute: bewteen 00 and 59
-MINUTE = Regex(ur'[0-5][0-9]').\
+MINUTE = Regex(r'[0-5][0-9]').\
     setParseAction(as_int).\
     setResultsName('minute')
 
 # The numeric version of the month: 2 digits bewteen 01 and 12
-NUMERIC_MONTH = Regex(ur'1[0-2]|0[1-9]|[1-9](?!\d)').\
+NUMERIC_MONTH = Regex(r'1[0-2]|0[1-9]|[1-9](?!\d)').\
     setParseAction(as_int).\
     setResultsName('month')
 
 # The numeric version of the year number, either 2 digits or 4 digits
 # (ex: dd/mm/2012 or dd/mm/12)
-NUMERIC_YEAR = Regex(ur'%s|\d{2}(?!\d{1,2})' % (YEAR.pattern)).\
+NUMERIC_YEAR = Regex(r'%s|\d{2}(?!\d{1,2})' % (YEAR.pattern)).\
     setParseAction(as_4digit_year).\
     setResultsName('year')

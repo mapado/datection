@@ -5,6 +5,7 @@ Timepoint objects. The Timepoints bringing redundancy will be removed.
 
 """
 
+from builtins import object
 from copy import deepcopy
 from collections import Counter
 from datetime import datetime

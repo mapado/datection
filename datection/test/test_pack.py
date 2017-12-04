@@ -2,6 +2,8 @@
 
 """ Functional tests on datection.pack """
 
+from builtins import zip
+from builtins import range
 import unittest
 
 from datection.timepoint import ALL_DAY
@@ -20,8 +22,8 @@ class TestPack(unittest.TestCase):
         self.assertItemsEqual(new_details, res_details)
 
     def assertRrulesEqual(self, rrule1, rrule2):
-        self.assertItemsEqual(rrule1.keys(), rrule2.keys())
-        for k in rrule2.keys():
+        self.assertItemsEqual(list(rrule1.keys()), list(rrule2.keys()))
+        for k in list(rrule2.keys()):
             if k == 'rrule':
                 self.assertRruleStrEqual(rrule1[k], rrule2[k])
             elif k == 'excluded':
@@ -50,7 +52,7 @@ class TestPack(unittest.TestCase):
         sorted_packed = sorted(packed, key=lambda drr: drr.start_datetime)
         result = [DurationRRule(rrule) for rrule in result]
         sorted_result = sorted(result, key=lambda drr: drr.start_datetime)
-        for i in xrange(len(result)):
+        for i in range(len(result)):
             self.assertRrulesEqual(sorted_result[i].duration_rrule,
                                    sorted_packed[i].duration_rrule)
 

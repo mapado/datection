@@ -3,6 +3,7 @@
 Module in charge of transforming a rrule + duraction object into the shortest
 human-readable string possible.
 """
+from builtins import object
 import datetime
 from collections import namedtuple
 
