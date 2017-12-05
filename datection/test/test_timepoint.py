@@ -3,6 +3,7 @@
 """Test suite of the datection.timepoint module."""
 
 import unittest
+import six
 import mock
 
 from datetime import time
@@ -155,7 +156,7 @@ class TestDateList(CurrentDayMock):
                 'duration': ALL_DAY
             }
         ]
-        self.assertItemsEqual(self.dl.export(), expected)
+        six.assertCountEqual(self, self.dl.export(), expected)
 
     def test_future(self):
         self.assertTrue(self.dl.future())  # today: before
@@ -308,7 +309,7 @@ class TestDatetimeList(CurrentDayMock):
                 'duration': 0
             }
         ]
-        self.assertItemsEqual(self.dtl.export(), expected)
+        six.assertCountEqual(self, self.dtl.export(), expected)
 
     # def test_to_python(self):
     #     self.assertListEqual(

@@ -3,6 +3,7 @@
 """ Functional tests on datection.combine.remove """
 
 from builtins import range
+import six
 import unittest
 
 from datection.combine.remove import RruleRemover
@@ -12,7 +13,7 @@ from datection.models import DurationRRule
 class TestRemove(unittest.TestCase):
 
     def assertRrulesEqual(self, rrule1, rrule2):
-        self.assertItemsEqual(list(rrule1.keys()), list(rrule2.keys()))
+        six.assertCountEqual(self, list(rrule1.keys()), list(rrule2.keys()))
         for k in list(rrule2.keys()):
             if k == 'rrule':
                 new_rrule_lines = rrule1[k].splitlines()
@@ -20,7 +21,7 @@ class TestRemove(unittest.TestCase):
                 self.assertEqual(new_rrule_lines[0], result_lines[0])
                 new_details = new_rrule_lines[1].split(":")[1].split(";")
                 res_details = result_lines[1].split(":")[1].split(";")
-                self.assertItemsEqual(new_details, res_details)
+                six.assertCountEqual(self, new_details, res_details)
             else:
                 self.assertEqual(rrule1[k], rrule2[k])
 

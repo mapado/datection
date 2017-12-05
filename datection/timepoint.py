@@ -343,7 +343,7 @@ class Date(AbstractDate):
 
         """
         reference = reference if reference is not None else get_current_date()
-        return self.to_python() >= reference
+        return (self.to_python() >= reference)
 
 
 class Time(Timepoint):

@@ -2,6 +2,7 @@
 
 """ Functional tests on datection.combine.split """
 import unittest
+import six
 from datection.combine.split import split_schedules
 from datetime import date
 
@@ -14,7 +15,7 @@ class TestSplit(unittest.TestCase):
         self.assertEqual(new_rrule_lines[0], result_lines[0])
         new_details = new_rrule_lines[1].split(":")[1].split(";")
         res_details = result_lines[1].split(":")[1].split(";")
-        self.assertItemsEqual(new_details, res_details)
+        six.assertCountEqual(self, new_details, res_details)
 
     def test_only_past(self):
         reference = date(2016, 10, 24)

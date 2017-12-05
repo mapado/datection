@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from builtins import str
+import six
 import unittest
 
 from datetime import datetime
@@ -239,4 +240,4 @@ class TestFacebookScheduleNormalization(unittest.TestCase):
                 time_interval=TimeInterval(Time(10, 0), Time(18, 0)),
                 weekdays=Weekdays([SU])).export(),
         ]
-        self.assertItemsEqual(normalize_fb_hours(fb_hours), expected)
+        six.assertCountEqual(self, normalize_fb_hours(fb_hours), expected)
