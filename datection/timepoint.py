@@ -586,7 +586,11 @@ class DateInterval(AbstractDateInterval):
         if not end_date.year:
             return start_date
         if not start_date.year:
-            if start_date.month > end_date.month:
+            if not end_date.month:
+                start_date.year = end_date.year - 1
+            elif not start_date.month:
+                start_date.year = end_date.year
+            elif start_date.month > end_date.month:
                 start_date.year = end_date.year - 1
             else:
                 start_date.year = end_date.year

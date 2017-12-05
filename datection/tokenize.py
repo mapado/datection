@@ -2,6 +2,7 @@
 
 """Utilities used for tokenizing a string into time-related tokens."""
 from __future__ import division
+import six
 
 from builtins import str
 from builtins import range
@@ -301,7 +302,10 @@ class Tokenizer(object):
 
         """
         matches = []
-        ctx = str(context)
+        if six.PY2:
+            ctx = unicode(context)
+        else:
+            ctx = context.text[context.start: context.end]
         ctx = self.clean_context(ctx)
 
         # replacement expression
@@ -328,7 +332,6 @@ class Tokenizer(object):
         dmatches = self._search_matches_timepoints(
             timepoints, context, ctx, analyse_subpattern, pattern_list
         )
-
         matches = [t for mt in list(dmatches.values()) for t in mt]
         return matches
 
@@ -431,8 +434,10 @@ class Tokenizer(object):
         pname = tp[0]
         pattern = tp[1]
         local_matches = []
-        ctx = str(ctx)
-
+        if six.PY2:
+            ctx = unicode(ctx)
+        else:
+            ctx = context.text[context.start: context.end]
         try:
             idx_offset = context.start
             for pattern_matches, start, end in pattern.scanString(ctx):
@@ -522,7 +527,6 @@ class Tokenizer(object):
         contexts = probe(self.text, self.lang)
         if not contexts:
             return []
-
         matches = []
         for ctx in contexts:
             matches.extend(self.search_context(ctx))

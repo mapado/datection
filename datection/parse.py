@@ -27,6 +27,7 @@ def parse(text, lang, valid=True, reference=None):
 
     schedule = Schedule()
     token_groups = Tokenizer(text, lang).tokenize()
+
     for token_group in token_groups:
         if token_group.is_single_token:
             token = token_group[0]
