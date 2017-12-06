@@ -434,10 +434,7 @@ class Tokenizer(object):
         pname = tp[0]
         pattern = tp[1]
         local_matches = []
-        if six.PY2:
-            ctx = unicode(ctx)
-        else:
-            ctx = context.text[context.start: context.end]
+        ctx = str(ctx)
         try:
             idx_offset = context.start
             for pattern_matches, start, end in pattern.scanString(ctx):

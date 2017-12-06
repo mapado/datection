@@ -282,12 +282,12 @@ class Date(AbstractDate):
     def __hash__(self):
         return hash((self.year, self.month, self.day))
 
-    def __unicode__(self):  # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         return u'%s/%s/%s' % (
             str(self.year).zfill(4) if self.year is not None else '?',
             str(self.month).zfill(2) if self.month is not None else '?',
             str(self.day).zfill(2)
-        )
+        ) 
 
     @classmethod
     def from_match(self, match):  # pragma: no cover
@@ -394,7 +394,7 @@ class TimeInterval(Timepoint):
         yield self.start_time
         yield self.end_time
 
-    def __unicode__(self):
+    def __repr__(self):
         return u'%d:%s - %d:%s' % (
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
@@ -555,7 +555,7 @@ class DateInterval(AbstractDateInterval):
             yield current
             current += timedelta(days=1)
 
-    def __unicode__(self):
+    def __repr__(self):
         return u'%s - %s%s' % (
             str(self.start_date),
             str(self.end_date),
@@ -685,7 +685,7 @@ class Datetime(AbstractDate):
     def __hash__(self):
         return hash((self.date, self.start_time, self.end_time))
 
-    def __unicode__(self):
+    def __repr__(self):
         return u'%s - %d:%s%s' % (
             str(self.date),
             self.start_time.hour,
@@ -1043,7 +1043,7 @@ class Weekdays(Timepoint):
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
             return False
-        return sorted(self.days) == sorted(other.days)
+        return sorted([str(d) for d in self.days]) == sorted([str(d) for d in other.days])
 
     def __hash__(self):
         return hash(sorted(self.days))
@@ -1054,7 +1054,7 @@ class Weekdays(Timepoint):
     def __iter__(self):
         return iter(self.days)
 
-    def __unicode__(self):
+    def __repr__(self):
         if self.all_week:
             return 'ALL_WEEK'
         else:

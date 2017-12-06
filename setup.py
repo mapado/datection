@@ -12,6 +12,7 @@ setup(
         # private packages
         # public packages
         'python-dateutil',
-        'pyparsing==2.0.3'
+        'pyparsing==2.0.3',
+        'future'
     ],
 )
