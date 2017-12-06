@@ -3,6 +3,7 @@ from builtins import str
 from builtins import object
 import sys
 import six
+from future.utils import viewitems
 import datetime
 from collections import defaultdict
 import locale as _locale
@@ -109,13 +110,9 @@ def groupby_time(dt_intervals):
         start_time, end_time = inter['start'].time(), inter['end'].time()
         grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
         times[grp].append(inter)  # group dates by time
-    print([
-        sorted(group, key=lambda item: item['start'])
-        for group in list(times.values())])
     return [
         sorted(group, key=lambda item: item['start'])
-        for group in list(times.values())]
-
+        for group in times.values()]
 
 def groupby_date(dt_intervals):
     """
@@ -130,8 +127,7 @@ def groupby_date(dt_intervals):
         dates[start_date.isoformat()].append(inter)  # group dates by time
     return [
         sorted(group, key=lambda item: item['start'])
-        for group in list(dates.values())]
-
+        for group in dates.values()]
 
 def group_recurring_by_date_interval(recurrings):
     """
