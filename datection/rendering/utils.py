@@ -110,9 +110,9 @@ def groupby_time(dt_intervals):
         start_time, end_time = inter['start'].time(), inter['end'].time()
         grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
         times[grp].append(inter)  # group dates by time
-    return [
-        sorted(group, key=lambda item: item['start'])
-        for group in times.values()]
+    return sorted([group
+        for time_group, group in sorted(viewitems(times))],
+        key=lambda item:item[0]["start"])
 
 def groupby_date(dt_intervals):
     """
@@ -125,9 +125,9 @@ def groupby_date(dt_intervals):
     for inter in dt_intervals:
         start_date = inter['start'].date()
         dates[start_date.isoformat()].append(inter)  # group dates by time
-    return [
-        sorted(group, key=lambda item: item['start'])
-        for group in dates.values()]
+    return sorted([group
+        for date_group, group in sorted(viewitems(dates))],
+        key=lambda item:item[0]["start"])
 
 def group_recurring_by_date_interval(recurrings):
     """
