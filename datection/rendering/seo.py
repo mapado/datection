@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from builtins import next
+import six
 from datection.rendering.base import BaseFormatter
 from datection.rendering.base import NextDateMixin
 from datection.rendering.base import NextChangesMixin
@@ -65,15 +66,26 @@ class SeoFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             return u''
         elif len(dates) == 1:
             date_fmt = DateFormatter(dates[0], self.locale)
-            month_fmt = date_fmt.format_month().decode('utf-8')
+            if not six.PY3:
+                month_fmt = date_fmt.format_month().decode('utf-8')
+            else:
+                month_fmt = date_fmt.format_month()
         else:
             month_tpl = self.get_template('two_months')
-            month_fmt = month_tpl.format(
-                month1=DateFormatter(
-                    dates[0], self.locale).format_month().decode('utf-8'),
-                _and=self._('and'),
-                month2=DateFormatter(
-                    dates[1], self.locale).format_month().decode('utf-8'))
+            if not six.PY3:
+                month_fmt = month_tpl.format(
+                    month1=DateFormatter(
+                        dates[0], self.locale).format_month().decode('utf-8'),
+                    _and=self._('and'),
+                    month2=DateFormatter(
+                        dates[1], self.locale).format_month().decode('utf-8'))
+            else:
+                month_fmt = month_tpl.format(
+                    month1=DateFormatter(
+                        dates[0], self.locale).format_month(),
+                    _and=self._('and'),
+                    month2=DateFormatter(
+                        dates[1], self.locale).format_month())
         year_fmt = DateFormatter(dates[0], self.locale).format_year(force=True)
         tpl = self.get_template('full')
         fmt = tpl.format(months=month_fmt, year=year_fmt)
