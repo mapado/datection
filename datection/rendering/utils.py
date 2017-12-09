@@ -55,8 +55,7 @@ def group_recurring_by_day(recurrings):
     for rec in recurrings:
         key = "_".join([str(i) for i in rec.weekday_indexes])
         out[key].append(rec)
-    return list(out.values())
-
+    return [v for k, v in sorted(out.items())]
 
 def hash_same_date_pattern(time_group):
     """
