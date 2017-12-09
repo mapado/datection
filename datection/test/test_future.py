@@ -3,7 +3,7 @@
 import unittest
 import datetime
 
-from datection.future import is_future
+from datection.dtfuture import is_future
 
 
 class TestFuture(unittest.TestCase):

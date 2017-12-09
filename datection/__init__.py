@@ -19,5 +19,5 @@ from datection.context import probe
 from datection.export import export, to_db
 from datection.render import display
 from datection.render import get_display_schedule
-from datection.future import is_future
+from datection.dtfuture import is_future
 from datection.similarity import similarity

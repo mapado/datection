@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+
 from builtins import str
 from builtins import object
 import sys
 import six
-from future.utils import viewitems
 import datetime
 from collections import defaultdict
 import locale as _locale
+from future.utils import viewitems
+
 from datection.models import DurationRRule
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END

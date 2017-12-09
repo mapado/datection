@@ -5,7 +5,7 @@ Test suite of the similarity module
 """
 
 from __future__ import division
-
+import six
 import unittest
 
 from datetime import datetime
@@ -49,7 +49,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 5, 8, 30, 0),
             datetime(2014, 2, 5, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
+        six.assertCountEqual(self, discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_exception(self):
         schedule = [
@@ -70,7 +70,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2017, 1, 29, 0, 0)
         ]
 
-        self.assertItemsEqual(discretise_schedule(schedule), expected)
+        six.assertCountEqual(self, discretise_schedule(schedule), expected)
 
     def test_discretise_several_schedules(self):
         schedule = [
@@ -93,7 +93,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 6, 8, 30, 0),
             datetime(2014, 2, 6, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
+        six.assertCountEqual(self, discretise_schedule(schedule, grain_level="min", grain_quantity=30), expected)
 
     def test_discretise_day_interval(self):
         start = datetime(2014, 2, 5, 8, 0, 0)
@@ -103,7 +103,7 @@ class ScheduleSimilarityTest(unittest.TestCase):
             datetime(2014, 2, 5, 8, 30, 0),
             datetime(2014, 2, 5, 9, 0, 0),
         ]
-        self.assertItemsEqual(discretise_day_interval(start, end), expected)
+        six.assertCountEqual(self, discretise_day_interval(start, end), expected)
 
     def test_similarity_no_overlap(self):
         schedule1 = [
