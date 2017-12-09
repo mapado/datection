@@ -181,7 +181,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             hash_key = utils.hash_same_date_pattern(time_grp)
             common_pattern_dict[hash_key].append((time_grp, conseq_grps))
 
-        for time_conseq_grp_tup_list in list(common_pattern_dict.values()):
+        for k, time_conseq_grp_tup_list in sorted(common_pattern_dict.items()):
             if len(time_conseq_grp_tup_list) == 1:
                 others.extend(time_conseq_grp_tup_list)
             else:
