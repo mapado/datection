@@ -3,6 +3,8 @@
 """Some utility functions"""
 from __future__ import division
 
+from future.utils import viewitems
+
 from builtins import str
 from past.builtins import basestring
 from past.utils import old_div
@@ -112,7 +114,7 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')
     else:
         rulestr = "RRULE:FREQ=%s;" % (freq)
-        for arg, val in list(kwargs.items()):
+        for arg, val in sorted(kwargs.items()):
             rulestr += arg.upper() + '=' + str(val) + ';'
 
     if until and (rulestr.find('UNTIL') != -1):

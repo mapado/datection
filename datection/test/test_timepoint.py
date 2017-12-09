@@ -83,8 +83,8 @@ class TestDate(unittest.TestCase):
 
     def test_export(self):
         expected = {
-            'rrule': ("DTSTART:20151012\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;"
-                      "BYHOUR=0"),
+            'rrule': ("DTSTART:20151012\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;"
+                      "COUNT=1"),
             'duration': ALL_DAY
         }
         self.assertDictEqual(self.d.export(), expected)
@@ -129,13 +129,13 @@ class TestDateList(unittest.TestCase):
     def test_export(self):
         expected = [
             {
-                'rrule': ("DTSTART:20131112\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=0;BYHOUR=0"),
+                'rrule': ("DTSTART:20131112\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=0;BYMINUTE=0;COUNT=1"),
                 'duration': ALL_DAY
             },
             {
-                'rrule': ("DTSTART:20131113\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=0;BYHOUR=0"),
+                'rrule': ("DTSTART:20131113\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=0;BYMINUTE=0;COUNT=1"),
                 'duration': ALL_DAY
             }
         ]
@@ -239,16 +239,16 @@ class TestDatetime(unittest.TestCase):
 
     def test_export(self):
         expected = {
-            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                      "BYMINUTE=30;BYHOUR=20"),
+            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                      "BYHOUR=20;BYMINUTE=30;COUNT=1"),
             'duration': 0
         }
         self.assertDictEqual(self.dt.export(), expected)
 
     def test_export_with_time_interval(self):
         expected = {
-            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                      "BYMINUTE=30;BYHOUR=20"),
+            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                      "BYHOUR=20;BYMINUTE=30;COUNT=1"),
             'duration': 60
         }
         self.assertDictEqual(self.dt2.export(), expected)
@@ -286,13 +286,13 @@ class TestDatetimeList(unittest.TestCase):
     def test_export(self):
         expected = [
             {
-                'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=30;BYHOUR=20"),
+                'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=20;BYMINUTE=30;COUNT=1"),
                 'duration': 0
             },
             {
-                'rrule': ("DTSTART:20131212\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=30;BYHOUR=20"),
+                'rrule': ("DTSTART:20131212\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=20;BYMINUTE=30;COUNT=1"),
                 'duration': 0
             }
         ]

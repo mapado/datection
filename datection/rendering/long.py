@@ -221,7 +221,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
         :return: time format string
         """
-        start_time, end_time = list(time_group[0].values())
+        start_time, end_time = time_group[0].get("start"), time_group[0].get("end")
         return TimePatternFormatter(
             start_time, end_time, self.locale).display(prefix=True)
 

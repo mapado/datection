@@ -7,7 +7,6 @@ import six
 import datetime
 from collections import defaultdict
 import locale as _locale
-from future.utils import viewitems
 
 from datection.models import DurationRRule
 from datection.timepoint import DAY_START
@@ -112,8 +111,11 @@ def groupby_time(dt_intervals):
         start_time, end_time = inter['start'].time(), inter['end'].time()
         grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
         times[grp].append(inter)  # group dates by time
+    # print(sorted([group
+    #     for time_group, group in sorted(times.items())],
+        # key=lambda item:item[0]["start"]))
     return sorted([group
-        for time_group, group in sorted(viewitems(times))],
+        for time_group, group in sorted(times.items())],
         key=lambda item:item[0]["start"])
 
 def groupby_date(dt_intervals):
@@ -128,7 +130,7 @@ def groupby_date(dt_intervals):
         start_date = inter['start'].date()
         dates[start_date.isoformat()].append(inter)  # group dates by time
     return sorted([group
-        for date_group, group in sorted(viewitems(dates))],
+        for date_group, group in sorted(dates.items())],
         key=lambda item:item[0]["start"])
 
 def group_recurring_by_date_interval(recurrings):
