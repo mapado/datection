@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Some utility functions"""
+from __future__ import division
 
+from future.utils import viewitems
+
+from builtins import str
+from past.builtins import basestring
+from past.utils import old_div
 import re
 import datection
 
@@ -10,10 +16,10 @@ from datetime import date
 from datetime import time
 from dateutil.rrule import weekdays
 
-UNLIMITED_DATE_START        = date(2000, 01, 01)
+UNLIMITED_DATE_START        = date(2000, 1, 1)
 UNLIMITED_DATE_END          = date(3000, 12, 31)
 
-UNLIMITED_DATETIME_START    = datetime(2000, 01, 01)
+UNLIMITED_DATETIME_START    = datetime(2000, 1, 1)
 UNLIMITED_DATETIME_END      = datetime(3000, 12, 31, 23, 59, 59)
 
 
@@ -108,7 +114,7 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')
     else:
         rulestr = "RRULE:FREQ=%s;" % (freq)
-        for arg, val in kwargs.items():
+        for arg, val in sorted(kwargs.items()):
             rulestr += arg.upper() + '=' + str(val) + ';'
 
     if until and (rulestr.find('UNTIL') != -1):
@@ -132,14 +138,14 @@ def duration(start, end):
 
     # return the difference bewteen the end datetime and start datetime
     if isinstance(start, datetime) and isinstance(end, datetime):
-        return int((end - start).total_seconds() / 60)
+        return int(old_div((end - start).total_seconds(), 60))
 
     # return the difference bewteen the two times
     if (isinstance(start, time) and isinstance(end, time)):
         today = date.today()
         start_dt = datetime.combine(today, start)
         end_dt = datetime.combine(today, end)
-        return (end_dt - start_dt).seconds / 60
+        return old_div((end_dt - start_dt).seconds, 60)
 
 
 def normalize_2digit_year(year):
@@ -174,7 +180,7 @@ def normalize_2digit_year(year):
 
 def digit_to_int(kwargs):
     """Convert all digit values to integer and return the kwargs dict"""
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         if v and isinstance(v, basestring):
             if v.isdigit():
                 kwargs[k] = int(v)
@@ -227,7 +233,7 @@ def sort_facebook_hours(fb_hours):
         idx = '%d%s%d' % (wk_idx, window_nb, _open)
         return idx
 
-    return sorted(fb_hours.items(), key=lambda x: facebook_hour_index(x[0]))
+    return sorted(list(fb_hours.items()), key=lambda x: facebook_hour_index(x[0]))
 
 
 def group_facebook_hours(fb_hours):

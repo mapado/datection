@@ -2,6 +2,9 @@
 
 """Definition of Timepoint classes."""
 
+from builtins import str
+from builtins import range
+from builtins import object
 from datetime import timedelta
 from datetime import datetime
 from datetime import time
@@ -229,8 +232,11 @@ class Timepoint(object):
             return False
         return True
 
+    def __hash__(self):
+        return id(self)
+
     def __repr__(self):
-        return u'<%s %s>' % (self.__class__.__name__, unicode(self))
+        return u'<%s %s>' % (self.__class__.__name__, str(self))
 
     @property
     def duration(self):
@@ -273,12 +279,15 @@ class Date(AbstractDate):
             and self.month == other.month
             and self.day == other.day)
 
-    def __unicode__(self):  # pragma: no cover
+    def __hash__(self):
+        return hash((self.year, self.month, self.day))
+
+    def __repr__(self):  # pragma: no cover
         return u'%s/%s/%s' % (
             str(self.year).zfill(4) if self.year is not None else '?',
             str(self.month).zfill(2) if self.month is not None else '?',
             str(self.day).zfill(2)
-        )
+        ) 
 
     @classmethod
     def from_match(self, match):  # pragma: no cover
@@ -334,7 +343,7 @@ class Date(AbstractDate):
 
         """
         reference = reference if reference is not None else get_current_date()
-        return self.to_python() >= reference
+        return (self.to_python() >= reference)
 
 
 class Time(Timepoint):
@@ -359,6 +368,9 @@ class Time(Timepoint):
             return False
         return (self.hour == other.hour and self.minute == other.minute)
 
+    def __hash__(self):
+        return hash((self.hour, self.minute))
+
     @property
     def valid(self):
         try:
@@ -382,7 +394,7 @@ class TimeInterval(Timepoint):
         yield self.start_time
         yield self.end_time
 
-    def __unicode__(self):
+    def __repr__(self):
         return u'%d:%s - %d:%s' % (
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
@@ -395,6 +407,9 @@ class TimeInterval(Timepoint):
         return (
             self.start_time == other.start_time and
             self.end_time == other.end_time)
+
+    def __hash__(self):
+        return hash((self.start_time, self.end_time))
 
     @classmethod
     def make_all_day(self):
@@ -428,6 +443,9 @@ class DateList(Timepoint):
         if not super(DateList, self).__eq__(other):
             return False
         return self.dates == other.dates
+
+    def __hash__(self):
+        return hash(tuple(self.dates))
 
     def __repr__(self):
         return object.__repr__(self)
@@ -528,17 +546,20 @@ class DateInterval(AbstractDateInterval):
             self.start_date == other.start_date
             and self.end_date == other.end_date)
 
+    def __hash__(self):
+        return hash((self.start_date, self.end_date))
+
     def __iter__(self):
         current = self.start_date.to_python()
         while current <= self.end_date.to_python():
             yield current
             current += timedelta(days=1)
 
-    def __unicode__(self):
+    def __repr__(self):
         return u'%s - %s%s' % (
-            unicode(self.start_date),
-            unicode(self.end_date),
-            unicode("" if not self.excluded
+            str(self.start_date),
+            str(self.end_date),
+            str("" if not self.excluded
                     else " { EXCLUDED: " + str(self.excluded) + "}")
         )
 
@@ -565,7 +586,11 @@ class DateInterval(AbstractDateInterval):
         if not end_date.year:
             return start_date
         if not start_date.year:
-            if start_date.month > end_date.month:
+            if not end_date.month:
+                start_date.year = end_date.year - 1
+            elif not start_date.month:
+                start_date.year = end_date.year
+            elif start_date.month > end_date.month:
                 start_date.year = end_date.year - 1
             else:
                 start_date.year = end_date.year
@@ -657,9 +682,12 @@ class Datetime(AbstractDate):
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
 
-    def __unicode__(self):
+    def __hash__(self):
+        return hash((self.date, self.start_time, self.end_time))
+
+    def __repr__(self):
         return u'%s - %d:%s%s' % (
-            unicode(self.date),
+            str(self.date),
             self.start_time.hour,
             str(self.start_time.minute).zfill(2),
             '-%s:%s' % (
@@ -760,6 +788,9 @@ class DatetimeList(Timepoint):
             return False
         return self.datetimes == other.datetimes
 
+    def __hash__(self):
+        return hash(tuple(self.datetimes))
+
     def __getitem__(self, index):
         return self.datetimes[index]
 
@@ -826,12 +857,15 @@ class DatetimeInterval(AbstractDateInterval):
             self.date_interval == other.date_interval
             and self.time_interval == other.time_interval)
 
+    def __hash__(self):
+        return hash((self.date_interval, self.time_interval))
+
     def __repr__(self):
         return u'<%s (%s) (%s)%s>' % (
-            unicode(self.__class__.__name__),
-            unicode(self.date_interval),
-            unicode(self.time_interval),
-            unicode("" if not self.excluded
+            str(self.__class__.__name__),
+            str(self.date_interval),
+            str(self.time_interval),
+            str("" if not self.excluded
                     else " { EXCLUDED: " + str(self.excluded) + "}"),
         )
 
@@ -923,6 +957,9 @@ class ContinuousDatetimeInterval(Timepoint):
             and self.end_date == other.end_date
             and self.end_time == other.end_time)
 
+    def __hash__(self):
+        return hash((self.start_date, self.start_time, self.end_date, self.end_time))
+
     def __repr__(self):
         return object.__repr__(self)
 
@@ -1006,7 +1043,10 @@ class Weekdays(Timepoint):
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
             return False
-        return sorted(self.days) == sorted(other.days)
+        return sorted(str(d) for d in self.days) == sorted(str(d) for d in other.days)
+
+    def __hash__(self):
+        return hash(sorted(self.days))
 
     def __len__(self):
         return len(self.days)
@@ -1014,7 +1054,7 @@ class Weekdays(Timepoint):
     def __iter__(self):
         return iter(self.days)
 
-    def __unicode__(self):
+    def __repr__(self):
         if self.all_week:
             return 'ALL_WEEK'
         else:
@@ -1022,7 +1062,7 @@ class Weekdays(Timepoint):
 
     @property
     def all_week(self):
-        return [w.weekday for w in self.days] == range(0, 7)
+        return [w.weekday for w in self.days] == list(range(0, 7))
 
 
 class WeeklyRecurrence(Timepoint):
@@ -1044,13 +1084,16 @@ class WeeklyRecurrence(Timepoint):
             self.time_interval == other.time_interval and
             self.weekdays == other.weekdays)
 
+    def __hash__(self):
+        return hash((self.date_interval, self.time_interval, (str(d) for d in self.weekdays)))
+
     def __repr__(self):
         return u'<%s - (%s) (%s) (%s)%s>' % (
             self.__class__.__name__,
-            unicode(self.date_interval),
-            unicode(self.weekdays),
-            unicode(self.time_interval),
-            unicode("" if not self.excluded
+            str(self.date_interval),
+            str(self.weekdays),
+            str(self.time_interval),
+            str("" if not self.excluded
                     else " { EXCLUDED: " + str(self.excluded) + "}"),
         )
 

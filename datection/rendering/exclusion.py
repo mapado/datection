@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import range
 from datection.rendering.base import BaseFormatter
 from datection.rendering.date import DateFormatter
 from datection.rendering.long import LongFormatter
@@ -76,7 +77,7 @@ class ExclusionFormatter(BaseFormatter):
         else:
             indices = sorted(list(excluded._byweekday))
             # excluded day range
-            if indices and indices == range(indices[0], indices[-1] + 1):
+            if indices and indices == list(range(indices[0], indices[-1] + 1)):
                 return self.get_template('weekday_interval').format(
                     _from=self._('from_day'),
                     start_weekday=self.day_name(indices[0]),

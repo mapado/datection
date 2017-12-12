@@ -2,7 +2,9 @@
 
 """Test suite of the datection tokenization utilities."""
 
+from builtins import object
 import unittest
+import six
 
 from datection.tokenize import Tokenizer
 from datection.tokenize import TokenGroup
@@ -131,7 +133,7 @@ class TestTokenizer(unittest.TestCase):
                       probe_kind=['day','year', 'weekday'])
         result = self.tok.search_context(ctx)
         families = [r[0].timepoint_type for r in result]
-        self.assertItemsEqual(
+        six.assertCountEqual(self, 
             families,
             ['date',  # 23 mars 2015
              'date_interval',  # du 5 au 29 mars 2015

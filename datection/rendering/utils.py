@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
+
+from builtins import str
+from builtins import object
+import sys
+import six
 import datetime
 from collections import defaultdict
 import locale as _locale
+
 from datection.models import DurationRRule
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
@@ -49,8 +55,7 @@ def group_recurring_by_day(recurrings):
     for rec in recurrings:
         key = "_".join([str(i) for i in rec.weekday_indexes])
         out[key].append(rec)
-    return out.values()
-
+    return [v for k, v in sorted(out.items())]
 
 def hash_same_date_pattern(time_group):
     """
@@ -105,10 +110,9 @@ def groupby_time(dt_intervals):
         start_time, end_time = inter['start'].time(), inter['end'].time()
         grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
         times[grp].append(inter)  # group dates by time
-    return [
-        sorted(group, key=lambda item: item['start'])
-        for group in times.values()]
-
+    return sorted([group
+        for time_group, group in sorted(times.items())],
+        key=lambda item:item[0]["start"])
 
 def groupby_date(dt_intervals):
     """
@@ -121,10 +125,9 @@ def groupby_date(dt_intervals):
     for inter in dt_intervals:
         start_date = inter['start'].date()
         dates[start_date.isoformat()].append(inter)  # group dates by time
-    return [
-        sorted(group, key=lambda item: item['start'])
-        for group in dates.values()]
-
+    return sorted([group
+        for date_group, group in sorted(dates.items())],
+        key=lambda item:item[0]["start"])
 
 def group_recurring_by_date_interval(recurrings):
     """
@@ -192,14 +195,16 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
                 out.append({'start': start, 'end': end})
     return out
 
-
 class TemporaryLocale(object):  # pragma: no cover
     """
     Temporarily change the current locale using a context manager.
     """
     def __init__(self, category, locale):
         self.category = category
-        self.locale = locale.encode('utf-8')
+        if not six.PY3:
+            self.locale = locale.encode('utf-8')
+        else:
+            self.locale = locale
         self.oldlocale = _locale.getlocale(category)
 
     def __enter__(self):

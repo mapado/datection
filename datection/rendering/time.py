@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import str
 import datetime
 from datection.rendering.base import BaseFormatter
 from datection.rendering.utils import get_time
@@ -21,7 +22,7 @@ class TimeFormatter(BaseFormatter):
 
     def format_hour(self):
         """ Format the time hour using the current locale. """
-        return unicode(self.time.hour)
+        return str(self.time.hour)
 
     def format_minute(self):
         """ Format the time hour using the current locale. """

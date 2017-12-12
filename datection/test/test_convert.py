@@ -2,7 +2,11 @@
 """
 Test suite for the datection.convert module
 """
+from builtins import zip
+from builtins import range
 import unittest
+
+import six
 
 from datection.convert import convert_to_concise_form
 from datection.convert import convert_to_plain_form
@@ -17,11 +21,11 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(new_rrule_lines[0], result_lines[0])
         new_details = new_rrule_lines[1].split(":")[1].split(";")
         res_details = result_lines[1].split(":")[1].split(";")
-        self.assertItemsEqual(new_details, res_details)
+        six.assertCountEqual(self, new_details, res_details)
 
     def assertRrulesEqual(self, rrule1, rrule2):
-        self.assertItemsEqual(rrule1.keys(), rrule2.keys())
-        for k in rrule2.keys():
+        six.assertCountEqual(self, list(rrule1.keys()), list(rrule2.keys()))
+        for k in list(rrule2.keys()):
             if k == 'rrule':
                 self.assertRruleStrEqual(rrule1[k], rrule2[k])
             elif k == 'excluded':
@@ -41,7 +45,7 @@ class TestConvert(unittest.TestCase):
         sorted_result = sorted(results, key=lambda drr: drr.start_datetime)
         sorted_expected = sorted(expected, key=lambda drr: drr.start_datetime)
 
-        for i in xrange(len(results)):
+        for i in range(len(results)):
             self.assertRrulesEqual(sorted_result[i].duration_rrule,
                                    sorted_expected[i].duration_rrule)
 

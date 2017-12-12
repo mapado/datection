@@ -7,9 +7,11 @@ a concise or plain form.
  * plain is meant for computation (eventDate generation, merge)
 
 """
-from pack import RrulePackerWithGaps
-from pack import RrulePacker
-from combine.remove import RruleRemover
+from __future__ import absolute_import
+from builtins import str
+from .pack import RrulePackerWithGaps
+from .pack import RrulePacker
+from .combine.remove import RruleRemover
 from datection.models import DurationRRule
 
 

@@ -2,7 +2,11 @@
 
 """ Functional tests on datection.pack """
 
+from builtins import zip
+from builtins import range
 import unittest
+
+import six
 
 from datection.timepoint import ALL_DAY
 from datection.models import DurationRRule
@@ -17,11 +21,11 @@ class TestPack(unittest.TestCase):
         self.assertEqual(new_rrule_lines[0], result_lines[0])
         new_details = new_rrule_lines[1].split(":")[1].split(";")
         res_details = result_lines[1].split(":")[1].split(";")
-        self.assertItemsEqual(new_details, res_details)
+        six.assertCountEqual(self, new_details, res_details)
 
     def assertRrulesEqual(self, rrule1, rrule2):
-        self.assertItemsEqual(rrule1.keys(), rrule2.keys())
-        for k in rrule2.keys():
+        six.assertCountEqual(self, list(rrule1.keys()), list(rrule2.keys()))
+        for k in list(rrule2.keys()):
             if k == 'rrule':
                 self.assertRruleStrEqual(rrule1[k], rrule2[k])
             elif k == 'excluded':
@@ -50,7 +54,7 @@ class TestPack(unittest.TestCase):
         sorted_packed = sorted(packed, key=lambda drr: drr.start_datetime)
         result = [DurationRRule(rrule) for rrule in result]
         sorted_result = sorted(result, key=lambda drr: drr.start_datetime)
-        for i in xrange(len(result)):
+        for i in range(len(result)):
             self.assertRrulesEqual(sorted_result[i].duration_rrule,
                                    sorted_packed[i].duration_rrule)
 
@@ -66,13 +70,13 @@ class TestPack(unittest.TestCase):
         drrs = [DurationRRule(rrule) for rrule in rrules]
         packer = pack.RrulePacker(drrs, pack_no_timings=pack_no_timings)
         packed = packer.pack_rrules()
-        self.assertItemsEqual(drrs, packed)
+        six.assertCountEqual(self, drrs, packed)
 
     def assertNotPackWithGaps(self, rrules):
         drrs = [DurationRRule(rrule) for rrule in rrules]
         packer = pack.RrulePackerWithGaps(drrs)
         packed = packer.pack_rrules()
-        self.assertItemsEqual(drrs, packed)
+        six.assertCountEqual(self, drrs, packed)
 
     def test_include_sing_in_cont(self):
         single = {'duration': 30,

@@ -2,10 +2,11 @@
 """
 Definition of English specific grammar, related to temoral expressions.
 """
+from __future__ import absolute_import
 from datection.grammar import YEAR
 from datection.grammar import oneof_ci
 
-from grammar_factory import GrammarFactory
+from .grammar_factory import GrammarFactory
 
 grm_gen = GrammarFactory('datection.data.en')
 

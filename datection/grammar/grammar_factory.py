@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import object
 from pyparsing import Optional
 from pyparsing import Regex
 from pyparsing import OneOrMore
@@ -75,10 +76,10 @@ class GrammarFactory(object):
         return (
             (
                 # weekday with optional s at the end
-                oneof_ci(self._weekdays.keys()) + Optional(Regex(r'(?<!\s)s?'))
+                oneof_ci(list(self._weekdays.keys())) + Optional(Regex(r'(?<!\s)s?'))
             ) |
             # short weekday not followed by another alphanum char
-            oneof_ci(self._short_weekdays.keys()) + Regex(r'\.?(?!\w)').leaveWhitespace()
+            oneof_ci(list(self._short_weekdays.keys())) + Regex(r'\.?(?!\w)').leaveWhitespace()
         ).setParseAction(self.set_weekday)('weekday')
 
     def set_month_number(self, text, start_index, match):
@@ -95,8 +96,8 @@ class GrammarFactory(object):
         month index.
         """
         return oneof_ci(
-            self._months.keys() +
-            self._short_months.keys(),
+            list(self._months.keys()) +
+            list(self._short_months.keys()),
         ).setParseAction(self.set_month_number)('month')
 
     def daynumber_grm(self):
@@ -206,7 +207,7 @@ class GrammarFactory(object):
         return (
             date_pattern_grm('date') +
             optional_oneof_ci(self._date_time_links) +
-            optional_oneof_ci(self._weekdays.keys() + self._short_weekdays.keys()) +
+            optional_oneof_ci(list(self._weekdays.keys()) + list(self._short_weekdays.keys())) +
             Optional('.') +
             time_pattern_grm('time_pattern')
         ).setParseAction(develop_datetime_patterns)

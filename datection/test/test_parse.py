@@ -4,6 +4,8 @@
 
 import unittest
 
+import six
+
 from datetime import datetime, date
 from dateutil.rrule import TU, WE, TH, FR
 
@@ -31,7 +33,7 @@ class TestParse(unittest.TestCase):
                     generated_datetimes.extend(list(DurationRRule(item)))
             else:
                 generated_datetimes.extend(list(DurationRRule(schedule)))
-        self.assertItemsEqual(generated_datetimes, datetimes)
+        six.assertCountEqual(self, generated_datetimes, datetimes)
 
     def test_date(self):
         self.assert_generates(u"Le 5 mars 2015", [datetime(2015, 3, 5, 0, 0)])

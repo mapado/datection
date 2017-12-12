@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Utilities used for tokenizing a string into time-related tokens."""
+from __future__ import division
+import six
 
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import re
 import unicodedata
 
@@ -34,7 +40,7 @@ def get_repetitions(txt):
         pattern = match.group(1)
         idx_end = match.end()
         real_case = txt[idx_start: len(pattern) + idx_start]
-        qte = len(match.group(0)) / len(pattern)
+        qte = old_div(len(match.group(0)), len(pattern))
 
         context = Context(idx_start, idx_end, real_case, [])
         repetitions.append({
@@ -42,7 +48,7 @@ def get_repetitions(txt):
             'start': idx_start,
             'end': idx_end,
             'qte': qte,
-            'coverage': float(len(pattern) * qte) / len(txt)
+            'coverage': old_div(float(len(pattern) * qte), len(txt))
         })
     return repetitions
 
@@ -193,7 +199,7 @@ class Tokenizer(object):
 
         """
         def spanset(span):
-            return frozenset(range(span[0], span[1]))
+            return frozenset(list(range(span[0], span[1])))
 
         matches = [(tpt, ctx, spanset(tpt.span)) for tpt, ctx in matches]
         out = matches[:]  # shallow copy
@@ -230,9 +236,9 @@ class Tokenizer(object):
                     continue
                 (tpt1, ctx1, span1), (tpt2, ctx2, span2) = group1, group2
                 if span1.intersection(span2):
-                    intersections[group1] += 1
+                    intersections[id(group1)] += 1
         out = [(group[0], group[1])
-               for group in out if intersections[group] < 2]
+               for group in out if intersections[id(group)] < 2]
 
         # sort list by match position
         out = sorted(out, key=lambda item: item[0].start_index)
@@ -296,11 +302,14 @@ class Tokenizer(object):
 
         """
         matches = []
-        ctx = unicode(context)
+        if six.PY2:
+            ctx = unicode(context)
+        else:
+            ctx = context.text[context.start: context.end]
         ctx = self.clean_context(ctx)
 
         # replacement expression
-        for expression, translation in self.language_expressions.iteritems():
+        for expression, translation in self.language_expressions.items():
             ctx = re.sub(expression, translation, ctx, flags=re.I)
 
         # if no weekday avoid weekday more complex pattern
@@ -323,8 +332,7 @@ class Tokenizer(object):
         dmatches = self._search_matches_timepoints(
             timepoints, context, ctx, analyse_subpattern, pattern_list
         )
-
-        matches = [t for mt in dmatches.values() for t in mt]
+        matches = [t for mt in list(dmatches.values()) for t in mt]
         return matches
 
     def _extract_timepoint_from_patterns(self, ctx, timepoints):
@@ -337,8 +345,8 @@ class Tokenizer(object):
                 dt_matches = self._search_matches_timepoints(
                     timepoints, pat['context'], pat['context'])
                 tps = list(self._get_valid_timepoints(dt_matches, timepoints))
-                return tps, dt_matches.keys()
-	return None, None
+                return tps, list(dt_matches.keys())
+        return None, None
 
     def _search_matches_timepoints(
             self, timepoints, context, ctx, analyse_subpattern=True,
@@ -376,7 +384,7 @@ class Tokenizer(object):
         probe_kinds = found_probe_kinds
         for tp_probe in not_yet_found_probes:
             for match, _, _ in tp_probe.scanString(new_text, maxMatches=1):
-                probe_kinds = probe_kinds.union(match.keys())
+                probe_kinds = probe_kinds.union(list(match.keys()))
         return probe_kinds
 
     def _get_valid_timepoints(self, dmatches, timepoints):
@@ -396,11 +404,11 @@ class Tokenizer(object):
 
         if contain_datetime_and_date:
             validated_tp = (
-                tp for tp in timepoints if tp[0] in dmatches.keys())
+                tp for tp in timepoints if tp[0] in list(dmatches.keys()))
         else:
             sub_pattern = [
                 tp for tp in timepoints if tp[0] == 'datetime'
-                if tp[0] in dmatches.keys()
+                if tp[0] in list(dmatches.keys())
             ]
             # if only one subpattern and subpattern
             if len(sub_pattern) == 1:
@@ -426,8 +434,7 @@ class Tokenizer(object):
         pname = tp[0]
         pattern = tp[1]
         local_matches = []
-        ctx = unicode(ctx)
-
+        ctx = str(ctx)
         try:
             idx_offset = context.start
             for pattern_matches, start, end in pattern.scanString(ctx):
@@ -517,7 +524,6 @@ class Tokenizer(object):
         contexts = probe(self.text, self.lang)
         if not contexts:
             return []
-
         matches = []
         for ctx in contexts:
             matches.extend(self.search_context(ctx))

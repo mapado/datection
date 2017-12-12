@@ -3,7 +3,9 @@
 """Test suite of the datection.timepoint module."""
 
 import unittest
+import six
 import mock
+from freezegun import freeze_time
 
 from datetime import time
 from datetime import date
@@ -22,26 +24,6 @@ from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import enrich_with_timings
 
-
-class CurrentDayMock(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.get_current_date_patch = mock.patch(
-            'datection.timepoint.get_current_date')
-        cls.get_current_date_mock = cls.get_current_date_patch.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.get_current_date_patch.stop()
-
-    def setUp(self):
-        self.set_current_date(date(2012, 1, 1))
-
-    def set_current_date(self, _date):
-        self.get_current_date_mock.return_value = _date
-
-
 class TestTime(unittest.TestCase):
 
     def test_equal(self):
@@ -55,7 +37,7 @@ class TestTime(unittest.TestCase):
         self.assertTrue(Time(15, 30).valid)
         self.assertFalse(Time(25, 30).valid)
 
-
+@freeze_time("2012-01-01")
 class TestTimeInterval(unittest.TestCase):
 
     def test_equal(self):
@@ -75,7 +57,8 @@ class TestTimeInterval(unittest.TestCase):
         self.assertFalse(TimeInterval(Time(15, 30), Time(25, 30)).valid)
 
 
-class TestDate(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestDate(unittest.TestCase):
 
     def setUp(self):
         self.d = Date(2015, 10, 12)
@@ -100,17 +83,17 @@ class TestDate(CurrentDayMock):
 
     def test_export(self):
         expected = {
-            'rrule': ("DTSTART:20151012\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=0;"
-                      "BYHOUR=0"),
+            'rrule': ("DTSTART:20151012\nRRULE:FREQ=DAILY;BYHOUR=0;BYMINUTE=0;"
+                      "COUNT=1"),
             'duration': ALL_DAY
         }
         self.assertDictEqual(self.d.export(), expected)
 
     def test_future(self):
         self.assertTrue(self.d.future())
-        self.set_current_date(date(2016, 11, 12))
-        self.assertFalse(self.d.future())
-        self.assertTrue(self.d.future(reference=date(2014, 11, 12)))
+        with freeze_time("2016-11-12"):
+            self.assertFalse(self.d.future())
+            self.assertTrue(self.d.future(reference=date(2014, 11, 12)))
 
     def test_add_timings(self):
         time_interval = TimeInterval(Time(12, 00), Time(20, 00))
@@ -122,14 +105,15 @@ class TestDate(CurrentDayMock):
         self.assertEqual(time_interval.end_time, result.end_time)
 
 
-class TestDateList(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestDateList(unittest.TestCase):
 
     def setUp(self):
         self.dl = DateList([Date(2013, 11, 12), Date(2013, 11, 13)])
 
     def test_equal(self):
         dl1 = DateList([Date(2013, 11, 12), Date(2013, 11, 13)])
-        dl2 = DateList([Date(2014, 10, 03)])
+        dl2 = DateList([Date(2014, 10, 3)])
         self.assertEqual(self.dl, dl1)
         self.assertNotEqual(self.dl, dl2)
 
@@ -145,26 +129,26 @@ class TestDateList(CurrentDayMock):
     def test_export(self):
         expected = [
             {
-                'rrule': ("DTSTART:20131112\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=0;BYHOUR=0"),
+                'rrule': ("DTSTART:20131112\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=0;BYMINUTE=0;COUNT=1"),
                 'duration': ALL_DAY
             },
             {
-                'rrule': ("DTSTART:20131113\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=0;BYHOUR=0"),
+                'rrule': ("DTSTART:20131113\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=0;BYMINUTE=0;COUNT=1"),
                 'duration': ALL_DAY
             }
         ]
-        self.assertItemsEqual(self.dl.export(), expected)
+        six.assertCountEqual(self, self.dl.export(), expected)
 
     def test_future(self):
         self.assertTrue(self.dl.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.dl.future())
+        with freeze_time("2016-11-12"):  # today: after
+            self.assertFalse(self.dl.future())
 
-        self.set_current_date(date(2013, 11, 12))  # today: in between
-        self.assertTrue(self.dl.future())
+        with freeze_time("2013-11-12"):  # today: in between
+            self.assertTrue(self.dl.future())
 
     def test_add_timings(self):
         time_interval = TimeInterval(Time(12, 00), Time(20, 00))
@@ -175,7 +159,8 @@ class TestDateList(CurrentDayMock):
         self.assertEqual(result.datetimes[1].start_time, time_interval.start_time)
 
 
-class TestDateInterval(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestDateInterval(unittest.TestCase):
 
     def setUp(self):
         self.di = DateInterval(Date(2013, 3, 12), Date(2013, 3, 19))
@@ -215,11 +200,11 @@ class TestDateInterval(CurrentDayMock):
     def test_future(self):
         self.assertTrue(self.di.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.di.future())
+        with freeze_time("2016-11-12"):  # today: after
+            self.assertFalse(self.di.future())
 
-        self.set_current_date(date(2013, 3, 14))  # today: in between
-        self.assertTrue(self.di.future())
+        with freeze_time("2013-03-14"):  # today: in between
+            self.assertTrue(self.di.future())
 
     def test_add_timings(self):
         time_interval = TimeInterval(Time(12, 00), Time(20, 00))
@@ -227,7 +212,9 @@ class TestDateInterval(CurrentDayMock):
         self.assertTrue(isinstance(result, DatetimeInterval))
         self.assertEqual(result.time_interval, time_interval)
 
-class TestDatetime(CurrentDayMock):
+
+@freeze_time("2012-01-01")
+class TestDatetime(unittest.TestCase):
 
     def setUp(self):
         self.dt = Datetime(Date(2013, 12, 11), Time(20, 30))
@@ -252,16 +239,16 @@ class TestDatetime(CurrentDayMock):
 
     def test_export(self):
         expected = {
-            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                      "BYMINUTE=30;BYHOUR=20"),
+            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                      "BYHOUR=20;BYMINUTE=30;COUNT=1"),
             'duration': 0
         }
         self.assertDictEqual(self.dt.export(), expected)
 
     def test_export_with_time_interval(self):
         expected = {
-            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                      "BYMINUTE=30;BYHOUR=20"),
+            'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                      "BYHOUR=20;BYMINUTE=30;COUNT=1"),
             'duration': 60
         }
         self.assertDictEqual(self.dt2.export(), expected)
@@ -269,11 +256,12 @@ class TestDatetime(CurrentDayMock):
     def test_future(self):
         self.assertTrue(self.dt.future())
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.dt.future())
+        with freeze_time("2016-11-12"):  # today: after
+            self.assertFalse(self.dt.future())
 
 
-class TestDatetimeList(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestDatetimeList(unittest.TestCase):
 
     def setUp(self):
         self.dtl = DatetimeList([
@@ -298,44 +286,31 @@ class TestDatetimeList(CurrentDayMock):
     def test_export(self):
         expected = [
             {
-                'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=30;BYHOUR=20"),
+                'rrule': ("DTSTART:20131211\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=20;BYMINUTE=30;COUNT=1"),
                 'duration': 0
             },
             {
-                'rrule': ("DTSTART:20131212\nRRULE:FREQ=DAILY;COUNT=1;"
-                          "BYMINUTE=30;BYHOUR=20"),
+                'rrule': ("DTSTART:20131212\nRRULE:FREQ=DAILY;"
+                          "BYHOUR=20;BYMINUTE=30;COUNT=1"),
                 'duration': 0
             }
         ]
-        self.assertItemsEqual(self.dtl.export(), expected)
+        six.assertCountEqual(self, self.dtl.export(), expected)
 
-    # def test_to_python(self):
-    #     self.assertListEqual(
-    #         self.dtl.to_python(),
-    #         [
-    #             (
-    #                 datetime(2013, 12, 11, 20, 30),
-    #                 datetime(2013, 12, 11, 20, 30)
-    #             ),
-    #             (
-    #                 datetime(2013, 12, 12, 20, 30),
-    #                 datetime(2013, 12, 12, 20, 30),
-    #             )
-    #         ]
-    #     )
 
     def test_future(self):
         self.assertTrue(self.dtl.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.dtl.future())
+        with freeze_time("2016-11-12"):  # today: after
+            self.assertFalse(self.dtl.future())
 
-        self.set_current_date(date(2013, 12, 12))  # today: in between
-        self.assertTrue(self.dtl.future())
+        with freeze_time("2013-12-12"):  # today: in between
+            self.assertTrue(self.dtl.future())
 
 
-class TestDatetimeInterval(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestDatetimeInterval(unittest.TestCase):
 
     def setUp(self):
         self.dtl = DatetimeInterval(
@@ -363,19 +338,12 @@ class TestDatetimeInterval(CurrentDayMock):
     def test_future(self):
         self.assertTrue(self.dtl.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.dtl.future())
+        with freeze_time("2016-11-12"):   # today: after
+            self.assertFalse(self.dtl.future())
 
-        self.set_current_date(date(2015, 4, 13))  # today: in between
-        self.assertTrue(self.dtl.future())
+        with freeze_time("2015-04-13"):   # today: in between
+            self.assertTrue(self.dtl.future())
 
-    # def test_to_python(self):
-    #     expected = [
-    #         (datetime(2015, 4, 12, 18, 0), datetime(2015, 4, 12, 19, 0)),
-    #         (datetime(2015, 4, 13, 18, 0), datetime(2015, 4, 13, 19, 0)),
-    #         (datetime(2015, 4, 14, 18, 0), datetime(2015, 4, 14, 19, 0)),
-    #     ]
-    #     self.assertEqual(self.dtl.to_python(), expected)
 
     def test_export(self):
         expected = {
@@ -386,7 +354,8 @@ class TestDatetimeInterval(CurrentDayMock):
         self.assertEqual(self.dtl.export(), expected)
 
 
-class TestContinuousDatetimeInterval(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestContinuousDatetimeInterval(unittest.TestCase):
 
     def setUp(self):
         self.cdti = ContinuousDatetimeInterval(
@@ -423,11 +392,11 @@ class TestContinuousDatetimeInterval(CurrentDayMock):
     def test_future(self):
         self.assertTrue(self.cdti.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.cdti.future())
+        with freeze_time("2016-11-12"):   # today: after
+            self.assertFalse(self.cdti.future())
 
-        self.set_current_date(date(2015, 4, 9))  # today: in between
-        self.assertTrue(self.cdti.future())
+        with freeze_time("2015-04-09"):  # today: in between
+            self.assertTrue(self.cdti.future())
 
     def test_export(self):
         expected = {
@@ -439,7 +408,8 @@ class TestContinuousDatetimeInterval(CurrentDayMock):
         self.assertDictEqual(self.cdti.export(), expected)
 
 
-class TestWeeklyRecurrence(CurrentDayMock):
+@freeze_time("2012-01-01")
+class TestWeeklyRecurrence(unittest.TestCase):
 
     def setUp(self):
         self.wkr = WeeklyRecurrence(
@@ -464,11 +434,11 @@ class TestWeeklyRecurrence(CurrentDayMock):
     def test_future(self):
         self.assertTrue(self.wkr.future())  # today: before
 
-        self.set_current_date(date(2016, 11, 12))  # today: after
-        self.assertFalse(self.wkr.future())
+        with freeze_time("2016-11-12"):   # today: after
+            self.assertFalse(self.wkr.future())
 
-        self.set_current_date(date(2015, 4, 9))  # today: in between
-        self.assertTrue(self.wkr.future())
+        with freeze_time("2015-04-09"):   # today: in between
+            self.assertTrue(self.wkr.future())
 
     def test_export(self):
         expected = {

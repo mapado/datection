@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from builtins import object
 import calendar
 import datetime
 import locale as _locale
+import six
 
 from datection.rendering.wrappers import cached_property
 import datection.rendering.utils as utils
@@ -62,8 +64,14 @@ class BaseFormatter(object):
         """
         with utils.TemporaryLocale(_locale.LC_TIME, self.locale):
             if abbrev:
-                return calendar.day_abbr[weekday_index].decode('utf-8')
-            return calendar.day_name[weekday_index].decode('utf-8')
+                if six.PY2:
+                    return calendar.day_abbr[weekday_index].decode('utf-8')
+                else:
+                    return calendar.day_abbr[weekday_index]
+            if six.PY2:
+                return calendar.day_name[weekday_index].decode('utf-8')
+            else:
+                return calendar.day_name[weekday_index]
 
     @staticmethod
     def deduplicate(schedule):
@@ -93,7 +101,7 @@ class NextDateMixin(object):
         end = self.end if hasattr(self, 'end') else None
         dtimes = utils.to_start_end_datetimes(self.schedule, start, end)
         # group the filtered values by date
-        dtimes = sorted(utils.groupby_date(dtimes))
+        dtimes = sorted(utils.groupby_date(dtimes), key=lambda x:x[0]["start"] )
         return dtimes
 
     def next_occurence(self):

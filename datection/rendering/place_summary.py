@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from builtins import range
 from datection.models import DurationRRule
 from datection.rendering.base import BaseFormatter
 from datection.rendering.wrappers import postprocess
@@ -25,7 +26,7 @@ class PlaceSummaryFormatter(BaseFormatter):
                 for w in drr.weekday_indexes:
                     open_weekdays.add(w)
             elif drr.is_continuous or drr.unlimited:
-                return range(7)
+                return list(range(7))
 
         return open_weekdays
 

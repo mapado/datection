@@ -3,7 +3,9 @@
 """
 Definition of default locales for given languages
 """
+from __future__ import division
 
+from past.utils import old_div
 import re
 import operator
 
@@ -76,14 +78,14 @@ def fill_lang_keywords_with_lang(lang):
 
     for word_dict in WORD_DICTS:
         if hasattr(module, word_dict):
-            words = getattr(module, word_dict).keys()
+            words = list(getattr(module, word_dict).keys())
             for word in words:
                 LANG_KEYWORDS.setdefault(word, set()).add(lang)
 
     if hasattr(module, 'TRANSLATIONS'):
         translations = getattr(module, 'TRANSLATIONS')
-        for locale in translations.keys():
-            for expr in translations[locale].values():
+        for locale in list(translations.keys()):
+            for expr in list(translations[locale].values()):
                 for word in expr.split(' '):
                     LANG_KEYWORDS.setdefault(word, set()).add(lang)
 
@@ -149,20 +151,20 @@ def light_lang_detection(text):
 
     lang_keywords = get_lang_keywords()
 
-    matching_tokens = [tok for tok in text_tokens if tok in lang_keywords.keys()]
+    matching_tokens = [tok for tok in text_tokens if tok in list(lang_keywords.keys())]
 
     # contains score for each language (default 0)
-    lang_scores = dict.fromkeys(DEFAULT_LOCALES.keys(), 0)
+    lang_scores = dict.fromkeys(list(DEFAULT_LOCALES.keys()), 0)
 
     for token in matching_tokens:
         for lang in lang_keywords[token]:
             # division by len(lang_keywords[token]) because word shared
             # by many languages should have a low impact on the score
-            lang_scores[lang] += 1. / len(lang_keywords[token])
+            lang_scores[lang] += old_div(1., len(lang_keywords[token]))
 
     # compute proba for the best candidate (no need for softmax (small range))
-    best_lang = max(lang_scores.items(), key=operator.itemgetter(1))[0]
+    best_lang = max(list(lang_scores.items()), key=operator.itemgetter(1))[0]
     sum_scores = float(sum(lang_scores.values()))
-    proba = (lang_scores[best_lang] / sum_scores) if (sum_scores != 0.) else 0
+    proba = (old_div(lang_scores[best_lang], sum_scores)) if (sum_scores != 0.) else 0
 
     return best_lang, proba
