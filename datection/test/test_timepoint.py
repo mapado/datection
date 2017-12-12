@@ -113,7 +113,7 @@ class TestDateList(unittest.TestCase):
 
     def test_equal(self):
         dl1 = DateList([Date(2013, 11, 12), Date(2013, 11, 13)])
-        dl2 = DateList([Date(2014, 10, 0o3)])
+        dl2 = DateList([Date(2014, 10, 3)])
         self.assertEqual(self.dl, dl1)
         self.assertNotEqual(self.dl, dl2)
 
@@ -298,20 +298,6 @@ class TestDatetimeList(unittest.TestCase):
         ]
         six.assertCountEqual(self, self.dtl.export(), expected)
 
-    # def test_to_python(self):
-    #     self.assertListEqual(
-    #         self.dtl.to_python(),
-    #         [
-    #             (
-    #                 datetime(2013, 12, 11, 20, 30),
-    #                 datetime(2013, 12, 11, 20, 30)
-    #             ),
-    #             (
-    #                 datetime(2013, 12, 12, 20, 30),
-    #                 datetime(2013, 12, 12, 20, 30),
-    #             )
-    #         ]
-    #     )
 
     def test_future(self):
         self.assertTrue(self.dtl.future())  # today: before
@@ -358,13 +344,6 @@ class TestDatetimeInterval(unittest.TestCase):
         with freeze_time("2015-04-13"):   # today: in between
             self.assertTrue(self.dtl.future())
 
-    # def test_to_python(self):
-    #     expected = [
-    #         (datetime(2015, 4, 12, 18, 0), datetime(2015, 4, 12, 19, 0)),
-    #         (datetime(2015, 4, 13, 18, 0), datetime(2015, 4, 13, 19, 0)),
-    #         (datetime(2015, 4, 14, 18, 0), datetime(2015, 4, 14, 19, 0)),
-    #     ]
-    #     self.assertEqual(self.dtl.to_python(), expected)
 
     def test_export(self):
         expected = {

@@ -1043,7 +1043,7 @@ class Weekdays(Timepoint):
     def __eq__(self, other):
         if not super(Weekdays, self).__eq__(other):
             return False
-        return sorted([str(d) for d in self.days]) == sorted([str(d) for d in other.days])
+        return sorted(str(d) for d in self.days) == sorted(str(d) for d in other.days)
 
     def __hash__(self):
         return hash(sorted(self.days))

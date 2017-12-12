@@ -110,9 +110,6 @@ def groupby_time(dt_intervals):
         start_time, end_time = inter['start'].time(), inter['end'].time()
         grp = '%s-%s' % (start_time.isoformat(), end_time.isoformat())
         times[grp].append(inter)  # group dates by time
-    # print(sorted([group
-    #     for time_group, group in sorted(times.items())],
-        # key=lambda item:item[0]["start"]))
     return sorted([group
         for time_group, group in sorted(times.items())],
         key=lambda item:item[0]["start"])
