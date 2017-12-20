@@ -514,7 +514,12 @@ class Tokenizer(object):
         return out
 
     def tokenize(self):
-        contexts = probe(self.text, self.lang)
+        text = self.text
+        # replacement expression
+        for expression, translation in self.language_expressions.iteritems():
+            text = text.replace(expression, translation)
+
+        contexts = probe(text, self.lang)
         if not contexts:
             return []
 

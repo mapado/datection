@@ -436,10 +436,7 @@ class TestParse(unittest.TestCase):
     def test_timing_alone(self):
         text = u"ouvert de 10h à 18h."
         res = parse(text, "fr")
-        self.assertEqual(len(res), 1)
-        self.assertTrue(isinstance(res[0], WeeklyRecurrence))
-        self.assertEqual(len(res[0].weekdays), 7)
-        self.assertEqual(res[0].time_interval.start_time, Time(10,00))
+        self.assertEqual(len(res), 0)
 
     def test_timing_with_exclusion(self):
         text = u"ouvert de 10h à 18h. Fermé le dimanche"

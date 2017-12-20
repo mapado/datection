@@ -5,6 +5,8 @@ from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
 from datection.year_inheritance import YearTransmitter
 from datection.coherency import TimepointCoherencyFilter
+from datection.timepoint import Time
+from datection.timepoint import TimeInterval
 
 
 def parse(text, lang, valid=True, reference=None):
@@ -25,6 +27,17 @@ def parse(text, lang, valid=True, reference=None):
 
     schedule = Schedule()
     token_groups = Tokenizer(text, lang).tokenize()
+
+    # if we only have timings and no date, we rather
+    # return no timepoint than inferring a day (today?
+    # every day?)
+    if all(
+        type(token.timepoint) in [Time, TimeInterval]
+        for token_group in token_groups
+        for token in token_group
+    ):
+        return []
+
     for token_group in token_groups:
         if token_group.is_single_token:
             token = token_group[0]
