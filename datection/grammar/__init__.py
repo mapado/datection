@@ -107,7 +107,10 @@ def regroup_dates_by_continuty(date_list):
         out.append(DateInterval(
             start_date=interval_group[0],
             end_date=interval_group[-1]))
-    out.append(DateList(dates=single_dates))
+
+    if single_dates:
+        out.append(DateList(dates=single_dates))
+
     return out
 
 
