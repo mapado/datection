@@ -86,8 +86,19 @@ def cleanup_rrule_string(rrule_str):
     Function to be called before dateutil.rrule.rrulestr for
     compatibility purpose with the non RFC form "DTSTART:\n" 
     """
-    cleaned_str = rrule_str.replace("DTSTART:\n", "")
-    return cleaned_str
+    cleanup_strings = [
+        "BYMINUTE=",
+        "BYHOUR=",
+        "BYDAY=",
+    ]
+    rrule_str = rrule_str.replace("DTSTART:\n", "")
+    for string in cleanup_strings:
+        rrule_str = rrule_str.replace(string + ";", "")
+        if rrule_str[-len(string):] == string:
+            rrule_str = rrule_str[:-len(string)]
+    if rrule_str[-1:] == ";":
+        rrule_str = rrule_str[:-1]
+    return rrule_str
 
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
