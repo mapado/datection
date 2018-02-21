@@ -22,6 +22,8 @@ UNLIMITED_DATE_END          = date(3000, 12, 31)
 UNLIMITED_DATETIME_START    = datetime(2000, 1, 1)
 UNLIMITED_DATETIME_END      = datetime(3000, 12, 31, 23, 59, 59)
 
+rrule_keywords = ['BYHOUR', 'BYMINUTE', 'BYDAY']
+regexp_keywords_equal_null = re.compile('|'.join(['%s=(;|$)' % keyword for keyword in rrule_keywords  ]))
 
 def get_current_date():
     """Return the current date.
@@ -86,8 +88,9 @@ def cleanup_rrule_string(rrule_str):
     Function to be called before dateutil.rrule.rrulestr for
     compatibility purpose with the non RFC form "DTSTART:\n" 
     """
-    cleaned_str = rrule_str.replace("DTSTART:\n", "")
-    return cleaned_str
+    rrule_str = rrule_str.replace("DTSTART:\n", "")
+    rrule_str = re.sub(regexp_keywords_equal_null, '', rrule_str).strip(';')
+    return rrule_str
 
 
 def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
