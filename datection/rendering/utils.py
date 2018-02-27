@@ -162,8 +162,8 @@ def to_start_end_datetimes(schedule, start_bound=None, end_bound=None):
     out = []
     for drr in schedule:
         for start_date in drr:
-            hour = drr.rrule._byhour[0] if drr.rrule._byhour else 0
-            minute = drr.rrule._byminute[0] if drr.rrule._byminute else 0
+            hour = list(drr.rrule._byhour)[0] if drr.rrule._byhour else 0
+            minute = list(drr.rrule._byminute)[0] if drr.rrule._byminute else 0
             start = datetime.datetime.combine(
                 start_date,
                 datetime.time(hour, minute))
