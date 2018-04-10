@@ -123,9 +123,6 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
     if until and (rulestr.find('UNTIL') != -1):
         until = ''
 
-    if rulestr and not rulestr.startswith('RRULE:'):
-        rulestr = 'RRULE:' + rulestr
-
     result = '{start}{rule}{end}'.format(
         start=dtstart, rule=rulestr, end=until)
     return result.rstrip(';')
