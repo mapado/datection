@@ -10,6 +10,8 @@ from datection.timepoint import Date
 from datection.timepoint import DateInterval
 from datection.timepoint import Datetime
 from datection.timepoint import Time
+from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import TimeInterval
 from datection.year_inheritance import YearTransmitter
 
 
@@ -77,3 +79,13 @@ class TestYearTransmission(unittest.TestCase):
                 # this date as taken the year of the reference
                 Datetime(Date(2014, 5, 12), Time(8, 0), Time(18, 0)),
             ])
+
+    def test_transmit_year_to_unbounded_weekly(self):
+        reference = date(2018, 4, 1)
+        timepoints = [WeeklyRecurrence.make_undefined(TimeInterval.make_all_day())]
+
+        new_timepoints = YearTransmitter(timepoints, reference).transmit()
+        new_weekly_date_interval = new_timepoints[0].date_interval
+
+        self.assertEqual(new_weekly_date_interval.start_date, Date(2018, 4, 1))
+        self.assertEqual(new_weekly_date_interval.end_date, Date(2019, 4, 1))
