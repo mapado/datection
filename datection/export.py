@@ -5,6 +5,7 @@
 from builtins import next
 from datetime import datetime
 from datetime import timedelta
+from datection.timepoint import DAY_START, DAY_END
 from datection.parse import parse
 from datection.models import DurationRRule
 from datection.coherency import RRuleCoherencyFilter
@@ -142,6 +143,8 @@ def schedule_last_date(schedule):
         for drr in schedule:
             drr = DurationRRule(drr)
             edt = drr.end_datetime
+            if drr.duration_rrule['duration'] == 0 and edt.time() == DAY_START:
+                edt = datetime.combine(edt.date(), DAY_END)
             if not curmax or curmax < edt:
                 curmax = edt
 
