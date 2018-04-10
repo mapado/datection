@@ -3,8 +3,12 @@
 """Implementation of the year iheritance strategies."""
 
 from builtins import object
+from datetime import datetime, timedelta
 from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
+from datection.timepoint import WeeklyRecurrence
+from datection.timepoint import DateInterval
+from datection.timepoint import Date
 
 
 class YearTransmitter(object):
@@ -28,6 +32,16 @@ class YearTransmitter(object):
     def year_undefined_timepoints(self):
         """Return the list of timepoints with no defined year."""
         return [t for t in self.timepoints if not t.year]
+
+    @property
+    def unbounded_weekly_recurrences(self):
+        """"""
+        return [
+            timepoint for timepoint in self.timepoints if (
+                isinstance(timepoint, WeeklyRecurrence) and
+                timepoint.date_interval == DateInterval.make_undefined()
+            )
+        ]
 
     def candidate_container(self, yearless_timepoint):
         """Return a timepoint that can transmit its year to the argument
@@ -70,5 +84,11 @@ class YearTransmitter(object):
         if self.reference:
             for yearless_timepoint in self.year_undefined_timepoints:
                 yearless_timepoint.year = self.reference.year
+
+            new_date_interval = DateInterval(
+                Date.from_date(self.reference),
+                Date.from_date(self.reference + timedelta(days=365)))
+            for unbounded_weekly in self.unbounded_weekly_recurrences:
+                unbounded_weekly.date_interval = new_date_interval
 
         return self.timepoints

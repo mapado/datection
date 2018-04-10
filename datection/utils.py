@@ -113,7 +113,7 @@ def makerrulestr(start, end=None, freq='DAILY', rule=None, **kwargs):
         until = "UNTIL=%s" % isoformat_concat(end)
 
     if rule:
-        rulestr = "RRULE:" + stringify_rrule(rule) + ";"
+        rulestr = stringify_rrule(rule) + ";"
         rulestr = rulestr.replace('BYWEEKDAY', 'BYDAY')
     else:
         rulestr = "RRULE:FREQ=%s;" % (freq)
