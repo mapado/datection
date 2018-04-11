@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Implementation of the year iheritance strategies."""
-
+import re
 from builtins import object
 from datetime import datetime, timedelta
 from datection.timepoint import AbstractDate
@@ -9,6 +9,7 @@ from datection.timepoint import AbstractDateInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import DateInterval
 from datection.timepoint import Date
+from datection.models import DurationRRule
 
 
 class YearTransmitter(object):
@@ -63,8 +64,22 @@ class YearTransmitter(object):
                     if dt.month == target_dt.month and dt.day == target_dt.day:
                         return candidate
 
+    def transmit_year_to_exclusion(self, year, exclusion):
+        """
+        """
+        exclusion = re.sub(
+            r'(?<=DTSTART:)\d{4}',
+            str(year),
+            exclusion)
+        exclusion = re.sub(
+            r'(?<=UNTIL=)\d{4}',
+            str(year),
+            exclusion)
+        return exclusion
+
     def transmit(self):
-        """Make all yearless timepoints inherit from a year, when possible.
+        """
+        Make all yearless timepoints inherit from a year, when possible.
 
         Two strategies are used. The first is to find an appropriate
         timepoint for each yearless one, and transmit its year.
@@ -84,6 +99,11 @@ class YearTransmitter(object):
         if self.reference:
             for yearless_timepoint in self.year_undefined_timepoints:
                 yearless_timepoint.year = self.reference.year
+                if hasattr(yearless_timepoint, 'excluded'):
+                    yearless_timepoint.excluded = [
+                        self.transmit_year_to_exclusion(self.reference.year, exclusion)
+                        for exclusion in yearless_timepoint.excluded
+                    ]
 
             new_date_interval = DateInterval(
                 Date.from_date(self.reference),

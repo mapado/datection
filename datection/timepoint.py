@@ -25,7 +25,7 @@ ALL_DAY = 1439  # number of minutes from midnight to 23:59
 MISSING_YEAR = 1000
 DAY_START = time(0, 0)
 DAY_END = time(23, 59, 59)
-MIN_YEAR = 1
+MIN_YEAR = 1970
 ORDERED_DAYS = [MO, TU, WE, TH, FR, SA, SU]
 
 
