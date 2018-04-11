@@ -23,6 +23,7 @@ from datection.timepoint import DatetimeInterval
 from datection.timepoint import ContinuousDatetimeInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import enrich_with_timings
+from datection.timepoint import MIN_YEAR
 
 class TestTime(unittest.TestCase):
 
@@ -70,11 +71,11 @@ class TestDate(unittest.TestCase):
 
     def test_to_python(self):
         self.assertEqual(self.d.to_python(), date(2015, 10, 12))
-        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertEqual(Date(None, 12, 11).to_python(), date(MIN_YEAR, 12, 11))
         self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_to_python_invalid(self):
-        self.assertEqual(Date(None, 12, 11).to_python(), date(1, 12, 11))
+        self.assertEqual(Date(None, 12, 11).to_python(), date(MIN_YEAR, 12, 11))
         self.assertIsNone(Date(None, 13, 11).to_python())
 
     def test_valid(self):

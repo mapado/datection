@@ -303,5 +303,6 @@ class Schedule(object):
                         new_tp = enrich_with_timings(tp, timing[0])
                         if tp.span:
                             new_tp.span = tp.span
-                        self.add_exclusion(new_tp, timing[1])
+                        if isinstance(new_tp, (WeeklyRecurrence, AbstractDateInterval)):
+                            self.add_exclusion(new_tp, timing[1])
                         self._timepoints.append(new_tp)
