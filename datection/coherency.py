@@ -14,6 +14,10 @@ from datection.timepoint import AbstractDate
 from datection.timepoint import AbstractDateInterval
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import DateInterval
+from datection.timepoint import ORDERED_DAYS
+from datection.timepoint import Date
+from datection.timepoint import Datetime
+from datection.timepoint import TimeInterval
 
 
 class TimepointCoherencyFilter(object):
@@ -28,7 +32,8 @@ class TimepointCoherencyFilter(object):
 
     @property
     def date_intervals(self):
-        """The list of all date(time) intervals instances among the
+        """
+        The list of all date(time) intervals instances among the
         timepoint list.
 
         """
@@ -38,13 +43,18 @@ class TimepointCoherencyFilter(object):
 
     @property
     def dates(self):
-        """The list of all date(time) instances among the timepoint list.
-
+        """
+        The list of all date(time) instances among the timepoint list.
         """
         return [t for t in self.timepoints if isinstance(t, AbstractDate)]
 
+    @property
+    def weekly_recurrences(self):
+        return [t for t in self.timepoints if isinstance(t, WeeklyRecurrence)]
+
     def deduplicate_date_interval_and_dates(self):
-        """Remove the date intervals which dates are all re-defined by
+        """
+        Remove the date intervals which dates are all re-defined by
         other independant dates in the timepoint list.
 
         Example:
@@ -72,7 +82,8 @@ class TimepointCoherencyFilter(object):
         self.timepoints = timepoints
 
     def inherit_date_lapse(self):
-        """ Intersect datetime range timepoint with infinite patterns
+        """
+        Intersect datetime range timepoint with infinite patterns
 
         Example:
         >>> timepoints = [
@@ -118,10 +129,33 @@ class TimepointCoherencyFilter(object):
                     timepoints.append(tp_inf)
             self.timepoints = timepoints + tp_not_concerned
 
+    def deduplicates_weekly_recurrences_and_dates(self):
+        """
+        When we have a very general weekly recurrence that matches a single date (
+        same weekday and timing), it is most likely that this weekly recurrence was
+        wrongly parsed.
+        """
+        def date_match_weekly(date, weekly):
+            """"""
+            return (
+                len(weekly.weekdays) == 1 and
+                weekly.weekdays[0] == ORDERED_DAYS[date.day_of_week()] and (
+                    isinstance(date, Date) and weekly.time_interval == TimeInterval.make_all_day() or
+                    isinstance(date, Datetime) and date.start_time == weekly.time_interval.start_time
+                )
+            )
+
+        timepoints = self.timepoints[:]
+        for weekly in self.weekly_recurrences:
+            if any(date_match_weekly(date, weekly) for date in self.dates):
+                timepoints.remove(weekly)
+        self.timepoints = timepoints
+
     def apply_coherency_rules(self):
         """Call every coherency rules."""
         self.inherit_date_lapse()
         self.deduplicate_date_interval_and_dates()
+        self.deduplicates_weekly_recurrences_and_dates()
         return self.timepoints
 
 

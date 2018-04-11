@@ -325,6 +325,12 @@ class Date(AbstractDate):
                     # Eg: either the month or the day is None or out of bounds
                     return None
 
+    def day_of_week(self):
+        """
+        Returns the day of week
+        """
+        return self.to_python().weekday()
+
     @add_span
     def export(self):
         """Return a dict containing the rrule and the duration (in min).
@@ -773,6 +779,12 @@ class Datetime(AbstractDate):
                     self.start_time.minute)
             except (TypeError, ValueError):
                 return None
+
+    def day_of_week(self):
+        """
+        Returns the day of week
+        """
+        return self.to_python().weekday()
 
 
 class DatetimeList(Timepoint):

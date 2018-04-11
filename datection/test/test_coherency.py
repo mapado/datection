@@ -8,6 +8,9 @@ from datection.timepoint import Date
 from datection.timepoint import DateInterval
 from datection.timepoint import Datetime
 from datection.timepoint import Time
+from datection.timepoint import TimeInterval
+from datection.timepoint import WeeklyRecurrence
+from dateutil.rrule import SA
 
 from datection.models import DurationRRule
 from datection.coherency import TimepointCoherencyFilter
@@ -55,6 +58,34 @@ class TestTimepointCoherencyFilter(unittest.TestCase):
                 Datetime(Date(2014, 11, 14), Time(18, 0), Time(20, 0))
             ]
         )
+
+    def test_deduplicate_date_and_weekly(self):
+        timepoints = [
+            Date(2017, 9, 16),
+            WeeklyRecurrence(
+                DateInterval.make_undefined(),
+                TimeInterval.make_all_day(),
+                [SA]
+            )
+        ]
+        cf = TimepointCoherencyFilter(timepoints)
+        cf.deduplicates_weekly_recurrences_and_dates()
+
+        self.assertEqual(cf.timepoints, [Date(2017, 9, 16)])
+
+    def test_deduplicate_datetime_and_weekly(self):
+        timepoints = [
+            Datetime(Date(2017, 9, 16), Time(10, 30)),
+            WeeklyRecurrence(
+                DateInterval.make_undefined(),
+                TimeInterval(Time(10, 30), Time(12, 30)),
+                [SA]
+            )
+        ]
+        cf = TimepointCoherencyFilter(timepoints)
+        cf.deduplicates_weekly_recurrences_and_dates()
+
+        self.assertEqual(cf.timepoints, [Datetime(Date(2017, 9, 16), Time(10, 30))])
 
 
 class TestRRuleTypeCoherencyHeuristics(unittest.TestCase):
