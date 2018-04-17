@@ -37,6 +37,7 @@ from datection.timepoint import Weekdays
 from datection.timepoint import WeeklyRecurrence
 from datection.test.test_grammar import TestGrammar
 from datection.test.test_grammar import set_pattern
+from datection.parse import parse
 
 
 class TestDate(TestGrammar):
@@ -651,10 +652,10 @@ class TestWeekdayRecurrence(TestGrammar):
 
     @set_pattern(MULTIPLE_WEEKLY_RECURRENCE)
     def test_parse_multiple_weekly_recurrence_formats(self):
-        self.assert_parse(
+        self.assert_unparsable(
             u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
             lundi à 18h""")
-        self.assert_parse(
+        self.assert_unparsable(
             u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
             lundi à 18h, dimanche à 20h30""")
 
@@ -673,12 +674,12 @@ class TestWeekdayRecurrence(TestGrammar):
             time_interval=TimeInterval(Time(20, 30), Time(20, 30)),
             weekdays=Weekdays([SU]))
         self.assertListEqual(
-            list(self.pattern.parseString(
+            sorted(list(parse(
                 u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
-                lundi à 18h""")),
-            [wk1, wk2])
+                lundi à 18h""", 'fr'))),
+            sorted([wk2, wk1]))
         self.assertListEqual(
-            list(self.pattern.parseString(
+            sorted(list(parse(
                 u"""Du 29/03/15 au 02/04/15 - Mardi, mercredi samedi 16h-19h,
-                lundi à 18h, dimanche à 20h30""")),
-            [wk1, wk2, wk3])
+                lundi à 18h, dimanche à 20h30""", 'fr'))),
+            sorted([wk2, wk3, wk1]))

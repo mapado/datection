@@ -7,7 +7,7 @@ import unittest
 import six
 
 from datetime import datetime, date
-from dateutil.rrule import TU, WE, TH, FR
+from dateutil.rrule import TU, WE, SA
 
 from datection import parse
 from datection.models import DurationRRule
@@ -16,6 +16,8 @@ from datection.timepoint import Datetime
 from datection.timepoint import Time
 from datection.timepoint import WeeklyRecurrence
 from datection.timepoint import ContinuousDatetimeInterval
+from datection.timepoint import DateInterval
+from datection.timepoint import TimeInterval
 
 
 class TestParse(unittest.TestCase):
@@ -511,3 +513,28 @@ class TestYearLessExpressions(unittest.TestCase):
         dt = timepoints[0]
         self.assertEqual(dt.dates[0].year, 2015)
         self.assertEqual(dt.dates[1].year, 2015)
+
+
+class TestParseWeekly(unittest.TestCase):
+
+    def test_pipe_pattern(self):
+        date_interval = DateInterval(Date(2018, 3, 24), Date(2018, 11, 1))
+        wk1 = WeeklyRecurrence(date_interval, TimeInterval(Time(14, 0), Time(18, 0)), [TU])
+        wk2 = WeeklyRecurrence(date_interval, TimeInterval(Time(10, 0), Time(12, 0)), [TU])
+        wk3 = WeeklyRecurrence(date_interval, TimeInterval(Time(10, 0), Time(12, 0)), [SA])
+        schedule_description = "les mardis du 24/03/2018 au 01/11/2018 de 14:00 à 18:00 | les mardis du 24/03/2018 au 01/11/2018 de 10:00 à 12:00 | les samedis du 24/03/2018 au 01/11/2018 de 10:00 à 12:00"
+        timepoints = parse(schedule_description, 'fr')
+        self.assertListEqual(sorted(timepoints), sorted([wk1, wk2, wk3]))
+
+    def test_multiline_pattern(self):
+        date_interval = DateInterval(Date(2018, 3, 24), Date(2018, 11, 1))
+        wk1 = WeeklyRecurrence(date_interval, TimeInterval(Time(14, 0), Time(18, 0)), [TU])
+        wk2 = WeeklyRecurrence(date_interval, TimeInterval(Time(10, 0), Time(12, 0)), [TU])
+        wk3 = WeeklyRecurrence(date_interval, TimeInterval(Time(10, 0), Time(12, 0)), [SA])
+        schedule_description = """
+            les mardis du 24/03/2018 au 01/11/2018 de 14:00 à 18:00
+            les mardis du 24/03/2018 au 01/11/2018 de 10:00 à 12:00
+            les samedis du 24/03/2018 au 01/11/2018 de 10:00 à 12:00
+        """
+        timepoints = parse(schedule_description, 'fr')
+        self.assertListEqual(sorted(timepoints), sorted([wk1, wk2, wk3]))

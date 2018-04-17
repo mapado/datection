@@ -105,7 +105,9 @@ class TimepointCoherencyFilter(object):
                 if 'UNTIL' not in tp.date_interval.rrulestr:
                     tp_infinites.append(tp)
                 else:
+                    # keep the weekly recurrence but also use it as date range reference
                     tp_date_ranges.append(tp)
+                    tp_not_concerned.append(tp)
             elif isinstance(tp, AbstractDateInterval):
                 tp_date_ranges.append(tp)
             else:

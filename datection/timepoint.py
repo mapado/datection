@@ -10,6 +10,7 @@ from datetime import datetime
 from datetime import time
 from datetime import date
 from dateutil.rrule import rrule
+from dateutil.rrule import rruleset
 from dateutil.rrule import WEEKLY
 from dateutil.rrule import MO, TU, WE, TH, FR, SA, SU
 from operator import attrgetter
@@ -289,6 +290,9 @@ class Date(AbstractDate):
             str(self.day).zfill(2)
         ) 
 
+    def __lt__(self, other):
+        return self.to_python() < other.to_python()
+
     @classmethod
     def from_match(self, match):  # pragma: no cover
         year = match['year'] if match['year'] else None
@@ -374,6 +378,9 @@ class Time(Timepoint):
             return False
         return (self.hour == other.hour and self.minute == other.minute)
 
+    def __lt__(self, other):
+        return self.to_python < other.to_python()
+
     def __hash__(self):
         return hash((self.hour, self.minute))
 
@@ -414,6 +421,9 @@ class TimeInterval(Timepoint):
             self.start_time == other.start_time and
             self.end_time == other.end_time)
 
+    def __lt__(self, other):
+        return self.start_time < other.start_time
+
     def __hash__(self):
         return hash((self.start_time, self.end_time))
 
@@ -449,6 +459,9 @@ class DateList(Timepoint):
         if not super(DateList, self).__eq__(other):
             return False
         return self.dates == other.dates
+
+    def __lt__(self, other):
+        return min(self.dates) < min(other.dates)
 
     def __hash__(self):
         return hash(tuple(self.dates))
@@ -552,6 +565,9 @@ class DateInterval(AbstractDateInterval):
             self.start_date == other.start_date
             and self.end_date == other.end_date)
 
+    def __lt__(self, other):
+        return self.start_date < other.start_date
+
     def __hash__(self):
         return hash((self.start_date, self.end_date))
 
@@ -631,6 +647,10 @@ class DateInterval(AbstractDateInterval):
     def duration(self):
         return ALL_DAY
 
+    def length(self):
+        """ Date range length """
+        return (self.end_date.to_python() - self.start_date.to_python())
+
     def to_python(self):
         return [_date for _date in self]
 
@@ -687,6 +707,9 @@ class Datetime(AbstractDate):
             self.date == other.date
             and self.start_time == other.start_time
             and self.end_time == other.end_time)
+
+    def __lt__(self, other):
+        return self.to_python() < other.to_python()
 
     def __hash__(self):
         return hash((self.date, self.start_time, self.end_time))
@@ -800,6 +823,9 @@ class DatetimeList(Timepoint):
             return False
         return self.datetimes == other.datetimes
 
+    def __lt__(self, other):
+        return min(self.datetimes) < min(other.datetimes)
+
     def __hash__(self):
         return hash(tuple(self.datetimes))
 
@@ -868,6 +894,15 @@ class DatetimeInterval(AbstractDateInterval):
         return (
             self.date_interval == other.date_interval
             and self.time_interval == other.time_interval)
+
+    def __lt__(self, other):
+        if self.date_interval < other.date_interval:
+            return True
+        elif self.date_interval == other.date_interval:
+            if self.time_interval < other.time_interval:
+                return True
+        return False
+
 
     def __hash__(self):
         return hash((self.date_interval, self.time_interval))
@@ -969,6 +1004,14 @@ class ContinuousDatetimeInterval(Timepoint):
             and self.end_date == other.end_date
             and self.end_time == other.end_time)
 
+    def __lt__(self, other):
+        if self.start_date < other.start_date:
+            return True
+        elif self.start_date == other.start_date:
+            if self.start_time < other.start_time:
+                return True
+        return False
+
     def __hash__(self):
         return hash((self.start_date, self.start_time, self.end_date, self.end_time))
 
@@ -1057,6 +1100,9 @@ class Weekdays(Timepoint):
             return False
         return sorted(str(d) for d in self.days) == sorted(str(d) for d in other.days)
 
+    def __lt__(self, other):
+        return min(self.days) < min(other.days)
+
     def __hash__(self):
         return hash(sorted(self.days))
 
@@ -1095,6 +1141,13 @@ class WeeklyRecurrence(Timepoint):
             self.date_interval == other.date_interval and
             self.time_interval == other.time_interval and
             self.weekdays == other.weekdays)
+
+    def __lt__(self, other):
+        first_self = next(iter(self.to_python()))
+        first_other = next(iter(other.to_python()))
+        if first_self and first_other:
+            return first_self < first_other
+        return False
 
     def __hash__(self):
         return hash((self.date_interval, self.time_interval, (str(d) for d in self.weekdays)))

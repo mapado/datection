@@ -54,8 +54,7 @@ MULTIPLE_WEEKLY_RECURRENCE = grm_gen.multiple_weekly_recurrence_grm(WEEKDAY_PATT
 EXCLUSION = oneof_ci([u'sauf', u'relâche', u'relache', u'fermé', u'repos'])
 
 TIMEPOINTS = [
-    ('weekly_rec', WEEKLY_RECURRENCE),
-    ('weekly_rec', MULTIPLE_WEEKLY_RECURRENCE),
+    ('weekly_rec', WEEKLY_RECURRENCE, [('weekly_rec_multi', MULTIPLE_WEEKLY_RECURRENCE)]),
 
     ('datetime', DATETIME_PATTERN, [
         ('datetime_list', DATELIST_TIMEINTERVAL),

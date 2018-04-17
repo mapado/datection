@@ -11,7 +11,7 @@ from past.utils import old_div
 import re
 import unicodedata
 
-from collections import Counter
+from collections import Counter, defaultdict
 from datection.timepoint import NormalizationError
 from datection.context import probe, Context
 from datection.utils import cached_property
@@ -69,6 +69,9 @@ class Match(object):
     @property
     def span(self):
         return (self.start_index, self.end_index)
+
+    def __repr__(self):
+        return '%s [%s:%s]' % (self.timepoint_type, self.start_index, self.end_index)
 
 
 class Token(object):
@@ -171,6 +174,18 @@ class Tokenizer(object):
         return self.language_module.TIMEPOINTS
 
     @property
+    def timepoint_patterns_hierarchy(self):
+        """
+        Dictionary of patterns complexities
+        """
+        hierarchy = defaultdict(set)
+        for pattern in self.timepoint_patterns:
+            if len(pattern) == 3:
+                for subpattern in pattern[2]:
+                    hierarchy[pattern[0]].add(subpattern[0])
+        return hierarchy
+
+    @property
     def language_expressions(self):  # pragma: no cover
         """The list of all time-related expressions in the Tokenizer language.
 
@@ -243,6 +258,29 @@ class Tokenizer(object):
         # sort list by match position
         out = sorted(out, key=lambda item: item[0].start_index)
 
+        return out
+
+    def _remove_simpler_patterns(self, matches):
+        """
+        Removes simple patterns when more complex pattern with same span exists
+        """
+        def exists_more_complex_match_with_same_span(match, matches):
+            """ Checks if more complex pattern with same span exists """
+            return any(
+                match.timepoint_type in ['weekly_rec'] and
+                match.start_index == other.start_index and
+                match.end_index == other.end_index and
+                other.timepoint_type in self.timepoint_patterns_hierarchy[match.timepoint_type]
+                for other, _ in matches
+            )
+
+        out = list()
+        for match, ctx in matches:
+            if exists_more_complex_match_with_same_span(match, matches):
+                continue
+            out.append((match, ctx))
+
+        out = sorted(out, key=lambda item: item[0].start_index)
         return out
 
     @staticmethod
@@ -352,11 +390,11 @@ class Tokenizer(object):
             self, timepoints, context, ctx, analyse_subpattern=True,
             pattern_list=None):
         """ Find all matches given a list of timepoint parse rules """
-        dmatches = {}
+        dmatches = defaultdict(list)
         for tp in timepoints:
             mchs = self._search_matches_timepoint(tp, context, ctx)
             if mchs:
-                dmatches[tp[0]] = mchs
+                dmatches[tp[0]].extend(mchs)
 
         # Validate simple pattern before matching related more complex ones
         if analyse_subpattern:
@@ -371,7 +409,7 @@ class Tokenizer(object):
                     for sp in subpatterns:
                         mchs = self._search_matches_timepoint(sp, context, ctx)
                         if mchs:
-                            dmatches[sp[0]] = mchs
+                            dmatches[sp[0]].extend(mchs)
         return dmatches
 
     def _update_probe_kinds(self, found_probe_kinds, new_text):
@@ -397,12 +435,13 @@ class Tokenizer(object):
 
                 contain_datetime_and_date = any(
                     not any(
-                        dts[0] <= ds[0] and dts[1] >= ds[1]
-                        for dts in datetime_spans
-                    ) for ds in date_spans
+                        datetime_span[0] <= date_span[0] and
+                        datetime_span[1] >= date_span[1]
+                        for datetime_span in datetime_spans
+                    ) for date_span in date_spans
                 )
 
-        if contain_datetime_and_date:
+        if contain_datetime_and_date or ('weekly_rec' in dmatches):
             validated_tp = (
                 tp for tp in timepoints if tp[0] in list(dmatches.keys()))
         else:
@@ -533,6 +572,7 @@ class Tokenizer(object):
         for ctx in contexts:
             matches.extend(self.search_context(ctx))
         non_overlapping_matches = self._remove_subsets(matches)
-        tokens = self.create_tokens(non_overlapping_matches)
+        most_complex_matches = self._remove_simpler_patterns(non_overlapping_matches)
+        tokens = self.create_tokens(most_complex_matches)
         token_groups = self.group_tokens(tokens)
         return token_groups

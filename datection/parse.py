@@ -2,6 +2,10 @@
 
 import six
 
+# remove newlines from default whitespace characters
+from pyparsing import ParserElement
+ParserElement.setDefaultWhitespaceChars(' \t')
+
 from datection.lang import detect_language
 from datection.tokenize import Tokenizer
 from datection.schedule import Schedule
