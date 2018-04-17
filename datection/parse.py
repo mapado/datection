@@ -54,7 +54,10 @@ def parse(text, lang, valid=True, reference=None):
                 schedule.add(timepoint=token.timepoint)
         elif token_group.is_exclusion_group:
             token = token_group[0]
-            excluded_tps = [tok.timepoint for tok in token_group[2:]]
+            excluded_tps = []
+            for tok in token_group[2:]:
+                tok.timepoint.span = tok.span
+                excluded_tps.append(tok.timepoint)
             # hack, transmit the span at the last minute so that it gets
             # exported
             token.timepoint.span = token.span[0], token_group[-1].span[1]
