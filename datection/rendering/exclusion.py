@@ -34,11 +34,17 @@ class ExclusionFormatter(BaseFormatter):
 
         The rrule can either define weekdays or a single date(time).
         """
-        excluded_rrule = excluded.exclusion_rrules[0]
+        # excluded_rrule = excluded.exclusion_rrules[0]
         result = ""
         # excluded recurrent weekdays
-        if excluded_rrule._byweekday:
-            result = self.display_excluded_weekdays(excluded_rrule)
+        if all(exclusion._byweekday for exclusion in excluded.exclusion_rrules):
+            excluded_weekdays = set(
+                wk for exclusion in excluded.exclusion_rrules for wk in exclusion._byweekday)
+            result = self.display_excluded_weekdays(list(excluded_weekdays))
+
+        elif excluded.exclusion_rrules[0]._byweekday:
+            excluded_weekdays = excluded.exclusion_rrules[0]._byweekday
+            result = self.display_excluded_weekdays(excluded_weekdays)
         # excluded date(time)
         else:
             result = self.display_excluded_date(
@@ -62,7 +68,7 @@ class ExclusionFormatter(BaseFormatter):
         fmt = DateFormatter(drr.date_interval[0], self.locale)
         return fmt.display(prefix=True)
 
-    def display_excluded_weekdays(self, excluded):
+    def display_excluded_weekdays(self, excluded_weekdays):
         """
         Render the excluded weekdays into a human-readable format.
 
@@ -70,12 +76,12 @@ class ExclusionFormatter(BaseFormatter):
         or a weekday list.
         """
         # single excluded recurrent weekday
-        if (excluded._byweekday is not None) and len(excluded._byweekday) == 1:
+        if (excluded_weekdays is not None) and len(excluded_weekdays) == 1:
             return self.get_template('weekday').format(
                 prefix=self._('the'),
-                weekday=self.day_name(excluded._byweekday[0]))
+                weekday=self.day_name(excluded_weekdays[0]))
         else:
-            indices = sorted(list(excluded._byweekday))
+            indices = sorted(list(excluded_weekdays))
             # excluded day range
             if indices and indices == list(range(indices[0], indices[-1] + 1)):
                 return self.get_template('weekday_interval').format(
