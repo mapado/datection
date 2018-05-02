@@ -2,6 +2,8 @@
 
 import unittest
 
+from freezegun import freeze_time
+
 from datetime import datetime
 from datection.models import DurationRRule
 from datection.export import schedule_to_discretised_days
@@ -9,6 +11,7 @@ from datection.export import schedule_first_date
 from datection.export import schedule_last_date
 from datection.export import schedule_next_date
 from datection.export import discretised_days_to_scheduletags
+from datection.export import split_past_and_future
 
 
 class ExportScheduleToSQLTest(unittest.TestCase):
@@ -189,3 +192,51 @@ class ExportScheduleToSQLTest(unittest.TestCase):
                 '2014_year_night',
             ])
         )
+
+
+@freeze_time("2018-01-14 20:00:01")
+class SplitPastFutureTest(unittest.TestCase):
+
+    def setUp(self):
+        self._20180103_8h = {
+            'duration': 0,
+            'rrule': ('DTSTART:20180103\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                      'BYMINUTE=0;COUNT=1'),
+        }
+
+        self._20180114_15h = {
+            'duration': 0,
+            'rrule': ('DTSTART:20180114\nRRULE:FREQ=DAILY;BYHOUR=15;'
+                      'BYMINUTE=0;COUNT=1'),
+        }
+
+        self._20180115_15h = {
+            'duration': 0,
+            'rrule': ('DTSTART:20180115\nRRULE:FREQ=DAILY;BYHOUR=15;'
+                      'BYMINUTE=0;COUNT=1'),
+        }
+
+    def test_basic_split(self):
+        schedule = [self._20180103_8h, self._20180114_15h, self._20180115_15h]
+
+        past, future = split_past_and_future(schedule)
+
+        self.assertItemsEqual([self._20180103_8h, self._20180114_15h], past)
+        self.assertItemsEqual([self._20180115_15h], future)
+
+    def test_keep_all_day(self):
+        schedule = [self._20180103_8h, self._20180114_15h, self._20180115_15h]
+
+        past, future = split_past_and_future(schedule, keep_all_day=True)
+
+        self.assertItemsEqual([self._20180103_8h], past)
+        self.assertItemsEqual([self._20180114_15h, self._20180115_15h], future)
+
+    def test_reference_day(self):
+        schedule = [self._20180103_8h, self._20180114_15h, self._20180115_15h]
+
+        past, future = split_past_and_future(
+            schedule, keep_all_day=True, reference_date=datetime(2018, 1, 16, 18, 0))
+
+        self.assertItemsEqual([self._20180103_8h, self._20180114_15h, self._20180115_15h], past)
+        self.assertItemsEqual([], future)
