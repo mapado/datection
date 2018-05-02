@@ -221,16 +221,16 @@ class SplitPastFutureTest(unittest.TestCase):
 
         past, future = split_past_and_future(schedule)
 
-        self.assertItemsEqual([self._20180103_8h, self._20180114_15h], past)
-        self.assertItemsEqual([self._20180115_15h], future)
+        self.assertListEqual([self._20180103_8h, self._20180114_15h], past)
+        self.assertListEqual([self._20180115_15h], future)
 
     def test_keep_all_day(self):
         schedule = [self._20180103_8h, self._20180114_15h, self._20180115_15h]
 
         past, future = split_past_and_future(schedule, keep_all_day=True)
 
-        self.assertItemsEqual([self._20180103_8h], past)
-        self.assertItemsEqual([self._20180114_15h, self._20180115_15h], future)
+        self.assertListEqual([self._20180103_8h], past)
+        self.assertListEqual([self._20180114_15h, self._20180115_15h], future)
 
     def test_reference_day(self):
         schedule = [self._20180103_8h, self._20180114_15h, self._20180115_15h]
@@ -238,5 +238,5 @@ class SplitPastFutureTest(unittest.TestCase):
         past, future = split_past_and_future(
             schedule, keep_all_day=True, reference_date=datetime(2018, 1, 16, 18, 0))
 
-        self.assertItemsEqual([self._20180103_8h, self._20180114_15h, self._20180115_15h], past)
-        self.assertItemsEqual([], future)
+        self.assertListEqual([self._20180103_8h, self._20180114_15h, self._20180115_15h], past)
+        self.assertListEqual([], future)
