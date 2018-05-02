@@ -169,6 +169,29 @@ def schedule_next_date(schedule):
     return curnext
 
 
+def split_past_and_future(schedule, keep_all_day=False, reference_date=None):
+    """
+    Splits the given schedule into past and future ones.
+    """
+    past_schedule, future_schedule = [], []
+
+    threshold_date = reference_date
+    if threshold_date is None:
+        threshold_date = datetime.now()
+    if keep_all_day:
+        threshold_date = datetime.combine(threshold_date.date(), DAY_START)
+
+    for drr_string in schedule:
+        drr = DurationRRule(drr_string)
+        end_datetime = drr.end_datetime
+        if end_datetime < threshold_date:
+            past_schedule.append(drr_string)
+        else:
+            future_schedule.append(drr_string)
+
+    return past_schedule, future_schedule
+
+
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
     Elasticsearch filtering
