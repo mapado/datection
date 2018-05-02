@@ -5,13 +5,13 @@ import unittest
 from freezegun import freeze_time
 
 from datetime import datetime
-from datection.models import DurationRRule
 from datection.export import schedule_to_discretised_days
 from datection.export import schedule_first_date
 from datection.export import schedule_last_date
 from datection.export import schedule_next_date
 from datection.export import discretised_days_to_scheduletags
 from datection.export import split_past_and_future
+from datection.export import terminate_infinite_schedule
 
 
 class ExportScheduleToSQLTest(unittest.TestCase):
@@ -240,3 +240,57 @@ class SplitPastFutureTest(unittest.TestCase):
 
         self.assertListEqual([self._20180103_8h, self._20180114_15h, self._20180115_15h], past)
         self.assertListEqual([], future)
+
+
+@freeze_time("2018-01-16 20:00:01")
+class TerminateScheduleTest(unittest.TestCase):
+
+    def test_terminate_schedule(self):
+        schedule = [{
+            'duration': 0,
+            'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
+                      'BYHOUR=10;BYMINUTE=30'),
+        }]
+
+        expected_output = [{
+            'duration': 0,
+            'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
+                      'BYHOUR=10;BYMINUTE=30;UNTIL=20180116T235959'),
+        }]
+
+        flag, result = terminate_infinite_schedule(schedule, new_end=datetime.now())
+        self.assertTrue(flag)
+        self.assertListEqual(result, expected_output)
+
+    def test_not_terminate_schedule_single_date(self):
+        schedule = [{
+            'duration': 0,
+            'rrule': ('DTSTART:20180103\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                      'BYMINUTE=0;COUNT=1'),
+        }]
+
+        flag, result = terminate_infinite_schedule(schedule, new_end=datetime.now())
+        self.assertFalse(flag)
+        self.assertListEqual(result, schedule)
+
+    def test_not_terminate_schedule_continuous(self):
+        schedule = [{
+            'duration': 0,
+            'rrule': ('DTSTART:20180103\nRRULE:FREQ=DAILY;BYHOUR=8;'
+                      'BYMINUTE=0;INTERVAL=1;UNTIL=20180116T235959'),
+        }]
+
+        flag, result = terminate_infinite_schedule(schedule, new_end=datetime.now())
+        self.assertFalse(flag)
+        self.assertListEqual(result, schedule)
+
+    def test_not_terminate_schedule_bounded_recurring(self):
+        schedule = [{
+            'duration': 0,
+            'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=SU;'
+                      'BYHOUR=10;BYMINUTE=30;UNTIL=20180116T235959'),
+        }]
+
+        flag, result = terminate_infinite_schedule(schedule, new_end=datetime.now())
+        self.assertFalse(flag)
+        self.assertListEqual(result, schedule)
