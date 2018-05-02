@@ -192,6 +192,22 @@ def split_past_and_future(schedule, keep_all_day=False, reference_date=None):
     return past_schedule, future_schedule
 
 
+def terminate_infinite_schedule(schedule, new_end=datetime.now()):
+    """
+    Sets the new end date to recurring schedule without end.
+    """
+    schedule_has_changed = False
+
+    for idx, drr_string in enumerate(schedule):
+        drr = DurationRRule(drr_string)
+        if drr.is_recurring and not drr.has_end:
+            drr.add_enddate(new_end.date())
+            schedule[idx] = drr.duration_rrule
+            schedule_has_changed = True
+
+    return schedule_has_changed, schedule
+
+
 def discretised_days_to_scheduletags(discretised_days):
     """ Convert a list of days to a format suitable for
     Elasticsearch filtering
