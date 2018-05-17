@@ -178,6 +178,10 @@ def split_past_and_future(schedule, keep_all_day=False, reference_date=None):
     threshold_date = reference_date
     if threshold_date is None:
         threshold_date = datetime.now()
+
+    if not isinstance(threshold_date, datetime):
+        threshold_date = datetime.combine(threshold_date, DAY_START)
+
     if keep_all_day:
         threshold_date = datetime.combine(threshold_date.date(), DAY_START)
 
