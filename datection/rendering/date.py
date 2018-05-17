@@ -193,6 +193,10 @@ class DateIntervalFormatter(BaseFormatter):
     def has_two_consecutive_days(self):
         return self.start_date + datetime.timedelta(days=1) == self.end_date
 
+    def very_long_interval(self):
+        """ Indicates if the interval is very long """
+        return (self.end_date - self.start_date) >= datetime.timedelta(days=365)
+
     def format_same_month(self, *args, **kwargs):
         """Formats the date interval when both dates have the same month."""
         template = self.get_template()
@@ -252,7 +256,9 @@ class DateIntervalFormatter(BaseFormatter):
         if kwargs.get('summarize'):
             kwargs['include_dayname'] = False
 
-        if self.has_two_consecutive_days():
+        if self.very_long_interval() and kwargs.get('avoid_bounds_display'):
+            return self._('every day')
+        elif self.has_two_consecutive_days():
             return self.format_two_consecutive_days(**kwargs)
         elif self.same_month_interval():
             return self.format_same_month(*args, **kwargs)
