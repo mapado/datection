@@ -129,6 +129,18 @@ def get_short_display_place_schedule(schedule, loc):
     return fmt.display()
 
 
+def get_full_display_place_schedule(schedule, loc):
+    """
+    Gives a long formatting for place schedule trying to avoid
+    to display dates bounds (full year interval for instance)
+    """
+    locale = getlocale(loc) if getlocale(loc) else 'fr_FR.UTF8'
+
+    fmt = FullFormatter(schedule, locale)
+
+    return fmt.display(avoid_bounds_display=True)
+
+
 def display(schedule, loc, short=False, seo=False, bounds=(None, None),
             reference=utils.get_current_date()):
     """
