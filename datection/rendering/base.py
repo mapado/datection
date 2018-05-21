@@ -101,7 +101,7 @@ class NextDateMixin(object):
         end = self.end if hasattr(self, 'end') else None
         dtimes = utils.to_start_end_datetimes(self.schedule, start, end)
         # group the filtered values by date
-        dtimes = sorted(utils.groupby_date(dtimes), key=lambda x:x[0]["start"] )
+        dtimes = sorted(utils.groupby_date(dtimes), key=lambda x: x[0]["start"])
         return dtimes
 
     def next_occurence(self):

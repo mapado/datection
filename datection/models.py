@@ -258,14 +258,20 @@ class DurationRRule(object):
         is only performed the first time.
 
         """
+        unkown_start = (self.duration_rrule['rrule'].find("DTSTART:\n") != -1)
         rrule_str = cleanup_rrule_string(self.duration_rrule['rrule'])
         rrule = rrulestr(rrule_str)
 
         # when we are in unlimited mode, datection need to
         # have DTSTART=01-01-0001 & UNTIL=31-12-9999
         if self.duration_rrule.get('unlimited'):
-            rrule._dtstart   = UNLIMITED_DATETIME_START
-            rrule._until     = UNLIMITED_DATETIME_END
+            rrule._dtstart = UNLIMITED_DATETIME_START
+            rrule._until = UNLIMITED_DATETIME_END
+
+        # default behaviour of dateutil.rrule is to set now() as
+        # dtstart, whereas we want today at 00:00
+        elif unkown_start:
+            rrule._dtstart = datetime.combine(datetime.today(), time(0, 0))
 
         return rrule
 
