@@ -309,7 +309,10 @@ class DurationRRule(object):
     @property
     def duration(self):
         """The DurationRRule duration, in minutes (as an integer)."""
-        return int(self.duration_rrule['duration'])
+        duration = self.duration_rrule.get('duration', None)
+        if duration is None:
+            duration = 0
+        return int(duration)
 
     @property
     def start_datetime(self):

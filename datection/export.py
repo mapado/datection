@@ -114,7 +114,7 @@ def schedule_to_discretised_days(schedule, forced_lower_bound=None,
     """
     discretised_days = set()
     for drr in schedule:
-        drr = DurationRRule(drr, forced_lower_bound = forced_lower_bound,
+        drr = DurationRRule(dict(drr), forced_lower_bound = forced_lower_bound,
             forced_upper_bound = forced_upper_bound)
         for dt in drr:
             discretised_days.add(dt)
@@ -127,7 +127,7 @@ def schedule_first_date(schedule):
     curmin = None
     if schedule:
         for drr in schedule:
-            drr = DurationRRule(drr)
+            drr = DurationRRule(dict(drr))
             sdt = drr.start_datetime
             if not curmin or curmin > sdt:
                 curmin = sdt
@@ -141,7 +141,7 @@ def schedule_last_date(schedule):
     curmax = None
     if schedule:
         for drr in schedule:
-            drr = DurationRRule(drr)
+            drr = DurationRRule(dict(drr))
             edt = drr.end_datetime
             if drr.duration_rrule['duration'] == 0 and edt.time() == DAY_START:
                 edt = datetime.combine(edt.date(), DAY_END)
@@ -158,7 +158,7 @@ def schedule_next_date(schedule):
     if schedule:
         nowdate = datetime.now()
         for drr in schedule:
-            drr = DurationRRule(drr, forced_lower_bound=nowdate)
+            drr = DurationRRule(dict(drr), forced_lower_bound=nowdate)
             try:
                 ndt = next(drr.__iter__())
             except StopIteration:
