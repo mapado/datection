@@ -314,7 +314,6 @@ class RrulePacker(object):
         new_continuous.remove_count()
         new_continuous.add_interval_ind()
         new_continuous.add_enddate(sing_list[-1].start_datetime.date())
-        new_continuous.duration_rrule['continuous'] = True
         return new_continuous
 
     def create_week_from_sings(self, sing_list):
