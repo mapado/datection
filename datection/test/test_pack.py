@@ -448,8 +448,7 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161028T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
         self.assertPackEqual([sing_3, sing_1, sing_2], cont)
 
     def test_merge_sing_into_cont_2(self):
@@ -474,13 +473,11 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161028T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
         cont_bis = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
                               'UNTIL=20161028T235959;INTERVAL=1;'
                               'BYMINUTE=0;BYHOUR=9'),
-                    'duration': 60,
-                    'continuous': True}
+                    'duration': 60}
         self.assertPackEqualMulti([sing_3, sing_1, sing_2, sing_1_bis,
                                    sing_2_bis, sing_3_bis],
                                   [cont_bis, cont])
@@ -566,8 +563,7 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161021T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
         self.assertRrulesEqual(new_cont, cont)
 
     def test_merge_two_weekly(self):
