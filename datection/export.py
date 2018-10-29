@@ -10,6 +10,9 @@ from datection.parse import parse
 from datection.models import DurationRRule
 from datection.coherency import RRuleCoherencyFilter
 from datection.pack import RrulePacker
+from datection.timezone import local_time_to_utc_no_timezone
+from datection.timezone import now_local_time_no_timezone
+from datection.timezone import is_valid_timezone
 
 
 def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
@@ -121,7 +124,7 @@ def schedule_to_discretised_days(schedule, forced_lower_bound=None,
     return sorted(discretised_days)
 
 
-def schedule_first_date(schedule):
+def schedule_first_date(schedule, timezone_name=""):
     """ Export the first date of a duration rrule list
     """
     curmin = None
@@ -132,10 +135,13 @@ def schedule_first_date(schedule):
             if not curmin or curmin > sdt:
                 curmin = sdt
 
+    if curmin is not None and is_valid_timezone(timezone_name):
+        curmin = local_time_to_utc_no_timezone(curmin, timezone_name)
+
     return curmin
 
 
-def schedule_last_date(schedule):
+def schedule_last_date(schedule, timezone_name=""):
     """ Export the last date of a duration rrule list
     """
     curmax = None
@@ -148,15 +154,22 @@ def schedule_last_date(schedule):
             if not curmax or curmax < edt:
                 curmax = edt
 
+    if curmax is not None and is_valid_timezone(timezone_name):
+        curmax = local_time_to_utc_no_timezone(curmax, timezone_name)
+
     return curmax
 
 
-def schedule_next_date(schedule):
+def schedule_next_date(schedule, timezone_name=""):
     """ Export the next date of a duration rrule list
     """
     curnext = None
     if schedule:
-        nowdate = datetime.now()
+
+        nowdate = datetime.utcnow()
+        if is_valid_timezone(timezone_name):
+            nowdate = now_local_time_no_timezone(timezone_name)
+
         for drr in schedule:
             drr = DurationRRule(dict(drr), forced_lower_bound=nowdate)
             try:
@@ -165,6 +178,9 @@ def schedule_next_date(schedule):
                 ndt = None
             if ndt and (not curnext or curnext > ndt) and ndt > nowdate:
                 curnext = ndt
+
+    if curnext is not None and is_valid_timezone(timezone_name):
+        curnext = local_time_to_utc_no_timezone(curnext, timezone_name)
 
     return curnext
 
@@ -177,7 +193,7 @@ def split_past_and_future(schedule, keep_all_day=False, reference_date=None):
 
     threshold_date = reference_date
     if threshold_date is None:
-        threshold_date = datetime.now()
+        threshold_date = datetime.utcnow()
 
     if not isinstance(threshold_date, datetime):
         threshold_date = datetime.combine(threshold_date, DAY_START)
@@ -196,7 +212,7 @@ def split_past_and_future(schedule, keep_all_day=False, reference_date=None):
     return past_schedule, future_schedule
 
 
-def terminate_infinite_schedule(schedule, new_end=datetime.now()):
+def terminate_infinite_schedule(schedule, new_end=datetime.utcnow()):
     """
     Sets the new end date to recurring schedule without end.
     """
