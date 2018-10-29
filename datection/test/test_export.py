@@ -66,9 +66,10 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             }
         ]
 
-        first_date = schedule_first_date(schedule)
-
-        self.assertEqual(first_date, datetime(2014, 11, 4, 8, 0, 0))
+        self.assertEqual(schedule_first_date(schedule), datetime(2014, 11, 4, 8, 0, 0))
+        self.assertEqual(schedule_first_date(schedule, ""), datetime(2014, 11, 4, 8, 0, 0))
+        self.assertEqual(schedule_first_date(schedule, "Europe/Paris"), datetime(2014, 11, 4, 7, 0, 0))
+        self.assertEqual(schedule_first_date(schedule, None), datetime(2014, 11, 4, 8, 0, 0))
 
     def test_schedule_last_date(self):
         self.assertEqual(schedule_last_date(None), None)
@@ -89,9 +90,10 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             }
         ]
 
-        last_date = schedule_last_date(schedule)
-
-        self.assertEqual(last_date, datetime(2014, 12, 9, 17, 30, 0))
+        self.assertEqual(schedule_last_date(schedule), datetime(2014, 12, 9, 17, 30, 0))
+        self.assertEqual(schedule_last_date(schedule, ""), datetime(2014, 12, 9, 17, 30, 0))
+        self.assertEqual(schedule_last_date(schedule, "Europe/Paris"), datetime(2014, 12, 9, 16, 30, 0))
+        self.assertEqual(schedule_last_date(schedule, None), datetime(2014, 12, 9, 17, 30, 0))
 
     def test_schedule_next_date(self):
         self.assertEqual(schedule_next_date(None), None)
@@ -105,9 +107,10 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             }
         ]
 
-        next_date = schedule_next_date(schedule)
-
-        self.assertEqual(next_date, datetime(2042, 8, 3, 10, 30, 0))
+        self.assertEqual(schedule_next_date(schedule), datetime(2042, 8, 3, 10, 30, 0))
+        self.assertEqual(schedule_next_date(schedule, ""), datetime(2042, 8, 3, 10, 30, 0))
+        self.assertEqual(schedule_next_date(schedule, "Europe/Paris"), datetime(2042, 8, 3, 9, 30, 0))
+        self.assertEqual(schedule_next_date(schedule, None), datetime(2042, 8, 3, 10, 30, 0))
 
 
     def test_discretised_days_to_scheduletags(self):
