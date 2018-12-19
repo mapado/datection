@@ -293,12 +293,12 @@ class RrulePacker(object):
 
     def get_continuous_container(self):
         """ Gets all the drrs corresponding to continuous dates """
-        return [drr for drr in self._input_drrs if drr.is_continuous]
+        return [drr for drr in self._input_drrs if drr.is_continuous or
+                drr.is_every_day_recurrence]
 
     def get_weekly_rec_container(self):
         """ Gets all the drrs corresponding to recurrent dates """
-        return [drr for drr in self._input_drrs if drr.is_recurring or
-                drr.is_every_day_recurrence]
+        return [drr for drr in self._input_drrs if drr.is_recurring]
 
     def get_other_drrs(self):
         """ Gets all other drrs """
