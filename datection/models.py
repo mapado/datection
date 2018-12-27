@@ -422,6 +422,7 @@ class DurationRRule(object):
     @property
     def is_every_day_recurrence(self):
         return (
+            self.rrule._count is None and
             self.rrule._byweekday is not None and
             len(self.rrule._byweekday) == 7
         )
