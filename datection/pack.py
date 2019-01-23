@@ -397,6 +397,22 @@ class RrulePacker(object):
                                    'count': len(consecutives)})
                 consecutives = []
 
+    def remove_duplicate_single_dates(self):
+        """
+        Removes duplicates single dates. Hash(DurationRRule) is not
+        sufficient as it only compares the RRULE string and two different
+        strings can represent the same DurationRRule.
+        """
+        seen_hash = set()
+        idxs_to_remove = set()
+        for idx, sing in enumerate(self._single_dates):
+            h = hash((sing.start_datetime, sing.duration))
+            if h in seen_hash:
+                idxs_to_remove.add(idx)
+            else:
+                seen_hash.add(h)
+        self._single_dates = [s for i, s in enumerate(self._single_dates) if i not in idxs_to_remove]
+
     def pack_single_dates(self):
         """
         Packs single dates into continuous or weekly rules depending on
@@ -648,6 +664,7 @@ class RrulePacker(object):
     def pack_rrules(self):
         """
         """
+        self.remove_duplicate_single_dates()
         self.pack_single_dates()
         self.include_sing_in_cont()
         self.include_sing_in_wrec()

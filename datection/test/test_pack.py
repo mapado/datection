@@ -451,6 +451,19 @@ class TestPack(unittest.TestCase):
                 'duration': 60}
         self.assertPackEqual([sing_3, sing_1, sing_2], cont)
 
+    def test_remove_duplicate_single_dates(self):
+        sing_1 = {
+            "duration": 0,
+            "rrule": "DTSTART:20190125\nRRULE:FREQ=DAILY;COUNT=1;BYHOUR=19;BYMINUTE=5"
+        }
+
+        sing_2 = {
+            "continuous": False,
+            "duration": 0,
+            "rrule": "DTSTART:20190125\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=05;BYHOUR=19;BYDAY=MO,TU,WE,TH,FR,SA,SU"
+        }
+        self.assertPackEqual([sing_1, sing_2], sing_1)
+
     def test_merge_sing_into_cont_2(self):
         sing_3 = {'duration': 60,
                   'rrule': ('DTSTART:20161028\nRRULE:FREQ=DAILY;'
