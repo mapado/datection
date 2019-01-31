@@ -468,6 +468,14 @@ class TestParse(unittest.TestCase):
         self.assertEqual(res.time_interval.start_time, Time(9,45))
         self.assertEqual(res.time_interval.end_time, Time(13,00))
 
+    def test_standardized_pattern(self):
+        text = u"du 2019-01-31 18:00:00 au 2019-01-31 20:00:00"
+        results = parse(text, "fr")
+        self.assertEqual(len(results), 1)
+        self.assertTrue(isinstance(results[0], ContinuousDatetimeInterval))
+        self.assertEqual(results[0].start_time, Time(18,00))
+        self.assertEqual(results[0].end_time, Time(20,00))
+
     def test_long_text_complex_pattern(self):
         text = """Du 13/04/2017 à 23:30 au 14/04/2017 à 05:00\nDu 20/04/2017 à 23:30 au 21/04/2017 à 05:00\nDu 27/04/2017 à 23:30 au 28/04/2017 à 05:00\nDu 04/05/2017 à 23:30 au 05/05/2017 à 05:00\nDu 11/05/2017 à 23:30 au 12/05/2017 à 05:00\nDu 18/05/2017 à 23:30 au 19/05/2017 à 05:00\nDu 25/05/2017 à 23:30 au 26/05/2017 à 05:00\nDu 27/04/2017 à 23:30 au 28/04/2017 à 05:00"""
         result = parse(text, 'fr')

@@ -12,6 +12,7 @@ from datection.grammar import DAY_NUMBER
 from datection.grammar import YEAR
 from datection.grammar import HOUR
 from datection.grammar import MINUTE
+from datection.grammar import SECOND
 from datection.grammar import NUMERIC_MONTH
 from datection.grammar import NUMERIC_YEAR
 from datection.grammar import optional_ci
@@ -134,7 +135,9 @@ class GrammarFactory(object):
             optional_oneof_ci(self._time_prepositions) +
             HOUR +
             oneof_ci([u'h', u':']) +
-            Optional(MINUTE)
+            Optional(MINUTE) +
+            Optional(u':') +
+            Optional(SECOND)
         ).setParseAction(as_time)
 
     def time_interval_grm(self, time_grm):
