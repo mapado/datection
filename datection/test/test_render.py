@@ -625,6 +625,16 @@ class TestContinuousDatetimeIntervalFormatterfr_FR(GetCurrentDayMocker):
             self.cdtifmt.display(),
             u'du 4 mars à 12 h 15 au 5 août à 12 h 15')
 
+    def test_display_same_day(self):
+        start = datetime.datetime(2019, 1, 11, 12, 15)
+        end = datetime.datetime(2019, 1, 11, 18, 15)
+        cdtifmt = ContinuousDatetimeIntervalFormatter(start, end)
+        self.assertEqual(
+            cdtifmt.display(),
+            'vendredi 11 janvier, de 12 h 15 à 18 h 15'
+        )
+
+
     def test_display(self):
         self.cdtifmt.start = datetime.datetime(2012, 3, 4, 12, 15)
         self.assertEqual(

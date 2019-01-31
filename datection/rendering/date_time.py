@@ -5,6 +5,7 @@ from datection.rendering.date import DateIntervalFormatter
 from datection.rendering.time import TimeFormatter
 from datection.rendering.time import TimePatternFormatter
 from datection.rendering.wrappers import postprocess
+import datection.rendering.utils as utils
 
 
 class DatetimeFormatter(BaseFormatter):
@@ -88,19 +89,51 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         self.start = start
         self.end = end
         self.templates = {
-            'de_DE':
-            u'{start_date} {start_time} - {end_date} {end_time}',
-            'ru_RU':
-            u'{start_date} {start_time} - {end_date} {end_time}',
-            'default':
-            u'{_from} {start_date} {start_time} {_to} {end_date} {end_time}'
+            'de_DE': {
+                'single-day': '{date}, {time_interval}',
+                'multi-days': '{start_date} {start_time} - {end_date} {end_time}',
+            },
+            'ru_RU': {
+                'single-day': '{date}, {time_interval}',
+                'multi-days': '{start_date} {start_time} - {end_date} {end_time}',
+            },
+            'default': {
+                'single-day': '{date}, {time_interval}',
+                'multi-days': '{_from} {start_date} {start_time} {_to} {end_date} {end_time}'
+            }
         }
 
-    @postprocess()
-    def display(self, *args, **kwargs):
-        """ Display a continuous datetime interval in the current locale. """
-        template = self.get_template()
+    def same_day_interval(self):
+        """"""
+        start_date = utils.get_date(self.start)
+        end_date = utils.get_date(self.end)
+        return (start_date == end_date)
 
+    def display_single_day(self, *args, **kwargs):
+        """
+        """
+        # do not include the year if both dates are in the same year
+        sd_kwargs = kwargs.copy()
+        if self.start.year == self.end.year:
+            sd_kwargs['include_year'] = False
+            sd_kwargs['include_dayname'] = True
+            sd_kwargs['force_year'] = False
+
+        date_fmt = DateFormatter(
+            self.start, self.locale).display(*args, **sd_kwargs)
+        time_inter_fmt = TimePatternFormatter(
+                self.start, self.end, self.locale
+            ).display(prefix=True)
+
+        template = self.get_template('single-day')
+
+        return template.format(
+            date=date_fmt,
+            time_interval=time_inter_fmt)
+
+    def display_multi_days(self, *args, **kwargs):
+        """
+        """
         # do not include the year if both dates are in the same year
         sd_kwargs = kwargs.copy()
         if self.start.year == self.end.year:
@@ -116,6 +149,8 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
         end_time_fmt = TimeFormatter(
             self.end, self.locale).display(prefix=True)
 
+        template = self.get_template('multi-days')
+
         return template.format(
             _from=self._('from_day'),
             start_date=start_date_fmt,
@@ -123,3 +158,11 @@ class ContinuousDatetimeIntervalFormatter(BaseFormatter):
             _to=self._('to_day'),
             end_date=end_date_fmt,
             end_time=end_time_fmt)
+
+    @postprocess()
+    def display(self, *args, **kwargs):
+        """ Display a continuous datetime interval in the current locale. """
+        if self.same_day_interval():
+            return self.display_single_day(*args, **kwargs)
+        else:
+            return self.display_multi_days(*args, **kwargs)
