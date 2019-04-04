@@ -141,10 +141,7 @@ class TimepointCoherencyFilter(object):
             """"""
             return (
                 len(weekly.weekdays) == 1 and
-                weekly.weekdays[0] == ORDERED_DAYS[date.day_of_week()] and (
-                    isinstance(date, Date) and weekly.time_interval == TimeInterval.make_all_day() or
-                    isinstance(date, Datetime) and date.start_time == weekly.time_interval.start_time
-                )
+                weekly.weekdays[0] == ORDERED_DAYS[date.day_of_week()]
             )
 
         timepoints = self.timepoints[:]
