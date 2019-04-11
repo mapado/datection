@@ -293,8 +293,8 @@ class RrulePacker(object):
 
     def get_continuous_container(self):
         """ Gets all the drrs corresponding to continuous dates """
-        return [drr for drr in self._input_drrs if drr.is_continuous or
-                drr.is_every_day_recurrence]
+        return [drr for drr in self._input_drrs if (drr.is_continuous or
+                drr.is_every_day_recurrence) and not drr.single_date]
 
     def get_weekly_rec_container(self):
         """ Gets all the drrs corresponding to recurrent dates """
@@ -313,6 +313,9 @@ class RrulePacker(object):
         new_continuous = DurationRRule(sing_list[0].duration_rrule)
         new_continuous.remove_count()
         new_continuous.add_interval_ind()
+        # the combination of continuours rrule is not continuous
+        if sing_list[0].duration_rrule.get('continuous', False):
+            new_continuous.duration_rrule['continuous'] = False
         new_continuous.add_enddate(sing_list[-1].start_datetime.date())
         return new_continuous
 
@@ -324,6 +327,9 @@ class RrulePacker(object):
         new_weekly.remove_count()
         new_weekly.add_enddate(sing_list[-1].start_datetime.date())
         new_weekly.set_frequency('WEEKLY')
+        # the combination of continuours rrule is not continuous
+        if sing_list[0].duration_rrule.get('continuous', False):
+            new_continuous.duration_rrule['continuous'] = False
         new_weekly.add_weekdays([weekdays[sing_list[0].start_datetime.date().weekday()]])
         return new_weekly
 
