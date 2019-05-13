@@ -179,6 +179,18 @@ class DurationRRule(object):
         else:
             self.rrule._dtstart = datetime.combine(start_date, DAY_START)
 
+    def add_startdate(self, start_date):
+        """
+        Adds an start date (DTSTART) to the rrule
+        """
+        self.duration_rrule['rrule'] = self.duration_rrule['rrule'].replace(
+            'DTSTART:\n',
+            'DTSTART:%s\n' % start_date.strftime('%Y%m%d'))
+        if type(start_date) == datetime:
+            self.rrule._dtstart = start_date
+        else:
+            self.rrule._dtstart = datetime.combine(start_date, DAY_START)
+
     def set_enddate(self, end_date):
         """
         Update the rrule end date property and the underlying _until.
