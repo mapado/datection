@@ -409,15 +409,19 @@ class RrulePacker(object):
         sufficient as it only compares the RRULE string and two different
         strings can represent the same DurationRRule.
         """
-        seen_hash = set()
-        idxs_to_remove = set()
+        def select_best_single_date(sing_idxs_list):
+            """
+            For a given start_datetime, the best (= most englobing) single date
+            is the one with the latest end_datetime
+            """
+            return max(sing_idxs_list, key=lambda idx: self._single_dates[idx].end_datetime)
+
+        sing_idxs_by_start_datetime = defaultdict(list)
         for idx, sing in enumerate(self._single_dates):
-            h = hash((sing.start_datetime, sing.duration))
-            if h in seen_hash:
-                idxs_to_remove.add(idx)
-            else:
-                seen_hash.add(h)
-        self._single_dates = [s for i, s in enumerate(self._single_dates) if i not in idxs_to_remove]
+            sing_idxs_by_start_datetime[sing.start_datetime].append(idx)
+
+        idxs_to_keep = set(select_best_single_date(sing_idxs_list) for sing_idxs_list in sing_idxs_by_start_datetime.values())
+        self._single_dates = [s for i, s in enumerate(self._single_dates) if i in idxs_to_keep]
 
     def pack_single_dates(self):
         """
