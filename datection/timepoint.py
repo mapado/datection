@@ -1066,8 +1066,7 @@ class ContinuousDatetimeInterval(Timepoint):
         end_dt = datetime.combine(self.end_date.to_python(),  DAY_END)
         return makerrulestr(
             start=self.start_date.to_python(),
-            end=end_dt,
-            interval=1,
+            count=1,
             byhour=self.start_time.hour,
             byminute=self.start_time.minute)
 
@@ -1085,8 +1084,7 @@ class ContinuousDatetimeInterval(Timepoint):
         """Export the ContinuousDatetimeInterval to a database-ready format."""
         return {
             'rrule': self.rrulestr,
-            'duration': self.duration,
-            'continuous': True,
+            'duration': self.duration
         }
 
 

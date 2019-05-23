@@ -894,13 +894,13 @@ class TestFullFormatter_fr_FR(GetCurrentDayMocker):
     def test_display(self):
         self.assertEqual(
             self.fmt.display(),
-            u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
+            """Du mercredi 5 au dimanche 9 mars 2014 à 9 h\nLe mercredi 26 février 2014, le jeudi 26 février 2015, à 9 h""")
 
     def test_display_in_less_than_6_months(self):
         self.set_current_date(datetime.date(2013, 11, 1))
         self.assertEqual(
             self.fmt.display(),
-            u'Le 26 février 2014, du 5 au 9 mars 2014, le 26 février 2015, à 9 h')
+            'Du mercredi 5 au dimanche 9 mars 2014 à 9 h\nLe mercredi 26 février 2014, le jeudi 26 février 2015, à 9 h')
 
     def test_display_day_with_one_date(self):
         # Le vendredi 25 septembre 2015 à 20 h

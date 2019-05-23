@@ -313,9 +313,6 @@ class RrulePacker(object):
         new_continuous = DurationRRule(sing_list[0].duration_rrule)
         new_continuous.remove_count()
         new_continuous.add_interval_ind()
-        # the combination of continuours rrule is not continuous
-        if sing_list[0].duration_rrule.get('continuous', False):
-            new_continuous.duration_rrule['continuous'] = False
         new_continuous.add_enddate(sing_list[-1].start_datetime.date())
         return new_continuous
 
@@ -327,9 +324,6 @@ class RrulePacker(object):
         new_weekly.remove_count()
         new_weekly.add_enddate(sing_list[-1].start_datetime.date())
         new_weekly.set_frequency('WEEKLY')
-        # the combination of continuours rrule is not continuous
-        if sing_list[0].duration_rrule.get('continuous', False):
-            new_continuous.duration_rrule['continuous'] = False
         new_weekly.add_weekdays([weekdays[sing_list[0].start_datetime.date().weekday()]])
         return new_weekly
 

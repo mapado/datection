@@ -56,7 +56,8 @@ class FullFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
             out.append(ExclusionFormatter(exc, self.locale).display(*args, **kwargs))
         exclusion_out = self.format_output(out)
 
-        other_out = LongFormatter(self._schedule, self.locale).display(*args, **kwargs)
+        no_exclusion = [drr.duration_rrule for drr in self.schedule if not drr.exclusion_rrules]
+        other_out = LongFormatter(no_exclusion, self.locale).display(*args, **kwargs)
 
         output = [exclusion_out, other_out]
         output = [s for s in output if s != ""]

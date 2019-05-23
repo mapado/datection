@@ -24,8 +24,6 @@ def _exclusion_rrule_to_drr(excl_rrule, main_drr):
         'rrule': str(excl_rrule),
         'duration': main_drr.duration
     })
-    if excl_rrule._interval == 1:
-        drr.duration_rrule["continuous"] = True
     return drr
 
 

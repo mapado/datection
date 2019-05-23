@@ -93,14 +93,12 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         result = {'rrule': ('DTSTART:20161017\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertRemoveEquals([cont], [single], [result])
 
@@ -112,14 +110,12 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         result = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161022T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertRemoveEquals([cont], [single], [result])
 
@@ -131,20 +127,17 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         result_1 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                               'UNTIL=20161017T235959;INTERVAL=1;'
                               'BYMINUTE=0;BYHOUR=3'),
-                    'duration': 30,
-                    'continuous': True}
+                    'duration': 30}
 
         result_2 = {'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
                               'UNTIL=20161023T235959;INTERVAL=1;'
                               'BYMINUTE=0;BYHOUR=3'),
-                    'duration': 30,
-                    'continuous': True}
+                    'duration': 30}
 
         self.assertRemoveEquals([cont], [single], [result_1, result_2])
 
@@ -152,8 +145,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         sing_1 = {'duration': 30,
                   'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
@@ -264,20 +256,17 @@ class TestRemove(unittest.TestCase):
         cont_1 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         cont_2 = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         cont_3 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161018T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertNothingLeft([single], [cont_1])
         self.assertNothingLeft([single], [cont_2])
@@ -291,20 +280,17 @@ class TestRemove(unittest.TestCase):
         cont_1 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 35,
-                  'continuous': True}
+                  'duration': 35}
 
         cont_2 = {'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         cont_3 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161017T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertNotImpacted([single], [cont_1])
         self.assertNotImpacted([single], [cont_2])
@@ -314,14 +300,12 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         bigger_cont = {'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                                  'UNTIL=20161023T235959;INTERVAL=1;'
                                  'BYMINUTE=0;BYHOUR=3'),
-                       'duration': 30,
-                       'continuous': True}
+                       'duration': 30}
 
         self.assertNothingLeft([cont], [bigger_cont])
 
@@ -329,20 +313,17 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         cont_1 = {'rrule': ('DTSTART:20161014\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161018T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         result = {'rrule': ('DTSTART:20161019\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertRemoveEquals([cont], [cont_1], [result])
 
@@ -350,20 +331,17 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         cont_1 = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161030T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         result = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161017T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertRemoveEquals([cont], [cont_1], [result])
 
@@ -371,26 +349,22 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         cont_1 = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161021T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         result_1 = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                               'UNTIL=20161017T235959;INTERVAL=1;'
                               'BYMINUTE=0;BYHOUR=3'),
-                    'duration': 30,
-                    'continuous': True}
+                    'duration': 30}
 
         result_2 = {'rrule': ('DTSTART:20161022\nRRULE:FREQ=DAILY;'
                               'UNTIL=20161023T235959;INTERVAL=1;'
                               'BYMINUTE=0;BYHOUR=3'),
-                    'duration': 30,
-                    'continuous': True}
+                    'duration': 30}
 
         self.assertRemoveEquals([cont], [cont_1], [result_1, result_2])
 
@@ -398,32 +372,27 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161016\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         cont_1 = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161021T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 35,
-                  'continuous': True}
+                  'duration': 35}
 
         cont_2 = {'rrule': ('DTSTART:20161014\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161015T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         cont_3 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161026T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         cont_4 = {'rrule': ('DTSTART:20161018\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161021T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=6'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
 
         self.assertNotImpacted([cont], [cont_1])
         self.assertNotImpacted([cont], [cont_2])
@@ -438,8 +407,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170208T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result = {'duration': 60,
                   'rrule': ('DTSTART:20170209\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
@@ -455,8 +423,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170208\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170215T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result_1 = {'duration': 60,
                     'rrule': ('DTSTART:20170206\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
@@ -476,8 +443,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170220\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170304T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result = {'duration': 60,
                   'rrule': ('DTSTART:20170206\nRRULE:FREQ=WEEKLY;BYDAY=TU;'
@@ -493,8 +459,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170205\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170304T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         self.assertNothingLeft([wrec], [cont])
 
@@ -506,20 +471,17 @@ class TestRemove(unittest.TestCase):
         cont_1 = {'rrule': ('DTSTART:20170301\nRRULE:FREQ=DAILY;'
                             'UNTIL=20170304T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=8'),
-                  'duration': 60,
-                  'continuous': True}
+                  'duration': 60}
 
         cont_2 = {'rrule': ('DTSTART:20170120\nRRULE:FREQ=DAILY;'
                             'UNTIL=20170205T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=8'),
-                  'duration': 60,
-                  'continuous': True}
+                  'duration': 60}
 
         cont_3 = {'rrule': ('DTSTART:20170220\nRRULE:FREQ=DAILY;'
                             'UNTIL=20170304T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=7'),
-                  'duration': 60,
-                  'continuous': True}
+                  'duration': 60}
 
         self.assertNotImpacted([wrec], [cont_1])
         self.assertNotImpacted([wrec], [cont_2])
@@ -580,15 +542,13 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170221T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result_1 = {'duration': 60,
                     'rrule': ('DTSTART:20170201\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH,FR,SA,SU;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170207T235959')}
 
         result_2 = {'duration': 60,
-                    'continuous': True,
                     'rrule': ('DTSTART:20170208\nRRULE:FREQ=DAILY;INTERVAL=1;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170221T235959')}
 
@@ -602,11 +562,9 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170225T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result_1 = {'duration': 60,
-                    'continuous': True,
                     'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;INTERVAL=1;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170206T235959')}
 
@@ -615,7 +573,6 @@ class TestRemove(unittest.TestCase):
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170214T235959')}
 
         result_3 = {'duration': 60,
-                    'continuous': True,
                     'rrule': ('DTSTART:20170215\nRRULE:FREQ=DAILY;INTERVAL=1;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170225T235959')}
 
@@ -629,15 +586,13 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170225T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result_1 = {'duration': 60,
                     'rrule': ('DTSTART:20170221\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH,FR,SA,SU;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170225T235959')}
 
         result_2 = {'duration': 60,
-                    'continuous': True,
                     'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;INTERVAL=1;'
                               'BYHOUR=8;BYMINUTE=0;UNTIL=20170220T235959')}
 
@@ -651,8 +606,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170225T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         result_1 = {'duration': 60,
                     'rrule': ('DTSTART:20170201\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH,FR,SA,SU;'
@@ -664,8 +618,7 @@ class TestRemove(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20170201\nRRULE:FREQ=DAILY;'
                           'UNTIL=20170224T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': True}
+                'duration': 60}
 
         wrec_1 = {'duration': 60,
                   'rrule': ('DTSTART:20170128\nRRULE:FREQ=WEEKLY;BYDAY=TU;'

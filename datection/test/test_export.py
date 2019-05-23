@@ -21,13 +21,11 @@ class ExportScheduleToSQLTest(unittest.TestCase):
     def test_schedule_to_discretised_days(self):
         schedule = [
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),
             },
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
@@ -53,13 +51,11 @@ class ExportScheduleToSQLTest(unittest.TestCase):
 
         schedule = [
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
             },
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),
@@ -77,13 +73,11 @@ class ExportScheduleToSQLTest(unittest.TestCase):
 
         schedule = [
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141204\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141209T235959'),
             },
             {
-                'continuous': True,
                 'duration': 4890,
                 'rrule': ('DTSTART:20141104\nRRULE:FREQ=DAILY;BYHOUR=8;'
                           'BYMINUTE=0;INTERVAL=1;UNTIL=20141105T235959'),

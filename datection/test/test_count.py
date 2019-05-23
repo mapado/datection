@@ -18,8 +18,7 @@ class TestCount(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         cont = DurationRRule(cont)
         add_count_estimation(cont)
         self.assertEqual(cont.duration_rrule['estimated_count'], 13)

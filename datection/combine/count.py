@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
-
 from __future__ import division
 from past.utils import old_div
+
+
 def add_count_estimation(drr):
     """
     Adds a date count estimation to the DurationRRule

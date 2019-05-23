@@ -378,8 +378,13 @@ class DurationRRule(object):
         return a tuple of 2 elements: the the dtstart date and None.
 
         """
-        if self.rrule._until:
+        if self.rrule._until and self.rrule._interval:
             return (self.rrule._dtstart.date(), self.rrule._until.date())
+        if self.rrule._count:
+            end_date = self.rrule._dtstart.date() + timedelta(minutes=self.duration_rrule['duration'])
+            if self.rrule._dtstart.date() != end_date:
+                return (self.rrule._dtstart.date(), end_date)
+
         return (self.rrule._dtstart.date(), None)
 
     @property
@@ -477,15 +482,16 @@ class DurationRRule(object):
     @property
     def is_continuous(self):
         """Whether the rrule is to be taken by intervals, or continuously."""
-        return self.duration_rrule.get('continuous', False)
+        return (
+            self.rrule._interval == 1 and
+            self.rrule._count is None and
+            self.rrule._byweekday is None
+        )
 
     @property
     def single_date(self):
         """Return True if the RRule describes a single date(time)."""
-        return (
-            self.rrule._count == 1 and
-            self.duration <= ALL_DAY
-        )
+        return self.rrule._count == 1
 
     @property
     def small_date_interval(self):
@@ -525,3 +531,18 @@ class DurationRRule(object):
         return (
             self.duration < ALL_DAY
         )
+
+
+def convert_continuous_flag_to_single_drr(drr_with_cont_flag):
+    """
+    """
+    schedule = drr_with_cont_flag.duration_rrule.copy()
+    del schedule['continuous']
+    new_single_drr = DurationRRule(schedule)
+    new_single_drr.add_count()
+    new_single_drr.remove_interval_ind()
+    new_single_drr.set_enddate(None)
+    duration = drr_with_cont_flag.rrule._until - drr_with_cont_flag.start_datetime
+    new_single_drr.duration_rrule['duration'] = int(duration.total_seconds() / 60)
+
+    return new_single_drr

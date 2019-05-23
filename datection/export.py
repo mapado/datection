@@ -31,10 +31,7 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     Returns a list of dicts, each containing a recurrence rule
     describing the extracted time reference, a duration,
     linking each start date/time to an end date/time, a character span,
-    possible exclusion rrules, a boolean "continuous" flag indicating the
-    that the time interval is continuous, and not repeated for each date,
-    and finally, and 'unlimited' boolean flag, indicating that the dates
-    occur each year.
+    possible exclusion rrules
 
     >>> export(u"Le 4 mars 2015 à 18h30", "fr")
     [{'duration': 0,
@@ -68,8 +65,7 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
       'span': (0, 18)}]
 
     >>> export(u"Du 5 avril à 22h au 6 avril 2015 à 8h", "fr")
-    [{'continuous': True,
-      'duration': 600,
+    [{'duration': 600,
       'rrule': ('DTSTART:20150405\nRRULE:FREQ=DAILY;BYHOUR=22;BYMINUTE=0;'
                 'INTERVAL=1;UNTIL=20150406T235959'),
       'span': (0, 38)}]
@@ -78,8 +74,7 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     [{'duration': 0,
       'rrule': ('DTSTART:\nRRULE:FREQ=WEEKLY;BYDAY=MO;BYHOUR=8;'
                 'BYMINUTE=0'),
-      'span': (0, 21),
-      'unlimited': True}]
+      'span': (0, 21)}]
 
     """
     exports = []

@@ -4,6 +4,7 @@
 import unittest
 import six
 from datection.combine.split import split_schedules
+from datection.combine.split import split_short_continuous_schedules
 from datetime import date
 
 
@@ -22,8 +23,7 @@ class TestSplit(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         pasts, futures = split_schedules([cont], reference)
         self.assertEqual(len(pasts), 1)
         self.assertEqual(len(futures), 0)
@@ -33,8 +33,7 @@ class TestSplit(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         pasts, futures = split_schedules([cont], reference)
         self.assertEqual(len(pasts), 0)
         self.assertEqual(len(futures), 1)
@@ -44,8 +43,7 @@ class TestSplit(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         pasts, futures = split_schedules([cont], reference)
         self.assertEqual(len(pasts), 1)
         self.assertRruleStrEqual(pasts[0]['rrule'],
@@ -58,3 +56,21 @@ class TestSplit(unittest.TestCase):
                                  ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                                   'UNTIL=20161023T235959;INTERVAL=1;'
                                   'BYMINUTE=0;BYHOUR=3'))
+
+    def test_split_short_continuous_schedules(self):
+        cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161011T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=3'),
+                'duration': 30}
+        result = split_short_continuous_schedules([cont])
+        self.assertEqual(len(result), 2)
+
+
+    def test_no_split_short_continuous_schedules(self):
+        cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
+                          'UNTIL=20161012T235959;INTERVAL=1;'
+                          'BYMINUTE=0;BYHOUR=3'),
+                'duration': 30}
+        result = split_short_continuous_schedules([cont])
+        self.assertEqual(len(result), 1)
+

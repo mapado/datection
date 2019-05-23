@@ -10,6 +10,7 @@ from datection.rendering.date import DateIntervalFormatter
 from datection.rendering.date import DateListFormatter
 from datection.rendering.time import TimePatternFormatter
 from datection.rendering.date_time import ContinuousDatetimeIntervalFormatter
+from datection.rendering.date_time import DatetimeIntervalFormatter
 from datection.rendering.weekday_reccurence import WeekdayReccurenceFormatter
 from datection.rendering.weekday_reccurence import WeekdayReccurenceGroupFormatter
 from datection.rendering.wrappers import cached_property
@@ -17,6 +18,7 @@ from datection.rendering.wrappers import postprocess
 import datection.rendering.utils as utils
 from datection.timepoint import DAY_START
 from datection.timepoint import DAY_END
+from datection.combine.split import split_short_continuous_schedules
 
 
 class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
@@ -28,9 +30,9 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                  apply_exlusion=True, format_exclusion=True):
         super(LongFormatter, self).__init__(locale)
         self._schedule = schedule
-        self.schedule = schedule
+        self.schedule = split_short_continuous_schedules(schedule)
         self.schedule = [
-            DurationRRule(drr, apply_exlusion) for drr in schedule]
+            DurationRRule(drr, apply_exlusion) for drr in self.schedule]
         self.schedule = self.deduplicate(self.schedule)
         self.schedule = self.filter_non_informative(self.schedule)
         self.format_exclusion = format_exclusion
@@ -225,36 +227,10 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return TimePatternFormatter(
             start_time, end_time, self.locale).display(prefix=True)
 
-    @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
-    def display(self, *args, **kwargs):
+
+    def should_include_dayname(self, same_patterns_with_different_dates, others, **kwargs):
         """
-        Return a human readable string describing self.schedule as shortly
-        as possible(without using abbreviated forms), in the right language.
         """
-        out = []
-        kwargs['force_year'] = True
-
-        # format recurring rrules
-        for rec_group in utils.group_recurring_by_day(self.unlimited_recurrings):
-            out.append(WeekdayReccurenceFormatter(rec_group, self.locale).
-                       display(*args, **kwargs))
-        for rec_group in utils.group_recurring_by_date_interval(self.bounded_recurrings):
-            out.append(WeekdayReccurenceGroupFormatter(rec_group, self.locale).
-                       display(*args, **kwargs))
-
-        # format continuous rrules
-        for con in self.continuous:
-            start, end = con.start_datetime, con.end_datetime
-            if start.time() == DAY_START and end.time() == DAY_END:
-                out.append(DateIntervalFormatter(
-                    start, end, self.locale).display(*args, **kwargs))
-            else:
-                out.append(ContinuousDatetimeIntervalFormatter(
-                    start, end, self.locale).display(*args, **kwargs))
-
-        same_patterns_with_different_dates, others = \
-            self.group_by_common_pattern_except_time()
-
         # get nb of days ouput, if <2 display dayname
         nbdates = 0
         for dates in others:
@@ -266,18 +242,52 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                     nbdates += 1
         nbdates += len(same_patterns_with_different_dates)
         if nbdates < 3 and 'include_dayname' not in kwargs:
-            kwargs['include_dayname'] = True
+            return  True
 
+        return False
+
+
+    def format_continuous_rrules(self, *args, **kwargs):
+        """
+        """
+        out = []
+        # format continuous rrules
+        for con in self.continuous:
+            continuous_kwargs = kwargs.copy()
+            if 'include_dayname' not in continuous_kwargs:
+                continuous_kwargs['include_dayname'] = True
+            start, end = con.start_datetime, con.end_datetime
+            if start.time() == DAY_START and end.time() == DAY_END:
+                out.append(DateIntervalFormatter(
+                    start, end, self.locale).display(*args, **continuous_kwargs))
+            else:
+                out.append(DatetimeIntervalFormatter(
+                    start, end, self.locale).display(*args, **continuous_kwargs))
+        return out
+
+    def format_recurring_rrules(self, *args, **kwargs):
+        """
+        """
+        out = []
+
+        for rec_group in utils.group_recurring_by_day(self.unlimited_recurrings):
+            out.append(WeekdayReccurenceFormatter(rec_group, self.locale).
+                       display(*args, **kwargs))
+        for rec_group in utils.group_recurring_by_date_interval(self.bounded_recurrings):
+            out.append(WeekdayReccurenceGroupFormatter(rec_group, self.locale).
+                       display(*args, **kwargs))
+
+        return out
+
+    def format_same_pattern_with_different_dates(self, same_patterns_with_different_dates, *args, **kwargs):
+        """
+        """
+        out = []
         template = self.get_template()
         # format non recurring rrules on grouped patterns with different dates
         for time_conseq_grp_tup_list in same_patterns_with_different_dates:
             time_group, conseq_groups = time_conseq_grp_tup_list[0]
-            date_fmt = self._helper_date_fmt(
-                time_group,
-                conseq_groups,
-                *args,
-                **kwargs
-            )
+            date_fmt = self._helper_date_fmt(time_group, conseq_groups, *args, **kwargs)
 
             # concatenate dates and time
             time_fmt_list = []
@@ -291,16 +301,17 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(fmt)
             else:
                 out.append(date_fmt)
+        return out
+
+    def format_other_rrules(self, others, *args, **kwargs):
+        """
+        """
+        out = []
+        template = self.get_template()
 
         # format non recurring rrules on grouped patterns with different dates
         for time_group, conseq_groups in others:
-            date_fmt = self._helper_date_fmt(
-                time_group,
-                conseq_groups,
-                *args,
-                **kwargs
-            )
-
+            date_fmt = self._helper_date_fmt(time_group, conseq_groups, *args, **kwargs)
             time_fmt = self._helper_time_fmt(time_group)
 
             if time_fmt:
@@ -308,6 +319,31 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 out.append(fmt)
             else:
                 out.append(date_fmt)
+
+        return out
+
+
+    @postprocess(strip=False, trim_whitespaces=False, rstrip_pattern=',')
+    def display(self, *args, **kwargs):
+        """
+        Return a human readable string describing self.schedule as shortly
+        as possible(without using abbreviated forms), in the right language.
+        """
+        out = []
+        kwargs['force_year'] = True
+
+        out.extend(self.format_recurring_rrules(*args, **kwargs))
+        out.extend(self.format_continuous_rrules(*args, **kwargs))
+
+        same_patterns_with_different_dates, others = self.group_by_common_pattern_except_time()
+
+        if self.should_include_dayname(same_patterns_with_different_dates, others, **kwargs):
+            kwargs['include_dayname'] = True
+
+        out.extend(self.format_same_pattern_with_different_dates(
+            same_patterns_with_different_dates, *args, **kwargs))
+
+        out.extend(self.format_other_rrules(others, *args, **kwargs))
 
         # finally, apply global formatting rules
         return self.format_output(out)

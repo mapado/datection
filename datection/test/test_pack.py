@@ -86,16 +86,14 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         self.assertPackEqual([single, cont], cont)
 
     def test_not_include_sing_in_cont(self):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         single_date = {'duration': 30,
                        'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
@@ -169,22 +167,19 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         result = {'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161024T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertPackEqual([single_before, cont, single_after], result)
 
     def test_not_extend_cont(self):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         single_too_soon = {'duration': 30,
                            'rrule': ('DTSTART:20161008\nRRULE:FREQ=DAILY;'
@@ -266,86 +261,72 @@ class TestPack(unittest.TestCase):
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         result = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161030T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertPackEqual([cont1, cont2], result)
 
     def test_fusion_cont_extend(self):
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         result = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161030T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertPackEqual([cont1, cont2], result)
 
     def test_no_fusion_cont_gap(self):
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161025\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         self.assertNotPack([cont1, cont2])
 
     def test_no_fusion_cont_diff(self):
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=2'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         self.assertNotPack([cont1, cont2])
 
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=10;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         self.assertNotPack([cont1, cont2])
 
         cont1 = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161023T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161015\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 40,
-                 'continuous': True}
+                 'duration': 40}
         self.assertNotPack([cont1, cont2])
 
     def test_fusion_wrec_overlap(self):
@@ -454,21 +435,17 @@ class TestPack(unittest.TestCase):
     def test_merge_continuous_sing_into_cont(self):
         sing_3 = {'duration': 60,
                   'rrule': ('DTSTART:20161028\nRRULE:FREQ=DAILY;'
-                            'COUNT=1;BYMINUTE=0;BYHOUR=8'),
-                  'continuous': True}
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
         sing_1 = {'duration': 60,
                   'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
-                            'COUNT=1;BYMINUTE=0;BYHOUR=8'),
-                  'continuous': True}
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
         sing_2 = {'duration': 60,
                   'rrule': ('DTSTART:20161027\nRRULE:FREQ=DAILY;'
-                            'COUNT=1;BYMINUTE=0;BYHOUR=8'),
-                  'continuous': True}
+                            'COUNT=1;BYMINUTE=0;BYHOUR=8')}
         cont = {'rrule': ('DTSTART:20161026\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161028T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=8'),
-                'duration': 60,
-                'continuous': False}
+                'duration': 60}
         self.assertPackEqual([sing_3, sing_1, sing_2], cont)
 
     def test_remove_duplicate_single_dates(self):
@@ -478,7 +455,6 @@ class TestPack(unittest.TestCase):
         }
 
         sing_2 = {
-            "continuous": False,
             "duration": 0,
             "rrule": "DTSTART:20190125\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=05;BYHOUR=19;BYDAY=MO,TU,WE,TH,FR,SA,SU"
         }
@@ -643,8 +619,7 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
         self.assertNotPack([single, cont], pack_no_timings=False)
         self.assertPackEqual([single, cont], cont, pack_no_timings=True)
 
@@ -656,14 +631,12 @@ class TestPack(unittest.TestCase):
         cont = {'rrule': ('DTSTART:20161010\nRRULE:FREQ=DAILY;'
                           'UNTIL=20161023T235959;INTERVAL=1;'
                           'BYMINUTE=0;BYHOUR=3'),
-                'duration': 30,
-                'continuous': True}
+                'duration': 30}
 
         result = {'rrule': ('DTSTART:20161009\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161023T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertNotPack([single_before, cont], pack_no_timings=False)
         self.assertPackEqual([single_before, cont], result, pack_no_timings=True)
 
@@ -697,55 +670,47 @@ class TestPack(unittest.TestCase):
         cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161022T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         result = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161030T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
                   'excluded': [
                       ('DTSTART:20161023\nRRULE:FREQ=DAILY;BYHOUR=3;'
                        'BYMINUTE=0;COUNT=1')],
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertPackWithGapsEqual([cont1, cont2], result)
 
         # exception is a continuous rrule
         cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161021T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         result = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
                             'UNTIL=20161030T235959;INTERVAL=1;'
                             'BYMINUTE=0;BYHOUR=3'),
                   'excluded': [
                       ('DTSTART:20161022\nRRULE:FREQ=DAILY;BYHOUR=3;'
                        'BYMINUTE=0;INTERVAL=1;UNTIL=20161023T235959')],
-                  'duration': 30,
-                  'continuous': True}
+                  'duration': 30}
         self.assertPackWithGapsEqual([cont1, cont2], result)
 
     def test_no_pack_conts_with_gaps(self):
         cont1 = {'rrule': ('DTSTART:20161001\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161009T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         cont2 = {'rrule': ('DTSTART:20161024\nRRULE:FREQ=DAILY;'
                            'UNTIL=20161030T235959;INTERVAL=1;'
                            'BYMINUTE=0;BYHOUR=3'),
-                 'duration': 30,
-                 'continuous': True}
+                 'duration': 30}
         self.assertNotPackWithGaps([cont1, cont2])
 
     def test_pack_wrecs_with_gaps(self):

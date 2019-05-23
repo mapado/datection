@@ -401,10 +401,9 @@ class TestContinuousDatetimeInterval(unittest.TestCase):
 
     def test_export(self):
         expected = {
-            'continuous': True,
             'duration': 630,
             'rrule': ("DTSTART:20150408\nRRULE:FREQ=DAILY;BYHOUR=18;"
-                      "BYMINUTE=30;INTERVAL=1;UNTIL=20150409T235959")
+                      "BYMINUTE=30;COUNT=1")
         }
         self.assertDictEqual(self.cdti.export(), expected)
 
