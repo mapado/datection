@@ -105,6 +105,14 @@ class TestParse(unittest.TestCase):
                 datetime(2014, 8, 7, 15, 30),
                 datetime(2014, 8, 11, 15, 30),
             ])
+        self.assert_generates(
+            u"Les 7, 8, 10, 11 juillet 2019 de 11 h 30 à 12 h 55",
+            [
+                datetime(2019, 7, 7, 11, 30),
+                datetime(2019, 7, 8, 11, 30),
+                datetime(2019, 7, 10, 11, 30),
+                datetime(2019, 7, 11, 11, 30),
+            ])
 
     def test_parse_double_list_date(self):
         self.assert_generates(

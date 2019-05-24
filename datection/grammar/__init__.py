@@ -144,17 +144,18 @@ def as_datetime_list(text, start_index, matches):
         date_intervals = [
             timepoint for timepoint in timepoints
             if isinstance(timepoint, DateInterval)]
-        date_lists = [
-            timepoint for timepoint in timepoints
-            if isinstance(timepoint, DateList)]
         for date_interval in date_intervals:
             out.append(DatetimeInterval(
                 date_interval, matches['time_interval']))
-        datetimes = [
-            Datetime.combine(date, start_time, end_time)
-            for date_list in date_lists
-            for date in date_list]
-        out.append(DatetimeList(datetimes))
+        date_lists = [
+            timepoint for timepoint in timepoints
+            if isinstance(timepoint, DateList)]
+        if date_lists:
+            datetimes = [
+                Datetime.combine(date, start_time, end_time)
+                for date_list in date_lists
+                for date in date_list]
+            out.append(DatetimeList(datetimes))
         return out
 
 
