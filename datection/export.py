@@ -95,7 +95,10 @@ def export(text, lang, valid=True, only_future=False, reference=None, **kwargs):
     drrs, seen = [DurationRRule(export) for export in exports], []
 
     packed = RrulePacker(drrs).pack_rrules()
-    seen = sorted(packed, key=lambda drr: drr.start_datetime)[:10]
+    seen = sorted(packed, key=lambda drr: drr.start_datetime)
+
+    if not kwargs.get('keep_every_pattern', False):
+        seen = seen[:10]
 
     out = [drr.duration_rrule for drr in seen]
     return out
