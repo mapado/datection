@@ -306,7 +306,7 @@ def develop_weekly_recurrence_patterns(text, start_index, matches):
 DAY_NUMBER = Regex(
     r'(?<![\dh:])'  # not preceeded by a digit, a 'h' or a ':'
     # OK: (0)1..(0)9...10...29, 30, 31
-    r'([0-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
+    r'([1-2][0-9]|(0)?[1-9]|3[0-1]|1(?=er))'
     # no number, prices or time tags after
     # to avoid matching (20)13 in a year, (20)€ or (15)h
     # Note that is its possible for a single digit  to be matched

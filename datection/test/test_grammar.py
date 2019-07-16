@@ -75,7 +75,6 @@ class TestLanguageAgnosticRegexes(TestGrammar):
 
     @set_pattern(DAY_NUMBER)
     def test_parse_day_number(self):
-        self.assert_parse(u'00')  # yep ,it's weird
         self.assert_parse(u'8')
         self.assert_parse(u'08')
         self.assert_parse(u'12')
@@ -83,6 +82,7 @@ class TestLanguageAgnosticRegexes(TestGrammar):
 
     @set_pattern(DAY_NUMBER)
     def test_unparsable_day_number(self):
+        self.assert_unparsable(u'00')
         self.assert_unparsable(u'32')
 
     @set_pattern(YEAR)
