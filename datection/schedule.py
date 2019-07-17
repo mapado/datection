@@ -237,7 +237,7 @@ class Schedule(object):
         @param timepoint(Timepoint)
         @param excluded_tps(list(Timepoint) or None)
         """
-        if excluded_tps is not None:
+        if excluded_tps is not None and hasattr(timepoint, 'excluded'):
             for excluded in excluded_tps:
                 excluder = TimepointExcluder(timepoint, excluded)
                 excluded_str = excluder.exclude()
