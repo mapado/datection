@@ -491,7 +491,15 @@ class DurationRRule(object):
     @property
     def single_date(self):
         """Return True if the RRule describes a single date(time)."""
-        return self.rrule._count == 1
+        if self.rrule._count == 1:
+            return True
+
+        if self.rrule._until:
+            start = self.rrule._dtstart.date() if isinstance(self.rrule._dtstart, datetime) else self.rrule._dtstart
+            end = self.rrule._until.date() if isinstance(self.rrule._until, datetime) else self.rrule._until
+            return (end - start).days < 1
+
+        return False
 
     @property
     def small_date_interval(self):
