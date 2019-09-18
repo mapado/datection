@@ -90,8 +90,6 @@ class DurationRRule(object):
             for dtime in self.date_producer:
                 if dtime < end_bound:
                     yield dtime
-                else:
-                    raise StopIteration
 
     def set_weekdays(self, weekdays):
         """Update the rrule byweekday property and the underlying
@@ -498,6 +496,16 @@ class DurationRRule(object):
             start = self.rrule._dtstart.date() if isinstance(self.rrule._dtstart, datetime) else self.rrule._dtstart
             end = self.rrule._until.date() if isinstance(self.rrule._until, datetime) else self.rrule._until
             return (end - start).days < 1
+
+        return False
+
+    @property
+    def single_date_on_multiple_days(self):
+        """"""
+        if self.single_date:
+            start_day = self.start_datetime.date()
+            end_day = (self.start_datetime + timedelta(minutes=self.duration)).date()
+            return (start_day != end_day)
 
         return False
 

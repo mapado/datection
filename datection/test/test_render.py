@@ -1016,6 +1016,17 @@ class TestFullFormatter_fr_FR(GetCurrentDayMocker):
         display = fmt.display()
         self.assertEqual(display, u'Le vendredi 10 juillet 2015 de 2 h à 4 h')
 
+    def test_display_multidays_single_date(self):
+        schedule = [
+            {
+                "rrule": "DTSTART:20190927\nRRULE:FREQ=DAILY;COUNT=1;BYMINUTE=00;BYHOUR=08;BYDAY=MO,TU,WE,TH,FR,SA,SU",
+                "duration": 56880,
+            }
+        ]
+        fmt = FullFormatter(schedule)
+        display = fmt.display()
+        self.assertEqual(display, u'Du 27 septembre à 8 h au 5 novembre 2019 à 20 h')
+
     def test_display_excluded_weekday(self):
         # Du 5 au 28 mars 2015 de 8h à 9h, sauf le lundi
         schedule = [

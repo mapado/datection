@@ -58,6 +58,11 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                 not drr.has_end]
 
     @cached_property
+    def multidays_single_dates(self):
+        """"""
+        return [drr for drr in self.schedule if drr.single_date_on_multiple_days]
+
+    @cached_property
     def non_special(self):
         """
         Return all the non-continuous, non-recurring, non-excluded
@@ -66,6 +71,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
         return [drr for drr in self.schedule
                 if not drr.is_continuous
                 if not drr.is_recurring
+                if not drr.single_date_on_multiple_days
                 if not (drr.exclusion_rrules and drr.apply_exclusion)]
 
     @cached_property
@@ -265,6 +271,17 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
                     start, end, self.locale).display(*args, **continuous_kwargs))
         return out
 
+    def format_multidays_single_dates(self, *args, **kwargs):
+        """
+        """
+        out = []
+
+        for multidays_sing in self.multidays_single_dates:
+            start, end = multidays_sing.start_datetime, multidays_sing.end_datetime
+            out.append(ContinuousDatetimeIntervalFormatter(start, end).display(*args, **kwargs))
+
+        return out
+
     def format_recurring_rrules(self, *args, **kwargs):
         """
         """
@@ -334,6 +351,7 @@ class LongFormatter(BaseFormatter, NextDateMixin, NextChangesMixin):
 
         out.extend(self.format_recurring_rrules(*args, **kwargs))
         out.extend(self.format_continuous_rrules(*args, **kwargs))
+        out.extend(self.format_multidays_single_dates(*args, **kwargs))
 
         same_patterns_with_different_dates, others = self.group_by_common_pattern_except_time()
 
