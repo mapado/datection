@@ -90,6 +90,8 @@ class DurationRRule(object):
             for dtime in self.date_producer:
                 if dtime < end_bound:
                     yield dtime
+                else:
+                    return
 
     def set_weekdays(self, weekdays):
         """Update the rrule byweekday property and the underlying
