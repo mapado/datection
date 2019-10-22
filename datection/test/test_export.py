@@ -128,6 +128,7 @@ class ExportScheduleToSQLTest(unittest.TestCase):
             sorted([
                 '2014-08-17_day_full',
                 '2014-08-17_night',
+                '2014-33_sunday_full',
                 '2014-33_weekend_full',
                 '2014-33_weekend_night',
                 '2014_year_full',
@@ -143,6 +144,7 @@ class ExportScheduleToSQLTest(unittest.TestCase):
                 '2014-08-16_day',
                 '2014-08-17_day_full',
                 '2014-08-17_night',
+                '2014-33_sunday_full',
                 '2014-33_weekend_full',
                 '2014-33_weekend_night',
                 '2014-33_weekend_day',
@@ -182,6 +184,7 @@ class ExportScheduleToSQLTest(unittest.TestCase):
                 '2014-12-07_day',
                 '2014-12-08_day',
                 '2014-12-09_day',
+                '2014-49_sunday_full',
                 '2014-49_weekend_full',
                 '2014-49_weekend_day',
                 '2014_year_full',

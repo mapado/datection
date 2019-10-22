@@ -238,6 +238,8 @@ def discretised_days_to_scheduletags(discretised_days):
         if dt.isoweekday() in [6, 7]:
             isocal = datetime.isocalendar(dt)
             out.add("%s-%s_weekend_full" % (isocal[0], isocal[1]))
+            if dt.isoweekday() == 7:
+                out.add("%s-%s_sunday_full" % (isocal[0], isocal[1]))
 
         # daytime specific
         if dt.hour < 20:
